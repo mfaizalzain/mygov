@@ -419,7 +419,7 @@ const CAP = 4;                // requests per family per rolling minute
 const WINDOW = 60000;
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
-const CK = "mygov.cache.v5.";
+const CK = "mygov.cache.v6.";
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -460,6 +460,7 @@ const I18N = {
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
   "Data source & methodology":"Sumber data & kaedah",
   "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
+  "data as of ":"data sehingga ", "may be delayed":"mungkin tertunda",
   "refresh failed — showing last data":"gagal dimuat semula — memaparkan data terakhir",
   "Hottest today":"Paling panas hari ini", "Inflation y/y":"Inflasi t/t",
   "Active warnings":"Amaran aktif", "Vehicles live":"Kenderaan langsung",
@@ -501,13 +502,11 @@ const I18N = {
   "Unemployment rate":"Kadar pengangguran", "monthly":"bulanan",
   "Real GDP":"KDNK benar", "quarterly · RM million":"suku tahunan · RM juta",
   "Date":"Tarikh", "Month":"Bulan", "Quarter":"Suku", "RM million":"RM juta",
-  "Finance":"Kewangan", "Tourism":"Pelancongan", "Society":"Masyarakat",
+  "Finance":"Kewangan", "Postcodes":"Poskod",
   "Exchange rates and interest rates from Bank Negara Malaysia — the ringgit against key currencies, and what banks lend and pay.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia — ringgit berbanding mata wang utama, serta kadar pinjaman dan simpanan bank.",
   "Exchange rates are Bank Negara's daily reference rates, published here as monthly averages and month-end values. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it.":"Kadar pertukaran ialah kadar rujukan harian Bank Negara, diterbitkan di sini sebagai purata bulanan dan nilai akhir bulan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya.",
-  "Tourist arrivals by country and passports issued by state, from the Immigration Department.":"Ketibaan pelancong mengikut negara dan pasport dikeluarkan mengikut negeri, daripada Jabatan Imigresen.",
-  "Arrivals are monthly counts by country of residence; 2021-22 figures collapsed to near zero when borders closed during COVID — that is real data. Passports are the monthly totals issued, by state and office.":"Ketibaan ialah kiraan bulanan mengikut negara kediaman; angka 2021-22 menjunam ke hampir sifar apabila sempadan ditutup semasa COVID — itu data sebenar. Pasport ialah jumlah bulanan dikeluarkan, mengikut negeri dan pejabat.",
-  "Daily births, national health spending and a Malaysia postcode lookup.":"Kelahiran harian, perbelanjaan kesihatan negara dan carian poskod Malaysia.",
-  "Births are DOSM's daily registered births for Malaysia as a whole — the dataset has no per-state breakdown. Health spending comes from the National Health Accounts (MNHA). Postcodes are the national reference list.":"Kelahiran ialah kelahiran berdaftar harian DOSM untuk Malaysia keseluruhan — set data tiada pecahan mengikut negeri. Perbelanjaan kesihatan daripada Akaun Kesihatan Negara (MNHA). Poskod ialah senarai rujukan negara.",
+  "The national postcode reference list — look up any postcode, city or state.":"Senarai rujukan poskod kebangsaan — cari sebarang poskod, bandar atau negeri.",
+  "Pos Malaysia's national postcode reference list, kept as a static lookup table.":"Senarai rujukan poskod kebangsaan Pos Malaysia, dikekalkan sebagai jadual rujukan statik.",
   "Exchange rates":"Kadar pertukaran",
   "RM per unit · daily reference rates":"RM seunit · kadar rujukan harian",
   "Daily Bank Negara reference rates — monthly average values.":"Kadar rujukan harian Bank Negara — nilai purata bulanan.",
@@ -518,27 +517,6 @@ const I18N = {
   "Rate":"Kadar", "Bank":"Bank", "Commercial":"Komersial", "Investment":"Pelaburan",
   "Base rate":"Kadar asas", "Average lending rate":"Kadar pinjaman purata",
   "Savings rate":"Kadar simpanan", "Deposit 3m":"Deposit 3b", "Deposit 12m":"Deposit 12b",
-  "Total arrivals":"Jumlah ketibaan", "vs previous month":"berbanding bulan lepas",
-  "Top source":"Sumber teratas", "arrivals":"ketibaan", "Arrivals":"Ketibaan",
-  "Passports issued":"Pasport dikeluarkan", "Passports":"Pasport",
-  "Months on record":"Bulan direkod", "arrivals · passports":"ketibaan · pasport",
-  "Top 10 source countries":"10 negara sumber teratas",
-  "Monthly arrivals":"Ketibaan bulanan", "all countries":"semua negara",
-  "The collapse to near zero in 2021-22 is real data — border closures during COVID.":"Kejatuhan ke hampir sifar pada 2021-22 ialah data sebenar — penutupan sempadan semasa COVID.",
-  "Passports issued by state":"Pasport dikeluarkan mengikut negeri",
-  "Country":"Negara", "of top 10":"daripada 10 teratas",
-  "Latest day":"Hari terkini", "7-day average":"Purata 7 hari",
-  "births per day":"kelahiran sehari", "Peak day":"Hari puncak",
-  "Days on record":"Hari direkod", "since Jan 2021":"sejak Jan 2021",
-  "Daily births":"Kelahiran harian", "Malaysia · registered births":"Malaysia · kelahiran berdaftar",
-  "No state breakdown in this dataset — births are published for Malaysia as a whole.":"Tiada pecahan negeri dalam set data ini — kelahiran diterbitkan untuk Malaysia keseluruhan.",
-  "Births":"Kelahiran",
-  "Health expenditure":"Perbelanjaan kesihatan",
-  "National Health Accounts · RM billion":"Akaun Kesihatan Negara · RM bilion",
-  "Total":"Jumlah", "Public":"Awam", "Private":"Swasta",
-  "TEH — total expenditure":"TEH — jumlah perbelanjaan",
-  "CEH — current expenditure":"CEH — perbelanjaan semasa",
-  "Sector":"Sektor", "Variable":"Pemboleh ubah", "RM bn":"RM bilion",
   "Postcode lookup":"Carian poskod", "postcode → city → state":"poskod → bandar → negeri",
   "Search postcode, city or state…":"Cari poskod, bandar atau negeri…",
   "Postcode":"Poskod", "City":"Bandar", "State":"Negeri",
@@ -652,15 +630,14 @@ const SECTIONS = [
   { id:"fuel",      label:"Fuel",       icon:"⛽", family:"data-catalogue" },
   { id:"economy",   label:"Economy",    icon:"📈", family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"💱", family:"data-catalogue" },
-  { id:"tourism",   label:"Tourism",    icon:"✈️", family:"data-catalogue" },
-  { id:"society",   label:"Society",    icon:"👪", family:"data-catalogue" },
+  { id:"society",   label:"Postcodes",  icon:"🔍", family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["economy","finance","tourism","society","transport","live"]);
+const LAZY = new Set(["economy","finance","society","transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -1072,31 +1049,11 @@ async function loadFinance(){
   };
 }
 
-async function loadTourism(){
-  const arr = await request("data-catalogue", "/data-catalogue",
-    { id:"arrivals", sort:"-date" });
-  /* Server-side filter keeps only the per-state totals, dropping the ~80
-     individual passport offices — we only chart states. */
-  const pp = await request("data-catalogue", "/data-catalogue",
-    { id:"passports", sort:"-date", filter:"All@office" });
-  return {
-    arr: (arr || []).map(r => [r.date, r.country, r.arrivals]),
-    pp:  (pp || []).map(r => [r.date, r.state, r.passports]),
-  };
-}
-
 async function loadSociety(){
-  /* Births run daily back to 1920 (37,833 rows) — far too much for a chart,
-     so fetch a recent window server-side. The dataset is Malaysia-only. */
-  const b  = await request("data-catalogue", "/data-catalogue",
-    { id:"births", sort:"-date", date_start:"2021-01-01@date" });
-  const mn = await request("data-catalogue", "/data-catalogue",
-    { id:"mnha", sort:"-date" });
+  /* Postcode reference table is static data — the freshness policy does not
+     apply to it. */
   const po = await request("data-catalogue", "/data-catalogue", { id:"poskod" });
   return {
-    births: (b || []).map(r => [r.date, r.births])
-      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
-    mnha: (mn || []).map(r => [r.date, r.sector, r.variable, r.expenditure]),
     pos:  (po || []).map(r => [r.postcode, r.city, r.state])
       .sort((a,b) => Number(a[0]) - Number(b[0])),
   };
@@ -1691,79 +1648,7 @@ function cutoff(years){
   if (years % 1) d.setMonth(d.getMonth() - Math.round((years % 1) * 12));
   return d.toISOString().slice(0, 10);
 }
-/** Same as cutoff() but anchored to a given date instead of "now" — needed
-    for series whose latest point is in the past (births stops in 2023). */
-function cutoffFrom(dateStr, years){
-  const d = new Date(dateStr); d.setFullYear(d.getFullYear() - Math.floor(years));
-  if (years % 1) d.setMonth(d.getMonth() - Math.round((years % 1) * 12));
-  return d.toISOString().slice(0, 10);
-}
-
-/* ═══════════ finance & tourism constants ═══════════ */
-/* ISO 3166-1 alpha-3 → English name, generated from the official country
-   list (plus the two non-ISO codes the arrivals feed uses: ANT and XXX). */
-const COUNTRY = {
-  ABW:"Aruba", AFG:"Afghanistan", AGO:"Angola", AIA:"Anguilla",
-  ALA:"Åland Islands", ALB:"Albania", AND:"Andorra", ANT:"Netherlands Antilles",
-  ARE:"United Arab Emirates", ARG:"Argentina", ARM:"Armenia", ASM:"American Samoa",
-  ATA:"Antarctica", ATF:"French Southern Territories", ATG:"Antigua and Barbuda",
-  AUS:"Australia", AUT:"Austria", AZE:"Azerbaijan", BDI:"Burundi", BEL:"Belgium",
-  BEN:"Benin", BES:"Bonaire, Sint Eustatius and Saba", BFA:"Burkina Faso",
-  BGD:"Bangladesh", BGR:"Bulgaria", BHR:"Bahrain", BHS:"Bahamas",
-  BIH:"Bosnia and Herzegovina", BLM:"Saint Barthélemy", BLR:"Belarus", BLZ:"Belize",
-  BMU:"Bermuda", BOL:"Bolivia", BRA:"Brazil", BRB:"Barbados", BRN:"Brunei Darussalam",
-  BTN:"Bhutan", BVT:"Bouvet Island", BWA:"Botswana", CAF:"Central African Republic",
-  CAN:"Canada", CCK:"Cocos (Keeling) Islands", CHE:"Switzerland", CHL:"Chile",
-  CHN:"China", CIV:"Côte d'Ivoire", CMR:"Cameroon", COD:"DR Congo", COG:"Congo",
-  COK:"Cook Islands", COL:"Colombia", COM:"Comoros", CPV:"Cabo Verde", CRI:"Costa Rica",
-  CUB:"Cuba", CUW:"Curaçao", CXR:"Christmas Island", CYM:"Cayman Islands",
-  CYP:"Cyprus", CZE:"Czechia", DEU:"Germany", DJI:"Djibouti", DMA:"Dominica",
-  DNK:"Denmark", DOM:"Dominican Republic", DZA:"Algeria", ECU:"Ecuador", EGY:"Egypt",
-  ERI:"Eritrea", ESH:"Western Sahara", ESP:"Spain", EST:"Estonia", ETH:"Ethiopia",
-  FIN:"Finland", FJI:"Fiji", FLK:"Falkland Islands", FRA:"France", FRO:"Faroe Islands",
-  FSM:"Micronesia", GAB:"Gabon", GBR:"United Kingdom", GEO:"Georgia", GGY:"Guernsey",
-  GHA:"Ghana", GIB:"Gibraltar", GIN:"Guinea", GLP:"Guadeloupe", GMB:"Gambia",
-  GNB:"Guinea-Bissau", GNQ:"Equatorial Guinea", GRC:"Greece", GRD:"Grenada",
-  GRL:"Greenland", GTM:"Guatemala", GUF:"French Guiana", GUM:"Guam", GUY:"Guyana",
-  HKG:"Hong Kong", HMD:"Heard Island and McDonald Islands", HND:"Honduras",
-  HRV:"Croatia", HTI:"Haiti", HUN:"Hungary", IDN:"Indonesia", IMN:"Isle of Man",
-  IND:"India", IOT:"British Indian Ocean Territory", IRL:"Ireland", IRN:"Iran",
-  IRQ:"Iraq", ISL:"Iceland", ISR:"Israel", ITA:"Italy", JAM:"Jamaica", JEY:"Jersey",
-  JOR:"Jordan", JPN:"Japan", KAZ:"Kazakhstan", KEN:"Kenya", KGZ:"Kyrgyzstan",
-  KHM:"Cambodia", KIR:"Kiribati", KNA:"Saint Kitts and Nevis", KOR:"South Korea",
-  KWT:"Kuwait", LAO:"Laos", LBN:"Lebanon", LBR:"Liberia", LBY:"Libya",
-  LCA:"Saint Lucia", LIE:"Liechtenstein", LKA:"Sri Lanka", LSO:"Lesotho",
-  LTU:"Lithuania", LUX:"Luxembourg", LVA:"Latvia", MAC:"Macao", MAF:"Saint Martin",
-  MAR:"Morocco", MCO:"Monaco", MDA:"Moldova", MDG:"Madagascar", MDV:"Maldives",
-  MEX:"Mexico", MHL:"Marshall Islands", MKD:"North Macedonia", MLI:"Mali",
-  MLT:"Malta", MMR:"Myanmar", MNE:"Montenegro", MNG:"Mongolia",
-  MNP:"Northern Mariana Islands", MOZ:"Mozambique", MRT:"Mauritania", MSR:"Montserrat",
-  MTQ:"Martinique", MUS:"Mauritius", MYS:"Malaysia", MYT:"Mayotte", NAM:"Namibia",
-  NCL:"New Caledonia", NER:"Niger", NFK:"Norfolk Island", NGA:"Nigeria", NIC:"Nicaragua",
-  NIU:"Niue", NLD:"Netherlands", NOR:"Norway", NPL:"Nepal", NRU:"Nauru",
-  NZL:"New Zealand", OMN:"Oman", PAK:"Pakistan", PAN:"Panama", PCN:"Pitcairn",
-  PER:"Peru", PHL:"Philippines", PLW:"Palau", PNG:"Papua New Guinea", POL:"Poland",
-  PRI:"Puerto Rico", PRK:"North Korea", PRT:"Portugal", PRY:"Paraguay",
-  PSE:"Palestine", PYF:"French Polynesia", QAT:"Qatar", REU:"Réunion", ROU:"Romania",
-  RUS:"Russia", RWA:"Rwanda", SAU:"Saudi Arabia", SDN:"Sudan", SEN:"Senegal",
-  SGP:"Singapore", SGS:"South Georgia and the South Sandwich Islands",
-  SHN:"Saint Helena, Ascension and Tristan da Cunha", SJM:"Svalbard and Jan Mayen",
-  SLB:"Solomon Islands", SLE:"Sierra Leone", SLV:"El Salvador", SMR:"San Marino",
-  SOM:"Somalia", SPM:"Saint Pierre and Miquelon", SRB:"Serbia", SSD:"South Sudan",
-  STP:"Sao Tome and Principe", SUR:"Suriname", SVK:"Slovakia", SVN:"Slovenia",
-  SWE:"Sweden", SWZ:"Eswatini", SXM:"Sint Maarten (Dutch part)", SYC:"Seychelles",
-  SYR:"Syria", TCA:"Turks and Caicos Islands", TCD:"Chad", TGO:"Togo", THA:"Thailand",
-  TJK:"Tajikistan", TKL:"Tokelau", TKM:"Turkmenistan", TLS:"Timor-Leste", TON:"Tonga",
-  TTO:"Trinidad and Tobago", TUN:"Tunisia", TUR:"Türkiye", TUV:"Tuvalu",
-  TWN:"Taiwan", TZA:"Tanzania", UGA:"Uganda", UKR:"Ukraine",
-  UMI:"United States Minor Outlying Islands", URY:"Uruguay", USA:"United States",
-  UZB:"Uzbekistan", VAT:"Holy See", VCT:"Saint Vincent and the Grenadines",
-  VEN:"Venezuela", VGB:"British Virgin Islands", VIR:"U.S. Virgin Islands",
-  VNM:"Vietnam", VUT:"Vanuatu", WLF:"Wallis and Futuna", WSM:"Samoa",
-  XXX:"Unknown / Other", YEM:"Yemen", ZAF:"South Africa", ZMB:"Zambia", ZWE:"Zimbabwe"
-};
-const countryName = c => COUNTRY[c] || c;
-
+/* ═══════════ finance constants ═══════════ */
 const CURR = {
   usd:{ label:"USD", color:"#34d399" },
   gbp:{ label:"GBP", color:"#fbbf24" },
@@ -1778,8 +1663,6 @@ const RATE_LABEL = { br:"Base rate", alr:"Average lending rate", blr:"Base lendi
   sr:"Savings rate", fdr_3mo:"Deposit 3m", fdr_12mo:"Deposit 12m",
   wabr:"Weighted avg base rate", wablr:"Weighted avg base lending rate",
   walr:"Weighted avg lending rate", wasr:"Weighted avg savings rate" };
-const SECTOR_LABEL = { total:"Total", public:"Public", private:"Private" };
-const VAR_LABEL = { teh:"TEH — total expenditure", ceh:"CEH — current expenditure" };
 
 function renderFuel(d){
   const L = d.latest, P = d.prev;
@@ -2141,216 +2024,11 @@ function paintIr(d){
     })), [3]);
 }
 
-/* ════════════════════════════ tourism view ════════════════════════════ */
-let arrMonth = null, ppMonth = null;
-const monthList = rows => [...new Set(rows.map(r => r[0]))]
-  .sort((a,b) => String(b).localeCompare(String(a)));   // newest first
-
-function renderTourism(d){
-  const months = monthList(d.arr);
-  if (!arrMonth || !months.includes(arrMonth)) arrMonth = months[0];
-  const pmonths = monthList(d.pp);
-  if (!ppMonth || !pmonths.includes(ppMonth)) ppMonth = pmonths[0];
-
-  const all = d.arr.filter(r => r[1] === "ALL")
-    .sort((a,b) => String(a[0]).localeCompare(String(b[0])));
-  const cur = all.find(r => r[0] === arrMonth);
-  const prev = all[all.findIndex(r => r[0] === arrMonth) - 1];
-  const mo = (cur && prev) ? (cur[2]/prev[2] - 1) * 100 : null;
-  const top = d.arr.filter(r => r[0] === arrMonth && r[1] !== "ALL")
-    .sort((a,b) => b[2] - a[2])[0];
-  const ppTotal = (d.pp.find(r => r[0] === ppMonth && r[1] === "Malaysia") || [])[2];
-  const ppPrevM = pmonths[pmonths.indexOf(ppMonth) + 1];
-  const ppPrev = ppPrevM ? (d.pp.find(r => r[0] === ppPrevM && r[1] === "Malaysia") || [])[2] : null;
-  const ppMo = (ppTotal != null && ppPrev != null) ? (ppTotal/ppPrev - 1) * 100 : null;
-
-  $("#body-tourism").innerHTML = `
-    <div class="grid g4 mb">
-      <div class="kpi"><div class="lab">${T("Total arrivals")} · ${esc(cur ? ymd(cur[0]) : "—")}</div>
-        <div class="val" data-count="${cur ? cur[2] : 0}">0</div>
-        <div class="sub">${mo == null ? "" :
-          `<span class="${mo > 0 ? "down" : "up"}">${mo > 0 ? "▲" : "▼"} ${nf(Math.abs(mo),1)}%</span> ${T("vs previous month")}`}</div></div>
-      <div class="kpi"><div class="lab">${T("Top source")}</div>
-        <div class="val" style="font-size:20px">${esc(top ? countryName(top[1]) : "—")}</div>
-        <div class="sub">${top ? nf(top[2]) + " " + T("arrivals") : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Passports issued")} · ${esc(ymd(ppMonth))}</div>
-        <div class="val" data-count="${ppTotal || 0}">0</div>
-        <div class="sub">${ppMo == null ? "" :
-          `<span class="${ppMo > 0 ? "down" : "up"}">${ppMo > 0 ? "▲" : "▼"} ${nf(Math.abs(ppMo),1)}%</span> ${T("vs previous month")}`}</div></div>
-      <div class="kpi"><div class="lab">${T("Months on record")}</div>
-        <div class="val" style="font-size:20px">${nf(months.length)} · ${nf(pmonths.length)}</div>
-        <div class="sub">${T("arrivals · passports")}</div></div>
-    </div>
-    <div class="grid g2 mb">
-      <div class="card">
-        <div class="card-h"><h4>${T("Top 10 source countries")}</h4>
-          <span class="sub">${esc(ymd(arrMonth))}</span>
-          <span class="right"><label class="sr" for="arr-month">${T("Month")}</label>
-            <select class="inp" id="arr-month" style="max-width:180px" aria-label="${T("Month")}">
-              ${months.map(m => `<option value="${m}" ${m === arrMonth ? "selected" : ""}>${esc(ymd(m))}</option>`).join("")}
-            </select></span></div>
-        <div class="card-b"><div class="chart"><canvas id="arr-chart" role="img" aria-label="Top 10 source countries"></canvas></div>
-          <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="arr-dt"></div></details></div>
-      </div>
-      <div class="card">
-        <div class="card-h"><h4>${T("Monthly arrivals")}</h4><span class="sub">${T("all countries")}</span></div>
-        <div class="card-b"><div class="chart"><canvas id="arr-trend" role="img" aria-label="Monthly tourist arrivals"></canvas></div>
-          <p class="note">ℹ️ ${T("The collapse to near zero in 2021-22 is real data — border closures during COVID.")}</p>
-          <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="arr-trend-dt"></div></details></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-h"><h4>${T("Passports issued by state")}</h4>
-        <span class="sub">${esc(ymd(ppMonth))}</span>
-        <span class="right"><label class="sr" for="pp-month">${T("Month")}</label>
-          <select class="inp" id="pp-month" style="max-width:180px" aria-label="${T("Month")}">
-            ${pmonths.map(m => `<option value="${m}" ${m === ppMonth ? "selected" : ""}>${esc(ymd(m))}</option>`).join("")}
-          </select></span></div>
-      <div class="card-b"><div class="chart tall"><canvas id="pp-chart" role="img" aria-label="Passports by state"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="pp-dt"></div></details></div>
-    </div>`;
-
-  const am = $("#arr-month");
-  if (am) am.onchange = () => { arrMonth = am.value; renderTourism(d); };
-  const pm = $("#pp-month");
-  if (pm) pm.onchange = () => { ppMonth = pm.value; renderTourism(d); };
-  paintArr(d); paintArrTrend(d); paintPp(d);
-  animateCounters($("#body-tourism"));
-}
-
-function paintArr(d){
-  const top10 = d.arr.filter(r => r[0] === arrMonth && r[1] !== "ALL")
-    .sort((a,b) => b[2] - a[2]).slice(0, 10);
-  const total = top10.reduce((a,r) => a + r[2], 0);
-  chart("arr-chart", {
-    type:"bar",
-    data:{ labels: top10.slice().reverse().map(r => countryName(r[1])),
-      datasets:[{ label:T("Arrivals"), data:top10.slice().reverse().map(r => r[2]),
-        backgroundColor:top10.map((_, i) => i === 0 ? "#2dd4bf" : "rgba(45,212,191,.42)").reverse(),
-        borderRadius:5, borderSkipped:false, barThickness:"flex", maxBarThickness:26 }] },
-    options: baseOpts({ indexAxis:"y",
-      plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
-          callbacks:{
-            title: items => items.length ? countryName(top10[top10.length - 1 - items[0].dataIndex][1]) : "",
-            label: it => ` ${nf(it.parsed.x)} ${T("arrivals")}`,
-            afterBody: items => { const r = top10[top10.length - 1 - items[0].dataIndex];
-              return total ? ` ${nf((r[2]/total)*100,1)}% ${T("of top 10")}` : ""; } } } },
-      scales:{
-        x:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } },
-        y:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } } } }),
-  });
-  const dt = $("#arr-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Country"),T("Arrivals"),T("Share")],
-    top10.map(r => [countryName(r[1]), r[2], total ? (r[2]/total*100).toFixed(1) + "%" : "—"]), [1]);
-}
-
-function paintArrTrend(d){
-  const all = d.arr.filter(r => r[1] === "ALL")
-    .sort((a,b) => String(a[0]).localeCompare(String(b[0])));
-  chart("arr-trend", {
-    type:"line",
-    data:{ labels: all.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
-      datasets:[{ label:T("Arrivals"), data:all.map(r => r[2]),
-        borderColor:"#34d399", borderWidth:2, pointRadius:0, tension:.25, fill:true,
-        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#34d399") }] },
-    options: baseOpts({ plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } } } }),
-  });
-  const dt = $("#arr-trend-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Month"),T("Arrivals")],
-    all.map(r => [md(r[0]) + " '" + String(r[0]).slice(2,4), r[2]]), [1]);
-}
-
-function paintPp(d){
-  const st = d.pp.filter(r => r[0] === ppMonth && r[1] !== "Malaysia")
-    .sort((a,b) => b[2] - a[2]);
-  chart("pp-chart", {
-    type:"bar",
-    data:{ labels: st.slice().reverse().map(r => r[1]),
-      datasets:[{ label:T("Passports"), data:st.slice().reverse().map(r => r[2]),
-        backgroundColor:"rgba(34,211,238,.55)", borderRadius:5, borderSkipped:false,
-        barThickness:"flex", maxBarThickness:20 }] },
-    options: baseOpts({ indexAxis:"y",
-      plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } },
-        y:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } } } }),
-  });
-  const dt = $("#pp-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("State"),T("Passports")],
-    st.map(r => [r[1], r[2]]), [1]);
-}
-
-/* ════════════════════════════ society view ════════════════════════════ */
-let birthsRange = "1y";
-let mnhaVar = "teh", mnhaSector = new Set(["total"]);
+/* ════════════════════════════ postcode view ════════════════════════════ */
 let posQ = "";
-const SECTOR_COLOR = { total:"#2dd4bf", public:"#22d3ee", private:"#fbbf24" };
 
 function renderSociety(d){
-  const last = d.births[d.births.length - 1];
-  const last7 = d.births.slice(-7);
-  const avg7 = last7.length ? Math.round(last7.reduce((a,r) => a + r[1], 0) / last7.length) : null;
-  const peak = d.births.reduce((a,r) => r[1] > (a ? a[1] : -1) ? r : a, null);
   $("#body-society").innerHTML = `
-    <div class="grid g4 mb">
-      <div class="kpi"><div class="lab">${T("Latest day")}</div>
-        <div class="val" data-count="${last ? last[1] : 0}">0</div>
-        <div class="sub">${last ? esc(ymd(last[0])) : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("7-day average")}</div>
-        <div class="val" data-count="${avg7 || 0}">0</div>
-        <div class="sub">${T("births per day")}</div></div>
-      <div class="kpi"><div class="lab">${T("Peak day")}</div>
-        <div class="val" style="font-size:20px" data-count="${peak ? peak[1] : 0}">0</div>
-        <div class="sub">${peak ? esc(ymd(peak[0])) : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Days on record")}</div>
-        <div class="val" style="font-size:20px">${nf(d.births.length)}</div>
-        <div class="sub">${T("since Jan 2021")}</div></div>
-    </div>
-    <div class="card mb">
-      <div class="card-h"><h4>${T("Daily births")}</h4>
-        <span class="sub">${T("Malaysia · registered births")}</span>
-        <span class="right"><span class="seg" role="group" aria-label="Date range">
-          ${["6m","1y","all"].map(r => `<button data-brange="${r}" aria-pressed="${r === birthsRange}">${r.toUpperCase()}</button>`).join("")}
-        </span></span></div>
-      <div class="card-b">
-        <p class="note" style="margin-top:0">ℹ️ ${T("No state breakdown in this dataset — births are published for Malaysia as a whole.")}</p>
-        <div class="chart tall"><canvas id="births-chart" role="img" aria-label="Daily births"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="births-dt"></div></details></div>
-    </div>
-    <div class="card mb">
-      <div class="card-h"><h4>${T("Health expenditure")}</h4>
-        <span class="sub">${T("National Health Accounts · RM billion")}</span></div>
-      <div class="card-b" style="padding-bottom:8px">
-        <div class="chips mb" id="mnha-sectors"></div>
-        <span class="seg" role="group" aria-label="Variable">
-          ${Object.keys(VAR_LABEL).map(v =>
-            `<button data-mvar="${v}" aria-pressed="${v === mnhaVar}">${esc(T(VAR_LABEL[v]))}</button>`).join("")}
-        </span>
-      </div>
-      <div class="card-b" style="padding-top:8px">
-        <div class="chart tall"><canvas id="mnha-chart" role="img" aria-label="Health expenditure by sector"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="mnha-dt"></div></details></div>
-    </div>
     <div class="card">
       <div class="card-h"><h4>${T("Postcode lookup")}</h4>
         <span class="sub">${T("postcode → city → state")}</span></div>
@@ -2364,96 +2042,10 @@ function renderSociety(d){
         <tbody id="pos-rows"></tbody>
       </table></div>
     </div>`;
-  $("#body-society").querySelectorAll("[data-brange]").forEach(b => {
-    b.onclick = () => { birthsRange = b.dataset.brange;
-      $("#body-society").querySelectorAll("[data-brange]")
-        .forEach(o => o.setAttribute("aria-pressed", String(o.dataset.brange === birthsRange)));
-      paintBirths(d); };
-  });
-  const sc = $("#mnha-sectors");
-  Object.keys(SECTOR_LABEL).forEach(k => {
-    const c = el("button", "chip", esc(T(SECTOR_LABEL[k])));
-    c.dataset.sec = k;
-    c.setAttribute("aria-pressed", String(mnhaSector.has(k)));
-    c.onclick = () => { mnhaSector.has(k) ? mnhaSector.delete(k) : mnhaSector.add(k);
-      if (!mnhaSector.size) mnhaSector.add("total");
-      sc.querySelectorAll(".chip").forEach(o =>
-        o.setAttribute("aria-pressed", String(mnhaSector.has(o.dataset.sec))));
-      paintMnha(d); };
-    sc.appendChild(c);
-  });
-  $("#body-society").querySelectorAll("[data-mvar]").forEach(b => {
-    b.onclick = () => { mnhaVar = b.dataset.mvar;
-      $("#body-society").querySelectorAll("[data-mvar]")
-        .forEach(o => o.setAttribute("aria-pressed", String(o.dataset.mvar === mnhaVar)));
-      paintMnha(d); };
-  });
   const q = $("#pos-q");
   q.value = posQ;
   q.oninput = () => { posQ = q.value; paintPos(d); };
-  paintBirths(d); paintMnha(d); paintPos(d);
-  animateCounters($("#body-society"));
-}
-
-function paintBirths(d){
-  const last = d.births[d.births.length - 1];
-  const from = birthsRange === "all" ? "0000"
-    : cutoffFrom(last ? last[0] : "2023-07-31", RANGES[birthsRange]);
-  const rows = d.births.filter(r => String(r[0]) >= from);
-  chart("births-chart", {
-    type:"line",
-    data:{ labels: rows.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
-      datasets:[{ label:T("Births"), data:rows.map(r => r[1]),
-        borderColor:"#fbbf24", borderWidth:1.6, pointRadius:0, tension:.15, fill:true,
-        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#fbbf24") }] },
-    options: baseOpts({ plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, suggestedMin:0,
-                    callback:v => nf(v) } } } }),
-  });
-  const dt = $("#births-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Date"),T("Births")],
-    rows.map(r => [ymd(r[0]), r[1]]), [1]);
-}
-
-function paintMnha(d){
-  const years = [...new Set(d.mnha.map(r => r[0]))].sort();
-  const sectors = Object.keys(SECTOR_LABEL).filter(k => mnhaSector.has(k));
-  const bySector = {};
-  for (const k of sectors) bySector[k] = new Map();
-  for (const [date, sector, variable, exp] of d.mnha)
-    if (variable === mnhaVar && bySector[sector]) bySector[sector].set(date, exp / 1e9);
-  chart("mnha-chart", {
-    type:"bar",
-    data:{ labels: years.map(y => String(y).slice(0,4)),
-      datasets: sectors.map(k => ({
-        label:T(SECTOR_LABEL[k]),
-        data:years.map(y => bySector[k].get(y) ?? null),
-        backgroundColor:SECTOR_COLOR[k] + "b3", borderRadius:5, borderSkipped:false,
-        barThickness:"flex", maxBarThickness:26,
-      })) },
-    options: baseOpts({ plugins:{ legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8,
-          usePointStyle:true, pointStyle:"circle", font:{ size:11 }, padding:14 } },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxRotation:0 } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
-                    callback:v => "RM " + nf(v,1) } } } }),
-  });
-  const dt = $("#mnha-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Year"),T("Sector"),T("Variable"),T("RM bn")],
-    d.mnha.filter(r => mnhaSector.has(r[1]) && r[2] === mnhaVar)
-      .sort((a,b) => String(b[0]).localeCompare(String(a[0])))
-      .map(r => [String(r[0]).slice(0,4), T(SECTOR_LABEL[r[1]]), T(VAR_LABEL[r[2]]),
-                 (r[3]/1e9).toFixed(2)]), [3]);
+  paintPos(d);
 }
 
 function paintPos(d){
@@ -2779,14 +2371,10 @@ const META = {
     desc:"Exchange rates and interest rates from Bank Negara Malaysia — the ringgit against key currencies, and what banks lend and pay.",
     how:"Exchange rates are Bank Negara's daily reference rates, published here as monthly averages and month-end values. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it.",
     eps:["/data-catalogue?id=exchangerates","/data-catalogue?id=interestrates"] },
-  tourism:{ title:"Tourism",
-    desc:"Tourist arrivals by country and passports issued by state, from the Immigration Department.",
-    how:"Arrivals are monthly counts by country of residence; 2021-22 figures collapsed to near zero when borders closed during COVID — that is real data. Passports are the monthly totals issued, by state and office.",
-    eps:["/data-catalogue?id=arrivals","/data-catalogue?id=passports"] },
-  society:{ title:"Society",
-    desc:"Daily births, national health spending and a Malaysia postcode lookup.",
-    how:"Births are DOSM's daily registered births for Malaysia as a whole — the dataset has no per-state breakdown. Health spending comes from the National Health Accounts (MNHA). Postcodes are the national reference list.",
-    eps:["/data-catalogue?id=births","/data-catalogue?id=mnha","/data-catalogue?id=poskod"] },
+  society:{ title:"Postcodes",
+    desc:"The national postcode reference list — look up any postcode, city or state.",
+    how:"Pos Malaysia's national postcode reference list, kept as a static lookup table.",
+    eps:["/data-catalogue?id=poskod"] },
   transport:{ title:"Public Transport",
     desc:"Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.",
     how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.",
@@ -2807,18 +2395,27 @@ const LOADERS = {
       const active = d.warn.filter(w => !w.info).length;
       kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
       if (geo.status === "waiting") locate();
+    }, asOf:d => {   /* the forecast starts today */
+      let m = null; for (const r of d.rows){ const x = String(r[1]); if (x && (m === null || x < m)) m = x; }
+      return m;
     } },
   fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
       if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
-        sub:T("week of ") + ymd(d.latest.date) }; } },
+        sub:T("week of ") + ymd(d.latest.date) }; }, asOf:d => d.latest ? d.latest.date : null },
   economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
       const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
       if (ov.length > 12){
         const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
         kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
-      } } },
-  finance:  { load:loadFinance,   render:renderFinance },
-  tourism:  { load:loadTourism,   render:renderTourism },
+      } }, asOf:d => {
+      let m = "";
+      const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
+      for (const p of ov) if (String(p[0]) > m) m = String(p[0]);
+      if (d.lfs.length){ const x = String(d.lfs[d.lfs.length-1][0]); if (x > m) m = x; }
+      if (d.gdp.length){ const x = String(d.gdp[d.gdp.length-1][0]); if (x > m) m = x; }
+      return m || null;
+    } },
+  finance:  { load:loadFinance,   render:renderFinance,   asOf:d => d.fx.length ? d.fx[d.fx.length-1][0] : null },
   society:  { load:loadSociety,   render:renderSociety },
   transport:{ load:loadTransport, render:renderTransport },
   live:     { load:loadLive,      render:renderLive,      after:d => {
@@ -2831,13 +2428,19 @@ const loaded = new Set();    // sections whose content is currently on screen
 const loading = new Set();   // sections mid-fetch (guard against races)
 const dataMap = {};          // last data per section, for theme/lang re-renders
 const secMode = {};          // last freshness state per section ("updated"…)
+const dataDate = {};         // latest data date per section, for the "data as of" pill
 function setSecTime(id, mode){
   const n = $("#time-" + id); if (!n) return;
   const at = stamps[id] ? hhmm(stamps[id]) : "";
+  const dd = dataDate[id];
+  /* 183 days ≈ 6 months — the freshness policy's "may be delayed" threshold. */
+  const stale = dd ? (Date.now() - new Date(dd).getTime() > 183 * 86400000) : false;
   let text = "", cls = "";
   if (mode === "loading"){ text = "loading…"; cls = " loading"; }
-  else if (mode === "updated") text = T("updated ") + at;
-  else if (mode === "cached") text = T("cached · fetched ") + at;
+  else if (mode === "updated" || mode === "cached"){
+    if (dd){ text = T("data as of ") + md(dd); if (stale){ text += " ⚠️ " + T("may be delayed"); cls = " warn"; } }
+    else text = (mode === "cached" ? T("cached · fetched ") : T("updated ")) + at;
+  }
   else if (mode === "error"){ text = T("refresh failed — showing last data"); cls = " error"; }
   n.textContent = text; n.className = "sec-time" + cls;
   secMode[id] = mode;
@@ -2854,6 +2457,7 @@ async function loadSection(id, force){
       try {
         cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
+        dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
         setDot(id, "ok"); setSecTime(id, "cached");
         tick(); renderKpis();
         return;
