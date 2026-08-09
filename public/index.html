@@ -3448,8 +3448,6 @@ async function loadSection(id, force){
       cfg.render(data); if (cfg.after) cfg.after(data);
       loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
       dataDate[id] = cfg.asOf ? cfg.asOf(data) : null;
-      setDot(id, "ok"); setSecTime(id, "updated");      cfg.render(data); if (cfg.after) cfg.after(data);
-      loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
       setDot(id, "ok"); setSecTime(id, "updated");
     } catch (err){
       setDot(id, "err");
