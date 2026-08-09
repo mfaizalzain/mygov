@@ -17,10 +17,11 @@ proxies the reverse-geocoding and GTFS archive calls.
 | --- | --- | --- |
 | Weather | MET Malaysia | 7-day forecast for all 360 locations, severe-weather warnings, recent earthquakes |
 | Fuel & Households | Ministry of Finance | Weekly RON95 / RON97 / diesel ceiling prices, household income |
-| Economy | DOSM (OpenDOSM) | Core CPI by expenditure division, unemployment, quarterly real GDP |
-| Finance | Bank Negara Malaysia | Exchange rates vs key currencies, interest rates (commercial base rate) by bank type |
+| Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
+| Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
+| Vehicles & Ridership | JPJ, KTMB | Monthly new-vehicle registrations stacked by fuel type (the EV adoption curve), daily KTMB ridership per service |
 | Population | DOSM (OpenDOSM) | National population 1970-present, ethnic composition |
-| Health | Ministry of Health (KKMNOW) | Blood donations, blood stock by type, organ pledges, PeKa B40 screenings |
+| Health | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana | GTFS schedules — route and stop search, nearest stops, busiest routes |
 | Live | KTMB, Prasarana | GTFS-Realtime vehicle positions on a live map, with "last seen" cards |
@@ -35,12 +36,11 @@ public/
   sw.js                 service worker (offline shell + API fallback)
   manifest.webmanifest  PWA manifest
   icons/                generated PNGs (192, 512, apple-touch)
-  vendor/               self-hosted Chart.js, Leaflet, hyparquet (SRI-pinned)
+  vendor/               self-hosted Chart.js, Leaflet (SRI-pinned)
 src/
   index.js              Worker: static assets + /api/reverse
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
-  build-hyparquet.mjs   rebuilds the vendored Parquet reader + prints its SRI hash
 wrangler.jsonc
 ```
 
@@ -85,18 +85,16 @@ if the proxy is absent, so the page works on plain static hosting too.
   `X-Frame-Options`, a restrictive `Permissions-Policy` (only `geolocation`,
   same-origin) and `strict-origin-when-cross-origin` referrer policy. All in
   `public/_headers`.
-- **Chart.js, Leaflet and hyparquet are pinned and SRI-checked**
+- **Chart.js and Leaflet are pinned and SRI-checked**
   (`integrity="sha384-…"`), so altered bytes are refused rather than executed.
-  hyparquet is injected at runtime and carries the same hash.
 - Both API routes **validate input against a strict allowlist** and never
   interpolate user input into an upstream URL, and they reject cross-origin
   callers — they exist for this page, not as a public proxy.
 - No secrets, tokens or account identifiers are in the repo; the app needs
   none. `.dev.vars` and `.wrangler/` are gitignored.
-- No analytics. The page connects to exactly four hosts: itself (static assets
-  and `/api/*`), `api.data.gov.my`, `raw.githubusercontent.com` (the MoH
-  health Parquet files) and `tile.openstreetmap.org` (map tiles in the Live
-  section). Every library is self-hosted. The "Buy me a coffee" button is a
+- No analytics. The page connects to exactly three hosts: itself (static assets
+  and `/api/*`), `api.data.gov.my` (every dataset, health included) and
+  `tile.openstreetmap.org` (map tiles in the Live section). Every library is self-hosted. The "Buy me a coffee" button is a
   plain link, not their tracking widget. Earthquake and live-vehicle cards
   include an outbound Google Maps link — a normal link the reader chooses to
   follow, not a request the page makes.
@@ -199,25 +197,19 @@ Three things that would normally pull in a library:
 - **Icons** — `tools/make-icons.mjs` renders the PNGs with a hand-written
   encoder (`zlib` + CRC32), supersampled 4× for clean edges.
 
-Chart.js, Leaflet and hyparquet are the only runtime dependencies. They live
-in `public/vendor/` (self-hosted with subresource integrity, so there is no
-CDN to go down and the app works fully offline). Chart.js and Leaflet are
-precached by the service worker; hyparquet is not, because only one section
-needs it — it is injected on demand the first time Health loads, and cached
-from then on.
+Chart.js and Leaflet are the only runtime dependencies. They live in
+`public/vendor/` (self-hosted with subresource integrity, so there is no CDN
+to go down and the app works fully offline) and are precached by the service
+worker.
 
-### Why Parquet needs a vendored reader
+### Compacting daily series
 
-MoH publishes the health data as Parquet, and every KKMNOW file is
-**brotli**-compressed. hyparquet's core handles snappy and gzip only, and no
-browser exposes brotli to script — `DecompressionStream` is gzip/deflate. So
-`tools/build-hyparquet.mjs` bundles hyparquet with exactly one decompressor
-lifted from `hyparquet-compressors` (BROTLI, not the zstd/lz4/snappy-wasm the
-full package drags along) and prints the SRI hash to paste into `index.html`.
-The versions are pinned in that script, so the bundle is reproducible.
-
-Two things the reader gives back need converting: `date` columns arrive as
-`Date` objects and `int64` columns as `BigInt`.
+Several datasets are one JSON object per category per day — blood donations
+alone are five keys over three years. `denseDaily()` collapses each key to a
+start day plus a flat array of values, which is roughly a fifth the size and
+keeps these sections inside the localStorage budget the other eight share.
+Seven-day moving averages are computed at render time rather than cached, for
+the same reason.
 
 ## Preferences
 

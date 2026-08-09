@@ -5,15 +5,15 @@
 # routes like /api/reverse.
 #
 # The CSP is tight: the app has one inline <script> and one inline <style>
-# (both authored in index.html), three locally-hosted vendor scripts pinned with
-# subresource integrity (Chart.js, Leaflet, hyparquet), map tiles from
-# OpenStreetMap, and it talks to a short list of data hosts. 'unsafe-inline' for
-# script-src is unavoidable for a deliberately single-file app; it is paired
-# with a strict allowlist so an injected *external* script still cannot load.
+# (both authored in index.html), two locally-hosted vendor scripts pinned with
+# subresource integrity (Chart.js, Leaflet), map tiles from OpenStreetMap, and
+# it talks to a short list of data hosts. 'unsafe-inline' for script-src is
+# unavoidable for a deliberately single-file app; it is paired with a strict
+# allowlist so an injected *external* script still cannot load.
 #
-# raw.githubusercontent.com is where the Ministry of Health publishes the
-# KKMNOW health datasets (Parquet, CORS-open). It is a connect-src entry only —
-# nothing executable is ever loaded from it.
+# connect-src is deliberately minimal: api.data.gov.my for every dataset
+# (health included, since the MoH series moved to the data catalogue) and the
+# S3 bucket the GTFS-static endpoint redirects to.
 
 /*
   X-Content-Type-Options: nosniff
@@ -22,7 +22,7 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.data.gov.my https://*.s3.ap-southeast-1.amazonaws.com https://raw.githubusercontent.com; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.data.gov.my https://*.s3.ap-southeast-1.amazonaws.com; upgrade-insecure-requests
 
 # The service worker must not be cached, or a stale one pins an old app shell.
 /sw.js

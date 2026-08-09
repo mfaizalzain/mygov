@@ -146,7 +146,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4);min-height:40px}
 .hero-loc .loc-chip{text-decoration:none}
 .hero-loc .loc-chip:hover{text-decoration:none;border-color:rgba(45,212,191,.55)}
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s3);margin-top:var(--s6)}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--s3);margin-top:var(--s6)}
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);transition:var(--t)}
@@ -193,7 +193,7 @@ details.meta p{margin:var(--s2) 0 0;color:var(--fg-3);font-size:11.5px;max-width
 .card-b{padding:var(--s4)}
 .grid{display:grid;gap:var(--s3)}
 .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
-.g4{grid-template-columns:repeat(4,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)} .g5{grid-template-columns:repeat(5,1fr)}
 .mb{margin-bottom:var(--s3)}
 .chart{position:relative;height:300px}
 .chart.tall{height:340px}
@@ -324,12 +324,13 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 .bmc:hover{background:#fcd34d;border-color:#fcd34d;transform:translateY(-1px);text-decoration:none}
 @media (max-width:620px){ .foot{flex-direction:column-reverse;gap:var(--s4)} .bmc{width:100%;justify-content:center} }
 
-@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4,.g5{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
 @media (max-width:620px){
   .wrap{padding:0 var(--s4) 64px} .hd{padding:var(--s3) var(--s4)}
   nav.sections ul{padding:var(--s2) var(--s4)}
   .kpis{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:1fr}
+  .g5{grid-template-columns:repeat(2,1fr)}
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
   .vgrid{grid-template-columns:1fr} .lvmap{height:260px}
@@ -430,7 +431,7 @@ const CAP = 4;                // requests per family per rolling minute
 const WINDOW = 60000;
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
-const CK = "mygov.cache.v6.";
+const CK = "mygov.cache.v7.";
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -482,8 +483,8 @@ const I18N = {
   "Chinese":"Cina", "Indian":"India", "Other citizens":"Warganegara lain",
   "Non-citizens":"Bukan warganegara",
   "Health":"Kesihatan", "Health & Donations":"Kesihatan & Derma",
-  "Blood donations, blood stock by type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.":"Pendermaan darah, stok darah mengikut jenis, ikrar derma organ dan saringan kesihatan PeKa B40 — diterbitkan setiap hari oleh Kementerian Kesihatan.",
-  "These come from KKMNOW, which the Ministry of Health publishes as Parquet files in a public GitHub repository rather than through the government API; your browser reads them directly. Donations run from 2012, organ pledges from 2009 and PeKa B40 screenings from 2019. Blood stock is a short 2022 window — that is all MoH has published. Federal-territory rows were renamed mid-2022 and are folded back together here.":"Data ini daripada KKMNOW, yang diterbitkan oleh Kementerian Kesihatan sebagai fail Parquet dalam repositori GitHub awam dan bukan melalui API kerajaan; pelayar anda membacanya terus. Pendermaan bermula 2012, ikrar organ 2009 dan saringan PeKa B40 2019. Stok darah hanya meliputi tempoh singkat pada 2022 — itu sahaja yang diterbitkan KKM. Baris wilayah persekutuan dinamakan semula pertengahan 2022 dan digabungkan semula di sini.",
+  "Blood donations by blood type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.":"Pendermaan darah mengikut jenis darah, ikrar derma organ dan saringan kesihatan PeKa B40 — diterbitkan setiap hari oleh Kementerian Kesihatan.",
+  "The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.":"Kementerian Kesihatan menerbitkan tiga siri harian ini melalui katalog data kerajaan. Pendermaan disertakan pecahan jenis darah dan dipaparkan untuk tiga tahun terkini; ikrar organ bermula 2009 dan saringan PeKa B40 bermula 2019, kedua-duanya dipaparkan penuh.",
   "Health data updated":"Data kesihatan dikemas kini", "Date range":"Julat tarikh",
   "Blood donations":"Pendermaan darah", "Donations, last 7 days":"Pendermaan, 7 hari lepas",
   "Organ pledges":"Ikrar derma organ", "cumulative since 2009":"terkumpul sejak 2009",
@@ -491,14 +492,11 @@ const I18N = {
   "donors per day · 7-day average":"penderma sehari · purata 7 hari",
   "Daily donors":"Penderma harian", "Daily screenings":"Saringan harian",
   "Pledges to date":"Ikrar terkumpul", "health screenings per day":"saringan kesihatan sehari",
-  "Blood stock by type":"Stok darah mengikut jenis", "% of optimal level":"% paras optimum",
-  "No data for this state":"Tiada data untuk negeri ini",
-  "Blood donations are published for 13 states and Kuala Lumpur only.":"Pendermaan darah diterbitkan untuk 13 negeri dan Kuala Lumpur sahaja.",
-  "Stock is published as a share of the optimal level and capped at 100%. MoH last updated this series in October 2022 — the window shown is all there is.":"Stok diterbitkan sebagai peratusan paras optimum dan dihadkan pada 100%. KKM mengemas kini siri ini kali terakhir pada Oktober 2022 — itu sahaja tempoh yang ada.",
-  "No blood-stock series was published for this state.":"Tiada siri stok darah diterbitkan untuk negeri ini.",
-  "No pledge series was published for this state.":"Tiada siri ikrar diterbitkan untuk negeri ini.",
-  "PeKa B40 screenings start in April 2019.":"Saringan PeKa B40 bermula pada April 2019.",
-  "Data: MoH KKMNOW (GitHub)":"Data: KKMNOW, KKM (GitHub)",
+  "Donations by blood type":"Pendermaan mengikut jenis darah",
+  "7-day average · donors per day":"purata 7 hari · penderma sehari",
+  "Blood type":"Jenis darah", "Share of donations":"Bahagian pendermaan",
+  "last 30 days":"30 hari lepas",
+  "Data: MoH via data.gov.my":"Data: KKM melalui data.gov.my",
   "data as of ":"data sehingga ", "may be delayed":"mungkin tertunda",
   "refresh failed — showing last data":"gagal dimuat semula — memaparkan data terakhir",
   "Hottest today":"Paling panas hari ini", "Inflation y/y":"Inflasi t/t",
@@ -586,6 +584,37 @@ const I18N = {
   "Rate limited — cached data is reused for 15 minutes, so this usually clears on its own.":"Had laju — data cache digunakan semula selama 15 minit, jadi ini biasanya selesai sendiri.",
   "The dataset may be temporarily unavailable.":"Set data mungkin tidak tersedia buat sementara waktu.",
   "Try again":"Cuba lagi",
+  /* ── vehicles & ridership ── */
+  "Vehicles":"Kenderaan", "Vehicles & Ridership":"Kenderaan & Penumpang",
+  "New vehicle registrations split by fuel type — the EV adoption curve — and daily passenger numbers on every KTMB rail service.":"Pendaftaran kenderaan baharu mengikut jenis bahan api — lengkung penerimaan EV — serta jumlah penumpang harian bagi setiap perkhidmatan rel KTMB.",
+  "Registrations are counted by the Road Transport Department (JPJ) at first registration and published monthly by fuel type; only all-vehicle totals are charted here. Ridership is KTMB's own daily passenger count per service, published to the previous day.":"Pendaftaran dikira oleh Jabatan Pengangkutan Jalan (JPJ) pada pendaftaran pertama dan diterbitkan bulanan mengikut jenis bahan api; hanya jumlah semua kenderaan dipaparkan di sini. Bilangan penumpang ialah kiraan harian KTMB sendiri bagi setiap perkhidmatan, diterbitkan sehingga hari sebelumnya.",
+  "New vehicle registrations":"Pendaftaran kenderaan baharu",
+  "by fuel type · monthly":"mengikut jenis bahan api · bulanan",
+  "KTMB ridership":"Penumpang KTMB", "passengers per day":"penumpang sehari",
+  "New EVs":"EV baharu", "EV share":"Bahagian EV", "of new vehicles":"daripada kenderaan baharu",
+  "Registrations":"Pendaftaran", "Ridership":"Penumpang",
+  "Busiest service":"Perkhidmatan tersibuk", "passengers":"penumpang",
+  "Electric":"Elektrik", "Hybrid":"Hibrid", "Petrol":"Petrol", "Diesel":"Diesel",
+  "Green diesel":"Diesel hijau", "Other":"Lain-lain",
+  "Service":"Perkhidmatan", "Daily":"Harian", "Monthly":"Bulanan",
+  /* ── finance additions ── */
+  "Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia, serta nadi harian pembayaran dalam talian FPX daripada PayNet.",
+  "Exchange rates are Bank Negara's reference rates — either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.":"Kadar pertukaran ialah kadar rujukan Bank Negara — sama ada kadar tengah harian jam 12:00 atau purata bulanan yang diterbitkan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya. Angka FPX ialah nilai dan jumlah transaksi harian PayNet.",
+  "FPX e-payments":"Pembayaran elektronik FPX",
+  "daily transaction value & volume":"nilai & jumlah transaksi harian",
+  "FPX value":"Nilai FPX", "FPX transactions":"Transaksi FPX",
+  "Value":"Nilai", "Volume":"Jumlah", "transactions":"transaksi", "millions":"juta",
+  "RM per unit · Bank Negara reference rates":"RM seunit · kadar rujukan Bank Negara",
+  "Daily 12:00 middle rates from Bank Negara.":"Kadar tengah harian jam 12:00 daripada Bank Negara.",
+  /* ── economy additions ── */
+  "Department of Statistics Malaysia — headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia — inflasi utama dan teras, inflasi mengikut negeri, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
+  "Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly — all from OpenDOSM. The EPF dividend card comes from the general data catalogue.":"CPI utama dan teras ialah indeks kebangsaan bulanan; siri negeri ialah indeks keseluruhan bagi setiap negeri, dipaparkan di sini sebagai inflasi tahun ke tahun. Angka tenaga buruh adalah bulanan dan KDNK benar suku tahunan — kesemuanya daripada OpenDOSM. Kad dividen KWSP daripada katalog data am.",
+  "Consumer Price Index":"Indeks Harga Pengguna",
+  "headline vs core · by expenditure division":"utama berbanding teras · mengikut bahagian perbelanjaan",
+  "Headline — all items":"Utama — semua item", "Core — all items":"Teras — semua item",
+  "Inflation by state":"Inflasi mengikut negeri",
+  "year-on-year · overall index":"tahun ke tahun · indeks keseluruhan",
+  "EPF dividend":"Dividen KWSP", "conventional":"konvensional", "shariah":"patuh syariah",
 } };
 const T = s => (I18N[LANG] && I18N[LANG][s]) || s;
 /* Forecasts arrive only in Bahasa Melayu; map the common phrases to English
@@ -669,8 +698,9 @@ const SECTIONS = [
   { id:"fuel",      label:"Fuel",       icon:"⛽", family:"data-catalogue" },
   { id:"economy",   label:"Economy",    icon:"📈", family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"💱", family:"data-catalogue" },
+  { id:"mobility",  label:"Vehicles",   icon:"🚗", family:"data-catalogue" },
   { id:"population",label:"Population", icon:"👪", family:"opendosm" },
-  { id:"health",    label:"Health",     icon:"🩺", family:"moh" },
+  { id:"health",    label:"Health",     icon:"🩺", family:"data-catalogue" },
   { id:"society",   label:"Postcodes",  icon:"🔍", family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
@@ -678,7 +708,8 @@ const SECTIONS = [
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["economy","finance","population","health","society","transport","live"]);
+const LAZY = new Set(["economy","finance","mobility","population","health",
+                      "society","transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -1065,10 +1096,45 @@ function byDivision(rows){
 
 async function loadEconomy(){
   const core = await request("opendosm", "/opendosm", { id:"cpi_core" });
+  /* Only the all-items line is charted against core, so filter the division
+     breakdown away server-side — it is ~14x the rows we would keep. */
+  const head = await request("opendosm", "/opendosm",
+    { id:"cpi_headline", filter:"overall@division" });
   const lfs  = await request("opendosm", "/opendosm", { id:"lfs_month" });
   const gdp  = await request("opendosm", "/opendosm", { id:"gdp_qtr_real" });
+  /* Three years is the shortest window that still yields a year-on-year figure
+     for every month the state chart can land on. */
+  const st   = await request("opendosm", "/opendosm",
+    { id:"cpi_state", filter:"overall@division", date_start:cutoff(3) + "@date" });
+  /* The EPF rate lives in the general catalogue, not OpenDOSM — a different
+     rate-limit family, so it costs this section nothing in opendosm tokens. */
+  let epf = null;
+  try {
+    const rows = await request("data-catalogue", "/data-catalogue",
+      { id:"epf_dividend", sort:"-date", limit:1 });
+    if (rows && rows[0]) epf = { date:rows[0].date, shariah:rows[0].shariah,
+                                 conventional:rows[0].conventional };
+  } catch { /* a missing KPI card must not cost the whole section */ }
+
+  const cpi = byDivision(core);
+  const hp = (head || []).map(r => [r.date, r.index])
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  if (hp.length) cpi.unshift({ name:"headline", pts:hp });
+
+  /* state -> sorted [date, index]; the renderer turns pairs 12 months apart
+     into a year-on-year rate. */
+  const states = new Map();
+  for (const r of st || []){
+    if (!r.state) continue;
+    if (!states.has(r.state)) states.set(r.state, []);
+    states.get(r.state).push([r.date, r.index]);
+  }
+  for (const v of states.values()) v.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+
   return {
-    cpi: byDivision(core),
+    cpi,
+    states: [...states.entries()].map(([name, pts]) => ({ name, pts })),
+    epf,
     lfs: (lfs || []).map(r => [r.date, r.u_rate, r.p_rate, r.lf_employed]),
     gdp: (gdp || []).filter(r => r.series === "abs" || r.series == null).map(r => [r.date, r.value]),
   };
@@ -1077,8 +1143,18 @@ async function loadEconomy(){
 async function loadFinance(){
   const fx = await request("data-catalogue", "/data-catalogue",
     { id:"exchangerates", sort:"-date" });
+  /* The daily series carries 27 currencies x 3 rate types back to 1997. Pin it
+     to the middle rate server-side and to three years here — that is the whole
+     difference between a 40 kB payload and a 30 MB one. */
+  const fxd = await request("data-catalogue", "/data-catalogue",
+    { id:"exchangerates_daily_1200", filter:"middle@rate_type",
+      date_start:cutoff(3) + "@date", sort:"date" });
   const ir = await request("data-catalogue", "/data-catalogue",
     { id:"interestrates", sort:"-date" });
+  /* "both" is PayNet's own B2B + B2C total — summing the two models here would
+     double-count, since all three are published side by side. */
+  const fpx = await request("data-catalogue", "/data-catalogue",
+    { id:"trnsc_daily_fpx", filter:"both@model", sort:"date" });
   /* Each month has five rows (start/low/high/avg/end); chart the monthly
      average of Bank Negara's daily reference rates. */
   const avg = (fx || []).filter(r => r.indicator === "avg")
@@ -1086,8 +1162,54 @@ async function loadFinance(){
     .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   return {
     fx: avg,
+    /* Same column order as the monthly rows, so one painter serves both. */
+    fxd: (fxd || []).map(r => [r.date, r.usd, r.gbp, r.eur, r.sgd, r.idr])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+    fpx: (fpx || []).map(r => [r.date, r.value, r.volume])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
     ir: (ir || []).map(r => [r.bank, r.date, r.rate, Number(r.value)]),
   };
+}
+
+/* ═══════════════ vehicles & ridership (JPJ · KTMB) ═══════════════ */
+const FUELS = [
+  ["electric",    "Electric",     "#34d399"],
+  ["hybrid",      "Hybrid",       "#2dd4bf"],
+  ["greendiesel", "Green diesel", "#a78bfa"],
+  ["petrol",      "Petrol",       "#fbbf24"],
+  ["diesel",      "Diesel",       "#f87171"],
+  ["other",       "Other",        "#94a3b8"],
+];
+const KTMB_SERVICES = [
+  ["ets",            "ETS",            "#2dd4bf"],
+  ["komuter",        "Komuter",        "#60a5fa"],
+  ["komuter_utara",  "Komuter Utara",  "#a78bfa"],
+  ["shuttle_tebrau", "Shuttle Tebrau", "#f87171"],
+  ["intercity",      "Intercity",      "#fbbf24"],
+];
+
+async function loadMobility(){
+  /* One server-side filter is allowed; "all_types" collapses the per-body-type
+     rows (car/bus/lorry/…) that this section does not chart. */
+  const reg = await request("data-catalogue", "/data-catalogue",
+    { id:"registrations_type_fuel", filter:"all_types@type", sort:"date" });
+  const rid = await request("data-catalogue", "/data-catalogue",
+    { id:"ridership_ktmb_daily", sort:"date" });
+
+  const months = [], mIdx = new Map(), pairs = [], total = [];
+  for (const r of reg || []){
+    if (!mIdx.has(r.date)){ mIdx.set(r.date, months.length); months.push(r.date); }
+    const i = mIdx.get(r.date);
+    if (r.fuel === "all_fuels") total[i] = r.registrations;
+    else pairs.push([r.fuel, i, r.registrations]);
+  }
+  /* Every fuel gets a full-length column so the stacked bars line up even for
+     the early years, when electric and hybrid simply were not reported. */
+  const byFuel = {};
+  for (const [fuel] of FUELS) byFuel[fuel] = new Array(months.length).fill(null);
+  for (const [fuel, i, v] of pairs) if (byFuel[fuel]) byFuel[fuel][i] = v;
+  total.length = months.length;
+  return { months, byFuel, total, rid: denseDaily(rid, "service", "ridership") };
 }
 
 async function loadSociety(){
@@ -1122,129 +1244,67 @@ async function loadPopulation(){
   };
 }
 
-/* ═══════════════════ MoH KKMNOW (GitHub, Parquet) ═══════════════════
-   Health data does not come from api.data.gov.my at all — the Ministry of
-   Health publishes it as Parquet files in a public GitHub repo, refreshed
-   daily and served with `access-control-allow-origin: *`, so the browser can
-   read them directly. They are deliberately NOT put through request()/
-   schedule(): that machinery exists to stay inside the government API's
-   4-requests-per-minute limit, and raw.githubusercontent.com is a different
-   host with no such limit. Serialising them behind the same chain would add
-   seconds of artificial delay for nothing.                                   */
-const MOH = "https://raw.githubusercontent.com/MoH-Malaysia/kkmnow-data/main/";
-const HYPARQUET_SRI = "sha384-p5nMsu6Tw/sizSeQiciHStUBS34HQil8MGVjza0ewGACtZe6hUvmt5Iuz4o7AY6q";
-/* The Parquet reader is 150 kB — a sixth of it brotli's static dictionary — and
-   only this one section needs it, so it is fetched on first use rather than
-   loaded on every page view. See tools/build-hyparquet.mjs for the bundle. */
-let readerLoad = null;
-/* The bundle publishes itself as window.hyparquet — check for the export, not
-   just the name, so a half-loaded script can't be mistaken for a ready one. */
-const readerReady = () => window.hyparquet && window.hyparquet.parquetReadObjects
-  ? window.hyparquet : null;
-function parquetReader(){
-  const ready = readerReady();
-  if (ready) return Promise.resolve(ready);
-  if (!readerLoad) readerLoad = new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "/vendor/hyparquet.min.js";
-    s.integrity = HYPARQUET_SRI;
-    s.onload = () => { const r = readerReady();
-      if (r) resolve(r);
-      else { readerLoad = null;
-        reject(new ApiError("The Parquet reader failed to start.", "http")); } };
-    s.onerror = () => { readerLoad = null;         // let a retry try again
-      s.remove();
-      reject(new ApiError("Couldn't load the Parquet reader.", "network")); };
-    document.head.appendChild(s);
-  });
-  return readerLoad;
-}
-async function mohParquet(name){
-  const { parquetReadObjects, compressors } = await parquetReader();
-  let res;
-  try { res = await fetch(MOH + name + ".parquet"); }
-  catch { throw new ApiError("Can't reach the MoH data repository — you may be offline.", "network"); }
-  if (!res.ok) throw new ApiError(`GitHub returned HTTP ${res.status} for ${name}.`, "http");
-  /* Every KKMNOW file is brotli-compressed, which hyparquet core can't read and
-     browsers don't expose to script — hence the bundled BROTLI decompressor. */
-  return parquetReadObjects({ file: await res.arrayBuffer(), compressors });
-}
-
+/* ═══════════════════ daily-series compaction ═══════════════════ */
 const DAY_MS = 86400000;
-/* Around September 2022 the organ feed renamed "W.P. Labuan" to "Wp Labuan"
-   and ran both spellings for eight days. Fold them together so the federal
-   territories aren't listed twice — and, on the overlapping days, keep the
-   larger of the two rather than adding them, because the old series was
-   already tapering off as the new one took over. */
-const mohState = s => String(s ?? "").replace(/^Wp\s+/i, "W.P. ").trim();
-const mohDay = v => Math.round((v instanceof Date ? v.getTime() : Date.parse(v)) / DAY_MS);
+const dayIdx = v => Math.round(Date.parse(v) / DAY_MS);
+const isoOf  = day => new Date(day * DAY_MS).toISOString().slice(0, 10);
 
-/** Fold one row per state per day into { t0, states, series:{state:[…]} }.
+/** Fold one row per key per day into { t0, n, keys, series:{key:[…]} }.
  *
- *  Every one of these files is dense — one row per state for every day in its
- *  range, no gaps — so a series collapses to a start day plus a flat array of
- *  daily values. That is roughly a quarter the size of the parsed rows, which
- *  matters: this section alone would otherwise be most of the localStorage
- *  budget the other seven sections also share.
+ *  A daily series with a categorical split arrives as one JSON object per
+ *  category per day — five keys over twenty years is tens of thousands of
+ *  objects. Collapsing each key to a start day plus a flat array of values is
+ *  roughly a fifth the size, which matters: these sections share one
+ *  localStorage budget with seven others.
  */
-function denseByState(rows, keys){
+function denseDaily(rows, keyCol, valCol){
   const acc = new Map();
   let lo = Infinity, hi = -Infinity;
-  for (const r of rows){
-    const day = mohDay(r.date);
+  for (const r of rows || []){
+    const day = dayIdx(r.date);
     if (!Number.isFinite(day)) continue;
     if (day < lo) lo = day;
     if (day > hi) hi = day;
-    const st = mohState(r.state);
-    let m = acc.get(st); if (!m) acc.set(st, m = new Map());
-    const prev = m.get(day), val = keys.map(k => Number(r[k]));
-    m.set(day, prev ? val.map((v, i) => Math.max(v, prev[i])) : val);
+    const k = keyCol ? String(r[keyCol]) : "value";
+    let m = acc.get(k); if (!m) acc.set(k, m = new Map());
+    const v = Number(r[valCol]);
+    if (Number.isFinite(v)) m.set(day, v);
   }
-  if (!acc.size) return { t0:0, n:0, states:[], series:{} };
+  if (!acc.size) return { t0:0, n:0, keys:[], series:{} };
   const n = hi - lo + 1, series = {};
-  for (const [st, m] of acc){
-    const cols = keys.map(() => new Array(n).fill(null));
-    for (let d = lo; d <= hi; d++){
-      const v = m.get(d); if (!v) continue;
-      for (let k = 0; k < keys.length; k++)
-        cols[k][d - lo] = Number.isFinite(v[k]) ? Math.round(v[k] * 10) / 10 : null;
-    }
-    series[st] = keys.length === 1 ? cols[0] : cols;
+  for (const [k, m] of acc){
+    const a = new Array(n).fill(null);
+    for (const [day, v] of m) a[day - lo] = v;
+    series[k] = a;
   }
-  return { t0:lo, n, states:[...acc.keys()].sort(), series };
+  return { t0:lo, n, keys:[...acc.keys()], series };
 }
 
-/* metadata_updated_date.json is keyed by KKMNOW dashboard, each holding one
-   timestamp per chart. Only these three feed this section. */
-const MOH_GROUPS = ["blood_donation", "organ_donation", "peka_b40"];
+/* ═══════════════════ MoH health (data catalogue) ═══════════════════
+   The Ministry of Health publishes these three daily series as ordinary
+   catalogue datasets, so they go through the same rate-limited request()
+   path as everything else. Donations are windowed to three years: the full
+   series runs to 2006 and would be a multi-megabyte download per refresh for
+   history the chart's range toggle never reaches.                           */
+const BLOOD_TYPES = [["a","A","#f87171"], ["b","B","#60a5fa"],
+                     ["ab","AB","#a78bfa"], ["o","O","#34d399"]];
 
 async function loadHealth(){
-  let updated = null;
-  try {
-    const r = await fetch(MOH + "metadata_updated_date.json");
-    if (r.ok){
-      const meta = await r.json();
-      for (const g of MOH_GROUPS)
-        for (const v of Object.values(meta[g] || {}))
-          if (typeof v === "string" && (!updated || v > updated)) updated = v;
-    }
-  } catch { /* a missing timestamp is cosmetic — the data still renders */ }
+  const don = await request("data-catalogue", "/data-catalogue",
+    { id:"blood_donations", date_start:cutoff(3) + "@date", sort:"date" });
+  const organ = await request("data-catalogue", "/data-catalogue",
+    { id:"organ_pledges", sort:"date" });
+  const peka = await request("data-catalogue", "/data-catalogue",
+    { id:"pekab40_screenings", sort:"date" });
 
-  /* Fetched together: different host, no rate limit, and four sequential
-     round-trips to a CDN would be pure latency. */
-  const [don, stock, organ, peka] = await Promise.all([
-    mohParquet("blood_02_timeseries"),
-    mohParquet("blood_01_stock_timeseries"),
-    mohParquet("organ_01_timeseries"),
-    mohParquet("pekab40_01_timeseries"),
-  ]);
-  return {
-    updated,
-    don:   denseByState(don,   ["daily"]),
-    stock: denseByState(stock, ["stock_a","stock_ab","stock_b","stock_o"]),
-    organ: denseByState(organ, ["daily"]),
-    peka:  denseByState(peka,  ["daily"]),
-  };
+  const D = denseDaily(don,   "blood_type", "donations");
+  const O = denseDaily(organ, null,         "pledges");
+  const P = denseDaily(peka,  null,         "screenings");
+  /* No published "last updated" stamp on these endpoints — the newest date
+     any of the three carries is the honest answer. */
+  const updated = [D, O, P].filter(s => s.n)
+    .map(s => isoOf(s.t0 + s.n - 1)).sort().pop() || null;
+  return { updated, don:D, organ:O, peka:P };
 }
 const FEEDS = [
   { key:"ktmb", label:"KTMB", desc:"Keretapi Tanah Melayu — Komuter, ETS & intercity",
@@ -1943,8 +2003,12 @@ const COICOP = { overall:"Overall", "01":"Food & beverages", "02":"Alcohol & tob
   "06":"Health", "07":"Transport", "08":"Information & communication",
   "09":"Recreation & culture", "10":"Education", "11":"Restaurants & accommodation",
   "12":"Insurance & finance", "13":"Personal care & misc." };
-const divLabel = k => k === "overall" ? "Overall" : (COICOP[k] ? `${k} · ${COICOP[k]}` : k);
-let cpiPick = new Set(["overall"]), cpiRange = "all";
+const divLabel = k => k === "headline" ? T("Headline — all items")
+  : k === "overall" ? T("Core — all items")
+  : (COICOP[k] ? `${k} · ${COICOP[k]}` : k);
+/* Headline vs core is the comparison people come for, so both are on by
+   default; the expenditure divisions below them are opt-in. */
+let cpiPick = new Set(["headline", "overall"]), cpiRange = "all";
 
 function renderEconomy(d){
   const lfsL = d.lfs[d.lfs.length - 1] || [];
@@ -1955,7 +2019,7 @@ function renderEconomy(d){
   const cYoy = ov.length > 12 ? (cL[1] / ov[ov.length - 13][1] - 1) * 100 : null;
 
   $("#body-economy").innerHTML = `
-    <div class="grid g4 mb">
+    <div class="grid g5 mb">
       <div class="kpi"><div class="lab">${T("Core CPI")}</div><div class="val">${nf(cL[1],1)}</div>
         <div class="sub">${cYoy == null ? "" :
           `<span class="${cYoy>0?"up":"down"}">${cYoy>0?"▲":"▼"} ${nf(Math.abs(cYoy),1)}%</span> y/y`} · ${esc(ymd(cL[0]))}</div></div>
@@ -1967,9 +2031,12 @@ function renderEconomy(d){
         <div class="val" style="font-size:20px">RM ${nf(gdpL[1],0)}m</div>
         <div class="sub">${yoy == null ? "" :
           `<span class="${yoy>0?"down":"up"}">${yoy>0?"▲":"▼"} ${nf(Math.abs(yoy),1)}%</span> y/y`}</div></div>
+      <div class="kpi"><div class="lab">${T("EPF dividend")}</div>
+        <div class="val">${d.epf ? nf(d.epf.conventional, 2) + "%" : "—"}</div>
+        <div class="sub">${d.epf ? `${nf(d.epf.shariah, 2)}% ${T("shariah")} · ${esc(String(d.epf.date).slice(0,4))}` : ""}</div></div>
     </div>
     <div class="card mb">
-      <div class="card-h"><h4>${T("Consumer Price Index — core")}</h4><span class="sub">${T("by expenditure division")}</span>
+      <div class="card-h"><h4>${T("Consumer Price Index")}</h4><span class="sub">${T("headline vs core · by expenditure division")}</span>
         <span class="right"><span class="seg" role="group" aria-label="CPI range">
           ${["1y","2y","all"].map(r => `<button data-crange="${r}" aria-pressed="${r === cpiRange}">${r.toUpperCase()}</button>`).join("")}
         </span></span></div>
@@ -1978,6 +2045,15 @@ function renderEconomy(d){
         <div class="chart tall"><canvas id="cpi-chart" role="img" aria-label="CPI by division"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="cpi-dt"></div></details></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Inflation by state")}</h4>
+        <span class="sub">${T("year-on-year · overall index")}</span>
+        <span class="right sub" id="cpi-st-date"></span></div>
+      <div class="card-b"><div class="chart tall"><canvas id="cpist-chart" role="img"
+        aria-label="Year-on-year inflation by state"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="cpist-dt"></div></details></div>
     </div>
     <div class="grid g2">
       <div class="card"><div class="card-h"><h4>${T("Unemployment rate")}</h4><span class="sub">${T("monthly")}</span></div>
@@ -2019,6 +2095,7 @@ function renderEconomy(d){
       y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
           ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8 } } } }),
   });
+  paintCpiState(d);
   chart("lfs-chart", {
     type:"line",
     data:{ labels:d.lfs.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
@@ -2069,24 +2146,98 @@ function renderEconomy(d){
       return [isNaN(t) ? r[0] : `Q${Math.floor(t.getMonth()/3)+1} ${t.getFullYear()}`, r[1]]; }), [1]);
 }
 
+/** Year-on-year inflation per state for the newest month every state carries.
+ *  The published series is an index, not a rate — the rate is the point of
+ *  comparison, so it is derived here from the pair twelve months apart. */
+function paintCpiState(d){
+  const rows = [];
+  let when = null;
+  for (const s of d.states || []){
+    const pts = s.pts;
+    if (pts.length < 13) continue;
+    const last = pts[pts.length - 1], year = pts[pts.length - 13];
+    if (!last[1] || !year[1]) continue;
+    rows.push({ name:s.name, rate:(last[1] / year[1] - 1) * 100, index:last[1] });
+    if (!when || String(last[0]) > when) when = String(last[0]);
+  }
+  rows.sort((a, b) => b.rate - a.rate);
+  const stamp = $("#cpi-st-date");
+  if (stamp) stamp.textContent = when ? T("data as of ") + md(when) : "";
+  /* One hue, not a rainbow: the ranking is the message, and colouring 16 bars
+     differently would imply a categorical difference that isn't there. */
+  chart("cpist-chart", {
+    type:"bar",
+    data:{ labels: rows.map(r => r.name),
+      datasets:[{ label:"% y/y", data: rows.map(r => Math.round(r.rate * 100) / 100),
+        backgroundColor:"rgba(45,212,191,.62)", borderRadius:5, borderSkipped:false }] },
+    options: baseOpts({ indexAxis:"y",
+      plugins:{ legend:{ display:false },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          callbacks:{ label: it => ` ${nf(it.parsed.x, 2)}% y/y · ${T("Core CPI")} ${nf(rows[it.dataIndex].index, 1)}` } } },
+      scales:{
+        x:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, callback:v => nf(v, 1) + "%" } },
+        y:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } } } }),
+  });
+  const dt = $("#cpist-dt");
+  if (dt) dt.innerHTML = dataTableHTML([T("State"), "% y/y", T("Core CPI")],
+    rows.map(r => [r.name, nf(r.rate, 2) + "%", nf(r.index, 1)]), [1, 2]);
+}
+
 /* ════════════════════════════ finance view ════════════════════════════ */
 let fxRange = "1y";
+let fxGran = "monthly";   // monthly averages (since 2005) | daily 12:00 middle rate
+let fpxRange = "1y";
 const fxCurr = new Set(["usd","gbp","eur","sgd"]);   // IDR is toggleable; see below
 
 function renderFinance(d){
+  const fp = d.fpx || [];
+  const fL = fp[fp.length - 1] || [];
   $("#body-finance").innerHTML = `
+    <div class="grid g3 mb">
+      <div class="kpi"><div class="lab">${T("FPX value")}</div>
+        <div class="val" data-count="${(fL[1] || 0) / 1e9}" data-dec="2">0</div>
+        <div class="sub">RM b · ${fL[0] ? esc(ymd(fL[0])) : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("FPX transactions")}</div>
+        <div class="val" data-count="${(fL[2] || 0) / 1e6}" data-dec="2">0</div>
+        <div class="sub">${T("millions")} · ${fL[0] ? esc(ymd(fL[0])) : ""}</div></div>
+      <div class="kpi"><div class="lab">USD / MYR</div>
+        <div class="val">${(() => { const s = d.fxd && d.fxd.length ? d.fxd : d.fx;
+          const r = s && s[s.length - 1]; return r ? "RM " + nf(r[1], 4) : "—"; })()}</div>
+        <div class="sub">${(() => { const s = d.fxd && d.fxd.length ? d.fxd : d.fx;
+          const r = s && s[s.length - 1]; return r ? esc(ymd(r[0])) : ""; })()}</div></div>
+    </div>
     <div class="card mb">
       <div class="card-h"><h4>${T("Exchange rates")}</h4>
-        <span class="sub">${T("RM per unit · daily reference rates")}</span>
-        <span class="right"><span class="seg" role="group" aria-label="Date range">
+        <span class="sub">${T("RM per unit · Bank Negara reference rates")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="Granularity">
+            ${[["daily",T("Daily")],["monthly",T("Monthly")]].map(([v,l]) =>
+              `<button data-fxgran="${v}" aria-pressed="${v === fxGran}">${l}</button>`).join("")}
+          </span>
+          <span class="seg" role="group" aria-label="Date range">
           ${FX_RANGES.map(r => `<button data-fxrange="${r}" aria-pressed="${r === fxRange}">${r.toUpperCase()}</button>`).join("")}
         </span></span></div>
       <div class="card-b" style="padding-bottom:8px"><div class="chips" id="fx-currs"></div></div>
       <div class="card-b" style="padding-top:8px">
-        <p class="note" style="margin-top:0">ℹ️ ${T("Daily Bank Negara reference rates — monthly average values.")}</p>
+        <p class="note" style="margin-top:0" id="fx-note"></p>
         <div class="chart tall"><canvas id="fx-chart" role="img" aria-label="Exchange rates"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="fx-dt"></div></details></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("FPX e-payments")}</h4>
+        <span class="sub">${T("daily transaction value & volume")}</span>
+        <span class="right"><span class="seg" role="group" aria-label="Date range">
+          ${FX_RANGES.map(r => `<button data-fpxrange="${r}" aria-pressed="${r === fpxRange}">${r.toUpperCase()}</button>`).join("")}
+        </span></span></div>
+      <div class="card-b">
+        <div class="chart tall"><canvas id="fpx-chart" role="img"
+          aria-label="Daily FPX transaction value and volume"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="fpx-dt"></div></details></div>
     </div>
     <div class="card">
       <div class="card-h"><h4>${T("Interest rates")}</h4>
@@ -2115,19 +2266,32 @@ function renderFinance(d){
       paintFx(d); };
     chips.appendChild(c);
   });
-  $("#body-finance").querySelectorAll("[data-fxrange]").forEach(b => {
-    b.onclick = () => { fxRange = b.dataset.fxrange;
-      $("#body-finance").querySelectorAll("[data-fxrange]")
-        .forEach(o => o.setAttribute("aria-pressed", String(o.dataset.fxrange === fxRange)));
-      paintFx(d); };
-  });
+  const seg = (attr, apply) => $("#body-finance").querySelectorAll(`[data-${attr}]`)
+    .forEach(b => { b.onclick = () => {
+      apply(b.dataset[attr]);
+      $("#body-finance").querySelectorAll(`[data-${attr}]`).forEach(o =>
+        o.setAttribute("aria-pressed", String(o.dataset[attr] === b.dataset[attr])));
+    }; });
+  seg("fxrange", v => { fxRange = v; paintFx(d); });
+  seg("fxgran",  v => { fxGran = v;  paintFx(d); });
+  seg("fpxrange", v => { fpxRange = v; paintFpx(d); });
   paintFx(d);
+  paintFpx(d);
   paintIr(d);
+  animateCounters($("#body-finance"));
 }
 
 function paintFx(d){
+  /* The daily series is fetched for three years only, so "ALL" means three
+     years there and the full monthly history here — the note says which. */
+  const daily = fxGran === "daily" && d.fxd && d.fxd.length;
+  const src = daily ? d.fxd : d.fx;
+  const note = $("#fx-note");
+  if (note) note.innerHTML = "ℹ️ " + (daily
+    ? esc(T("Daily 12:00 middle rates from Bank Negara."))
+    : esc(T("Daily Bank Negara reference rates — monthly average values.")));
   const from = fxRange === "all" ? "0000" : cutoff(RANGES[fxRange]);
-  const rows = d.fx.filter(r => String(r[0]) >= from);
+  const rows = src.filter(r => String(r[0]) >= from);
   const sel = FX_ORDER.filter(k => fxCurr.has(k));
   const col = { usd:1, gbp:2, eur:3, sgd:4, idr:5 };
   chart("fx-chart", {
@@ -2159,6 +2323,53 @@ function paintFx(d){
     [T("Date"),"USD","GBP","EUR","SGD","IDR"],
     rows.map(r => [ymd(r[0]), r[1], r[2], r[3], r[4], r[5]]
       .map((v, i) => i ? Number(v).toFixed(4) : v)), [1,2,3,4,5]);
+}
+
+/** FPX value and volume share an x-axis but not a unit, so volume gets its own
+ *  right-hand scale — plotting billions of ringgit and millions of payments on
+ *  one axis would flatten the smaller of the two into the baseline. */
+function paintFpx(d){
+  const from = fpxRange === "all" ? "0000" : cutoff(RANGES[fpxRange]);
+  const rows = (d.fpx || []).filter(r => String(r[0]) >= from);
+  chart("fpx-chart", {
+    type:"line",
+    data:{ labels: rows.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
+      datasets:[
+        { label:T("Value") + " (RM b)", data:rows.map(r => r[1] / 1e9),
+          borderColor:"#2dd4bf", borderWidth:2, pointRadius:0, tension:.2, fill:true,
+          backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf"),
+          yAxisID:"y" },
+        { label:T("Volume") + " (m)", data:rows.map(r => r[2] / 1e6),
+          borderColor:"#fbbf24", borderWidth:1.6, pointRadius:0, tension:.2,
+          yAxisID:"y1" },
+      ] },
+    options: baseOpts({
+      plugins:{
+        legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
+          pointStyle:"circle", font:{ size:11 }, padding:14 } },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
+          callbacks:{
+            title: items => items.length ? ymd(rows[items[0].dataIndex][0]) : "",
+            label: it => it.datasetIndex === 0
+              ? ` RM ${nf(it.parsed.y, 2)}b`
+              : ` ${nf(it.parsed.y, 2)}m ${T("transactions")}` } } },
+      scales:{
+        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
+        y:{ position:"left", beginAtZero:true,
+            grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
+                    callback:v => "RM " + nf(v, 1) + "b" } },
+        y1:{ position:"right", beginAtZero:true,
+            grid:{ display:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
+                    callback:v => nf(v, 1) + "m" } } } }),
+  });
+  const dt = $("#fpx-dt");
+  if (dt) dt.innerHTML = dataTableHTML([T("Date"), T("Value") + " (RM)", T("Volume")],
+    rows.slice().reverse().slice(0, 400).map(r => [ymd(r[0]), nf(r[1]), nf(r[2])]), [1, 2]);
 }
 
 function paintIr(d){
@@ -2209,6 +2420,164 @@ function paintIr(d){
       return [T(RATE_LABEL[r] || r), T(b === "commercial" ? "Commercial" : "Investment"),
               v ? ymd(v.date) : null, v ? v.value.toFixed(2) + "%" : null];
     })), [3]);
+}
+
+/* ═══════════════════ vehicles & ridership view ═══════════════════ */
+/* Every fuel is on by default: the chart's whole point is that the green slice
+   of the stack has been growing, which only reads against the full total. */
+let regFuels = new Set(FUELS.map(f => f[0]));
+let regRange = "5y", ridRange = "1y";
+let ridSvc = new Set(KTMB_SERVICES.map(s => s[0]));
+const REG_RANGES = { "2y":2, "5y":5, all:99 };
+
+function renderMobility(d){
+  const n = d.months.length;
+  const last = n ? d.months[n - 1] : null;
+  const ev = n ? (d.byFuel.electric || [])[n - 1] : null;
+  const tot = n ? d.total[n - 1] : null;
+  const share = (ev != null && tot) ? ev / tot * 100 : null;
+
+  /* Ridership is published per service with no national total row, so the
+     day's headline figure is the sum of the services that reported. */
+  const R = d.rid, rn = R.n;
+  const svcLast = KTMB_SERVICES
+    .map(([k, label]) => ({ k, label, v: rn ? (R.series[k] || [])[rn - 1] : null }))
+    .filter(s => s.v != null);
+  const ridTotal = svcLast.reduce((a, s) => a + s.v, 0);
+  const busiest = svcLast.slice().sort((a, b) => b.v - a.v)[0];
+  const ridDate = rn ? isoOf(R.t0 + rn - 1) : null;
+
+  const chips = (id, list, on) => list.map(([k, label, color]) =>
+    `<button class="chip" data-${id}="${k}" aria-pressed="${on.has(k)}">
+       <span class="swatch" style="background:${color}"></span>${esc(T(label))}</button>`).join("");
+  const seg = (attr, ranges, cur) => `<span class="seg" role="group" aria-label="${T("Date range")}">
+    ${ranges.map(r => `<button data-${attr}="${r}" aria-pressed="${r === cur}">${r.toUpperCase()}</button>`).join("")}</span>`;
+
+  $("#body-mobility").innerHTML = `
+    <div class="grid g4 mb">
+      <div class="kpi"><div class="lab">🔌 ${T("New EVs")}</div>
+        <div class="val" data-count="${ev || 0}">0</div>
+        <div class="sub">${last ? esc(ymd(last)) : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("EV share")}</div>
+        <div class="val">${share == null ? "—" : nf(share, 1) + "%"}</div>
+        <div class="sub">${T("of new vehicles")} · ${nf(tot)}</div></div>
+      <div class="kpi"><div class="lab">${T("KTMB ridership")}</div>
+        <div class="val" data-count="${ridTotal || 0}">0</div>
+        <div class="sub">${ridDate ? esc(ymd(ridDate)) : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("Busiest service")}</div>
+        <div class="val" style="font-size:19px">${busiest ? esc(busiest.label) : "—"}</div>
+        <div class="sub">${busiest ? nf(busiest.v) + " " + T("passengers") : ""}</div></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("New vehicle registrations")}</h4>
+        <span class="sub">${T("by fuel type · monthly")}</span>
+        <span class="right">${seg("regrange", Object.keys(REG_RANGES), regRange)}</span></div>
+      <div class="card-b" style="padding-bottom:8px">
+        <div class="chips" id="reg-chips">${chips("fuel", FUELS, regFuels)}</div></div>
+      <div class="card-b" style="padding-top:8px">
+        <div class="chart tall"><canvas id="reg-chart" role="img"
+          aria-label="Monthly vehicle registrations by fuel type"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="reg-dt"></div></details></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>${T("KTMB ridership")}</h4>
+        <span class="sub">${T("passengers per day")} · ${T("7-day average")}</span>
+        <span class="right">${seg("ridrange", Object.keys(H_RANGES), ridRange)}</span></div>
+      <div class="card-b" style="padding-bottom:8px">
+        <div class="chips" id="rid-chips">${chips("svc", KTMB_SERVICES, ridSvc)}</div></div>
+      <div class="card-b" style="padding-top:8px">
+        <div class="chart tall"><canvas id="rid-chart" role="img"
+          aria-label="Daily KTMB ridership by service"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="rid-dt"></div></details></div>
+    </div>`;
+
+  const toggle = (attr, set, fallback, repaint) =>
+    $("#body-mobility").querySelectorAll(`[data-${attr}]`).forEach(b => {
+      b.onclick = () => {
+        const k = b.dataset[attr];
+        set.has(k) ? set.delete(k) : set.add(k);
+        if (!set.size) set.add(fallback);
+        $("#body-mobility").querySelectorAll(`[data-${attr}]`).forEach(o =>
+          o.setAttribute("aria-pressed", String(set.has(o.dataset[attr]))));
+        repaint();
+      };
+    });
+  const seg2 = (attr, apply) => $("#body-mobility").querySelectorAll(`[data-${attr}]`)
+    .forEach(b => { b.onclick = () => {
+      apply(b.dataset[attr]);
+      $("#body-mobility").querySelectorAll(`[data-${attr}]`).forEach(o =>
+        o.setAttribute("aria-pressed", String(o.dataset[attr] === b.dataset[attr])));
+    }; });
+  toggle("fuel", regFuels, "electric", () => paintReg(d));
+  toggle("svc",  ridSvc,   "ets",      () => paintRid(d));
+  seg2("regrange", v => { regRange = v; paintReg(d); });
+  seg2("ridrange", v => { ridRange = v; paintRid(d); });
+  paintReg(d); paintRid(d);
+  animateCounters($("#body-mobility"));
+}
+
+function paintReg(d){
+  const from = regRange === "all" ? "0000" : cutoff(REG_RANGES[regRange]);
+  const keep = d.months.map((m, i) => [m, i]).filter(([m]) => String(m) >= from);
+  const labels = keep.map(([m]) => md(m) + " '" + String(m).slice(2, 4));
+  const sel = FUELS.filter(f => regFuels.has(f[0]));
+  chart("reg-chart", {
+    type:"bar",
+    data:{ labels, datasets: sel.map(([k, label, color]) => ({
+      label: T(label), data: keep.map(([, i]) => (d.byFuel[k] || [])[i]),
+      backgroundColor: color + "cc", borderRadius:3, borderSkipped:false,
+      stack:"fuel" })) },
+    options: baseOpts({
+      plugins:{
+        legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
+          pointStyle:"circle", font:{ size:11 }, padding:14 } },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
+          callbacks:{ label: it => ` ${it.dataset.label}: ${nf(it.parsed.y)}` } } },
+      scales:{
+        x:{ stacked:true, grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
+        y:{ stacked:true, beginAtZero:true,
+            grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } } } }),
+  });
+  const dt = $("#reg-dt");
+  if (dt) dt.innerHTML = dataTableHTML(
+    [T("Month"), ...sel.map(f => T(f[1]))],
+    keep.slice().reverse().map(([m, i]) =>
+      [md(m) + " '" + String(m).slice(2, 4), ...sel.map(f => (d.byFuel[f[0]] || [])[i])]),
+    sel.map((_, i) => i + 1));
+}
+
+function paintRid(d){
+  const R = d.rid;
+  const from = hFrom(R.n, ridRange);
+  const labels = [];
+  for (let i = from; i < R.n; i++)
+    labels.push(md(isoOf(R.t0 + i)) + " '" + isoOf(R.t0 + i).slice(2, 4));
+  const sel = KTMB_SERVICES.filter(s => ridSvc.has(s[0]) && R.series[s[0]]);
+  /* One service gets its raw daily line behind the average; several would turn
+     the plot into noise, so those show the smoothed series only. */
+  const solo = sel.length === 1;
+  const sets = [];
+  const cols = [];
+  for (const [k, label, color] of sel){
+    const avg = dma7(R.series[k]).slice(from);
+    const rounded = avg.map(v => v == null ? null : Math.round(v));
+    if (solo) sets.push({ label:T("Ridership"), data:R.series[k].slice(from),
+      borderColor:color + "80", borderWidth:1, pointRadius:0, tension:.2, fill:true,
+      backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, color) });
+    sets.push({ label: solo ? T("7-day average") : label, data:rounded,
+      borderColor:color, borderWidth:2.2, pointRadius:0, tension:.3, spanGaps:true });
+    cols.push(rounded);
+  }
+  chart("rid-chart", { type:"line", data:{ labels, datasets:sets },
+    options: hLineOpts(labels.length) });
+  const dt = $("#rid-dt");
+  if (dt) dt.innerHTML = hTable([T("Date"), ...sel.map(s => s[1])], labels, cols);
 }
 
 /* ════════════════════════════ postcode view ════════════════════════════ */
@@ -2368,13 +2737,8 @@ function paintEthnicity(d){
 }
 
 /* ════════════════════════════ health view ════════════════════════════ */
-/* One state selection drives all four charts — pick Sabah once and the whole
-   section is about Sabah. Malaysia is the national total, not a sum the page
-   computes. */
-let hState = "Malaysia", donRange = "1y", pekaRange = "1y";
+let donRange = "1y", pekaRange = "1y";
 const H_RANGES = { "6m":183, "1y":365, "all":Infinity };
-const BLOOD_TYPE = [["stock_a","A","#f87171"], ["stock_b","B","#60a5fa"],
-                    ["stock_ab","AB","#a78bfa"], ["stock_o","O","#34d399"]];
 /* Chart.js redraws every point on hover; past a few thousand the animation is
    what makes it feel slow, not the draw. */
 const H_ANIM_MAX = 1500;
@@ -2383,12 +2747,11 @@ const H_ANIM_MAX = 1500;
    picture, and the table exists for screen readers and spot-checks. */
 const H_TABLE_MAX = 400;
 
-const hIso = (ds, i) => new Date((ds.t0 + i) * DAY_MS).toISOString().slice(0, 10);
-const hHas = (ds, st) => !!(ds && ds.series && ds.series[st]);
+const hIso = (ds, i) => isoOf(ds.t0 + i);
 
-/** Trailing 7-day mean. Matches MoH's own daily_7dma column exactly from the
- *  seventh day on (verified against all four files), so it is computed here
- *  instead of being stored — that halves what this section puts in the cache. */
+/** Trailing 7-day mean, computed rather than stored — the smoothed series is
+ *  the same size as the raw one, and caching both would double what these
+ *  daily sections cost in localStorage. */
 function dma7(a){
   const out = new Array(a.length).fill(null);
   let sum = 0;
@@ -2403,27 +2766,18 @@ function dma7(a){
  *  series rather than to today — several of these feeds lag by a few days. */
 const hFrom = (len, range) => Math.max(0, len - (H_RANGES[range] ?? Infinity));
 
-const hEmpty = msg => `<div class="state"><div class="big">🗂</div>
-  <strong>${esc(T("No data for this state"))}</strong><div>${esc(msg)}</div></div>`;
-
 function renderHealth(d){
-  const states = [...new Set([...d.don.states, ...d.stock.states,
-                              ...d.organ.states, ...d.peka.states])]
-    .sort((a, b) => a === "Malaysia" ? -1 : b === "Malaysia" ? 1
-                  : a.localeCompare(b));
-  if (!states.includes(hState)) hState = states[0] || "Malaysia";
-
-  const don = d.don.series[hState] || [];
+  const don = (d.don.series && d.don.series.all) || [];
   const lastDon = don.length ? don[don.length - 1] : null;
   const week = don.length ? don.slice(-7).reduce((a, v) => a + (v || 0), 0) : null;
-  const organ = d.organ.series[hState] || [];
+  const organ = (d.organ.series && d.organ.series.value) || [];
   const pledges = organ.length ? organ.reduce((a, v) => a + (v || 0), 0) : null;
-  const peka = d.peka.series[hState] || [];
+  const peka = (d.peka.series && d.peka.series.value) || [];
   const pekaWeek = peka.slice(-7);
   const pekaAvg = pekaWeek.length
     ? Math.round(pekaWeek.reduce((a, v) => a + (v || 0), 0) / pekaWeek.length) : null;
-  /* A state MoH doesn't publish gets an em dash, not a zero — "no blood bank
-     reports here" and "nobody donated" are very different statements. */
+  /* A series the ministry has not published gets an em dash, not a zero — "no
+     figure was reported" and "nobody donated" are very different statements. */
   const kpiVal = v => v == null ? `<div class="val">—</div>`
                                 : `<div class="val" data-count="${v}">0</div>`;
 
@@ -2433,20 +2787,15 @@ function renderHealth(d){
 
   $("#body-health").innerHTML = `
     <div class="hbar mb">
-      <span class="hstamp">🗓 ${T("Health data updated")}: ${esc(d.updated ? d.updated.slice(0,10) : "—")}</span>
-      <span class="right">
-        <label for="h-state">${T("State")}</label>
-        <select class="inp" id="h-state" aria-label="${T("State")}">
-          ${states.map(s => `<option value="${esc(s)}" ${s === hState ? "selected" : ""}>${esc(s)}</option>`).join("")}
-        </select></span>
+      <span class="hstamp">🗓 ${T("Health data updated")}: ${esc(d.updated || "—")}</span>
     </div>
     <div class="grid g4 mb">
       <div class="kpi"><div class="lab">${T("Blood donations")}</div>
         ${kpiVal(lastDon)}
-        <div class="sub">${don.length ? esc(ymd(hIso(d.don, don.length - 1))) : esc(hState)}</div></div>
+        <div class="sub">${don.length ? esc(ymd(hIso(d.don, don.length - 1))) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("Donations, last 7 days")}</div>
         ${kpiVal(week)}
-        <div class="sub">${esc(hState)}</div></div>
+        <div class="sub">${T("Malaysia")}</div></div>
       <div class="kpi"><div class="lab">${T("Organ pledges")}</div>
         ${kpiVal(pledges)}
         <div class="sub">${T("cumulative since 2009")}</div></div>
@@ -2455,56 +2804,49 @@ function renderHealth(d){
         <div class="sub">${T("per day · last 7 days")}</div></div>
     </div>
     <div class="card mb">
-      <div class="card-h"><h4>${T("Blood donations")} — ${esc(hState)}</h4>
+      <div class="card-h"><h4>${T("Blood donations")}</h4>
         <span class="sub">${T("donors per day · 7-day average")}</span>
         <span class="right">${rangeSeg("don", donRange)}</span></div>
-      <div class="card-b">${hHas(d.don, hState) ? `
+      <div class="card-b">
         <div class="chart tall"><canvas id="don-chart" role="img"
           aria-label="Daily blood donations"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="don-dt"></div></details>`
-        : hEmpty(T("Blood donations are published for 13 states and Kuala Lumpur only."))}</div>
+          <div class="dt-body" id="don-dt"></div></details></div>
     </div>
     <div class="grid g2 mb">
       <div class="card">
-        <div class="card-h"><h4>${T("Blood stock by type")}</h4>
-          <span class="sub">${T("% of optimal level")}</span></div>
-        <div class="card-b">${hHas(d.stock, hState) ? `
-          <div class="chart"><canvas id="stock-chart" role="img"
-            aria-label="Blood stock by blood type"></canvas></div>
-          <p class="note">ℹ️ ${T("Stock is published as a share of the optimal level and capped at 100%. MoH last updated this series in October 2022 — the window shown is all there is.")}</p>
+        <div class="card-h"><h4>${T("Donations by blood type")}</h4>
+          <span class="sub">${T("7-day average · donors per day")}</span></div>
+        <div class="card-b">
+          <div class="chart"><canvas id="btype-chart" role="img"
+            aria-label="Blood donations by blood type"></canvas></div>
           <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="stock-dt"></div></details>`
-          : hEmpty(T("No blood-stock series was published for this state."))}</div>
+            <div class="dt-body" id="btype-dt"></div></details></div>
       </div>
       <div class="card">
         <div class="card-h"><h4>${T("Organ pledges")}</h4>
           <span class="sub">${T("cumulative since 2009")}</span></div>
-        <div class="card-b">${hHas(d.organ, hState) ? `
+        <div class="card-b">
           <div class="chart"><canvas id="organ-chart" role="img"
             aria-label="Cumulative organ donation pledges"></canvas></div>
           <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="organ-dt"></div></details>`
-          : hEmpty(T("No pledge series was published for this state."))}</div>
+            <div class="dt-body" id="organ-dt"></div></details></div>
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><h4>${T("PeKa B40 screenings")} — ${esc(hState)}</h4>
+      <div class="card-h"><h4>${T("PeKa B40 screenings")}</h4>
         <span class="sub">${T("health screenings per day")}</span>
         <span class="right">${rangeSeg("peka", pekaRange)}</span></div>
-      <div class="card-b">${hHas(d.peka, hState) ? `
+      <div class="card-b">
         <div class="chart"><canvas id="peka-chart" role="img"
           aria-label="Daily PeKa B40 screenings"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="peka-dt"></div></details>`
-        : hEmpty(T("PeKa B40 screenings start in April 2019."))}</div>
+          <div class="dt-body" id="peka-dt"></div></details></div>
     </div>
-    <p class="credit">${T("Data: MoH KKMNOW (GitHub)")} —
-      <a href="https://github.com/MoH-Malaysia/kkmnow-data" target="_blank" rel="noopener"
-        >MoH-Malaysia/kkmnow-data</a></p>`;
+    <p class="credit">${T("Data: MoH via data.gov.my")} —
+      <a href="https://developer.data.gov.my/realtime-api/data-catalogue" target="_blank"
+         rel="noopener">data catalogue</a></p>`;
 
-  const sel = $("#h-state");
-  if (sel) sel.onchange = () => { hState = sel.value; renderHealth(d); };
   const seg = (name, set) => $("#body-health").querySelectorAll(`[data-${name}]`).forEach(b => {
     b.onclick = () => {
       set(b.dataset[name]);
@@ -2520,7 +2862,7 @@ function renderHealth(d){
 }
 
 function paintHealth(d){
-  paintDonations(d); paintStock(d); paintOrgan(d); paintPeka(d);
+  paintDonations(d); paintBloodTypes(d); paintOrgan(d); paintPeka(d);
 }
 
 /** Shared options for the three daily-series line charts here. */
@@ -2557,7 +2899,7 @@ const hTable = (headers, labels, cols) => {
 };
 
 function paintDonations(d){
-  const all = d.don.series[hState]; if (!all) return;
+  const all = d.don.series.all; if (!all) return;
   const avg = dma7(all);                        // over the full series, then sliced
   const from = hFrom(all.length, donRange);
   const labels = [], daily = [], mean = [];
@@ -2583,27 +2925,33 @@ function paintDonations(d){
     labels, [daily, mean]);
 }
 
-function paintStock(d){
-  const cols = d.stock.series[hState]; if (!cols) return;
-  const idx = { stock_a:0, stock_ab:1, stock_b:2, stock_o:3 };
-  const labels = cols[0].map((_, i) => ymd(hIso(d.stock, i)));
-  chart("stock-chart", {
+/** The four types side by side, smoothed. The raw daily counts follow the same
+ *  weekday rhythm for every type, so plotting them unsmoothed would show that
+ *  rhythm four times over and hide the thing worth seeing — the gap between
+ *  O and AB. Fixed to one year: the split is a composition, not a trend. */
+function paintBloodTypes(d){
+  const S = d.don.series;
+  const n = d.don.n;
+  const from = hFrom(n, "1y");
+  const labels = [];
+  for (let i = from; i < n; i++)
+    labels.push(md(hIso(d.don, i)) + " '" + hIso(d.don, i).slice(2, 4));
+  const cols = BLOOD_TYPES.map(([k]) => S[k]
+    ? dma7(S[k]).slice(from).map(v => v == null ? null : Math.round(v))
+    : new Array(labels.length).fill(null));
+  chart("btype-chart", {
     type:"line",
-    data:{ labels, datasets: BLOOD_TYPE.map(([key, label, color]) => ({
-      label, data: cols[idx[key]], borderColor:color, borderWidth:1.8,
+    data:{ labels, datasets: BLOOD_TYPES.map(([, label, color], i) => ({
+      label, data: cols[i], borderColor:color, borderWidth:1.9,
       pointRadius:0, tension:.3, spanGaps:true })) },
-    options: (() => { const o = hLineOpts(labels.length, "%");
-      o.scales.y.max = 100;              // the series is a capped percentage
-      o.scales.y.ticks.callback = v => nf(v) + "%";
-      return o; })(),
+    options: hLineOpts(labels.length),
   });
-  const dt = $("#stock-dt");
-  if (dt) dt.innerHTML = hTable([T("Date"), ...BLOOD_TYPE.map(t => t[1])],
-    labels, BLOOD_TYPE.map(t => cols[idx[t[0]]]));
+  const dt = $("#btype-dt");
+  if (dt) dt.innerHTML = hTable([T("Date"), ...BLOOD_TYPES.map(t => t[1])], labels, cols);
 }
 
 function paintOrgan(d){
-  const all = d.organ.series[hState]; if (!all) return;
+  const all = d.organ.series.value; if (!all) return;
   /* Cumulative from the very first day — the pledge count is a running total,
      so it is never windowed by a range toggle. */
   const labels = [], cum = [];
@@ -2627,7 +2975,7 @@ function paintOrgan(d){
 }
 
 function paintPeka(d){
-  const all = d.peka.series[hState]; if (!all) return;
+  const all = d.peka.series.value; if (!all) return;
   const avg = dma7(all);
   const from = hFrom(all.length, pekaRange);
   const labels = [], daily = [], mean = [];
@@ -2918,6 +3266,7 @@ function renderKpis(){
     { k:"hot",   lab:"Hottest today",   ico:"🌡", href:"#weather" },
     { k:"ron95", lab:"RON 95",          ico:"⛽", href:"#fuel" },
     { k:"cpi",   lab:"Inflation y/y",   ico:"📈", href:"#economy" },
+    { k:"ev",    lab:"New EVs",         ico:"🔌", href:"#mobility" },
     { k:"warn",  lab:"Active warnings", ico:"⚠️", href:"#weather" },
     { k:"live",  lab:"Vehicles live",   ico:"🚍", href:"#live" },
   ];
@@ -2949,22 +3298,32 @@ const META = {
     how:"Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.",
     eps:["/data-catalogue?id=fuelprice","/data-catalogue?id=hh_income"] },
   economy:{ title:"Economy",
-    desc:"Department of Statistics Malaysia — inflation by spending category, the monthly unemployment rate, and quarterly real GDP.",
-    how:"Core CPI is broken down by expenditure division, labour-force figures are monthly, and real GDP is quarterly. All three come from OpenDOSM.",
-    eps:["/opendosm?id=cpi_core","/opendosm?id=lfs_month","/opendosm?id=gdp_qtr_real"] },
+    desc:"Department of Statistics Malaysia — headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.",
+    how:"Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly — all from OpenDOSM. The EPF dividend card comes from the general data catalogue.",
+    eps:["/opendosm?id=cpi_core","/opendosm?id=cpi_headline&filter=overall@division",
+         "/opendosm?id=cpi_state&filter=overall@division","/opendosm?id=lfs_month",
+         "/opendosm?id=gdp_qtr_real","/data-catalogue?id=epf_dividend"] },
   finance:{ title:"Finance",
-    desc:"Exchange rates and interest rates from Bank Negara Malaysia — the ringgit against key currencies, and what banks lend and pay.",
-    how:"Exchange rates are Bank Negara's daily reference rates, published here as monthly averages and month-end values. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it.",
-    eps:["/data-catalogue?id=exchangerates","/data-catalogue?id=interestrates"] },
+    desc:"Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.",
+    how:"Exchange rates are Bank Negara's reference rates — either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.",
+    eps:["/data-catalogue?id=exchangerates",
+         "/data-catalogue?id=exchangerates_daily_1200&filter=middle@rate_type",
+         "/data-catalogue?id=interestrates",
+         "/data-catalogue?id=trnsc_daily_fpx&filter=both@model"] },
+  mobility:{ title:"Vehicles & Ridership",
+    desc:"New vehicle registrations split by fuel type — the EV adoption curve — and daily passenger numbers on every KTMB rail service.",
+    how:"Registrations are counted by the Road Transport Department (JPJ) at first registration and published monthly by fuel type; only all-vehicle totals are charted here. Ridership is KTMB's own daily passenger count per service, published to the previous day.",
+    eps:["/data-catalogue?id=registrations_type_fuel&filter=all_types@type",
+         "/data-catalogue?id=ridership_ktmb_daily"] },
   population:{ title:"Population",
     desc:"How many people live in Malaysia, every year since 1970, and how the population is made up today.",
     how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.",
     eps:["/opendosm?id=population_malaysia&filter=overall@age"] },
   health:{ title:"Health & Donations",
-    desc:"Blood donations, blood stock by type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.",
-    how:"These come from KKMNOW, which the Ministry of Health publishes as Parquet files in a public GitHub repository rather than through the government API; your browser reads them directly. Donations run from 2012, organ pledges from 2009 and PeKa B40 screenings from 2019. Blood stock is a short 2022 window — that is all MoH has published. Federal-territory rows were renamed mid-2022 and are folded back together here.",
-    eps:["kkmnow-data/blood_02_timeseries.parquet","kkmnow-data/blood_01_stock_timeseries.parquet",
-         "kkmnow-data/organ_01_timeseries.parquet","kkmnow-data/pekab40_01_timeseries.parquet"] },
+    desc:"Blood donations by blood type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.",
+    how:"The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.",
+    eps:["/data-catalogue?id=blood_donations","/data-catalogue?id=organ_pledges",
+         "/data-catalogue?id=pekab40_screenings"] },
   society:{ title:"Postcodes",
     desc:"The national postcode reference list — look up any postcode, city or state.",
     how:"Pos Malaysia's national postcode reference list, kept as a static lookup table.",
@@ -3009,11 +3368,29 @@ const LOADERS = {
       if (d.gdp.length){ const x = String(d.gdp[d.gdp.length-1][0]); if (x > m) m = x; }
       return m || null;
     } },
-  finance:  { load:loadFinance,   render:renderFinance,   asOf:d => d.fx.length ? d.fx[d.fx.length-1][0] : null },
+  finance:  { load:loadFinance,   render:renderFinance,   asOf:d => {
+      /* FPX is daily and the FX averages are monthly — the section is as fresh
+         as its freshest series. */
+      let m = null;
+      for (const s of [d.fx, d.fxd, d.fpx])
+        if (s && s.length){ const x = String(s[s.length-1][0]); if (!m || x > m) m = x; }
+      return m;
+    } },
+  mobility: { load:loadMobility,  render:renderMobility,  after:d => {
+      const n = d.months.length;
+      const ev = n ? (d.byFuel.electric || [])[n - 1] : null;
+      const tot = n ? d.total[n - 1] : null;
+      if (ev != null) kpiState.ev = { value:ev, dec:0,
+        sub:(tot ? nf(ev / tot * 100, 1) + "% " + T("of new vehicles") + " · " : "") +
+            ymd(d.months[n - 1]) };
+    }, asOf:d => {
+      const reg = d.months.length ? String(d.months[d.months.length-1]) : null;
+      const rid = d.rid.n ? isoOf(d.rid.t0 + d.rid.n - 1) : null;
+      return [reg, rid].filter(Boolean).sort().pop() || null;
+    } },
   population:{ load:loadPopulation, render:renderPopulation,
     asOf:d => d.latest },
-  health:   { load:loadHealth,    render:renderHealth,
-    asOf:d => d.updated ? d.updated.slice(0, 10) : null },
+  health:   { load:loadHealth,    render:renderHealth,    asOf:d => d.updated },
   society:  { load:loadSociety,   render:renderSociety },
   transport:{ load:loadTransport, render:renderTransport },
   live:     { load:loadLive,      render:renderLive,      after:d => {
