@@ -23,7 +23,7 @@ proxies the reverse-geocoding and GTFS archive calls.
 | Population | DOSM (OpenDOSM) | National population 1970-present, ethnic composition |
 | Health | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
-| Transport | KTMB, Prasarana | GTFS schedules — route and stop search, nearest stops, busiest routes |
+| Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules — route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
 | Live | KTMB, Prasarana | GTFS-Realtime vehicle positions on a live map, with "last seen" cards |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 
@@ -76,14 +76,15 @@ public/
   icons/                generated PNGs (192, 512, apple-touch)
   vendor/               self-hosted Chart.js, Leaflet (SRI-pinned)
 src/
-  index.js              Worker: static assets + /api/reverse
+  index.js              Worker: static assets + /api/reverse, /api/gtfs, /api/fids
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
+  collect_radar.py      Trend Radar collector (see above)
 wrangler.jsonc
 ```
 
-The Worker serves `public/` through the `ASSETS` binding and owns two routes,
-`/api/reverse` and `/api/gtfs`. Everything else is static.
+The Worker serves `public/` through the `ASSETS` binding and owns three routes,
+`/api/reverse`, `/api/gtfs` and `/api/fids`. Everything else is static.
 
 > Static assets are served by Cloudflare's asset router **without invoking the
 > Worker**, so response headers for them come from `public/_headers`, not from
@@ -115,6 +116,14 @@ cross-origin redirect entirely and lets the ZIP be edge-cached for 6 hours, so
 the government API sees a handful of requests a day rather than one 8 MB
 download per visitor. The client still falls back to fetching the API directly
 if the proxy is absent, so the page works on plain static hosting too.
+
+The third route, `/api/fids`, backs the live flight board. Malaysia Airports'
+FIDS endpoint (`api.myairports.com.my`) requires an `x-api-key` header and
+answers without CORS headers, so browsers cannot call it directly. The Worker
+injects the key (from the `FIDS_API_KEY` variable), adds
+`Access-Control-Allow-Origin: *`, slims the response to the fields the board
+renders, and edge-caches it for 60 seconds so the airport API sees one request
+per minute per board, not one per visitor.
 
 ### Security
 
@@ -213,9 +222,17 @@ dates — `new Date(null)` is the epoch, which renders a bogus
 "valid 01 Jan 1970". Both are handled.
 
 **GTFS static** ships as ZIP. `routes.txt` column *order* differs between
-agencies, so CSV is parsed by header name. Only `routes`/`trips`/`stops`/
-`agency` are inflated — Prasarana's `stop_times.txt` alone is 5.6 MB of the
-8.8 MB archive and is never decompressed.
+agencies, so CSV is parsed by header name. For the bus feeds only
+`routes`/`trips`/`stops`/`agency` are inflated — Prasarana's `stop_times.txt`
+alone is 5.6 MB of the 8.8 MB archive and is never decompressed. The rail feed
+(`gtfs_rapid_rail_kl.zip`) is the exception: its `stop_times.txt` is small
+enough to read, which is how the LRT/MRT metro diagram gets the ordered
+station sequence per line. It also carries the official route colors
+(`route_color`) used to draw each line.
+
+The rail feed is served by the same `/gtfs-static/prasarana` endpoint with
+`category=rapid-rail-kl` — 187 stations across 8 lines (Ampang, Sri Petaling,
+Kelana Jaya, Shah Alam, MRT Kajang, MRT Putrajaya, Monorail, BRT Sunway).
 
 **GTFS realtime** legitimately returns zero vehicles outside service hours.
 That is an empty state, not an error — the UI says so and shows the feed's own
@@ -296,7 +313,9 @@ rate-limit-aware layer.
 npx wrangler dev
 ```
 
-Serves on http://localhost:8788 with the `/api/reverse` route working locally.
+Serves on http://localhost:8788 with `/api/reverse`, `/api/gtfs` and
+`/api/fids` all working locally — `wrangler dev` picks up the `FIDS_API_KEY`
+variable declared in `wrangler.jsonc` automatically.
 
 Regenerate icons after changing the palette:
 
@@ -321,8 +340,9 @@ npx wrangler deploy
 
 The custom domain is attached in the Cloudflare dashboard under
 **Workers & Pages → mygov → Settings → Domains & Routes**, which creates the
-`mygov` CNAME on `faizalmzain.com` automatically. No environment variables or
-secrets are required.
+`mygov` CNAME on `faizalmzain.com` automatically. No secrets are required; the
+only variable is `FIDS_API_KEY` (a public key, declared as a `var` in
+`wrangler.jsonc` so `wrangler deploy` pushes it with the code).
 
 ---
 

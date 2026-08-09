@@ -3840,7 +3840,11 @@ async function initRadarCarousel(){
     const st = step();
     const n = st ? Math.round(track.scrollLeft / st) : 0;
     radarIdx = Math.min(Math.max(n, 0), maxIdx());
-    $("#radar-count").textContent = `${pageNum(radarIdx)} / ${slides.length}`;
+    /* count from the scroll fraction, so the far edge reads exactly N/N
+       even when the last snap point sits a hair short of the end */
+    const span = track.scrollWidth - track.clientWidth;
+    const frac = span > 0 ? Math.min(Math.max(track.scrollLeft / span, 0), 1) : 0;
+    $("#radar-count").textContent = `${Math.round(frac * (slides.length - 1)) + 1} / ${slides.length}`;
     $("#radar-prev").disabled = radarIdx === 0;
     $("#radar-next").disabled = radarIdx >= maxIdx();
   }, { passive:true });
