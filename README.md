@@ -18,8 +18,8 @@ proxies one geocoding call.
 | Weather | MET Malaysia | 7-day forecast for all 360 locations, severe-weather warnings, recent earthquakes |
 | Fuel & Households | Ministry of Finance | Weekly RON95 / RON97 / diesel ceiling prices, household income |
 | Economy | DOSM (OpenDOSM) | Core CPI by expenditure division, unemployment, quarterly real GDP |
-| Transport | KTMB, Prasarana | GTFS schedules — route, stop and trip counts, busiest routes |
-| Live | KTMB, Prasarana | GTFS-Realtime vehicle positions, decoded in the browser |
+| Transport | KTMB, Prasarana | GTFS schedules — route and stop search, nearest stops, busiest routes |
+| Live | KTMB, Prasarana | GTFS-Realtime vehicle positions on a live map, with "last seen" cards |
 
 ---
 
@@ -163,8 +163,22 @@ Three things that would normally pull in a library:
 - **Icons** — `tools/make-icons.mjs` renders the PNGs with a hand-written
   encoder (`zlib` + CRC32), supersampled 4× for clean edges.
 
-Chart.js is the one runtime dependency, loaded from a CDN and precached by the
-service worker.
+Chart.js and Leaflet are the only runtime dependencies, loaded from a CDN with
+subresource integrity and precached by the service worker.
+
+## Preferences
+
+All preferences are stored in `localStorage` only — nothing leaves the device:
+
+- **Theme** — dark, light, or follow the system, plus a persisted choice.
+- **Text size** — a large-text mode for readability.
+- **Language** — English or Bahasa Melayu for the interface. Weather warnings
+  use the API's native `_bm` fields when available, and Malay forecast phrases
+  are mapped to English when the interface language is English.
+
+The live maps use OpenStreetMap tiles (© OpenStreetMap contributors), with a
+CSS filter to keep them dark in dark mode. The `img-src` CSP allows
+`tile.openstreetmap.org` for exactly that purpose.
 
 ---
 
@@ -251,9 +265,12 @@ wired from those. Browse available ids at
 Skip link, `:focus-visible` outlines throughout, `aria-label`s on icon-only
 controls, keyboard-operable sortable table headers (`Enter`/`Space`),
 `aria-current` on the active nav item, `aria-sort` on sorted columns, and
-`prefers-reduced-motion` honoured — it disables chart animations, the KPI
-count-up and smooth scrolling. Body text is `#e8ecf4` on `#0a0c10`
-(~16:1 contrast); the dimmest supporting text stays above 4.5:1.
+real `<button>`s for selectable weather rows with an `aria-live` region
+announcing location changes. `prefers-reduced-motion` is honoured — it disables
+chart animations, the KPI count-up and smooth scrolling. Every chart has a
+"View data table" alternative for users who can't use tooltips. Body text is
+`#e8ecf4` on `#0a0c10` (~16:1 contrast); the dimmest supporting text stays
+above 4.5:1 in both themes.
 
 ---
 

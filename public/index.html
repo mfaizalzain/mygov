@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>mygov — Malaysia Open Data</title>
 <meta name="description" content="Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.">
-<meta name="theme-color" content="#0a0c10">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" id="tc" content="#0a0c10">
+<meta name="color-scheme" content="dark light">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -17,6 +17,12 @@
      bytes the browser refuses to execute them rather than running them. -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
         integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt"
+        crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"
+      integrity="sha384-b8ANgTJvdlAnWM5YGMpKn7Kodm+1k7NYNG9zdjTCcZcKatzYHwZ0RLdWarbJJVzU"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"
+        integrity="sha384-u5N8qJeJOO2iqNjIKTdl6KeKsEikMAmCUBPc6sC6uGpgL34aPJ4VgNhuhumedpEk"
         crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 <style>
 /* ═══════════════════════════ design system ═══════════════════════════ */
@@ -30,6 +36,9 @@
   --accent:#2dd4bf; --accent-2:#22d3ee; --accent-dim:rgba(45,212,191,.12);
   /* semantic */
   --ok:#34d399; --warn:#fbbf24; --danger:#f87171; --info:#60a5fa;
+  --chip-fg:#a5f3ea;
+  --grid:rgba(255,255,255,.045);
+  color-scheme:dark;
   /* spacing scale 4/8/12/16/24/32 */
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;
   --r:14px; --r-sm:10px; --r-xs:7px;
@@ -38,6 +47,25 @@
   --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --t:170ms cubic-bezier(.2,.7,.3,1);
 }
+html[data-theme="light"]{
+  --bg:#f4f6fa; --bg-2:#eef1f6; --surface:#ffffff; --surface-2:#f7f9fc; --surface-3:#e8ecf3;
+  --line:#d5dbe6; --line-soft:#e0e5ee;
+  --fg:#11151d; --fg-2:#46536a; --fg-3:#66738a;
+  --accent:#0d9488; --accent-2:#0284c7; --accent-dim:rgba(13,148,136,.1);
+  --ok:#059669; --warn:#b45309; --danger:#dc2626; --info:#2563eb;
+  --chip-fg:#0d9488;
+  --grid:rgba(17,21,29,.07);
+  color-scheme:light;
+  --shadow:0 1px 2px rgba(16,24,40,.06), 0 8px 24px -12px rgba(16,24,40,.14);
+}
+html[data-theme="light"] body{
+  background-image:
+    radial-gradient(1100px 520px at 10% -10%, rgba(13,148,136,.07), transparent 62%),
+    radial-gradient(820px 420px at 96% -14%, rgba(2,132,199,.05), transparent 60%);
+}
+html[data-theme="light"] header,
+html[data-theme="light"] nav.sections{background:rgba(255,255,255,.86)}
+html[data-theme="light"] tbody tr:nth-child(even){background:rgba(17,21,29,.025)}
 *{box-sizing:border-box}
 /* Author `display` on .badge/.btn outranks the UA stylesheet's [hidden] rule,
    so the attribute alone would not hide those elements. */
@@ -171,6 +199,14 @@ details.dt{margin-top:var(--s2);border-top:1px dashed var(--line-soft);padding-t
 details.dt summary{cursor:pointer;font-size:11.5px;color:var(--fg-2);user-select:none}
 details.dt summary:hover{color:var(--fg)}
 details.dt .dt-body{margin-top:var(--s2)}
+/* live map + vehicle cards */
+.lvmap{position:relative;z-index:0;height:340px;background:var(--bg-2)}
+html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.7)}
+.lvmap .leaflet-control-attribution{background:rgba(0,0,0,.55);color:var(--fg-3);font-size:10px}
+.lvmap .leaflet-control-attribution a{color:var(--fg-2)}
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+.vcard .card-h h4{margin-right:auto}
+.vcard .vrow{display:flex;justify-content:space-between;gap:var(--s2);font-size:12.5px;padding:3px 0;color:var(--fg-2)}
 
 /* controls */
 .seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--line-soft);
@@ -186,7 +222,7 @@ details.dt .dt-body{margin-top:var(--s2)}
 .chip{padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--bg-2);
   cursor:pointer;font-size:11.5px;color:var(--fg-3);transition:var(--t);white-space:nowrap}
 .chip:hover{color:var(--fg-2);border-color:#2e3548}
-.chip[aria-pressed="true"]{background:var(--accent-dim);border-color:rgba(45,212,191,.45);color:#a5f3ea}
+.chip[aria-pressed="true"]{background:var(--accent-dim);border-color:rgba(45,212,191,.45);color:var(--chip-fg)}
 .chips{display:flex;gap:var(--s2);flex-wrap:wrap}
 .swatch{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 
@@ -212,7 +248,7 @@ tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   margin:-7px -9px;border-radius:6px;cursor:pointer;text-align:left;white-space:nowrap;
   transition:color var(--t)}
 .pick:hover{color:var(--accent)}
-tr.sel .pick{color:#a5f3ea}
+tr.sel .pick{color:var(--chip-fg)}
 .mono{font-family:var(--mono)} .dim{color:var(--fg-3)}
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;
   font-weight:650;font-family:var(--mono)}
@@ -251,7 +287,7 @@ tr.sel .pick{color:#a5f3ea}
 /* location chip */
 .loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
 .loc-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;
-  background:var(--accent-dim);border:1px solid rgba(45,212,191,.3);color:#a5f3ea;font-size:12px;font-weight:600}
+  background:var(--accent-dim);border:1px solid rgba(45,212,191,.3);color:var(--chip-fg);font-size:12px;font-weight:600}
 .loc-chip.off{background:var(--surface-2);border-color:var(--line);color:var(--fg-3)}
 .link-btn{background:none;border:0;color:var(--accent);cursor:pointer;font-size:11.5px;
   padding:2px 4px;border-radius:4px}
@@ -267,7 +303,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 .bmc:hover{background:#fcd34d;border-color:#fcd34d;transform:translateY(-1px);text-decoration:none}
 @media (max-width:620px){ .foot{flex-direction:column-reverse;gap:var(--s4)} .bmc{width:100%;justify-content:center} }
 
-@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
 @media (max-width:620px){
   .wrap{padding:0 var(--s4) 64px} .hd{padding:var(--s3) var(--s4)}
@@ -275,6 +311,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .kpis{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:1fr}
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
+  .vgrid{grid-template-columns:1fr} .lvmap{height:260px}
   html{scroll-padding-top:112px}
 }
 @media (pointer:coarse){
@@ -290,10 +327,20 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
     transition-duration:.001ms!important}
   .kpi:hover,.btn:hover{transform:none}
 }
+/* larger text mode */
+html[data-text="large"] body{font-size:16px}
+html[data-text="large"] .hero h2{font-size:34px}
+html[data-text="large"] .hero p{font-size:16px}
+html[data-text="large"] .sec-h h3{font-size:22px}
+html[data-text="large"] .sec-h p{font-size:15px}
+html[data-text="large"] .kpi .val{font-size:28px}
+html[data-text="large"] .kpi .lab{font-size:11.5px}
+html[data-text="large"] .card-h h4{font-size:15px}
+html[data-text="large"] table{font-size:14px}
 </style>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+<a class="skip" href="#main" data-i18n="Skip to content">Skip to content</a>
 
 <header>
   <div class="hd">
@@ -307,9 +354,12 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
     <div class="hd-r">
       <span class="badge" id="net" hidden><span class="pulse"></span><span id="net-t">Online</span></span>
       <span class="badge" id="stamp"><span class="pulse"></span><span id="stamp-t">Loading…</span></span>
-      <button class="btn" id="install" hidden aria-label="Install mygov as an app">⬇ Install app</button>
+      <button class="btn" id="lang" aria-label="Bahasa Melayu">BM</button>
+      <button class="btn" id="textsize" aria-label="Larger text">A⁺</button>
+      <button class="btn" id="theme" aria-label="Theme">🌓</button>
+      <button class="btn" id="install" hidden aria-label="Install mygov as an app">⬇ <span data-i18n="Install app">Install app</span></button>
       <button class="btn btn-a" id="refresh" aria-label="Refresh all data">
-        <span id="ref-ico">↻</span><span id="ref-t">Refresh</span>
+        <span id="ref-ico">↻</span><span id="ref-t" data-i18n="Refresh">Refresh</span>
       </button>
     </div>
   </div>
@@ -322,8 +372,8 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 
 <div class="wrap">
   <div class="hero">
-    <h2>Today in Malaysia</h2>
-    <p>Weather, fuel prices, warnings and transport updates for your area — fetched live
+    <h2 data-i18n="Today in Malaysia">Today in Malaysia</h2>
+    <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area — fetched live
        from the Malaysian Government Open API.</p>
     <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
     <div class="kpis" id="kpis"></div>
@@ -334,15 +384,14 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   <footer>
     <div class="foot">
       <div>
-        Data: <a href="https://developer.data.gov.my" target="_blank" rel="noopener">Malaysian Government Open API</a>
-        (MET Malaysia · MOF · DOSM · KTMB · Prasarana). Reverse geocoding by
-        <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
-        Data is fetched directly by your browser and cached locally for 15 minutes to respect the
-        API's 4-requests-per-minute limit. No analytics, no tracking.
+        <span data-i18n="footerA">Data: </span><a href="https://developer.data.gov.my" target="_blank" rel="noopener">Malaysian Government Open API</a>
+        <span data-i18n="footerB"> (MET Malaysia · MOF · DOSM · KTMB · Prasarana). Reverse geocoding by </span>
+        <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+        <span data-i18n="footerC"> contributors. Data is fetched directly by your browser and cached locally for 15 minutes to respect the API's 4-requests-per-minute limit. No analytics, no tracking.</span>
         <br><a href="https://github.com/mfaizalzain/mygov" target="_blank" rel="noopener">Source on GitHub</a>
       </div>
       <a class="bmc" href="https://buymeacoffee.com/faizalmzain" target="_blank"
-         rel="noopener noreferrer" aria-label="Support this project on Buy Me a Coffee">
+         rel="noopener noreferrer" aria-label="Support this project on Buy Me a Coffee" data-i18n-aria="bmc">
         <span aria-hidden="true">☕</span> Buy me a coffee
       </a>
     </div>
@@ -360,8 +409,189 @@ const CAP = 4;                // requests per family per rolling minute
 const WINDOW = 60000;
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
-const CK = "mygov.cache.v3.";
+const CK = "mygov.cache.v5.";
 const LK = "mygov.location.v1";
+
+/* ═══════════ preferences: language · theme · text size ═══════════ */
+const LK_THEME = "mygov.theme.v1", LK_TEXT = "mygov.text.v1", LK_LANG = "mygov.lang.v1";
+let LANG = "en", themeMode = "system", textLarge = false;
+/* UI chrome translations; keys are the English source strings. API content
+   (forecasts, names) stays in the source language. */
+const I18N = {
+  /* Keys that are not themselves the English text need an explicit source. */
+  en: {
+    "hero":"Weather, fuel prices, warnings and transport updates for your area — fetched live from the Malaysian Government Open API.",
+    "footerA":"Data: ",
+    "footerB":" (MET Malaysia · MOF · DOSM · KTMB · Prasarana). Reverse geocoding by ",
+    "footerC":" contributors. Data is fetched directly by your browser and cached locally for 15 minutes to respect the API's 4-requests-per-minute limit. No analytics, no tracking.",
+    "bmc":"Support this project on Buy Me a Coffee",
+  },
+  ms: {
+  "Refresh":"Muat semula", "Refreshing…":"Memuat semula…", "Loading…":"Memuatkan…",
+  "Online":"Dalam talian", "Offline — showing cached data":"Luar talian — memaparkan data cache",
+  "Updated":"Dikemas kini", "Skip to content":"Langkau ke kandungan",
+  "Install app":"Pasang aplikasi", "Today in Malaysia":"Hari Ini di Malaysia",
+  "hero":"Cuaca, harga minyak, amaran dan pengangkutan untuk kawasan anda — diambil terus daripada API Terbuka Kerajaan Malaysia.",
+  "footerA":"Data: ", "footerB":" (MET Malaysia · MOF · DOSM · KTMB · Prasarana). Geokodan songsang oleh ",
+  "footerC":" penyumbang. Data diambil terus oleh pelayar anda dan dicache setempat selama 15 minit bagi menghormati had 4-permintaan-seminit API. Tiada analitik, tiada penjejakan.",
+  "bmc":"Sokong projek ini di Buy Me a Coffee",
+  "Weather":"Cuaca", "Fuel":"Minyak", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
+  "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
+  "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
+  "Seven-day forecast for every state, district and town in Malaysia — plus severe-weather warnings and recent earthquakes.":"Ramalan tujuh hari untuk setiap negeri, daerah dan bandar di Malaysia — serta amaran cuaca buruk dan gempa bumi terkini.",
+  "Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.":"Ramalan, amaran dan maklumat gempa bumi daripada MET Malaysia. Ramalan meliputi 360 lokasi, daripada negeri hingga bandar dan resort tanah tinggi.",
+  "The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.":"Harga siling runcit mingguan untuk RON 95, RON 97 dan diesel, serta pertumbuhan pendapatan isi rumah Malaysia.",
+  "Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.":"Harga ditetapkan mingguan oleh Kementerian Kewangan dan diambil dengan penapisan sisi pelayan ke siri paras harga. Pendapatan isi rumah daripada Kajian Pendapatan Isi Rumah.",
+  "Department of Statistics Malaysia — inflation by spending category, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia — inflasi mengikut kategori perbelanjaan, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
+  "Core CPI is broken down by expenditure division, labour-force figures are monthly, and real GDP is quarterly. All three come from OpenDOSM.":"CPI teras dipecahkan mengikut bahagian perbelanjaan, angka buruh bulanan, dan KDNK benar suku tahunan. Kesemuanya daripada OpenDOSM.",
+  "Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.":"Laluan bas dan kereta api berjadual untuk KTMB dan Rapid KL — laluan paling sibuk, serta bilangan perhentian dan perjalanan setiap rangkaian.",
+  "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda — hanya laluan, perjalanan dan perhentian dibaca, bukan fail terbesar.",
+  "Trains and buses currently reporting their position, straight from the operators' live feeds.":"Kereta api dan bas yang kini melaporkan kedudukan mereka, terus daripada suapan langsung pengendali.",
+  "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
+  "Data source & methodology":"Sumber data & kaedah",
+  "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
+  "refresh failed — showing last data":"gagal dimuat semula — memaparkan data terakhir",
+  "Hottest today":"Paling panas hari ini", "Inflation y/y":"Inflasi t/t",
+  "Active warnings":"Amaran aktif", "Vehicles live":"Kenderaan langsung",
+  "issued by MET":"dikeluarkan oleh MET", "all clear":"tiada amaran", "week of ":"minggu ",
+  "core CPI, ":"CPI teras, ", "trains + buses":"kereta api + bas", "none reporting now":"tiada laporan kini",
+  "Storm":"Ribut", "Rain":"Hujan", "Wind":"Angin", "Heat":"Panas", "Advisory":"Nasihat",
+  "Search locations":"Cari lokasi", "Local time":"Masa tempatan", "Depth":"Kedalaman",
+  "Nearest Malaysian town":"Bandar Malaysia terdekat",
+  "7-day outlook":"Ramalan 7 hari", "All locations":"Semua lokasi",
+  "Search a district, town or state…":"Cari daerah, bandar atau negeri…",
+  "View data table":"Lihat jadual data", "Recent earthquakes":"Gempa bumi terkini",
+  "No earthquake records.":"Tiada rekod gempa bumi.", "events":"peristiwa",
+  "All Malaysia":"Seluruh Malaysia", "My area":"Kawasan saya", "Marine":"Marin",
+  "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
+  "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
+  "No warnings in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
+  "No marine warnings right now":"Tiada amaran marin buat masa ini",
+  "elsewhere — try “All Malaysia”.":"di tempat lain — cuba “Seluruh Malaysia”.",
+  "Other notices":"Notis lain", "No location matches":"Tiada lokasi sepadan",
+  "Locating…":"Mengesan lokasi…", "Location off":"Lokasi dimatikan",
+  "use my location":"guna lokasi saya", "try again":"cuba lagi", "change":"tukar",
+  "did you mean":"maksud anda", "Not supported":"Tidak disokong",
+  "Location lookup unavailable":"Carian lokasi tidak tersedia",
+  "Not in the forecast list":"Tiada dalam senarai ramalan",
+  "Couldn't pin your location":"Tidak dapat mengesan lokasi anda", "search below":"cari di bawah",
+  "selected area":"kawasan dipilih", "selected":"dipilih", "Near you: ":"Berdekatan anda: ",
+  "Showing forecast for ":"Memaparkan ramalan untuk ", "of":"daripada",
+  "Location":"Lokasi", "Type":"Jenis", "Min":"Min", "Max":"Maks", "Today":"Hari Ini",
+  "Morning":"Pagi", "Afternoon":"Petang", "Night":"Malam", "Day":"Hari",
+  "Price week of":"Minggu harga", "vs last week":"berbanding minggu lepas",
+  "weeks on record":"minggu direkod", "Retail fuel prices":"Harga runcit minyak",
+  "RM per litre · weekly ceiling":"RM seliter · siling mingguan",
+  "Household income":"Pendapatan isi rumah", "RM per month · mean vs median":"RM sebulan · min vs median",
+  "Week":"Minggu", "Year":"Tahun", "Mean RM":"Min RM", "Median RM":"Median RM",
+  "Core CPI":"CPI teras", "Unemployment":"Pengangguran", "Participation rate":"Kadar penyertaan",
+  "Real GDP · quarter":"KDNK benar · suku", "employed":"bekerja",
+  "Consumer Price Index — core":"Indeks Harga Pengguna — teras",
+  "by expenditure division":"mengikut bahagian perbelanjaan",
+  "Unemployment rate":"Kadar pengangguran", "monthly":"bulanan",
+  "Real GDP":"KDNK benar", "quarterly · RM million":"suku tahunan · RM juta",
+  "Date":"Tarikh", "Month":"Bulan", "Quarter":"Suku", "RM million":"RM juta",
+  "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
+  "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
+  "Find stops near me":"Cari perhentian berdekatan saya",
+  "Location permission denied — search by name instead.":"Kebenaran lokasi dinafikan — cari mengikut nama sebaliknya.",
+  "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
+  "All networks":"Semua rangkaian", "Busiest routes — ":"Laluan paling sibuk — ",
+  "by scheduled trips":"mengikut perjalanan berjadual", "Stops — ":"Perhentian — ",
+  "with coordinates":"dengan koordinat", "stations & stops":"stesen & perhentian",
+  "scheduled trips":"perjalanan berjadual", "Route":"Laluan", "Name":"Nama",
+  "Trips":"Perjalanan", "Share":"Bahagian", "Stop":"Perhentian", "Distance":"Jarak",
+  "No routes match ":"Tiada laluan sepadan ", "No stops match ":"Tiada perhentian sepadan ",
+  "Avg trips / route":"Purata perjalanan / laluan", "routes":"laluan", "Stops":"Perhentian",
+  "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
+  "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
+  "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
+  "among live ":"antara ", "Live map — ":"Peta langsung — ", "positions as broadcast":"kedudukan seperti disiarkan",
+  "Network":"Rangkaian", "Trip":"Perjalanan", "Speed":"Kelajuan", "Last seen":"Dilihat terakhir",
+  "Position":"Kedudukan", "No trains are broadcasting right now":"Tiada kereta api melaporkan kedudukan kini",
+  "No buses are broadcasting right now":"Tiada bas melaporkan kedudukan kini",
+  "The feed responded normally":"Suapan bertindak balas seperti biasa",
+  "but carried zero vehicles — normal outside service hours, or when the operator's tracking feed is paused.":"tetapi sifar kenderaan — normal di luar waktu perkhidmatan, atau apabila suapan penjejakan pengendali dijeda.",
+  "Rate limited — cached data is reused for 15 minutes, so this usually clears on its own.":"Had laju — data cache digunakan semula selama 15 minit, jadi ini biasanya selesai sendiri.",
+  "The dataset may be temporarily unavailable.":"Set data mungkin tidak tersedia buat sementara waktu.",
+  "Try again":"Cuba lagi",
+} };
+const T = s => (I18N[LANG] && I18N[LANG][s]) || s;
+/* Forecasts arrive only in Bahasa Melayu; map the common phrases to English
+   when the interface language is English. */
+const WX_EN = {
+  "Tiada hujan":"No rain", "Hujan":"Rain", "Hujan lebat":"Heavy rain",
+  "Hujan berterusan":"Persistent rain", "Hujan setempat":"Isolated rain",
+  "Hujan pada waktu pagi":"Morning rain", "Hujan pada waktu petang":"Afternoon rain",
+  "Hujan pada waktu malam":"Night rain", "Hujan pada sebelah petang":"Afternoon rain",
+  "Hujan pada sebelah malam":"Night rain", "Ribut petir":"Thunderstorms", "Ribut":"Storm",
+  "Berkabus":"Foggy", "Kabus":"Fog", "Berangin":"Windy", "Berangin kencang":"Strong winds",
+  "Panah petir":"Lightning", "Sepanjang Hari":"All day", "Pagi":"Morning", "Petang":"Afternoon",
+  "Malam":"Night", "Pada waktu pagi":"In the morning", "Pada waktu petang":"In the afternoon",
+  "Pada waktu malam":"At night", "Cerah":"Clear", "Kebanyakkan cerah":"Mostly clear",
+  "Berawan":"Cloudy", "Kebanyakkan berawan":"Mostly cloudy", "Mendung":"Overcast",
+  "Guruh":"Thunder", "Hujan dan ribut":"Rain and storms",
+};
+const wxPhrase = s => (LANG === "en" && WX_EN[s]) || s;
+function loadPrefs(){
+  try {
+    LANG = localStorage.getItem(LK_LANG) === "ms" ? "ms" : "en";
+    const t = localStorage.getItem(LK_THEME);
+    themeMode = ["dark","light","system"].includes(t) ? t : "system";
+    textLarge = localStorage.getItem(LK_TEXT) === "1";
+  } catch {}
+}
+const savePref = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+function applyTheme(){
+  const dark = themeMode === "dark" ||
+    (themeMode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const tc = $("#tc"); if (tc) tc.content = dark ? "#0a0c10" : "#f4f6fa";
+  const b = $("#theme"); if (b){
+    b.textContent = themeMode === "dark" ? "🌙" : themeMode === "light" ? "☀️" : "🌓";
+    b.setAttribute("aria-label", "Theme: " + themeMode);
+  }
+}
+function applyText(){
+  document.documentElement.dataset.text = textLarge ? "large" : "normal";
+  const b = $("#textsize"); if (b){
+    b.textContent = textLarge ? "A" : "A⁺";
+    b.setAttribute("aria-pressed", String(textLarge));
+  }
+}
+function applyLang(){
+  document.documentElement.lang = LANG === "ms" ? "ms-MY" : "en-MY";
+  document.querySelectorAll("[data-i18n]").forEach(n => { n.textContent = T(n.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(n =>
+    n.setAttribute("aria-label", T(n.dataset.i18nAria)));
+  const b = $("#lang"); if (b) b.textContent = LANG === "ms" ? "EN" : "BM";
+  SECTIONS.forEach(s => {
+    const a = $("#nav-" + s.id); if (a){
+      const dot = a.querySelector(".dot");
+      a.innerHTML = (dot ? dot.outerHTML : "") + s.icon + " " + esc(T(s.label));
+    }
+    const h = $("#h-" + s.id); if (h) h.textContent = T(META[s.id].title);
+    const sec = document.getElementById(s.id);
+    if (sec){
+      const p = sec.querySelector(".sec-h p"); if (p) p.textContent = T(META[s.id].desc);
+      const sum = sec.querySelector("details.meta summary");
+      if (sum) sum.textContent = T("Data source & methodology");
+      const how = sec.querySelector("details.meta p");
+      if (how) how.textContent = T(META[s.id].how);
+    }
+  });
+  Object.keys(secMode).forEach(id => setSecTime(id, secMode[id]));
+  tick();
+  if (syncNet) syncNet();
+  rerenderAll();
+}
+function rerenderAll(){
+  for (const id of loaded){
+    const d = dataMap[id]; if (!d) continue;
+    try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d); } catch {}
+  }
+  renderKpis();
+}
 
 const SECTIONS = [
   { id:"weather",   label:"Weather",    icon:"🌦", family:"weather" },
@@ -488,6 +718,9 @@ const hhmm = ts => new Date(ts).toLocaleTimeString("en-MY", { hour:"2-digit", mi
 const hms = ts => new Date(ts).toLocaleTimeString("en-MY",
   { hour:"2-digit", minute:"2-digit", second:"2-digit" });
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* Canvas colours must be concrete hex/rgba — Chart.js can't resolve var().
+   Resolve the design tokens at render time so charts follow the theme. */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 /** Accessible alternative to a chart: a plain sortable-free table. */
 function dataTableHTML(headers, rows, numCols = []){
   return `<div class="tw scroll-y" style="max-height:280px"><table>
@@ -720,8 +953,10 @@ async function loadWeather(){
     const info = /no advisory|no tropical cyclone|tiada/i.test(head + " " + text);
     const real = v => { const t = new Date(v); return !!v && !isNaN(t) && t.getUTCFullYear() > 1970; };
     return { title:(w.warning_issue && w.warning_issue.title_en) || head || "Weather warning",
-             head, text, instr:w.instruction_en, from:w.valid_from, to:w.valid_to,
-             info, dated: real(w.valid_from) && real(w.valid_to) };
+             head, text, instr:w.instruction_en,
+             headBm:w.heading_bm || "", textBm:w.text_bm || "", instrBm:w.instruction_bm || "",
+             from:w.valid_from, to:w.valid_to, info,
+             dated: real(w.valid_from) && real(w.valid_to) };
   }).sort((a,b) => Number(a.info) - Number(b.info));
 
   return { locs, rows, dict, warn, eq };
@@ -797,9 +1032,15 @@ async function loadTransport(){
     const stops = parseCSV(files["stops.txt"]), agency = parseCSV(files["agency.txt"])[0] || {};
     const per = new Map();
     for (const t of trips) per.set(t.route_id, (per.get(t.route_id) || 0) + 1);
+    const stopList = stops
+      .map(s => ({ id:s.stop_id || "", name:s.stop_name || "—",
+                   lat:Number(s.stop_lat), lon:Number(s.stop_lon) }))
+      .filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lon))
+      .slice(0, 6000);
     out[f.key] = {
-      label:f.label, desc:f.desc, agency:agency.agency_name || f.label,
+      key:f.key, label:f.label, desc:f.desc, agency:agency.agency_name || f.label,
       routes:routes.length, stops:stops.length, trips:trips.length,
+      stopList,
       top: routes.map(r => ({
         id:r.route_id, short:r.route_short_name || r.route_id, long:r.route_long_name || "",
         color:/^[0-9A-Fa-f]{6}$/.test(r.route_color || "") ? "#" + r.route_color : "#2dd4bf",
@@ -820,7 +1061,7 @@ async function loadLive(){
   for (const f of RT){
     const buf = await request("gtfs-realtime", f.path, f.params, "buffer");
     const d = decodeVehiclePositions(buf);
-    out[f.key] = { label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
+    out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
       vehicles: d.vehicles.filter(v => v.lat != null && v.lon != null)
                           .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)) };
   }
@@ -851,17 +1092,17 @@ function baseOpts(extra){
     responsive:true, maintainAspectRatio:false,
     interaction:{ mode:"index", intersect:false },
     plugins:{
-      legend:{ labels:{ color:"#9aa4b8", boxWidth:8, boxHeight:8, usePointStyle:true,
+      legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
         pointStyle:"circle", font:{ size:11 }, padding:14 } },
-      tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
-        titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10,
+      tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+        titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
         usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4 },
     },
     scales:{
-      x:{ grid:{ display:false }, border:{ color:"#232838" },
-          ticks:{ color:"#616b80", font:{ size:10 }, maxRotation:0, autoSkipPadding:20 } },
-      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
-          ticks:{ color:"#616b80", font:{ size:10 }, padding:8 } },
+      x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+          ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxRotation:0, autoSkipPadding:20 } },
+      y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8 } },
     },
   };
   return Object.assign(o, extra || {});
@@ -872,18 +1113,18 @@ function buildShell(){
   const nav = $("#navlist"), main = $("#main");
   for (const s of SECTIONS){
     const li = el("li");
-    li.innerHTML = `<a href="#${s.id}" id="nav-${s.id}"><span class="dot" id="dot-${s.id}"></span>${s.icon} ${esc(s.label)}</a>`;
+    li.innerHTML = `<a href="#${s.id}" id="nav-${s.id}"><span class="dot" id="dot-${s.id}"></span>${s.icon} ${esc(T(s.label))}</a>`;
     nav.appendChild(li);
     const sec = el("section");
     sec.id = s.id;
     sec.setAttribute("aria-labelledby", `h-${s.id}`);
     sec.innerHTML = `<div class="sec-h">
         <div class="sec-ico" aria-hidden="true">${s.icon}</div>
-        <div><h3 id="h-${s.id}">${esc(META[s.id].title)}</h3>
-          <p>${esc(META[s.id].desc)}</p>
+        <div><h3 id="h-${s.id}">${esc(T(META[s.id].title))}</h3>
+          <p>${esc(T(META[s.id].desc))}</p>
           <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>${esc(META[s.id].how)}</p>
+            <summary>${esc(T("Data source & methodology"))}</summary>
+            <p>${esc(T(META[s.id].how))}</p>
             <ul>${META[s.id].eps.map(e => `<li><code>GET ${esc(e)}</code></li>`).join("")}</ul>
           </details>
         </div>
@@ -911,9 +1152,9 @@ function errorBox(id, err, retry){
   $("#body-" + id).innerHTML = `<div class="card"><div class="state err">
       <div class="big">${rate ? "⏱" : "⚠"}</div>
       <strong>${esc(err.message || "Couldn't load this section")}</strong>
-      <div>${rate ? "Cached data is reused for 15 minutes, so this usually clears on its own."
-                  : "The dataset may be temporarily unavailable."}</div>
-      <button class="btn" style="margin-top:16px" id="retry-${id}">Try again</button>
+      <div>${rate ? T("Rate limited — cached data is reused for 15 minutes, so this usually clears on its own.")
+                  : T("The dataset may be temporarily unavailable.")}</div>
+      <button class="btn" style="margin-top:16px" id="retry-${id}">${T("Try again")}</button>
     </div></div>`;
   const b = $("#retry-" + id); if (b) b.onclick = retry;
 }
@@ -1021,6 +1262,7 @@ async function locate(){
 
 /* ════════════════════════════ weather view ════════════════════════════ */
 const wx = { q:"", pick:null, data:null };
+let wxFilter = "all";   // warning filter: all | area | marine
 
 function renderWeather(d){
   wx.data = d;
@@ -1041,37 +1283,37 @@ function renderWeather(d){
     <div id="wx-warn" class="mb"></div>
     <div class="grid g2 mb">
       <div class="card">
-        <div class="card-h"><h4>7-day outlook</h4>
+        <div class="card-h"><h4>${T("7-day outlook")}</h4>
           <span class="sub" id="wx-name"></span>
           <span class="right" id="wx-loc"></span></div>
         <div class="card-b"><div class="chart"><canvas id="wx-chart"
           role="img" aria-label="Seven day minimum and maximum temperature"></canvas></div>
-          <details class="dt"><summary>View data table</summary>
+          <details class="dt"><summary>${T("View data table")}</summary>
             <div class="dt-body" id="wx-dt"></div></details></div>
       </div>
       <div class="card">
-        <div class="card-h"><h4>All locations</h4><span class="sub" id="wx-count"></span></div>
+        <div class="card-h"><h4>${T("All locations")}</h4><span class="sub" id="wx-count"></span></div>
         <div class="card-b" style="padding-bottom:10px">
-          <label class="sr" for="wx-q">Search locations</label>
-          <input class="inp" id="wx-q" placeholder="Search a district, town or state…" autocomplete="off">
+          <label class="sr" for="wx-q">${T("Search locations")}</label>
+          <input class="inp" id="wx-q" placeholder="${T("Search a district, town or state…")}" autocomplete="off">
         </div>
         <div class="tw scroll-y"><table id="wx-table">
           <thead><tr>
-            <th class="sortable" data-key="name">Location <span class="arrow">↕</span></th>
-            <th class="sortable" data-key="kind">Type <span class="arrow">↕</span></th>
-            <th class="sortable num" data-key="min" data-num="1">Min <span class="arrow">↕</span></th>
-            <th class="sortable num" data-key="max" data-num="1" data-desc="1">Max <span class="arrow">↕</span></th>
-            <th>Today</th>
+            <th class="sortable" data-key="name">${T("Location")} <span class="arrow">↕</span></th>
+            <th class="sortable" data-key="kind">${T("Type")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="min" data-num="1">${T("Min")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="max" data-num="1" data-desc="1">${T("Max")} <span class="arrow">↕</span></th>
+            <th>${T("Today")}</th>
           </tr></thead><tbody id="wx-rows"></tbody>
         </table></div>
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><h4>Recent earthquakes</h4>
-        <span class="sub">${d.eq.length} events · MET Malaysia</span></div>
+      <div class="card-h"><h4>${T("Recent earthquakes")}</h4>
+        <span class="sub">${d.eq.length} ${T("events")} · MET Malaysia</span></div>
       <div class="tw scroll-y"><table>
-        <thead><tr><th>Local time</th><th class="num">Mag</th><th>Location</th>
-          <th class="num">Depth</th><th>Nearest Malaysian town</th><th></th></tr></thead>
+        <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
+          <th class="num">${T("Depth")}</th><th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
         <tbody>${d.eq.map(q => { const m = Number(q.mag) || 0;
           const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
           return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
@@ -1081,7 +1323,7 @@ function renderWeather(d){
             <td><a class="mono" style="font-size:11.5px" target="_blank" rel="noopener"
               href="https://www.google.com/maps?q=${q.lat},${q.lon}"
               aria-label="Open earthquake location in Google Maps">map ↗</a></td></tr>`;
-        }).join("") || `<tr><td colspan="6" class="state">No earthquake records.</td></tr>`}
+        }).join("") || `<tr><td colspan="6" class="state">${T("No earthquake records.")}</td></tr>`}
       </tbody></table></div>
     </div>`;
 
@@ -1094,8 +1336,12 @@ function renderWeather(d){
 }
 
 /** Guess a short severity label from the warning's own text. */
+const warnHead = x => LANG === "ms" ? (x.headBm || x.head) : x.head;
+const warnText = x => LANG === "ms" ? (x.textBm || x.text) : x.text;
+const warnInstr = x => LANG === "ms" ? (x.instrBm || x.instr) : x.instr;
 function sevClass(x){
-  const t = (x.head + " " + x.text + " " + (x.instr || "")).toLowerCase();
+  const t = (x.head + " " + x.text + " " + (x.instr || "") + " " +
+             x.headBm + " " + x.textBm + " " + (x.instrBm || "")).toLowerCase();
   if (/thunder|ribut|storm/i.test(t)) return ["storm","Storm","var(--warn)"];
   if (/heatwave|heat wave|heat|panas/i.test(t)) return ["heat","Heat","var(--danger)"];
   if (/heavy rain|hujan lebat|rain/i.test(t)) return ["rain","Rain","var(--info)"];
@@ -1105,30 +1351,56 @@ function sevClass(x){
 function warnCard(x){
   const [cls, label, color] = sevClass(x);
   return `<div class="alert ${x.info ? "info" : cls}">
-    <h5>${x.info ? "✅" : "⚠️"} ${txt(x.head || x.title)}
-      <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${label}</span></h5>
-    <p>${txt(x.text || "")}</p>
-    ${x.instr ? `<p style="margin-top:6px">${txt(x.instr)}</p>` : ""}
+    <h5>${x.info ? "✅" : "⚠️"} ${txt(warnHead(x) || x.title)}
+      <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${T(label)}</span></h5>
+    <p>${txt(warnText(x) || "")}</p>
+    ${warnInstr(x) ? `<p style="margin-top:6px">${txt(warnInstr(x))}</p>` : ""}
     ${x.dated ? `<div class="meta">valid ${esc(ymd(x.from))} → ${esc(ymd(x.to))}</div>` : ""}
   </div>`;
 }
 /** Active warnings first with a summary; all-clear notices collapsed below. */
+const MARINE_RE = /waters|coastal|sea |seas|wave|maritim|perairan|laut|pantai|ombak/i;
+function warnInArea(x){
+  const l = wx.data && wx.data.locs.find(l => l.id === wx.pick);
+  if (!l) return false;
+  const term = norm(l.name); if (!term) return false;
+  const t = (x.head + " " + x.text + " " + (x.instr || "") + " " +
+             x.headBm + " " + x.textBm + " " + (x.instrBm || "")).toLowerCase();
+  return t.includes(term);
+}
+const WARN_FILTERS = {
+  all:    () => true,
+  area:   x => warnInArea(x),
+  marine: x => MARINE_RE.test(x.head + " " + x.text + " " + (x.instr || "")),
+};
 function paintWarnings(){
   const d = wx.data; const w = $("#wx-warn"); if (!w) return;
-  const active = d.warn.filter(x => !x.info);
+  const active = d.warn.filter(x => !x.info && WARN_FILTERS[wxFilter](x));
   const notices = d.warn.filter(x => x.info);
   const first = active[0];
-  w.innerHTML =
-    (first ? `<div class="wx-summary">⚠️ <span>${txt(first.head || first.title)}</span>
+  const total = d.warn.filter(x => !x.info).length;
+  const empty = wxFilter === "all"
+    ? [T("No active weather warnings"), T("MET Malaysia has nothing on issue.")]
+    : [T(wxFilter === "area" ? "No warnings in your area right now" : "No marine warnings right now"),
+       `${total} ${T("active")} ${T("elsewhere — try “All Malaysia”.")}`];
+  const FILT = [["all",T("All Malaysia")],["area",T("My area")],["marine",T("Marine")]];
+  w.innerHTML = `<div class="chips mb" id="wx-filters">` +
+    FILT.map(([v, label]) =>
+      `<button class="chip" data-wf="${v}" aria-pressed="${wxFilter === v}">${label}</button>`).join("") +
+    `</div>` +
+    (first ? `<div class="wx-summary">⚠️ <span>${txt(warnHead(first) || first.title)}</span>
         <span class="pill" style="color:var(--warn);border:1px solid #fbbf2455;background:#fbbf2418">
-          ${active.length} active</span></div>`
+          ${active.length} ${T("active")}</span></div>`
           : `<div class="card mb"><div class="state"><div class="big">✅</div>
-             <strong>No active weather warnings</strong>MET Malaysia has nothing on issue.</div></div>`) +
+             <strong>${empty[0]}</strong>${empty[1]}</div></div>`) +
     (active.length ? `<div class="grid g2">${active.map(warnCard).join("")}</div>` : "") +
     (notices.length ? `<details class="wx-other">
-        <summary>Other notices — ${notices.length} all clear</summary>
+        <summary>${T("Other notices")} — ${notices.length} ${T("all clear")}</summary>
         <div class="grid g2" style="margin-top:var(--s2)">${notices.map(warnCard).join("")}</div>
       </details>` : "");
+  w.querySelectorAll("[data-wf]").forEach(b => {
+    b.onclick = () => { wxFilter = b.dataset.wf; paintWarnings(); };
+  });
 }
 
 /** Today's row per location, flattened for the table + sorting. */
@@ -1149,7 +1421,7 @@ function paintWxRows(pre){
   const term = wx.q.trim().toLowerCase();
   let rows = pre || wxTableRows();
   if (term) rows = rows.filter(r => r.name.toLowerCase().includes(term) || r.kind.includes(term));
-  $("#wx-count").textContent = `${rows.length} of ${wx.data.locs.length}`;
+  $("#wx-count").textContent = `${rows.length} ${T("of")} ${wx.data.locs.length}`;
   $("#wx-rows").innerHTML = rows.slice(0, 400).map(r => `
     <tr class="${r.id === wx.pick ? "sel" : ""}">
       <td><button class="pick" data-pick="${esc(r.id)}"
@@ -1157,8 +1429,8 @@ function paintWxRows(pre){
       <td><span class="tag">${esc(r.kind)}</span></td>
       <td class="num dim">${nf(r.min)}°</td>
       <td class="num" style="font-weight:650">${nf(r.max)}°</td>
-      <td class="wrapcell">${esc(r.today)}</td></tr>`).join("")
-    || `<tr><td colspan="5" class="state">No location matches “${esc(wx.q)}”.</td></tr>`;
+      <td class="wrapcell">${esc(wxPhrase(r.today))}</td></tr>`).join("")
+    || `<tr><td colspan="5" class="state">${T("No location matches")} “${esc(wx.q)}”.</td></tr>`;
   $("#wx-rows").querySelectorAll("button[data-pick]").forEach(b => {
     b.onclick = () => pickLoc(b.getAttribute("data-pick"));
   });
@@ -1171,7 +1443,7 @@ function pickLoc(id){
     geo.label = l.name;
     geo.manual = true;
     try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
-    const live = $("#wx-live"); if (live) live.textContent = "Showing forecast for " + l.name;
+    const live = $("#wx-live"); if (live) live.textContent = T("Showing forecast for ") + l.name;
   }
   paintWxRows(); paintWxChart(); paintHeroLoc(); paintLocChip();
 }
@@ -1186,26 +1458,26 @@ function paintHeroLoc(){
   if (geo.manual)
     html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
             <button class="link-btn" id="hero-loc-change">change</button>
-            <span class="dim" style="font-size:11.5px">selected area</span>`;
-  else if (S === "asking") html = `<span class="loc-chip off">📍 Locating…</span>`;
+            <span class="dim" style="font-size:11.5px">${T("selected area")}</span>`;
+  else if (S === "asking") html = `<span class="loc-chip off">📍 ${T("Locating…")}</span>`;
   else if (S === "matched" || S === "cached")
     html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
-            <button class="link-btn" id="hero-loc-change">change</button>`;
+            <button class="link-btn" id="hero-loc-change">${T("change")}</button>`;
   else if (S === "ambiguous")
     html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
-            <span class="dim" style="font-size:11.5px">did you mean</span>` +
+            <span class="dim" style="font-size:11.5px">${T("did you mean")}</span>` +
       geo.candidates.slice(1).map(c =>
         `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
-  else if (S === "denied") html = `<span class="loc-chip off">📍 Location off</span>
-      <button class="link-btn" id="hero-loc-try">use my location</button>`;
-  else if (S === "unavailable") html = `<span class="loc-chip off">📍 Couldn't pin your location</span>
-      <button class="link-btn" id="hero-loc-try">try again</button>`;
-  else if (S === "nomatch") html = `<span class="loc-chip off">📍 ${esc(geo.osm || "Not in the forecast list")}</span>
-      <a class="link-btn" href="#weather">search below</a>`;
-  else if (S === "noproxy") html = `<span class="loc-chip off">📍 Location lookup unavailable</span>
-      <a class="link-btn" href="#weather">search below</a>`;
-  else if (S === "unsupported") html = `<span class="loc-chip off">📍 Not supported</span>`;
-  else html = `<button class="btn btn-a" id="hero-loc-try">📍 Use my location</button>`;
+  else if (S === "denied") html = `<span class="loc-chip off">📍 ${T("Location off")}</span>
+      <button class="link-btn" id="hero-loc-try">${T("use my location")}</button>`;
+  else if (S === "unavailable") html = `<span class="loc-chip off">📍 ${T("Couldn't pin your location")}</span>
+      <button class="link-btn" id="hero-loc-try">${T("try again")}</button>`;
+  else if (S === "nomatch") html = `<span class="loc-chip off">📍 ${esc(geo.osm || T("Not in the forecast list"))}</span>
+      <a class="link-btn" href="#weather">${T("search below")}</a>`;
+  else if (S === "noproxy") html = `<span class="loc-chip off">📍 ${T("Location lookup unavailable")}</span>
+      <a class="link-btn" href="#weather">${T("search below")}</a>`;
+  else if (S === "unsupported") html = `<span class="loc-chip off">📍 ${T("Not supported")}</span>`;
+  else html = `<button class="btn btn-a" id="hero-loc-try">📍 ${T("use my location")}</button>`;
   host.innerHTML = html;
   const t = $("#hero-loc-try"); if (t) t.onclick = locate;
   const c = $("#hero-loc-change"); if (c) c.onclick = locate;
@@ -1220,27 +1492,27 @@ function paintLocChip(){
   let html = "";
   if (geo.manual)
     html = chip("", `📍 ${esc(geo.label || "")}`) +
-           `<button class="link-btn" id="loc-change">change</button>
-            <span class="dim" style="font-size:11.5px">selected</span>`;
-  else if (S === "asking") html = chip("off", "📍 Locating…");
+           `<button class="link-btn" id="loc-change">${T("change")}</button>
+            <span class="dim" style="font-size:11.5px">${T("selected")}</span>`;
+  else if (S === "asking") html = chip("off", `📍 ${T("Locating…")}`);
   else if (S === "matched" || S === "cached")
-    html = chip("", `📍 Near you: ${esc(geo.label || "")}`) +
-           `<button class="link-btn" id="loc-change">change</button>`;
+    html = chip("", `📍 ${T("Near you: ")}${esc(geo.label || "")}`) +
+           `<button class="link-btn" id="loc-change">${T("change")}</button>`;
   else if (S === "ambiguous")
     html = chip("", `📍 ${esc(geo.label || "")}`) +
-      `<span class="dim" style="font-size:11.5px">did you mean</span>` +
+      `<span class="dim" style="font-size:11.5px">${T("did you mean")}</span>` +
       geo.candidates.slice(1).map(c =>
         `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
-  else if (S === "denied")  html = chip("off", "📍 Location off") +
-      `<button class="link-btn" id="loc-try">use my location</button>`;
-  else if (S === "unavailable") html = chip("off", "📍 Couldn't pin your location") +
-      `<button class="link-btn" id="loc-try">try again</button>`;
-  else if (S === "nomatch") html = chip("off", `📍 ${esc(geo.osm || "Not in the forecast list")}`) +
-      `<span class="dim" style="font-size:11.5px">— search below</span>`;
-  else if (S === "noproxy") html = chip("off", "📍 Location lookup unavailable") +
-      `<span class="dim" style="font-size:11.5px">— search below</span>`;
-  else if (S === "unsupported") html = chip("off", "📍 Not supported");
-  else html = `<button class="link-btn" id="loc-try">📍 Use my location</button>`;
+  else if (S === "denied")  html = chip("off", `📍 ${T("Location off")}`) +
+      `<button class="link-btn" id="loc-try">${T("use my location")}</button>`;
+  else if (S === "unavailable") html = chip("off", `📍 ${T("Couldn't pin your location")}`) +
+      `<button class="link-btn" id="loc-try">${T("try again")}</button>`;
+  else if (S === "nomatch") html = chip("off", `📍 ${esc(geo.osm || T("Not in the forecast list"))}`) +
+      `<span class="dim" style="font-size:11.5px">— ${T("search below")}</span>`;
+  else if (S === "noproxy") html = chip("off", `📍 ${T("Location lookup unavailable")}`) +
+      `<span class="dim" style="font-size:11.5px">— ${T("search below")}</span>`;
+  else if (S === "unsupported") html = chip("off", `📍 ${T("Not supported")}`);
+  else html = `<button class="link-btn" id="loc-try">📍 ${T("use my location")}</button>`;
   host.innerHTML = html;
   const t = $("#loc-try"); if (t) t.onclick = locate;
   const c = $("#loc-change"); if (c) c.onclick = locate;
@@ -1267,33 +1539,34 @@ function paintWxChart(){
       ] },
     options: baseOpts({
       scales:{
-        x:{ grid:{ display:false }, border:{ color:"#232838" },
-            ticks:{ color:"#616b80", font:{ size:10 } } },
-        y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
-            ticks:{ color:"#616b80", font:{ size:10 }, padding:8, callback:v => v + "°" },
+        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } },
+        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => v + "°" },
             suggestedMin: Math.min(...rows.map(r => r[2] ?? 20)) - 3,
             suggestedMax: Math.max(...rows.map(r => r[3] ?? 34)) + 3 },
       },
       plugins:{
-        legend:{ labels:{ color:"#9aa4b8", boxWidth:8, boxHeight:8, usePointStyle:true,
+        legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
           pointStyle:"circle", font:{ size:11 }, padding:14 }, onClick:() => {} },
-        tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
-          titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10,
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
           usePointStyle:true, boxWidth:8, boxHeight:8,
           callbacks:{ afterBody: items => { const r = rows[items[0].dataIndex]; if (!r) return "";
-            return ["", "Morning:   " + (d.dict[r[4]] || "—"),
-                        "Afternoon: " + (d.dict[r[5]] || "—"),
-                        "Night:     " + (d.dict[r[6]] || "—")]; } } },
+            return ["", T("Morning") + ":   " + wxPhrase(d.dict[r[4]] || "—"),
+                        T("Afternoon") + ": " + wxPhrase(d.dict[r[5]] || "—"),
+                        T("Night") + ":     " + wxPhrase(d.dict[r[6]] || "—")]; } } },
       },
     }),
   });
   const dt = $("#wx-dt");
   if (dt) dt.innerHTML = dataTableHTML(
-    ["Day","Min","Max","Morning","Afternoon","Night"],
+    [T("Day"),T("Min"),T("Max"),T("Morning"),T("Afternoon"),T("Night")],
     rows.map(r => [ `${md(r[1])} ${dow(r[1])}`,
                     r[2] == null ? null : r[2] + "°",
                     r[3] == null ? null : r[3] + "°",
-                    d.dict[r[4]] || "—", d.dict[r[5]] || "—", d.dict[r[6]] || "—" ]),
+                    wxPhrase(d.dict[r[4]] || "—"), wxPhrase(d.dict[r[5]] || "—"),
+                    wxPhrase(d.dict[r[6]] || "—") ]),
     [1, 2]);
 }
 
@@ -1316,27 +1589,27 @@ function renderFuel(d){
       ${[["RON 95","ron95"],["RON 97","ron97"],["Diesel","diesel"]].map(([lab,k]) => `
         <div class="kpi"><div class="lab">${lab}</div>
           <div class="val">RM ${nf(L && L[k], 2)}</div>
-          <div class="sub">${badge(delta(L && L[k], P && P[k]))} vs last week</div></div>`).join("")}
-      <div class="kpi"><div class="lab">Price week of</div>
+          <div class="sub">${badge(delta(L && L[k], P && P[k]))} ${T("vs last week")}</div></div>`).join("")}
+      <div class="kpi"><div class="lab">${T("Price week of")}</div>
         <div class="val" style="font-size:18px">${esc(ymd(L && L.date))}</div>
-        <div class="sub">${d.rows.length} weeks on record</div></div>
+        <div class="sub">${d.rows.length} ${T("weeks on record")}</div></div>
     </div>
     <div class="card mb">
-      <div class="card-h"><h4>Retail fuel prices</h4>
-        <span class="sub">RM per litre · weekly ceiling</span>
+      <div class="card-h"><h4>${T("Retail fuel prices")}</h4>
+        <span class="sub">${T("RM per litre · weekly ceiling")}</span>
         <span class="right"><span class="seg" role="group" aria-label="Date range">
           ${Object.keys(RANGES).map(r => `<button data-range="${r}" aria-pressed="${r === fuelRange}">${r.toUpperCase()}</button>`).join("")}
         </span></span></div>
       <div class="card-b"><div class="chart tall"><canvas id="fuel-chart"
         role="img" aria-label="Fuel prices over time"></canvas></div>
-        <details class="dt"><summary>View data table</summary>
-          <div class="dt-body" id="fuel-dt"></div></details></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="fuel-dt"></div></details></div>
     </div>
     <div class="card">
-      <div class="card-h"><h4>Household income</h4><span class="sub">RM per month · mean vs median</span></div>
+      <div class="card-h"><h4>${T("Household income")}</h4><span class="sub">${T("RM per month · mean vs median")}</span></div>
       <div class="card-b"><div class="chart"><canvas id="hh-chart"
         role="img" aria-label="Household income over time"></canvas></div>
-        <details class="dt"><summary>View data table</summary>
+        <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="hh-dt"></div></details></div>
     </div>`;
   $("#body-fuel").querySelectorAll("[data-range]").forEach(b => {
@@ -1357,12 +1630,12 @@ function renderFuel(d){
           pointRadius:2, tension:.32 },
       ] },
     options: baseOpts({ scales:{
-      x:{ grid:{ display:false }, border:{ color:"#232838" }, ticks:{ color:"#616b80", font:{size:10} } },
-      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
-          ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => "RM " + nf(v) } } } }),
+      x:{ grid:{ display:false }, border:{ color:cssVar("--line") }, ticks:{ color:cssVar("--fg-3"), font:{size:10} } },
+      y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8, callback:v => "RM " + nf(v) } } } }),
   });
   const hdt = $("#hh-dt");
-  if (hdt) hdt.innerHTML = dataTableHTML(["Year","Mean RM","Median RM"],
+  if (hdt) hdt.innerHTML = dataTableHTML([T("Year"),T("Mean RM"),T("Median RM")],
     d.hh.map(r => [String(r[0]).slice(0,4), r[1], r[2]]), [1,2]);
 }
 function paintFuel(d){
@@ -1381,14 +1654,14 @@ function paintFuel(d){
           pointRadius:0, tension:.25 },
       ] },
     options: baseOpts({ scales:{
-      x:{ grid:{ display:false }, border:{ color:"#232838" },
-          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:12, maxRotation:0 } },
-      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
-          ticks:{ color:"#616b80", font:{size:10}, padding:8,
+      x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, maxTicksLimit:12, maxRotation:0 } },
+      y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8,
                   callback:v => "RM " + Number(v).toFixed(2) } } } }),
   });
   const fdt = $("#fuel-dt");
-  if (fdt) fdt.innerHTML = dataTableHTML(["Week","RON 95","RON 97","Diesel"],
+  if (fdt) fdt.innerHTML = dataTableHTML([T("Week"),"RON 95","RON 97","Diesel"],
     rows.map(r => [ymd(r[0]), r[1], r[2], r[3]]), [1,2,3]);
 }
 
@@ -1411,37 +1684,37 @@ function renderEconomy(d){
 
   $("#body-economy").innerHTML = `
     <div class="grid g4 mb">
-      <div class="kpi"><div class="lab">Core CPI</div><div class="val">${nf(cL[1],1)}</div>
+      <div class="kpi"><div class="lab">${T("Core CPI")}</div><div class="val">${nf(cL[1],1)}</div>
         <div class="sub">${cYoy == null ? "" :
           `<span class="${cYoy>0?"up":"down"}">${cYoy>0?"▲":"▼"} ${nf(Math.abs(cYoy),1)}%</span> y/y`} · ${esc(ymd(cL[0]))}</div></div>
-      <div class="kpi"><div class="lab">Unemployment</div><div class="val">${nf(lfsL[1],1)}%</div>
+      <div class="kpi"><div class="lab">${T("Unemployment")}</div><div class="val">${nf(lfsL[1],1)}%</div>
         <div class="sub">${esc(ymd(lfsL[0]))}</div></div>
-      <div class="kpi"><div class="lab">Participation rate</div><div class="val">${nf(lfsL[2],1)}%</div>
-        <div class="sub">${nf(lfsL[3],0)}k employed</div></div>
-      <div class="kpi"><div class="lab">Real GDP · quarter</div>
+      <div class="kpi"><div class="lab">${T("Participation rate")}</div><div class="val">${nf(lfsL[2],1)}%</div>
+        <div class="sub">${nf(lfsL[3],0)}k ${T("employed")}</div></div>
+      <div class="kpi"><div class="lab">${T("Real GDP · quarter")}</div>
         <div class="val" style="font-size:20px">RM ${nf(gdpL[1],0)}m</div>
         <div class="sub">${yoy == null ? "" :
           `<span class="${yoy>0?"down":"up"}">${yoy>0?"▲":"▼"} ${nf(Math.abs(yoy),1)}%</span> y/y`}</div></div>
     </div>
     <div class="card mb">
-      <div class="card-h"><h4>Consumer Price Index — core</h4><span class="sub">by expenditure division</span>
+      <div class="card-h"><h4>${T("Consumer Price Index — core")}</h4><span class="sub">${T("by expenditure division")}</span>
         <span class="right"><span class="seg" role="group" aria-label="CPI range">
           ${["1y","2y","all"].map(r => `<button data-crange="${r}" aria-pressed="${r === cpiRange}">${r.toUpperCase()}</button>`).join("")}
         </span></span></div>
       <div class="card-b" style="padding-bottom:8px"><div class="chips" id="cpi-chips"></div></div>
       <div class="card-b" style="padding-top:8px">
         <div class="chart tall"><canvas id="cpi-chart" role="img" aria-label="CPI by division"></canvas></div>
-        <details class="dt"><summary>View data table</summary>
+        <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="cpi-dt"></div></details></div>
     </div>
     <div class="grid g2">
-      <div class="card"><div class="card-h"><h4>Unemployment rate</h4><span class="sub">monthly</span></div>
+      <div class="card"><div class="card-h"><h4>${T("Unemployment rate")}</h4><span class="sub">${T("monthly")}</span></div>
         <div class="card-b"><div class="chart"><canvas id="lfs-chart" role="img" aria-label="Unemployment rate"></canvas></div>
-        <details class="dt"><summary>View data table</summary>
+        <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="lfs-dt"></div></details></div></div>
-      <div class="card"><div class="card-h"><h4>Real GDP</h4><span class="sub">quarterly · RM million</span></div>
+      <div class="card"><div class="card-h"><h4>${T("Real GDP")}</h4><span class="sub">${T("quarterly · RM million")}</span></div>
         <div class="card-b"><div class="chart"><canvas id="gdp-chart" role="img" aria-label="Real GDP"></canvas></div>
-        <details class="dt"><summary>View data table</summary>
+        <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="gdp-dt"></div></details></div></div>
     </div>`;
 
@@ -1469,45 +1742,45 @@ function renderEconomy(d){
                  borderColor:PALETTE[i % PALETTE.length], borderWidth:2, pointRadius:0,
                  tension:.25, spanGaps:true }; }) },
     options: baseOpts({ scales:{
-      x:{ grid:{ display:false }, border:{ color:"#232838" },
-          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:12, maxRotation:0 } },
-      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
-          ticks:{ color:"#616b80", font:{size:10}, padding:8 } } } }),
+      x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, maxTicksLimit:12, maxRotation:0 } },
+      y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8 } } } }),
   });
   chart("lfs-chart", {
     type:"line",
     data:{ labels:d.lfs.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
-      datasets:[{ label:"Unemployment %", data:d.lfs.map(r => r[1]), borderColor:"#f87171",
+      datasets:[{ label:T("Unemployment") + " %", data:d.lfs.map(r => r[1]), borderColor:"#f87171",
         borderWidth:2, pointRadius:0, tension:.3, fill:true,
         backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#f87171") }] },
     options: baseOpts({ plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
-          titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10 } },
-      scales:{ x:{ grid:{ display:false }, border:{ color:"#232838" },
-          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:8, maxRotation:0 } },
-        y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
-          ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => v + "%" } } } }),
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
+      scales:{ x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, maxTicksLimit:8, maxRotation:0 } },
+        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8, callback:v => v + "%" } } } }),
   });
   chart("gdp-chart", {
     type:"bar",
     data:{ labels:d.gdp.map(r => { const t = new Date(r[0]);
         return isNaN(t) ? r[0] : `Q${Math.floor(t.getMonth()/3)+1} '${String(t.getFullYear()).slice(2)}`; }),
-      datasets:[{ label:"RM million", data:d.gdp.map(r => r[1]),
+      datasets:[{ label:T("RM million"), data:d.gdp.map(r => r[1]),
         backgroundColor:"rgba(34,211,238,.6)", borderRadius:5, borderSkipped:false }] },
     options: baseOpts({ plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
-          titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10 } },
-      scales:{ x:{ grid:{ display:false }, border:{ color:"#232838" },
-          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:10, maxRotation:0 } },
-        y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
-          ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => nf(v) } } } }),
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
+      scales:{ x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, maxTicksLimit:10, maxRotation:0 } },
+        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8, callback:v => nf(v) } } } }),
   });
   const cdt = $("#cpi-dt");
   if (cdt){
     const cols = d.cpi.filter(s => cpiPick.has(s.name));
     const maps = cols.map(s => new Map(s.pts));
     cdt.innerHTML = dataTableHTML(
-      ["Date"].concat(cols.map(s => divLabel(s.name))),
+      [T("Date")].concat(cols.map(s => divLabel(s.name))),
       labels.map(x => {
         const row = [md(x) + " '" + String(x).slice(2,4)];
         for (const m of maps) row.push(m.get(x) ?? null);
@@ -1516,39 +1789,143 @@ function renderEconomy(d){
       cols.map((_, i) => i + 1));
   }
   const ldt = $("#lfs-dt");
-  if (ldt) ldt.innerHTML = dataTableHTML(["Month","Unemployment %","Participation %"],
+  if (ldt) ldt.innerHTML = dataTableHTML([T("Month"),T("Unemployment") + " %",T("Participation rate") + " %"],
     d.lfs.map(r => [md(r[0]) + " '" + String(r[0]).slice(2,4), r[1], r[2]]), [1,2]);
   const gdt = $("#gdp-dt");
-  if (gdt) gdt.innerHTML = dataTableHTML(["Quarter","RM million"],
+  if (gdt) gdt.innerHTML = dataTableHTML([T("Quarter"),T("RM million")],
     d.gdp.map(r => { const t = new Date(r[0]);
       return [isNaN(t) ? r[0] : `Q${Math.floor(t.getMonth()/3)+1} ${t.getFullYear()}`, r[1]]; }), [1]);
 }
 
 /* ════════════════════════════ transport view ════════════════════════════ */
 let topN = 10;
+let netFilter = "all";        // all | ktmb | prasarana
+let routeQ = "", stopQ = "";
+let tdata = null;
+const tgeo = { status:"idle", near:null };
+const haversine = (a, b) => {
+  const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180,
+        dLon = (b.lon - a.lon) * Math.PI / 180;
+  const s = Math.sin(dLat/2) ** 2 +
+    Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) * Math.sin(dLon/2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+};
+const kmTxt = km => km < 1 ? Math.round(km * 1000) + " m" : km.toFixed(1) + " km";
+
+async function findStopsNear(){
+  if (!navigator.geolocation){ tgeo.status = "unsupported"; paintTransport(); return; }
+  tgeo.status = "asking"; paintTransport();
+  let pos;
+  try {
+    pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej,
+        { timeout:12000, maximumAge:600000, enableHighAccuracy:false }));
+  } catch (e) {
+    tgeo.status = (e && e.code === 1) ? "denied" : "unavailable";
+    paintTransport();
+    return;
+  }
+  tgeo.lat = pos.coords.latitude; tgeo.lon = pos.coords.longitude;
+  tgeo.near = {};
+  for (const f of Object.values(tdata || {})){
+    tgeo.near[f.key] = f.stopList
+      .map(s => ({ s, km:haversine({ lat:tgeo.lat, lon:tgeo.lon }, s) }))
+      .sort((a, b) => a.km - b.km).slice(0, 12);
+  }
+  tgeo.status = "ok";
+  paintTransport();
+}
+
+const trFeed = () => Object.values(tdata || {})
+  .filter(f => netFilter === "all" || f.key === netFilter);
+
 function renderTransport(d){
-  $("#body-transport").innerHTML = Object.values(d).map((f, n) => `
-    <div class="${n ? "" : "mb"}" style="margin-bottom:var(--s6)">
+  tdata = d;
+  $("#body-transport").innerHTML = `
+    <div class="chips mb" id="tr-filters"></div>
+    <div class="grid g2 mb">
+      <div class="card">
+        <div class="card-h"><h4>${T("Search routes")}</h4></div>
+        <div class="card-b"><label class="sr" for="tr-rq">${T("Search routes")}</label>
+          <input class="inp" id="tr-rq" placeholder="${T("Route number or name…")}" autocomplete="off"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>${T("Search stops")}</h4></div>
+        <div class="card-b">
+          <label class="sr" for="tr-sq">${T("Search stops")}</label>
+          <input class="inp" id="tr-sq" placeholder="${T("Station or stop name…")}" autocomplete="off">
+          <button class="btn" id="tr-near" style="margin-top:var(--s2)">📍 ${T("Find stops near me")}</button>
+          <div id="tr-near-st" style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)"></div>
+        </div>
+      </div>
+    </div>
+    <div id="tr-blocks"></div>`;
+  $("#tr-filters").innerHTML = [["all",T("All networks")],["ktmb","KTMB"],["prasarana","Rapid KL"]]
+    .map(([v, label]) => `<button class="chip" data-net="${v}" aria-pressed="${netFilter === v}">${label}</button>`)
+    .join("");
+  $("#tr-filters").querySelectorAll("[data-net]").forEach(b => {
+    b.onclick = () => { netFilter = b.dataset.net; paintTransport(); };
+  });
+  const rq = $("#tr-rq");
+  rq.value = routeQ;
+  rq.oninput = () => { routeQ = rq.value; paintBlocks(); };
+  const sq = $("#tr-sq");
+  sq.value = stopQ;
+  sq.oninput = () => { stopQ = sq.value; paintBlocks(); };
+  $("#tr-near").onclick = findStopsNear;
+  paintTransport();
+}
+
+function paintTransport(){
+  paintFilters(); paintBlocks();
+}
+function paintFilters(){
+  const host = $("#tr-filters"); if (!host) return;
+  host.querySelectorAll("[data-net]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.net === netFilter)));
+  const st = $("#tr-near-st");
+  if (st){
+    if (tgeo.status === "ok" && tgeo.near)
+      st.textContent = `${T("Showing nearest stops from ")}${tgeo.lat.toFixed(3)}, ${tgeo.lon.toFixed(3)}`;
+    else if (tgeo.status === "asking") st.textContent = T("Locating…");
+    else if (tgeo.status === "denied") st.textContent = T("Location permission denied — search by name instead.");
+    else if (tgeo.status === "unavailable") st.textContent = T("Couldn't pin your location.");
+    else st.textContent = "";
+  }
+}
+function paintBlocks(){
+  const host = $("#tr-blocks"); if (!host || !tdata) return;
+  const tq = routeQ.trim().toLowerCase(), sq = stopQ.trim().toLowerCase();
+  host.innerHTML = trFeed().map(f => {
+    const routes = f.top.filter(r =>
+      !tq || r.short.toLowerCase().includes(tq) || r.long.toLowerCase().includes(tq) || r.id.toLowerCase().includes(tq));
+    const near = tgeo.near && tgeo.near[f.key];
+    const stops = f.stopList
+      .filter(s => !sq || s.name.toLowerCase().includes(sq) || s.id.toLowerCase().includes(sq))
+      .sort((a, b) => { const d = (near && near.find(n => n.s.id === a.id)?.km) ?? 1e9;
+        const e = (near && near.find(n => n.s.id === b.id)?.km) ?? 1e9; return d - e; })
+      .slice(0, 200);
+    return `<div class="mb" style="margin-bottom:var(--s6)">
       <div class="grid g4 mb">
-        <div class="kpi"><div class="lab">${esc(f.label)} · routes</div>
-          <div class="val" data-count="${f.routes}">0</div><div class="sub">${esc(f.agency)}</div></div>
-        <div class="kpi"><div class="lab">Stops</div>
-          <div class="val" data-count="${f.stops}">0</div><div class="sub">stations & stops</div></div>
-        <div class="kpi"><div class="lab">Trips</div>
-          <div class="val" data-count="${f.trips}">0</div><div class="sub">scheduled trips</div></div>
-        <div class="kpi"><div class="lab">Avg trips / route</div>
-          <div class="val" data-count="${(f.routes ? f.trips / f.routes : 0).toFixed(1)}" data-dec="1">0</div>
+        <div class="kpi"><div class="lab">${esc(f.label)} · ${T("routes")}</div>
+          <div class="val">${nf(f.routes)}</div><div class="sub">${esc(f.agency)}</div></div>
+        <div class="kpi"><div class="lab">${T("Stops")}</div>
+          <div class="val">${nf(f.stops)}</div><div class="sub">${T("stations & stops")}</div></div>
+        <div class="kpi"><div class="lab">${T("Trips")}</div>
+          <div class="val">${nf(f.trips)}</div><div class="sub">${T("scheduled trips")}</div></div>
+        <div class="kpi"><div class="lab">${T("Avg trips / route")}</div>
+          <div class="val">${nf(f.routes ? f.trips / f.routes : 0, 1)}</div>
           <div class="sub">${esc(f.desc)}</div></div>
       </div>
       <div class="card">
-        <div class="card-h"><h4>Busiest routes — ${esc(f.label)}</h4>
-          <span class="sub">by scheduled trips</span>
+        <div class="card-h"><h4>${T("Busiest routes — ")}${esc(f.label)}</h4>
+          <span class="sub">${T("by scheduled trips")}</span>
           <span class="right"><span class="seg" role="group" aria-label="Rows to show">
-            ${[10,25,"all"].map(v => `<button data-top="${v}" data-feed="${f.label}" aria-pressed="${String(v) === String(topN)}">${v === "all" ? "ALL" : "TOP " + v}</button>`).join("")}
+            ${[10,25,"all"].map(v => `<button data-top="${v}" data-feed="${f.key}" aria-pressed="${String(v) === String(topN)}">${v === "all" ? "ALL" : "TOP " + v}</button>`).join("")}
           </span></span></div>
         <div class="tw scroll-y"><table>
-          <thead><tr><th>Route</th><th>Name</th><th class="num">Trips</th><th style="width:30%">Share</th></tr></thead>
-          <tbody>${f.top.slice(0, topN === "all" ? f.top.length : topN).map(r => {
+          <thead><tr><th>${T("Route")}</th><th>${T("Name")}</th><th class="num">${T("Trips")}</th><th style="width:30%">${T("Share")}</th></tr></thead>
+          <tbody>${routes.slice(0, topN === "all" ? routes.length : topN).map(r => {
             const pct = f.top[0].trips ? (r.trips / f.top[0].trips) * 100 : 0;
             return `<tr>
               <td><span class="pill" style="background:${esc(r.color)}22;color:${esc(r.color)};border:1px solid ${esc(r.color)}55">${esc(r.short)}</span></td>
@@ -1557,14 +1934,29 @@ function renderTransport(d){
               <td><div style="background:var(--surface-3);border-radius:99px;height:6px;overflow:hidden">
                 <div style="width:${pct.toFixed(1)}%;height:100%;background:${esc(r.color)};border-radius:99px"></div></div></td>
             </tr>`; }).join("")}
+        ${!routes.length ? `<tr><td colspan="4" class="state">${T("No routes match ")}“${esc(routeQ)}”.</td></tr>` : ""}
         </tbody></table></div>
       </div>
-    </div>`).join("");
-  $("#body-transport").querySelectorAll("[data-top]").forEach(b => {
+      <div class="card">
+        <div class="card-h"><h4>${T("Stops — ")}${esc(f.label)}</h4>
+          <span class="sub">${nf(f.stopList.length)} ${T("with coordinates")}</span></div>
+        <div class="tw scroll-y"><table>
+          <thead><tr><th>${T("Stop")}</th><th>ID</th>${near ? `<th class="num">${T("Distance")}</th>` : `<th class="num">Lat</th><th class="num">Lon</th>`}</tr></thead>
+          <tbody>${stops.map(s => {
+            const d = near && near.find(n => n.s.id === s.id);
+            return `<tr><td class="wrapcell" style="min-width:160px;font-weight:550">${esc(s.name)}</td>
+              <td class="mono dim">${esc(s.id)}</td>
+              ${near ? `<td class="num" style="font-weight:650">${d ? kmTxt(d.km) : "—"}</td>`
+                     : `<td class="num dim">${s.lat.toFixed(4)}</td><td class="num dim">${s.lon.toFixed(4)}</td>`}</tr>`;
+          }).join("")}
+          ${!stops.length ? `<tr><td colspan="${near ? 3 : 4}" class="state">${T("No stops match ")}“${esc(stopQ)}”.</td></tr>` : ""}
+          </tbody></table></div>
+      </div>
+    </div>`; }).join("");
+  host.querySelectorAll("[data-top]").forEach(b => {
     b.onclick = () => { topN = b.dataset.top === "all" ? "all" : Number(b.dataset.top);
-      renderTransport(d); };
+      paintBlocks(); };
   });
-  animateCounters($("#body-transport"));
 }
 function animateCounters(root){
   root.querySelectorAll("[data-count]").forEach(n => {
@@ -1573,48 +1965,87 @@ function animateCounters(root){
 }
 
 /* ════════════════════════════ live view ════════════════════════════ */
+const ago = ts => {
+  const s = Math.max(0, Math.floor(Date.now() / 1000 - ts));
+  if (s < 60) return s + "s ago";
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + "m ago";
+  const h = Math.floor(m / 60);
+  return h + "h " + (m % 60) + "m ago";
+};
+let lvdata = null;
+const lvMaps = {};
+function vcard(f, v){
+  return `<div class="card vcard">
+    <div class="card-h"><h4 class="mono">${esc(v.vehicleId || v.entityId || "—")}</h4>
+      ${v.routeId ? `<span class="pill" style="background:var(--accent-dim);color:${cssVar("--chip-fg")}">${esc(v.routeId)}</span>` : ""}</div>
+    <div class="card-b">
+      <div class="vrow"><span>${T("Network")}</span><span>${esc(f.label)}</span></div>
+      <div class="vrow"><span>${T("Trip")}</span><span class="mono dim">${esc(v.tripId || "—")}</span></div>
+      <div class="vrow"><span>${T("Speed")}</span><span>${v.speed == null ? "—" : nf(v.speed, 1) + " km/h"}</span></div>
+      <div class="vrow"><span>${T("Last seen")}</span><span>${v.timestamp ? ago(v.timestamp) : "—"}</span></div>
+      <div class="vrow"><span>${T("Position")}</span><span class="mono dim">${v.lat == null ? "—" : v.lat.toFixed(4) + ", " + v.lon.toFixed(4)}</span></div>
+      ${v.lat == null ? "" : `<a class="link-btn" target="_blank" rel="noopener"
+        href="https://www.google.com/maps?q=${v.lat},${v.lon}">map ↗</a>`}
+    </div></div>`;
+}
 function renderLive(d){
+  lvdata = d;
   $("#body-live").innerHTML = Object.values(d).map(f => {
     const n = f.vehicles.length;
-    const ts = f.feedTimestamp ? hms(f.feedTimestamp * 1000) : "—";
+    const ts = f.feedTimestamp ? ago(f.feedTimestamp) : "—";
     return `<div style="margin-bottom:var(--s6)">
       <div class="grid g3 mb">
-        <div class="kpi"><div class="lab">${esc(f.label)} live now</div>
+        <div class="kpi"><div class="lab">${esc(f.label)} ${T("live now")}</div>
           <div class="val" style="color:${n ? "var(--ok)" : "var(--fg-3)"}" data-count="${n}">0</div>
-          <div class="sub">${n ? "broadcasting a position" : "none reporting"}</div></div>
-        <div class="kpi"><div class="lab">Last feed update</div>
+          <div class="sub">${n ? T("broadcasting a position") : T("none reporting")}</div></div>
+        <div class="kpi"><div class="lab">${T("Last update")}</div>
           <div class="val" style="font-size:19px">${esc(ts)}</div>
-          <div class="sub">operator feed · v${esc(f.version || "?")}</div></div>
-        <div class="kpi"><div class="lab">Distinct routes</div>
+          <div class="sub">${T("feed v")}${esc(f.version || "?")}</div></div>
+        <div class="kpi"><div class="lab">${T("Distinct routes")}</div>
           <div class="val" data-count="${new Set(f.vehicles.map(v => v.routeId).filter(Boolean)).size}">0</div>
-          <div class="sub">among live ${esc(f.noun)}</div></div>
+          <div class="sub">${T("among live ")}${esc(f.noun)}</div></div>
       </div>
-      <div class="card">
-        <div class="card-h"><h4>Active ${esc(f.noun)}</h4>
-          <span class="sub">positions decoded in your browser</span></div>
-        ${n ? `<div class="tw scroll-y"><table>
-          <thead><tr><th>Vehicle</th><th>Route</th><th>Trip</th><th class="num">Lat</th>
-            <th class="num">Lon</th><th class="num">Speed</th><th>Updated</th><th></th></tr></thead>
-          <tbody>${f.vehicles.map(v => `<tr>
-            <td class="mono" style="font-weight:650">${esc(v.vehicleId || v.entityId || "—")}</td>
-            <td>${v.routeId ? `<span class="pill" style="background:var(--accent-dim);color:#a5f3ea">${esc(v.routeId)}</span>` : '<span class="dim">—</span>'}</td>
-            <td class="mono dim">${esc(v.tripId || "—")}</td>
-            <td class="num">${v.lat == null ? "—" : v.lat.toFixed(5)}</td>
-            <td class="num">${v.lon == null ? "—" : v.lon.toFixed(5)}</td>
-            <td class="num dim">${v.speed == null ? "—" : nf(v.speed,1)}</td>
-            <td class="mono dim">${v.timestamp ? hhmm(v.timestamp * 1000) : "—"}</td>
-            <td><a class="mono" style="font-size:11.5px" target="_blank" rel="noopener"
-              href="https://www.google.com/maps?q=${v.lat},${v.lon}"
-              aria-label="Open vehicle position in Google Maps">map ↗</a></td></tr>`).join("")}
-          </tbody></table></div>`
-        : `<div class="state"><div class="big">🌙</div>
-             <strong>No ${esc(f.noun)} are broadcasting right now</strong>
-             <div>The feed responded normally (v${esc(f.version || "?")}, timestamp ${esc(ts)}) but
-             carried zero vehicles — normal outside service hours, or when the operator's
-             tracking feed is paused.</div></div>`}
+      <div class="card mb">
+        <div class="card-h"><h4>${T("Live map — ")}${esc(f.label)}</h4>
+          <span class="sub">${T("positions as broadcast")}</span></div>
+        <div class="card-b" style="padding:0"><div class="lvmap" id="lvmap-${f.key}"></div></div>
+      </div>
+      ${n ? `<div class="vgrid">${f.vehicles.map(v => vcard(f, v)).join("")}</div>`
+          : `<div class="card"><div class="state"><div class="big">🌙</div>
+             <strong>${T(f.noun === "trains" ? "No trains are broadcasting right now" : "No buses are broadcasting right now")}</strong>
+             <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles — normal outside service hours, or when the operator's tracking feed is paused.")}</div></div>`}
       </div></div>`;
   }).join("");
   animateCounters($("#body-live"));
+  paintMaps();
+}
+function paintMaps(){
+  if (!window.L || !lvdata) return;
+  for (const f of Object.values(lvdata)){
+    const el = document.getElementById("lvmap-" + f.key); if (!el) continue;
+    if (lvMaps[f.key]){ lvMaps[f.key].remove(); delete lvMaps[f.key]; }
+    const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 7);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+    if (f.vehicles.length){
+      const pts = f.vehicles.map(v => {
+        const m = L.circleMarker([v.lat, v.lon], {
+          radius: 6, color:"#0a0c10", weight:1.5,
+          fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.9,
+        }).addTo(map);
+        m.bindPopup(`<b>${esc(v.vehicleId || v.entityId || "—")}</b>` +
+          (v.routeId ? ` · ${esc(v.routeId)}` : "") +
+          (v.tripId ? `<br>${esc(v.tripId)}` : "") +
+          (v.timestamp ? `<br>${ago(v.timestamp)}` : ""));
+        return [v.lat, v.lon];
+      });
+      if (pts.length > 1) map.fitBounds(pts, { padding:[30, 30], maxZoom:14 });
+      else map.setView(pts[0], 13);
+    }
+    lvMaps[f.key] = map;
+  }
 }
 
 /* ════════════════════════════ KPI summary ════════════════════════════ */
@@ -1631,11 +2062,11 @@ function renderKpis(){
   host.innerHTML = cards.map(c => {
     const s = kpiState[c.k];
     return `<a class="kpi${s ? " fade" : ""}" href="${c.href}"
-      aria-label="${esc(c.lab)} — go to the ${esc(c.href.slice(1))} section">
-      <div class="kpi-t"><span class="lab">${c.ico} ${esc(c.lab)}</span>
+      aria-label="${esc(T(c.lab))} — go to the ${esc(c.href.slice(1))} section">
+      <div class="kpi-t"><span class="lab">${c.ico} ${esc(T(c.lab))}</span>
         <span class="go" aria-hidden="true">↗</span></div>
       <div class="val" id="kpi-${c.k}">${s ? "" : "—"}</div>
-      <div class="sub">${s ? esc(s.sub) : "loading…"}</div></a>`;
+      <div class="sub">${s ? esc(s.sub) : T("loading…")}</div></a>`;
   }).join("");
   for (const c of cards){
     const s = kpiState[c.k]; if (!s) continue;
@@ -1677,36 +2108,39 @@ const LOADERS = {
       for (const [i, r] of first) if (r[3] != null && (!hot || r[3] > hot.t)) hot = { t:r[3], i };
       if (hot) kpiState.hot = { value:hot.t, dec:0, suffix:"°C", sub:d.locs[hot.i].name };
       const active = d.warn.filter(w => !w.info).length;
-      kpiState.warn = { value:active, dec:0, sub:active ? "issued by MET" : "all clear" };
+      kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
       if (geo.status === "waiting") locate();
     } },
   fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
       if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
-        sub:"week of " + ymd(d.latest.date) }; } },
+        sub:T("week of ") + ymd(d.latest.date) }; } },
   economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
       const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
       if (ov.length > 12){
         const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
-        kpiState.cpi = { value:v, dec:1, suffix:"%", sub:"core CPI, " + ymd(ov[ov.length-1][0]) };
+        kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
       } } },
   transport:{ load:loadTransport, render:renderTransport },
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
-      kpiState.live = { value:n, dec:0, sub:n ? "trains + buses" : "none reporting now" }; } },
+      kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
 };
 
 let stamps = {};
 const loaded = new Set();    // sections whose content is currently on screen
 const loading = new Set();   // sections mid-fetch (guard against races)
+const dataMap = {};          // last data per section, for theme/lang re-renders
+const secMode = {};          // last freshness state per section ("updated"…)
 function setSecTime(id, mode){
   const n = $("#time-" + id); if (!n) return;
   const at = stamps[id] ? hhmm(stamps[id]) : "";
   let text = "", cls = "";
   if (mode === "loading"){ text = "loading…"; cls = " loading"; }
-  else if (mode === "updated") text = "updated " + at;
-  else if (mode === "cached") text = "cached · fetched " + at;
-  else if (mode === "error"){ text = "refresh failed — showing last data"; cls = " error"; }
+  else if (mode === "updated") text = T("updated ") + at;
+  else if (mode === "cached") text = T("cached · fetched ") + at;
+  else if (mode === "error"){ text = T("refresh failed — showing last data"); cls = " error"; }
   n.textContent = text; n.className = "sec-time" + cls;
+  secMode[id] = mode;
 }
 async function loadSection(id, force){
   if (loading.has(id)) return;
@@ -1719,7 +2153,7 @@ async function loadSection(id, force){
     if (cached){
       try {
         cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
-        loaded.add(id); stamps[id] = cached.t;
+        loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
         setDot(id, "ok"); setSecTime(id, "cached");
         tick(); renderKpis();
         return;
@@ -1733,7 +2167,7 @@ async function loadSection(id, force){
       const data = await cfg.load();
       const rec = cacheSet(id, data);
       cfg.render(data); if (cfg.after) cfg.after(data);
-      loaded.add(id); stamps[id] = rec.t;
+      loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
       setDot(id, "ok"); setSecTime(id, "updated");
     } catch (err){
       setDot(id, "err");
@@ -1750,22 +2184,22 @@ function tick(){
   bar.style.width = (ts.length / SECTIONS.length * 100) + "%";
   if (ts.length === SECTIONS.length) setTimeout(() => { bar.style.width = "0%"; }, 800);
   $("#stamp-t").textContent = ts.length
-    ? `Updated ${hms(Math.max(...ts))} · ${ts.length}/${SECTIONS.length}`
-    : "Loading…";
+    ? `${T("Updated")} ${hms(Math.max(...ts))} · ${ts.length}/${SECTIONS.length}`
+    : T("Loading…");
 }
 let busy = false;
 async function loadAll(force){
   if (busy) return;
   busy = true;
   const btn = $("#refresh");
-  btn.disabled = true; $("#ref-ico").className = "spin"; $("#ref-t").textContent = "Refreshing…";
+  btn.disabled = true; $("#ref-ico").className = "spin"; $("#ref-t").textContent = T("Refreshing…");
   if (force){ cacheClear(); stamps = {}; }
   /* Weather + fuel first; the rest are lazy-loaded on scroll. A full refresh
      still covers every section so the button means "update everything". */
   for (const s of SECTIONS) if (!LAZY.has(s.id)) await loadSection(s.id, force);
   if (force) for (const s of SECTIONS) if (LAZY.has(s.id)) await loadSection(s.id, force);
   busy = false;
-  btn.disabled = false; $("#ref-ico").className = ""; $("#ref-t").textContent = "Refresh";
+  btn.disabled = false; $("#ref-ico").className = ""; $("#ref-t").textContent = T("Refresh");
 }
 /** Paint whatever is already in the cache immediately, before any network. */
 function primeCached(){
@@ -1774,7 +2208,7 @@ function primeCached(){
     try {
       LOADERS[s.id].render(rec.d);
       if (LOADERS[s.id].after) LOADERS[s.id].after(rec.d);
-      loaded.add(s.id); stamps[s.id] = rec.t;
+      loaded.add(s.id); stamps[s.id] = rec.t; dataMap[s.id] = rec.d;
       setDot(s.id, "ok"); setSecTime(s.id, "cached");
     } catch { /* shape drift — refetch on load */ }
   }
@@ -1799,24 +2233,35 @@ function pwa(){
   addEventListener("appinstalled", () => { btn.hidden = true; });
 
   const net = $("#net"), netT = $("#net-t");
-  const sync = () => {
+  syncNet = () => {
     const off = !navigator.onLine;
     net.hidden = !off;
-    if (off){ net.className = "badge off"; netT.textContent = "Offline — showing cached data"; }
+    if (off){ net.className = "badge off"; netT.textContent = T("Offline — showing cached data"); }
   };
-  addEventListener("online", sync);
-  addEventListener("offline", sync);
+  addEventListener("online", syncNet);
+  addEventListener("offline", syncNet);
   // A tab restored from the background can miss the online/offline events.
-  addEventListener("visibilitychange", () => { if (!document.hidden) sync(); });
-  sync();
+  addEventListener("visibilitychange", () => { if (!document.hidden) syncNet(); });
+  syncNet();
 }
+let syncNet = null;
 
 /* ════════════════════════════ boot ════════════════════════════ */
 function boot(){
+  loadPrefs();
   buildShell();
   renderKpis();
   pwa();
+  applyTheme(); applyText(); applyLang();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyTheme(); rerenderAll(); });
   $("#refresh").onclick = () => loadAll(true);
+  $("#lang").onclick = () => { LANG = LANG === "en" ? "ms" : "en";
+    savePref(LK_LANG, LANG); applyLang(); };
+  $("#theme").onclick = () => { const seq = ["dark","light","system"];
+    themeMode = seq[(seq.indexOf(themeMode) + 1) % 3];
+    savePref(LK_THEME, themeMode); applyTheme(); rerenderAll(); };
+  $("#textsize").onclick = () => { textLarge = !textLarge;
+    savePref(LK_TEXT, textLarge ? "1" : "0"); applyText(); rerenderAll(); };
   geo.status = "waiting";     // resolved once weather data lands
   primeCached();
   /* Start lazy-loading only after weather + fuel have rendered: while the

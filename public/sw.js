@@ -9,7 +9,7 @@
  *   Freshness is driven by the app's own 15-minute TTL in index.html, which is
  *   the "revalidate" half of SWR moved into a rate-limit-aware layer.
  */
-const VERSION    = "mygov-v1";
+const VERSION    = "mygov-v2";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -22,6 +22,8 @@ const SHELL_ASSETS = [
   "/icons/icon-512.png",
   "/icons/apple-touch-icon.png",
   "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+  "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css",
+  "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js",
 ];
 
 self.addEventListener("install", event => {
