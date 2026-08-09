@@ -125,7 +125,8 @@ development, not just for final wiring:
 
 ## Data freshness policy (hard rule)
 - Applies to the dataset's LAST-UPDATED date, NOT historical depth. Long
-  history is fine; a series nobody updates is not.
+  history is fine; a series nobody updates is not — without current data to
+  compare, a frozen series is worthless to users.
 - EXCLUDE any dataset whose latest date is more than 2 years old (audit done
   2026-08-09 — re-verify at build time with a sort=-date call).
 - STALE — do NOT build sections for these:
@@ -133,12 +134,28 @@ development, not just for final wiring:
   - mnha (2022-01), marriages (2022-01), population_state (2023-01),
     deaths (2024-01), fertility (2024-01)
   - arrivals (tourism, last update 2024-10-01) and passports (2024-10-01) —
-    22 months frozen, effectively abandoned. Skip the tourism section.
+    22 months frozen, effectively abandoned. Skip the tourism section even
+    though the data exists; no current data to compare = no point showing it.
 - FRESH — keep: fuelprice (3d), cpi_core/ppi (69d), iowrt (100d), ipi (130d),
   exchangerates (161d), population_malaysia (220d), interestrates (251d),
-  MoH health (daily).
+  MoH health (daily). poskod is static reference data — exempt from the rule.
 - Every section header shows a "data as of <date>" line — if the data is
   older than 6 months, add a muted "⚠️ may be delayed" note.
+
+### Enforcing the policy on an existing build
+1. Audit index.html: remove every loader, SECTIONS entry, META block, KPI
+   feed, nav entry and lazy-load registration for removed ids (arrivals,
+   passports, births, mnha, marriages, deaths, fertility,
+   population_state — keep population_malaysia).
+2. Bump the cache version prefix (CK in index.html) since loader contracts
+   changed — stale cached payloads must not replay into new renderers.
+3. Re-balance the per-family rate-limit budget (removing datasets frees
+   opendosm/data-catalogue slots; keep the token bucket intact).
+4. Verify with npx wrangler dev: every remaining section renders real data,
+   zero console errors, no dead nav entries, mobile + dark theme intact.
+5. Security re-pass: Network tab shows zero requests to removed endpoints;
+   CSP unchanged; no dead code left behind.
+6. Report per-section "data as of" values in the final summary.
 
 ---
 
