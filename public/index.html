@@ -909,10 +909,19 @@ async function locate(){
   geo.status = "asking"; paintWeather();
   let pos;
   try {
+    // A cached fix returns in ~0 ms; a cold one can take well over 8 s on a
+    // desktop with no GPS, so give it a little longer before giving up.
     pos = await new Promise((res, rej) =>
       navigator.geolocation.getCurrentPosition(res, rej,
-        { timeout:8000, maximumAge:600000, enableHighAccuracy:false }));
-  } catch { geo.status = "denied"; paintWeather(); return; }
+        { timeout:12000, maximumAge:600000, enableHighAccuracy:false }));
+  } catch (e) {
+    // 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT. Only the
+    // first means the user said no — reporting a slow fix as "location off"
+    // tells them they denied something they actually allowed.
+    geo.status = (e && e.code === 1) ? "denied" : "unavailable";
+    paintWeather();
+    return;
+  }
 
   const { latitude:lat, longitude:lon } = pos.coords;
   let addr = null;
@@ -1090,6 +1099,8 @@ function paintLocChip(){
         `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
   else if (S === "denied")  html = chip("off", "📍 Location off") +
       `<button class="link-btn" id="loc-try">use my location</button>`;
+  else if (S === "unavailable") html = chip("off", "📍 Couldn't pin your location") +
+      `<button class="link-btn" id="loc-try">try again</button>`;
   else if (S === "nomatch") html = chip("off", `📍 ${esc(geo.osm || "Not in the forecast list")}`) +
       `<span class="dim" style="font-size:11.5px">— search below</span>`;
   else if (S === "noproxy") html = chip("off", "📍 Location lookup unavailable") +
