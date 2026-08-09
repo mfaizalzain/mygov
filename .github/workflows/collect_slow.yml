@@ -1,11 +1,16 @@
 name: Update Slow Data (fuel, finance, mobility, economy, population)
 
 on:
+  # Runs twice daily so the business-daily series (FX, FPX, ridership) stay
+  # within ~12h of current: 08:30 AM + 08:30 PM MYT
   schedule:
-    # Twice daily so the business-daily series (FX, FPX, ridership) stay
-    # within ~12h of current: 08:30 AM + 08:30 PM MYT
     - cron: '30 0 * * *'
     - cron: '30 12 * * *'
+  # Catch-up: also refresh on any push, so a delayed/skipped cron never
+  # leaves the static files stale for a day. The collector's own commit uses
+  # [skip ci], so this cannot loop.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:

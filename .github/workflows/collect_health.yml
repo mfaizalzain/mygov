@@ -1,9 +1,14 @@
 name: Update KKM Health Data
 
 on:
+  # Runs daily at 00:30 UTC (8:30 AM MYT)
   schedule:
-    # Runs daily at 00:30 UTC (8:30 AM MYT) — before the trend radar run
     - cron: '30 0 * * *'
+  # Catch-up: also refresh on any push, so a delayed/skipped cron never
+  # leaves the static files stale for a day. The collector's own commit uses
+  # [skip ci], so this cannot loop.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:

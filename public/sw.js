@@ -9,7 +9,7 @@
  *   Freshness is driven by the app's own 15-minute TTL in index.html, which is
  *   the "revalidate" half of SWR moved into a rate-limit-aware layer.
  */
-const VERSION    = "mygov-v6";
+const VERSION    = "mygov-v7";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -108,7 +108,18 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Everything else (icons, CDN script): cache first.
+  /* Cross-origin sub-resources — map tiles — are left to the browser.
+   *
+   * A worker that calls respondWith() re-issues the request as its own
+   * fetch(), and a fetch() from a worker is policed by `connect-src`, not by
+   * the `img-src` that governs the <img> the page actually made. The tile
+   * host is deliberately on img-src only, so every tile was blocked inside
+   * the worker, and the catch below turned each one into an empty 503 — a
+   * blank basemap on every visit. Nothing here wants to cache them anyway:
+   * the branch below only stores same-origin responses. */
+  if (url.origin !== self.location.origin) return;
+
+  // Everything else (icons, vendor scripts): cache first.
   event.respondWith((async () => {
     const hit = await caches.match(request);
     if (hit) return hit;
