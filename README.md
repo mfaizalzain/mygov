@@ -18,6 +18,9 @@ proxies the reverse-geocoding and GTFS archive calls.
 | Weather | MET Malaysia | 7-day forecast for all 360 locations, severe-weather warnings, recent earthquakes |
 | Fuel & Households | Ministry of Finance | Weekly RON95 / RON97 / diesel ceiling prices, household income |
 | Economy | DOSM (OpenDOSM) | Core CPI by expenditure division, unemployment, quarterly real GDP |
+| Finance | Bank Negara Malaysia | Exchange rates vs key currencies, interest rates (commercial base rate) by bank type |
+| Tourism | Immigration Department | Tourist arrivals by country, passports issued by state |
+| Society | DOSM · MoH · Pos Malaysia | Daily births, national health accounts, postcode lookup |
 | Transport | KTMB, Prasarana | GTFS schedules — route and stop search, nearest stops, busiest routes |
 | Live | KTMB, Prasarana | GTFS-Realtime vehicle positions on a live map, with "last seen" cards |
 
@@ -111,18 +114,43 @@ no request wastes a redirect hop against the rate limit.
 - caches results in memory + `localStorage` for 15 minutes;
 - never polls. Refresh is manual.
 
-Total cold load: **14 requests** — weather 3, catalogue 2, opendosm 3,
+Total cold load: **19 requests** — weather 3, catalogue 9, opendosm 3,
 gtfs-static 2, gtfs-realtime 2. Only weather + fuel (5 requests) are fetched
-on first paint; economy, transport and live are lazy-loaded as their sections
-scroll into view, so the first screen renders before the slowest datasets
-arrive.
+on first paint; economy, finance, tourism, society, transport and live are
+lazy-loaded as their sections scroll into view, so the first screen renders
+before the slowest datasets arrive.
 
 **Dataset ids that exist** (many plausible ones do not — an unknown id returns
 `404` with `{"status_code":404,...}`):
 
-- `data-catalogue`: `fuelprice`, `hh_income`, `population_malaysia`
+- `data-catalogue`: `fuelprice`, `hh_income`, `population_malaysia`,
+  `exchangerates`, `arrivals`, `interestrates`, `passports`, `births`, `poskod`, `mnha`
 - `opendosm`: `cpi_core`, `cpi_headline`, `lfs_month`, `gdp_qtr_real`
-- Not found: `electrictariff`, `watertariff`, `interestrate`, `unemployment`, `cpi_2d`
+- Not found: `electrictariff`, `watertariff`, `interestrate`, `unemployment`,
+  `cpi_2d`, `opr`
+
+**Gotchas in the finance/tourism datasets** (all verified against live
+responses):
+
+- `interestrates` has **no `opr` series** — the rate codes are lending and
+  deposit rates (`br`, `alr`, `sr`, `fdr_*`, `wabr`…). The Finance section
+  charts the commercial base rate (`bank=commercial, rate=br`) instead, which
+  tracks the OPR, and says so in the UI.
+- `exchangerates` publishes each month five times (`start`/`low`/`high`/`avg`/
+  `end`); filter to `indicator=avg` for a single monthly series.
+- `births` is daily for **Malaysia only** — 37,833 rows back to 1920, no state
+  column, so there is no state selector. Fetch it with `date_start=…@date` to
+  avoid downloading the whole century.
+- `poskod` has no `date` column, so `sort=-date` fails on it (columns are
+  `city`, `state`, `postcode`).
+- `arrivals` uses ISO 3166-1 alpha-3 country codes (plus `ALL`, `ANT`, `XXX`);
+  names are resolved from an embedded map. The 2021-22 COVID collapse to tens
+  of thousands a month is real data.
+- `passports` has ~80 individual offices per state; `filter=All@office` keeps
+  only the per-state totals, which is all the chart needs.
+
+**Date-range filters** use `<YYYY-MM-DD>@<date_column>` syntax, e.g.
+`?id=births&date_start=2021-01-01@date`.
 
 **Server-side filtering works** and is worth using:
 `?id=fuelprice&filter=level@series_type` returns only the price levels,
