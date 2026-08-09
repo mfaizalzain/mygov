@@ -25,6 +25,44 @@ proxies the reverse-geocoding and GTFS archive calls.
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana | GTFS schedules — route and stop search, nearest stops, busiest routes |
 | Live | KTMB, Prasarana | GTFS-Realtime vehicle positions on a live map, with "last seen" cards |
+| Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
+
+---
+
+## Trend Radar (hot issues)
+
+A daily scoop of Malaysia's hot issues and trends, fed by:
+
+- **News RSS**: MalayMail, Free Malaysia Today, Utusan
+- **Fact-check feed**: Sebenarnya.my (MCMC) — used to verify/debunk circulating claims
+
+The collector clusters ~100 raw signals into a ranked top-10 issue list (BM titles,
+categories, cross-source counts) using the **Gemini API** (`gemini-flash-latest`),
+then writes `public/radar.json`. Each issue carries a fact-check status
+(`verified_claim` / `debunked` / `no_check_found`) matched deterministically
+against Sebenarnya posts, plus clickable source URLs.
+
+### Pipeline
+
+```
+GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
+  daily 9 AM MYT (or manual dispatch)      reads live radar.json
+  python3 tools/collect_radar.py            sends top-5 to Telegram
+  GOOGLE_API_KEY secret → Gemini cluster    (no collecting — read-only)
+  commit + push radar.json
+  Cloudflare auto-deploy → mygov.faizalmzain.com/radar.json
+```
+
+- **Collector:** `tools/collect_radar.py` — RSS fetch, Gemini clustering with
+  JSON-rescue parsing, deterministic Sebenarnya fact-check matching, URL
+  backfill. Falls back to keyword clustering if the Gemini call fails (never
+  crashes).
+- **Repo secret required:** `GOOGLE_API_KEY` (Gemini API key) — without it the
+  collector degrades to keyword clustering in CI.
+- **Workflow:** `.github/workflows/collect_radar.yml` — scheduled 01:00 UTC
+  (9 AM MYT) + manual `workflow_dispatch`, commits as `github-actions[bot]`
+  with `contents: write`.
+- The dashboard fetches `/radar.json` (same-origin) and renders issue cards.
 
 ---
 
