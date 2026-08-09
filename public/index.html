@@ -146,6 +146,23 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4);min-height:40px}
 .hero-loc .loc-chip{text-decoration:none}
 .hero-loc .loc-chip:hover{text-decoration:none;border-color:rgba(45,212,191,.55)}
+/* compact postcode utility under the location chip */
+.pos-util{position:relative;display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2);max-width:420px}
+.pos-util .pos-ico{font-size:13px;color:var(--fg-3)}
+.pos-util .inp{flex:1;min-width:0;padding:8px var(--s3);border-radius:var(--r-sm);
+  border:1px solid var(--line);background:var(--surface);color:var(--fg);
+  font-size:13px;transition:var(--t)}
+.pos-util .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,212,191,.18)}
+.pos-util .pos-count{font-size:11px;font-family:var(--mono);color:var(--fg-3);white-space:nowrap}
+.pos-panel{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:0 12px 32px rgba(0,0,0,.45);max-height:300px;overflow:auto}
+.pos-panel table{width:100%;border-collapse:collapse}
+.pos-panel td{padding:7px var(--s3);font-size:12.5px;border-bottom:1px solid var(--line-soft)}
+.pos-panel td.num{font-family:var(--mono);font-weight:650;white-space:nowrap}
+.pos-panel tr:last-child td{border-bottom:none}
+.pos-panel tr:hover td{background:var(--surface-3)}
+.pos-panel .state{text-align:center;color:var(--fg-3);padding:var(--s4)}
 .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--s3);margin-top:var(--s6)}
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
@@ -212,6 +229,33 @@ details.dt .dt-body{margin-top:var(--s2)}
 .hbar select{width:auto;max-width:240px}
 .credit{margin-top:var(--s3);font-size:11.5px;color:var(--fg-3)}
 .credit a{color:var(--fg-2)}
+/* stops tables: map link instead of raw coordinates */
+a.maplink{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:550;
+  color:var(--accent);text-decoration:none;white-space:nowrap;padding:3px 8px;
+  border:1px solid rgba(45,212,191,.25);border-radius:99px;transition:var(--t)}
+a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-color:rgba(45,212,191,.5)}
+/* trend radar cards */
+.radar-grid{display:grid;gap:var(--s3);grid-template-columns:repeat(2,1fr)}
+@media (max-width:820px){.radar-grid{grid-template-columns:1fr}}
+.radar-card{position:relative}
+.radar-card .rank{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  background:var(--bg-2);border:1px solid var(--line);font-family:var(--mono);
+  font-size:11.5px;font-weight:700;color:var(--fg-2)}
+.radar-card h4{margin:0;font-size:14px;line-height:1.35}
+.radar-card .fc-badge{flex:none;font-size:10.5px;font-weight:650;padding:3px 8px;border-radius:99px;
+  border:1px solid var(--line);color:var(--fg-2);background:var(--bg-2);text-transform:uppercase;letter-spacing:.04em}
+.radar-card .fc-badge.ok{color:#34d399;border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.radar-card .fc-badge.err{color:#f87171;border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08)}
+.radar-debunk{border-color:rgba(248,113,113,.35)}
+.radar-meta{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin:6px 0 var(--s2)}
+.radar-meta .pill{font-size:10.5px}
+.fc-verdict{flex:none;font-size:11px;font-weight:650;color:var(--fg);background:var(--surface-2);
+  border:1px solid var(--line);padding:3px 8px;border-radius:99px;text-transform:capitalize}
+.fc-reason{margin:0 0 var(--s2);font-size:12.5px;color:var(--fg-2);line-height:1.5}
+.radar-src{display:flex;justify-content:space-between;gap:var(--s2);padding:5px 0;font-size:12.5px}
+.radar-src a{color:var(--accent);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.radar-src a:hover{text-decoration:underline}
+.radar-src .dim{flex:none}
 /* live map + vehicle cards */
 .lvmap{position:relative;z-index:0;height:340px;background:var(--bg-2)}
 html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.7)}
@@ -398,6 +442,13 @@ html[data-text="large"] table{font-size:14px}
     <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area — fetched live
        from the Malaysian Government Open API.</p>
     <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
+    <div class="pos-util">
+      <label class="sr" for="pos-q" data-i18n="Postcode lookup">Postcode lookup</label>
+      <span class="pos-ico" aria-hidden="true">🔍</span>
+      <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off" aria-expanded="false">
+      <span class="pos-count" id="pos-count"></span>
+      <div class="pos-panel" id="pos-panel" hidden></div>
+    </div>
     <div class="kpis" id="kpis"></div>
   </div>
 
@@ -429,6 +480,7 @@ const GAP = 1200;             // ms between any two requests
 const FGAP = 3000;            // ms between two requests of the SAME family
 const CAP = 4;                // requests per family per rolling minute
 const WINDOW = 60000;
+const FRESH_YEARS = 2;   // datasets whose last update is older than this are hidden
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
 const CK = "mygov.cache.v7.";
@@ -560,6 +612,12 @@ const I18N = {
   "matches":"padanan", "postcodes":"poskod", "type to filter":"taip untuk menapis",
   "No postcodes match ":"Tiada poskod sepadan ",
   "valid":"sah", "No active warnings":"Tiada amaran aktif",
+  "Trend Radar":"Radar Trend",
+  "The hottest issues and viral claims circulating in Malaysia right now, gathered from news feeds, Google Trends and Sebenarnya.my fact-checks — each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang, dikumpul daripada suapan berita, Google Trends dan semakan fakta Sebenarnya.my — setiap satu disahkan terhadap sumber sebenar.",
+  "Clustered daily by AI from news RSS, Google Trends Malaysia and Sebenarnya.my. Claims are fact-checked with web search; debunked items are flagged.":"Dikluster setiap hari oleh AI daripada RSS berita, Google Trends Malaysia dan Sebenarnya.my. Dakwaan disemak fakta dengan carian web; item palsu ditanda.",
+  "Sources":"Sumber", "issues":"isu", "sources":"sumber", "View sources":"Lihat sumber",
+  "verified":"disahkan", "debunked":"palsu", "unverified":"tidak disahkan",
+  "no_check_found":"belum disemak", "No trending issues right now.":"Tiada isu tular buat masa ini.",
   "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
@@ -568,6 +626,9 @@ const I18N = {
   "All networks":"Semua rangkaian", "Busiest routes — ":"Laluan paling sibuk — ",
   "by scheduled trips":"mengikut perjalanan berjadual", "Stops — ":"Perhentian — ",
   "with coordinates":"dengan koordinat", "stations & stops":"stesen & perhentian",
+  "View on map":"Lihat pada peta", "Map":"Peta",
+  "Household income is awaiting the next DOSM release (last updated ":"Pendapatan isi rumah menunggu keluaran DOSM seterusnya (dikemas kini terakhir ",
+  "). The chart will appear automatically when new data lands.":"). Carta akan muncul secara automatik apabila data baharu diterbitkan.",
   "scheduled trips":"perjalanan berjadual", "Route":"Laluan", "Name":"Nama",
   "Trips":"Perjalanan", "Share":"Bahagian", "Stop":"Perhentian", "Distance":"Jarak",
   "No routes match ":"Tiada laluan sepadan ", "No stops match ":"Tiada perhentian sepadan ",
@@ -701,7 +762,7 @@ const SECTIONS = [
   { id:"mobility",  label:"Vehicles",   icon:"🚗", family:"data-catalogue" },
   { id:"population",label:"Population", icon:"👪", family:"opendosm" },
   { id:"health",    label:"Health",     icon:"🩺", family:"data-catalogue" },
-  { id:"society",   label:"Postcodes",  icon:"🔍", family:"data-catalogue" },
+  { id:"radar",     label:"Trend Radar", icon:"🔥", family:"radar" },
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
 ];
@@ -709,7 +770,7 @@ const SECTIONS = [
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
 const LAZY = new Set(["economy","finance","mobility","population","health",
-                      "society","transport","live"]);
+                     "radar","transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -1075,11 +1136,20 @@ async function loadFuel(){
     { id:"fuelprice", filter:"level@series_type" });
   const lv = (fuel || []).sort((a,b) => String(a.date).localeCompare(String(b.date)));
   const hh = await request("data-catalogue", "/data-catalogue", { id:"hh_income" });
+  const hhRows = (hh || []).map(r => [r.date, r.income_mean, r.income_median]);
+  /* Freshness gate: hh_income is published every few years by DOSM. The card
+     is hidden while the series is older than FRESH_YEARS, and automatically
+     reappears when a new release lands — no code change needed. */
+  const hhLatest = hhRows.length ? String(hhRows[hhRows.length - 1][0]).slice(0, 10) : null;
+  const freshAfter = new Date(); freshAfter.setFullYear(freshAfter.getFullYear() - FRESH_YEARS);
+  const hhFresh = hhLatest && new Date(hhLatest) >= freshAfter;
   return {
     rows: lv.map(r => [r.date, r.ron95, r.ron97, r.diesel]),
     latest: lv[lv.length - 1] || null,
     prev: lv[lv.length - 2] || null,
-    hh: (hh || []).map(r => [r.date, r.income_mean, r.income_median]),
+    hh: hhRows,
+    hhFresh: !!hhFresh,
+    hhLatest,
   };
 }
 
@@ -1937,13 +2007,23 @@ function renderFuel(d){
           <details class="dt"><summary>${T("View data table")}</summary>
             <div class="dt-body" id="fuel-dt"></div></details></div>
     </div>
+    ${d.hhFresh ? `
     <div class="card">
       <div class="card-h"><h4>${T("Household income")}</h4><span class="sub">${T("RM per month · mean vs median")}</span></div>
       <div class="card-b"><div class="chart"><canvas id="hh-chart"
         role="img" aria-label="Household income over time"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="hh-dt"></div></details></div>
-    </div>`;
+    </div>
+    ` : `
+    <div class="card mb">
+      <div class="card-b" style="display:flex;align-items:center;gap:var(--s3);color:var(--fg-3);font-size:12.5px">
+        <span aria-hidden="true">⏳</span>
+        <span>${T("Household income is awaiting the next DOSM release (last updated ")}${d.hhLatest ? esc(d.hhLatest.slice(0,4)) : "—"}${T("). The chart will appear automatically when new data lands.")}</span>
+      </div>
+    </div>
+    `}
+  `;
   $("#body-fuel").querySelectorAll("[data-range]").forEach(b => {
     b.onclick = () => { fuelRange = b.dataset.range;
       $("#body-fuel").querySelectorAll("[data-range]")
@@ -1951,24 +2031,26 @@ function renderFuel(d){
       paintFuel(d); };
   });
   paintFuel(d);
-  chart("hh-chart", {
-    type:"line",
-    data:{ labels:d.hh.map(r => String(r[0]).slice(0,4)),
-      datasets:[
-        { label:"Mean", data:d.hh.map(r => r[1]), borderColor:"#2dd4bf", borderWidth:2,
-          pointRadius:2, tension:.32, fill:true,
-          backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf") },
-        { label:"Median", data:d.hh.map(r => r[2]), borderColor:"#22d3ee", borderWidth:2,
-          pointRadius:2, tension:.32 },
-      ] },
-    options: baseOpts({ scales:{
-      x:{ grid:{ display:false }, border:{ color:cssVar("--line") }, ticks:{ color:cssVar("--fg-3"), font:{size:10} } },
-      y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8, callback:v => "RM " + nf(v) } } } }),
-  });
-  const hdt = $("#hh-dt");
-  if (hdt) hdt.innerHTML = dataTableHTML([T("Year"),T("Mean RM"),T("Median RM")],
-    d.hh.map(r => [String(r[0]).slice(0,4), r[1], r[2]]), [1,2]);
+  if (d.hhFresh && document.getElementById("hh-chart")){
+    chart("hh-chart", {
+      type:"line",
+      data:{ labels:d.hh.map(r => String(r[0]).slice(0,4)),
+        datasets:[
+          { label:"Mean", data:d.hh.map(r => r[1]), borderColor:"#2dd4bf", borderWidth:2,
+            pointRadius:2, tension:.32, fill:true,
+            backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf") },
+          { label:"Median", data:d.hh.map(r => r[2]), borderColor:"#22d3ee", borderWidth:2,
+            pointRadius:2, tension:.32 },
+        ] },
+      options: baseOpts({ scales:{
+        x:{ grid:{ display:false }, border:{ color:cssVar("--line") }, ticks:{ color:cssVar("--fg-3"), font:{size:10} } },
+        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8, callback:v => "RM " + nf(v) } } } }),
+    });
+    const hdt = $("#hh-dt");
+    if (hdt) hdt.innerHTML = dataTableHTML([T("Year"),T("Mean RM"),T("Median RM")],
+      d.hh.map(r => [String(r[0]).slice(0,4), r[1], r[2]]), [1,2]);
+  }
 }
 function paintFuel(d){
   const from = cutoff(RANGES[fuelRange]);
@@ -2580,45 +2662,50 @@ function paintRid(d){
   if (dt) dt.innerHTML = hTable([T("Date"), ...sel.map(s => s[1])], labels, cols);
 }
 
-/* ════════════════════════════ postcode view ════════════════════════════ */
-let posQ = "";
+/* ════════════════════════════ postcode utility (hero search) ════════════════════════════ */
+let posQ = "", posData = null, posLoading = false;
 
-function renderSociety(d){
-  $("#body-society").innerHTML = `
-    <div class="card">
-      <div class="card-h"><h4>${T("Postcode lookup")}</h4>
-        <span class="sub">${T("postcode → city → state")}</span></div>
-      <div class="card-b">
-        <label class="sr" for="pos-q">${T("Postcode lookup")}</label>
-        <input class="inp" id="pos-q" placeholder="${T("Search postcode, city or state…")}" autocomplete="off">
-        <div style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)" id="pos-count"></div>
-      </div>
-      <div class="tw scroll-y" style="max-height:340px"><table>
-        <thead><tr><th class="num">${T("Postcode")}</th><th>${T("City")}</th><th>${T("State")}</th></tr></thead>
-        <tbody id="pos-rows"></tbody>
-      </table></div>
-    </div>`;
-  const q = $("#pos-q");
-  q.value = posQ;
-  q.oninput = () => { posQ = q.value; paintPos(d); };
-  paintPos(d);
+async function ensurePosData(){
+  if (posData) return paintPos();
+  if (posLoading) return;
+  posLoading = true;
+  try {
+    const po = await request("data-catalogue", "/data-catalogue", { id:"poskod" });
+    posData = (po || []).map(r => [r.postcode, r.city, r.state])
+      .sort((a,b) => Number(a[0]) - Number(b[0]));
+  } catch { posData = []; }
+  posLoading = false;
+  paintPos();
 }
 
-function paintPos(d){
-  const host = $("#pos-rows"); if (!host) return;
+function paintPos(){
+  const host = $("#pos-panel"), q = $("#pos-q"), cnt = $("#pos-count");
+  if (!host || !posData) return;
   const term = posQ.trim().toLowerCase();
   const rows = term
-    ? d.pos.filter(r => r[0].includes(term) ||
+    ? posData.filter(r => r[0].includes(term) ||
         r[1].toLowerCase().includes(term) || r[2].toLowerCase().includes(term))
-    : d.pos;
-  $("#pos-count").textContent = term
-    ? `${nf(rows.length)} ${T("matches")}`
-    : `${nf(d.pos.length)} ${T("postcodes")} · ${T("type to filter")}`;
-  const show = term ? rows.slice(0, 200) : rows.slice(0, 60);
-  host.innerHTML = show.map(r =>
-    `<tr><td class="num mono" style="font-weight:650">${esc(r[0])}</td>
-     <td>${esc(r[1])}</td><td class="dim">${esc(r[2])}</td></tr>`).join("")
-    || `<tr><td colspan="3" class="state">${T("No postcodes match ")}“${esc(posQ)}”.</td></tr>`;
+    : [];
+  if (host.hidden && !term) { cnt.textContent = term ? "" : `${nf(posData.length)} ${T("postcodes")} · ${T("type to filter")}`; return; }
+  cnt.textContent = term ? `${nf(rows.length)} ${T("matches")}` : `${nf(posData.length)} ${T("postcodes")}`;
+  host.hidden = !term;
+  if (!term) { host.innerHTML = ""; return; }
+  const show = rows.slice(0, 60);
+  host.innerHTML = `<table><tbody>${show.map(r =>
+    `<tr><td class="num">${esc(r[0])}</td><td>${esc(r[1])}</td><td class="dim">${esc(r[2])}</td></tr>`).join("")
+    || `<tr><td class="state">${T("No postcodes match ")}“${esc(posQ)}”.</td></tr>`}</tbody></table>`;
+  q.setAttribute("aria-expanded", "true");
+}
+
+function initPosUtil(){
+  const q = $("#pos-q"); if (!q) return;
+  q.value = posQ;
+  q.oninput = () => { posQ = q.value; if (posQ) ensurePosData(); else paintPos(); };
+  q.onfocus = () => { ensurePosData(); };
+  q.onkeydown = e => { if (e.key === "Escape"){ $("#pos-panel").hidden = true; q.blur(); } };
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".pos-util")) { $("#pos-panel").hidden = true; }
+  });
 }
 
 /* ════════════════════════════ population view ════════════════════════════ */
@@ -3140,17 +3227,16 @@ function paintBlocks(){
       </div>
       <div class="card">
         <div class="card-h"><h4>${T("Stops — ")}${esc(f.label)}</h4>
-          <span class="sub">${nf(f.stopList.length)} ${T("with coordinates")}</span></div>
+          <span class="sub">${nf(f.stopList.length)} ${T("stations & stops")}</span></div>
         <div class="tw scroll-y"><table>
-          <thead><tr><th>${T("Stop")}</th><th>ID</th>${near ? `<th class="num">${T("Distance")}</th>` : `<th class="num">Lat</th><th class="num">Lon</th>`}</tr></thead>
+          <thead><tr><th>${T("Stop")}</th>${near ? `<th class="num">${T("Distance")}</th>` : `<th>${T("Map")}</th>`}</tr></thead>
           <tbody>${stops.map(s => {
             const d = near && near.find(n => n.s.id === s.id);
             return `<tr><td class="wrapcell" style="min-width:160px;font-weight:550">${esc(s.name)}</td>
-              <td class="mono dim">${esc(s.id)}</td>
               ${near ? `<td class="num" style="font-weight:650">${d ? kmTxt(d.km) : "—"}</td>`
-                     : `<td class="num dim">${s.lat.toFixed(4)}</td><td class="num dim">${s.lon.toFixed(4)}</td>`}</tr>`;
+                     : `<td><a class="maplink" href="https://www.openstreetmap.org/?mlat=${s.lat.toFixed(5)}&mlon=${s.lon.toFixed(5)}#map=17/${s.lat.toFixed(5)}/${s.lon.toFixed(5)}" target="_blank" rel="noopener">🗺 ${T("View on map")}</a></td>`}</tr>`;
           }).join("")}
-          ${!stops.length ? `<tr><td colspan="${near ? 3 : 4}" class="state">${T("No stops match ")}“${esc(stopQ)}”.</td></tr>` : ""}
+          ${!stops.length ? `<tr><td colspan="${near ? 2 : 2}" class="state">${T("No stops match ")}“${esc(stopQ)}”.</td></tr>` : ""}
           </tbody></table></div>
       </div>
     </div>`; }).join("");
@@ -3163,6 +3249,59 @@ function animateCounters(root){
   root.querySelectorAll("[data-count]").forEach(n => {
     countTo(n, Number(n.dataset.count), Number(n.dataset.dec || 0));
   });
+}
+
+/* ════════════════════════════ trend radar view ════════════════════════════ */
+async function loadRadar(){
+  /* radar.json is same-origin static data generated by the CI pipeline —
+     no rate-limit family, fetched straight from the site root. */
+  const r = await fetch("/radar.json", { cache: "no-store" });
+  if (!r.ok) throw new ApiError("Trend Radar data unavailable.", "http");
+  return r.json();
+}
+
+const FC_BADGE = {
+  verified_claim:["✅","ok"], debunked:["🚫","err"], no_check_found:["ℹ️",""]
+};
+function fcBadge(st){
+  const [ic, cls] = FC_BADGE[st] || ["❓",""];
+  return `<span class="fc-badge ${cls}" title="${esc(st)}">${ic} ${esc(T(st))}</span>`;
+}
+
+function renderRadar(d){
+  const issues = d.top_issues || [];
+  if (!issues.length){
+    $("#body-radar").innerHTML = `<div class="state">${T("No trending issues right now.")}</div>`;
+    return;
+  }
+  $("#body-radar").innerHTML = `
+    <div class="radar-grid">
+      ${issues.map(i => {
+        const fc = i.fact_check || {};
+        const verdict = fc.verdict ? `<span class="fc-verdict">${esc(fc.verdict.replace("_"," "))}</span>` : "";
+        const reason = fc.reason ? `<p class="fc-reason">${esc(fc.reason)}</p>` : "";
+        const srcs = (i.sources || []).filter(s => s.url);
+        return `<article class="card radar-card ${fc.status === "debunked" ? "radar-debunk" : ""}">
+          <div class="card-h">
+            <span class="rank">${i.rank}</span>
+            <h4>${esc(i.title_bm)}</h4>
+            ${fcBadge(fc.status)} ${verdict}
+          </div>
+          <div class="card-b">
+            ${i.title_en && i.title_en !== i.title_bm ? `<p class="dim" style="margin:0 0 6px">${esc(i.title_en)}</p>` : ""}
+            <div class="radar-meta">
+              <span class="pill">${esc(i.category || "lain")}</span>
+              <span class="dim">${i.source_count || (srcs.length)} ${T("sources")}</span>
+            </div>
+            ${reason}
+            ${srcs.length ? `<details class="dt"><summary>${T("View sources")}</summary>
+              <div class="dt-body">${srcs.slice(0,5).map(s =>
+                `<div class="radar-src"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.name)}</a>
+                 <span class="dim">${esc(s.name)}</span></div>`).join("")}</div></details>` : ""}
+          </div>
+        </article>`;
+      }).join("")}
+    </div>`;
 }
 
 /* ════════════════════════════ live view ════════════════════════════ */
@@ -3230,15 +3369,31 @@ function paintMaps(){
     const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
-    /* The public OSM tile server occasionally answers 503; retry each failed
-       tile once so a transient blip doesn't leave grey holes in the map. */
+    /* The public OSM tile server intermittently answers 503 (rate limiting).
+       Retry failed tiles with exponential backoff; if the server stays down
+       (circuit breaker), swap to the dark CARTO basemap so the map never
+       stays blank. CARTO is the same style family as the app theme. */
+    const fallback = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 20, subdomains: "abcd", attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    });
+    let omsFailed = 0, fellBack = false;
     tiles.on("tileerror", e => {
       const t = e.tile;
-      if (t && !t.dataset.retried){
-        t.dataset.retried = "1";
-        setTimeout(() => { if (t.isConnected) t.src = t.src; }, 800);
+      if (!t) return;
+      omsFailed++;
+      const n = +(t.dataset.retries || 0);
+      if (n < 3 && !fellBack) {
+        t.dataset.retries = String(n + 1);
+        const delay = [1200, 3000, 6000][n] || 6000;
+        setTimeout(() => { if (t.isConnected) t.src = t.src; }, delay);
+      } else if (!fellBack && omsFailed >= 8) {
+        /* OSM looks down for everyone — switch the whole map to CARTO */
+        fellBack = true;
+        map.removeLayer(tiles);
+        fallback.addTo(map);
       }
     });
+    tiles.on("tileload", () => { omsFailed = Math.max(0, omsFailed - 1); });
     if (f.vehicles.length){
       const pts = f.vehicles.map(v => {
         const m = L.circleMarker([v.lat, v.lon], {
@@ -3324,10 +3479,10 @@ const META = {
     how:"The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.",
     eps:["/data-catalogue?id=blood_donations","/data-catalogue?id=organ_pledges",
          "/data-catalogue?id=pekab40_screenings"] },
-  society:{ title:"Postcodes",
-    desc:"The national postcode reference list — look up any postcode, city or state.",
-    how:"Pos Malaysia's national postcode reference list, kept as a static lookup table.",
-    eps:["/data-catalogue?id=poskod"] },
+  radar:{ title:"Trend Radar",
+    desc:"The hottest issues and viral claims circulating in Malaysia right now, gathered from news feeds, Google Trends and Sebenarnya.my fact-checks — each verified against real sources.",
+    how:"Clustered daily by AI from news RSS, Google Trends Malaysia and Sebenarnya.my. Claims are fact-checked with web search; debunked items are flagged.",
+    eps:["/radar.json"] },
   transport:{ title:"Public Transport",
     desc:"Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.",
     how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.",
@@ -3391,7 +3546,7 @@ const LOADERS = {
   population:{ load:loadPopulation, render:renderPopulation,
     asOf:d => d.latest },
   health:   { load:loadHealth,    render:renderHealth,    asOf:d => d.updated },
-  society:  { load:loadSociety,   render:renderSociety },
+  radar:    { load:loadRadar,      render:renderRadar,     asOf:d => d.generated_at ? d.generated_at.slice(0,10) : null },
   transport:{ load:loadTransport, render:renderTransport },
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
@@ -3543,6 +3698,7 @@ function boot(){
   $("#textsize").onclick = () => { textLarge = !textLarge;
     savePref(LK_TEXT, textLarge ? "1" : "0"); applyText(); rerenderAll(); };
   geo.status = "waiting";     // resolved once weather data lands
+  initPosUtil();
   primeCached();
   /* Start lazy-loading only after weather + fuel have rendered: while the
      page is still skeletons it is short, so every section looks "near" the

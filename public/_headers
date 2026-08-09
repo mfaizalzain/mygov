@@ -22,7 +22,7 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.data.gov.my https://*.s3.ap-southeast-1.amazonaws.com; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://*.basemaps.cartocdn.com; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.data.gov.my https://*.s3.ap-southeast-1.amazonaws.com; upgrade-insecure-requests
 
 # The service worker must not be cached, or a stale one pins an old app shell.
 /sw.js
