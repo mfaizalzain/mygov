@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-08-09T14:23:03.386431+00:00",
+ "generated_at": "2026-08-09T14:30:52.055128+00:00",
  "language": "bm-primary",
  "top_issues": [
   {
    "rank": 1,
-   "title_bm": "Keadaan Jerebu di Sarawak Kian Memburuk dengan IPU Tidak Sihat",
-   "title_en": "Sarawak Haze Worsens as API Readings Hit Unhealthy Levels",
+   "title_bm": "Jerebu Teruk Melanda Sarawak, Beberapa Kawasan Catat IPU Tidak Sihat",
+   "title_en": "Severe Haze Hits Sarawak as Air Quality Reaches Unhealthy Levels",
    "category": "bencana",
    "source_count": 2,
    "sources": [
@@ -31,15 +31,20 @@
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "confirmed by multiple reports",
+    "sources": [
+     "Bernama",
+     "Astro Awani",
+     "FMT"
+    ]
    }
   },
   {
    "rank": 2,
-   "title_bm": "Kemelut Keahlian Bersatu dan Pertikaian Status dalam Perikatan Nasional",
-   "title_en": "Dispute Over Bersatu's Membership Status in Perikatan Nasional",
+   "title_bm": "Kemelut Dalaman Perikatan Nasional dan Perbincangan Agihan Kerusi PRN Melaka",
+   "title_en": "Internal Tensions in Perikatan Nasional and Melaka State Election Seat Talks",
    "category": "politik",
    "source_count": 2,
    "sources": [
@@ -49,66 +54,86 @@
      "url": "https://www.malaymail.com/news/malaysia/2026/08/09/samsuri-says-bersatu-remains-in-perikatan-despite-hadis-claim/230711"
     },
     {
+     "name": "malaymail",
+     "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-seat-swaps-on-the-table-for-perikatan-samsuri-tells-bn/230717"
+    },
+    {
      "name": "freemalaysiatoday",
      "title": "Samsuri contradicts Hadi, says Bersatu still in PN",
      "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/samsuri-contradicts-hadi-says-bersatu-still-in-pn"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Bersatu to take PN membership dispute to RoS",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/bersatu-to-take-pn-membership-dispute-to-ros"
+     "title": "PN open to seat swaps with BN, says Samsuri",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/pn-open-to-seat-swaps-with-bn-says-samsuri"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Now Terengganu Bersatu No 2 quits post",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/now-terengganu-bersatu-no-2-quits-post"
+     "title": "Bersatu to take PN membership dispute to RoS",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/bersatu-to-take-pn-membership-dispute-to-ros"
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "confirmed by multiple reports",
+    "sources": [
+     "Sinar Harian",
+     "Berita Harian",
+     "Free Malaysia Today"
+    ]
    }
   },
   {
    "rank": 3,
-   "title_bm": "Perundingan Kerusi Menjelang Pilihan Raya Negeri Melaka",
-   "title_en": "Seat Allocation Negotiations Ahead of Melaka State Election",
+   "title_bm": "Persiapan Kongres DAP, Desakan Reformasi PH dan Tindakan Bekas Veteran",
+   "title_en": "DAP Congress Preparations, Demands for PH Reform, and Ex-Veteran Shifts",
    "category": "politik",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-seat-swaps-on-the-table-for-perikatan-samsuri-tells-bn/230717"
+     "title": "DAP congress set for Aug 16 showdown, stalled reforms and grassroots frustration to dominate agenda",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/dap-congress-set-for-aug-16-showdown-stalled-reforms-and-grassroots-frustration-to-dominate-agenda/230705"
     },
     {
      "name": "malaymail",
-     "title": "Melaka Pakatan open to talks, coalition welcomes negotiations ahead state election",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-pakatan-open-to-talks-coalition-welcomes-negotiations-ahead-state-election/230716"
+     "title": "Malay-Muslim unity cannot be built on fear of DAP — Phar Kim Beng",
+     "url": "https://www.malaymail.com/news/what-you-think/2026/08/09/malay-muslim-unity-cannot-be-built-on-fear-of-dap-phar-kim-beng/230655"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "PH in touch with BN on seat talks for Melaka polls",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-in-touch-with-bn-on-seat-talks-for-melaka-polls"
+     "title": "PH must make reforms to stave off becoming opposition again, says analyst",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-must-make-reforms-to-stave-off-becoming-opposition-again-says-analyst"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Melaka seat talks crucial for BN-PN pact, says analyst",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/melaka-seat-talks-crucial-for-bn-pn-pact-says-analyst"
+     "title": "Criticise DAP but labelling it ‘enemy of Islam’ is dangerous, says Marzuki",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/criticise-dap-but-labelling-it-enemy-of-islam-is-dangerous-says-marzuki"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Ex-DAP veteran Ronnie Liu joins PBM",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ex-dap-veteran-ronnie-liu-joins-pbm"
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "confirmed by multiple reports",
+    "sources": [
+     "Astro Awani",
+     "Sinar Harian",
+     "Free Malaysia Today"
+    ]
    }
   },
   {
    "rank": 4,
-   "title_bm": "Insiden Pokok Angsana Tumbang di George Town Akibat Akar Reput",
-   "title_en": "90-Year-Old Angsana Tree Collapses in George Town Due to Root Rot",
-   "category": "bencana",
+   "title_bm": "Pokok Angsana Tumbang Hentam Kereta di Georgetown, MBPP Jelaskan Punca Reput Root",
+   "title_en": "Falling Angsana Tree Crushes Car in George Town, MBPP Blames Root Rot",
+   "category": "lain",
    "source_count": 2,
    "sources": [
     {
@@ -128,15 +153,20 @@
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "confirmed by multiple reports",
+    "sources": [
+     "Bernama",
+     "Astro Awani",
+     "Malay Mail"
+    ]
    }
   },
   {
    "rank": 5,
-   "title_bm": "Pasangan Beregu Tee Kai Wun dan Yap Roy King Juara Korea Masters",
-   "title_en": "Doubles Pair Tee Kai Wun and Yap Roy King Win Korea Masters",
+   "title_bm": "Pasangan Beregu Negara Tee Kai Wun dan Yap Roy King Juara Korea Masters",
+   "title_en": "Malaysian Doubles Tee Kai Wun and Yap Roy King Crowned Korea Masters Champions",
    "category": "lain",
    "source_count": 2,
    "sources": [
@@ -152,39 +182,20 @@
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "confirmed by multiple reports",
+    "sources": [
+     "Bernama",
+     "The Star",
+     "Malay Mail"
+    ]
    }
   },
   {
    "rank": 6,
-   "title_bm": "Penjelasan Penggunaan Logo Jabatan Imigresen pada Kenderaan Syarikat",
-   "title_en": "Clarification on Immigration Department Logo Used on Company Vehicle",
-   "category": "lain",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "utusan",
-     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
-     "url": "https://www.utusan.com.my/nasional/2026/08/kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport/?utm_source=rss&utm_medium=rss&utm_campaign=kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport"
-    },
-    {
-     "name": "sebenarnya",
-     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-     "url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
-    }
-   ],
-   "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
-   }
-  },
-  {
-   "rank": 7,
-   "title_bm": "Kereta Rempuk Balai Pelepasan KKIA Akibat Pemandu Lupa Masuk Gear 'P'",
-   "title_en": "Car Crashes into KKIA Departure Hall After Driver Forgot to Engage Park Gear",
+   "title_bm": "Kereta Rempuh Balai Pelepasan KKIA Akibat Pemandu Lupa Tukar Gear 'P'",
+   "title_en": "SUV Crashes into KKIA Departure Hall After Driver Forgot to Engage 'P' Gear",
    "category": "lain",
    "source_count": 2,
    "sources": [
@@ -206,9 +217,9 @@
    }
   },
   {
-   "rank": 8,
-   "title_bm": "Tiga Pelarian Ditahan Disyaki Lakukan Kesalahan Seksual Terhadap Wanita OKU di Terengganu",
-   "title_en": "Three Refugees Arrested Over Alleged Sexual Offence Against Disabled Woman in Terengganu",
+   "rank": 7,
+   "title_bm": "Tiga Warga Asing Ditahan Atas Kes Seksual Terhadap Wanita OKU di Terengganu",
+   "title_en": "Three Foreign Nationals Arrested Over Sexual Assault of Disabled Woman in Terengganu",
    "category": "jenayah",
    "source_count": 2,
    "sources": [
@@ -230,9 +241,9 @@
    }
   },
   {
-   "rank": 9,
-   "title_bm": "Dinamik Kerjasama Politik Sabah Jelang PRU16 Fokus Hak Autonomi",
-   "title_en": "Sabah Political Alliances Ahead of GE16 Focus on Autonomy Rights",
+   "rank": 8,
+   "title_bm": "Dinamik Politik Sabah: Kerjasama Umno-PAS Tidak Terpakai di Sabah",
+   "title_en": "Sabah Political Dynamics: UMNO-PAS Pact Not Applicable in Sabah",
    "category": "politik",
    "source_count": 2,
    "sources": [
@@ -253,45 +264,64 @@
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "sebenarnya_title": "Kerjasama Antara Bank Rakyat Dan Kedai Emas Seri Semantan Adalah Tidak Benar",
+    "sebenarnya_url": "https://sebenarnya.my/kerjasama-antara-bank-rakyat-dan-kedai-emas-seri-semantan-adalah-tidak-benar/"
+   }
+  },
+  {
+   "rank": 9,
+   "title_bm": "Palsu: Dakwaan Bantuan Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Bagi Semua Rakyat 18 Tahun Ke Atas",
+   "title_en": "Fake: Claim of One-Off RM100 SARA Contribution for All Citizens Aged 18 and Above",
+   "category": "ekonomi",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off",
+     "url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
+    },
+    {
+     "name": "sebenarnya",
+     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan A",
+     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Adalah Tidak Benar",
+    "sebenarnya_url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
    }
   },
   {
    "rank": 10,
-   "title_bm": "Kongres DAP Menanti Macet Reformasi dan Pergerakan Tokoh Politik",
-   "title_en": "DAP Congress Approached Amid Reform Frustrations and Political Shifts",
-   "category": "politik",
-   "source_count": 2,
+   "title_bm": "Penjelasan Mengenai Perubahan Harga Runcit Petroleum Tanpa Subsidi Berikutan Risiko Geopolitik Timur Tengah",
+   "title_en": "Clarification on Unsubsidised Petroleum Price Adjustments Amid Middle East Geopolitical Risks",
+   "category": "ekonomi",
+   "source_count": 1,
    "sources": [
     {
-     "name": "malaymail",
-     "title": "DAP congress set for Aug 16 showdown, stalled reforms and grassroots frustration to dominate agenda",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/dap-congress-set-for-aug-16-showdown-stalled-reforms-and-grassroots-frustration-to-dominate-agenda/230705"
+     "name": "sebenarnya",
+     "title": "Makluman: Harga Petrol Dan Diesel Tanpa Subsidi Turun 5 Sen Bagi Tempoh 6 Hingga 12 Ogos 2026",
+     "url": "https://sebenarnya.my/makluman-harga-petrol-dan-diesel-tanpa-subsidi-turun-5-sen-bagi-tempoh-6-hingga-12-ogos-2026/"
     },
     {
-     "name": "malaymail",
-     "title": "Malay-Muslim unity cannot be built on fear of DAP — Phar Kim Beng",
-     "url": "https://www.malaymail.com/news/what-you-think/2026/08/09/malay-muslim-unity-cannot-be-built-on-fear-of-dap-phar-kim-beng/230655"
+     "name": "sebenarnya",
+     "title": "Makluman: Konflik Yang Melarat Di Asia Barat Terus Mendorong Peningkatan Harga Petrol Dan Diesel Tanpa Subsidi",
+     "url": "https://sebenarnya.my/makluman-konflik-yang-melarat-di-asia-barat-terus-mendorong-peningkatan-harga-petrol-dan-diesel-tanpa-subsidi/"
     },
     {
-     "name": "freemalaysiatoday",
-     "title": "Ex-DAP veteran Ronnie Liu joins PBM",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ex-dap-veteran-ronnie-liu-joins-pbm"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Criticise DAP but labelling it ‘enemy of Islam’ is dangerous, says Marzuki",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/criticise-dap-but-labelling-it-enemy-of-islam-is-dangerous-says-marzuki"
+     "name": "sebenarnya",
+     "title": "Makluman : Harga Runcit RON95 Dan Diesel Tanpa Subsidi Meningkat Susulan Peningkatan Risiko Geopolitik Di Asia",
+     "url": "https://sebenarnya.my/makluman-harga-runcit-ron95-dan-diesel-tanpa-subsidi-meningkat-susulan-peningkatan-risiko-geopolitik-di-asia-barat/"
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "sebenarnya_title": "Makluman : Harga Runcit RON95 Dan Diesel Tanpa Subsidi Meningkat Susulan Peningkatan Risiko Geopolitik Di Asia Barat",
+    "sebenarnya_url": "https://sebenarnya.my/makluman-harga-runcit-ron95-dan-diesel-tanpa-subsidi-meningkat-susulan-peningkatan-risiko-geopolitik-di-asia-barat/"
    }
   }
  ],
- "total_signals": 100
+ "total_signals": 90
 }

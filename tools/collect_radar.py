@@ -199,6 +199,47 @@ def backfill_urls(issues, signals):
     return issues
 
 
+def factcheck_with_search(issue):
+    """Grounded fact-check via Gemini + Google Search for ONE issue.
+
+    Returns dict {status, verdict, reason, sources[]} — status one of
+    verified_claim / debunked / no_check_found. Runs only for the top few
+    issues (cost + latency). Never raises — falls back to no_check_found."""
+    key = gemini_key()
+    if not key:
+        return {"status": "no_check_found", "verdict": None, "reason": None, "sources": []}
+    title = issue.get("title_bm") or issue.get("title_en") or ""
+    prompt = f"""A news trend is circulating in Malaysia: "{title}".
+Treat it as a claim to verify. Use Google Search to check the latest
+reports. Reply STRICT JSON only (no markdown):
+{{"verdict": "TRUE|FALSE|PARTLY_TRUE|UNVERIFIED",
+ "reason": "one sentence, in English",
+ "sources": ["up to 3 short source names, e.g. AFP Fact Check, UNHCR"]}}
+If it is a factual news event (not a claim), verdict TRUE with reason
+"confirmed by multiple reports". If it is a false/fake claim, FALSE."""
+    body = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "tools": [{"google_search": {}}],
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 600},
+    }).encode()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
+    try:
+        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            d = json.load(r)
+        text = d["candidates"][0]["content"]["parts"][0]["text"]
+        text = re.sub(r"^```(json)?\s*|\s*```$", "", text.strip())
+        parsed = json.loads(text)
+        verdict = parsed.get("verdict", "UNVERIFIED")
+        status = {"TRUE": "verified_claim", "PARTLY_TRUE": "verified_claim",
+                  "FALSE": "debunked"}.get(verdict, "no_check_found")
+        return {"status": status, "verdict": verdict,
+                "reason": parsed.get("reason"), "sources": parsed.get("sources", [])}
+    except Exception as e:
+        sys.stderr.write(f"  factcheck err: {e}\n")
+        return {"status": "no_check_found", "verdict": None, "reason": None, "sources": []}
+
+
 def main():
     print(f"[radar] {datetime.datetime.now():%Y-%m-%d %H:%M} collecting...")
     signals = []
@@ -222,6 +263,22 @@ def main():
         print(f"  fallback keyword clustering: {len(issues)} issues")
 
     issues = backfill_urls(issues, signals)
+
+    # Grounded fact-check (Gemini + Google Search) on top 5 — trends like
+    # Rohingya are claim landscapes; verify with real sources.
+    seben_fc = {i.get("rank"): i.get("fact_check", {}) for i in issues}
+    checked = 0
+    for i in issues[:5]:
+        fc = factcheck_with_search(i)
+        if fc.get("verdict"):
+            checked += 1
+            # keep the sebenarnya link if it exists (local match is authoritative)
+            sb = seben_fc.get(i.get("rank"), {})
+            if sb.get("status") != "no_check_found":
+                fc["sebenarnya_title"] = sb.get("sebenarnya_title")
+                fc["sebenarnya_url"] = sb.get("sebenarnya_url")
+            i["fact_check"] = fc
+    print(f"  grounded fact-check: {checked} issues verified")
 
     payload = {
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
