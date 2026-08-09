@@ -229,6 +229,13 @@ node tools/make-icons.mjs
 
 ## Deploying
 
+The site deploys automatically: this GitHub repo is connected to the
+`mygov` Worker via Cloudflare's **Workers Git integration** (Workers & Pages →
+mygov → Settings → Builds & Deployments). Every push to `main` triggers a new
+production deploy — no workflow file, secrets, or manual steps required.
+
+For manual deploys (e.g. testing a branch before pushing):
+
 ```bash
 npx wrangler deploy
 ```
