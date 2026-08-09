@@ -20,5 +20,11 @@
   },
   "observability": {
     "enabled": true
+  },
+  // Public API key embedded in malaysiaairports.com.my's JS bundle; declared
+  // as a var (not a secret) so `wrangler deploy` pushes it — set at:
+  // https://dash.cloudflare.com/.../workers/services/mygov/settings/variables
+  "vars": {
+    "FIDS_API_KEY": "f02f252a781a4db584d1ae9fce22bed1"
   }
 }

@@ -256,6 +256,55 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .radar-src a{color:var(--accent);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .radar-src a:hover{text-decoration:underline}
 .radar-src .dim{flex:none}
+/* trend radar carousel band */
+.radar-band{background:linear-gradient(180deg,var(--surface),var(--bg-2));
+  border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
+  box-shadow:var(--shadow);margin:0 0 var(--s2)}
+.radar-band-h{display:flex;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
+.radar-band-t{display:flex;align-items:flex-start;gap:var(--s3);min-width:0}
+.radar-band-t h3{margin:0;font-size:18px;font-weight:680;letter-spacing:-.025em}
+.radar-band-t p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:12.5px;max-width:70ch}
+.radar-band-ctl{margin-left:auto;display:flex;align-items:center;gap:var(--s2)}
+.radar-count{font-family:var(--mono);font-size:11.5px;color:var(--fg-3);white-space:nowrap}
+.radar-track{display:flex;gap:var(--s3);overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;padding-bottom:2px}
+.radar-track::-webkit-scrollbar{display:none}
+.radar-slide{flex:0 0 320px;scroll-snap-align:start;display:flex;gap:var(--s3);
+  align-items:flex-start;text-align:left;cursor:pointer;background:var(--surface);
+  border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
+  font:inherit;color:inherit;transition:var(--t);min-height:118px}
+.radar-slide:hover{transform:translateY(-2px);border-color:var(--line);box-shadow:var(--shadow)}
+.radar-slide:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.radar-slide .rank{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  background:var(--bg-2);border:1px solid var(--line);font-family:var(--mono);
+  font-size:11.5px;font-weight:700;color:var(--fg-2)}
+.radar-slide h4{margin:0;font-size:13.5px;line-height:1.35;font-weight:640}
+.radar-slide .rs-body{min-width:0}
+.radar-slide .rs-body p{margin:3px 0 0;font-size:12px}
+.radar-slide .radar-meta{margin-top:var(--s2)}
+.radar-slide .fc-badge{font-size:10px}
+/* detail modal */
+.rd-back{position:fixed;inset:0;z-index:80;background:rgba(4,6,10,.72);
+  backdrop-filter:blur(4px);display:grid;place-items:center;padding:var(--s4)}
+.rd-card{max-width:560px;width:100%;max-height:82vh;overflow:auto}
+.rd-card .card-h h4{font-size:16px}
+.rd-card .fc-reason{font-size:13.5px}
+@media (max-width:560px){.radar-slide{flex-basis:calc(100vw - 64px)}}
+/* live flights board */
+.fids-meta{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2);
+  font-size:11px;font-family:var(--mono);color:var(--fg-3)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none;
+  box-shadow:0 0 0 0 rgba(52,211,153,.5);animation:livepulse 2s ease-out infinite}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.fs-badge{display:inline-block;font-size:10.5px;font-weight:650;padding:3px 9px;border-radius:99px;
+  border:1px solid var(--line);color:var(--fg-2);background:var(--bg-2);white-space:nowrap;text-transform:uppercase;letter-spacing:.03em}
+.fs-badge.ok{color:#34d399;border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.fs-badge.warn{color:#fbbf24;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
+.fs-badge.err{color:#f87171;border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08)}
+@media (max-width:720px){
+  #fids-card .card-h .right{width:100%;justify-content:flex-start}
+  #fids-q{flex:1;min-width:0}
+}
 /* live map + vehicle cards */
 .lvmap{position:relative;z-index:0;height:340px;background:var(--bg-2)}
 html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.7)}
@@ -452,6 +501,24 @@ html[data-text="large"] table{font-size:14px}
     <div class="kpis" id="kpis"></div>
   </div>
 
+  <section class="radar-band" id="radar-band" hidden aria-labelledby="radar-h">
+    <div class="radar-band-h">
+      <div class="radar-band-t">
+        <div class="sec-ico" aria-hidden="true">🔥</div>
+        <div>
+          <h3 id="radar-h" data-i18n="Trend Radar">Trend Radar</h3>
+          <p data-i18n="The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.">The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.</p>
+        </div>
+      </div>
+      <div class="radar-band-ctl">
+        <span class="radar-count" id="radar-count" aria-live="polite"></span>
+        <button class="btn" id="radar-prev" aria-label="Previous issues">‹</button>
+        <button class="btn" id="radar-next" aria-label="Next issues">›</button>
+      </div>
+    </div>
+    <div class="radar-track" id="radar-track" tabindex="0" aria-label="Trending issues carousel"></div>
+  </section>
+
   <main id="main"></main>
 
   <footer>
@@ -614,6 +681,7 @@ const I18N = {
   "valid":"sah", "No active warnings":"Tiada amaran aktif",
   "Trend Radar":"Radar Trend",
   "The hottest issues and viral claims circulating in Malaysia right now, gathered from news feeds, Google Trends and Sebenarnya.my fact-checks — each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang, dikumpul daripada suapan berita, Google Trends dan semakan fakta Sebenarnya.my — setiap satu disahkan terhadap sumber sebenar.",
+  "The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang — setiap satu disahkan terhadap sumber sebenar.",
   "Clustered daily by AI from news RSS, Google Trends Malaysia and Sebenarnya.my. Claims are fact-checked with web search; debunked items are flagged.":"Dikluster setiap hari oleh AI daripada RSS berita, Google Trends Malaysia dan Sebenarnya.my. Dakwaan disemak fakta dengan carian web; item palsu ditanda.",
   "Sources":"Sumber", "issues":"isu", "sources":"sumber", "View sources":"Lihat sumber",
   "verified":"disahkan", "debunked":"palsu", "unverified":"tidak disahkan",
@@ -632,6 +700,14 @@ const I18N = {
   "scheduled trips":"perjalanan berjadual", "Route":"Laluan", "Name":"Nama",
   "Trips":"Perjalanan", "Share":"Bahagian", "Stop":"Perhentian", "Distance":"Jarak",
   "No routes match ":"Tiada laluan sepadan ", "No stops match ":"Tiada perhentian sepadan ",
+  "Live flights":"Penerbangan langsung", "Malaysia Airports · real-time board":"Malaysia Airports · papan masa nyata",
+  "Search flight, city, airline…":"Cari penerbangan, bandar, syarikat…", "Arrivals":"Ketibaan", "Departures":"Berlepas",
+  "Flight":"Penerbangan", "From":"Dari", "To":"Ke", "Scheduled":"Dijadualkan", "Status":"Status", "Gate":"Gerbang",
+  "Loading flights…":"Memuatkan penerbangan…", "No flights match ":"Tiada penerbangan sepadan ",
+  "All stops — both networks":"Semua perhentian — kedua-dua rangkaian",
+  "type to filter or use “Find stops near me”":"taip untuk menapis atau guna “Cari perhentian berdekatan saya”",
+  "Search both networks' stops above, or use “Find stops near me” to rank by distance.":"Cari perhentian kedua-dua rangkaian di atas, atau guna “Cari perhentian berdekatan saya” untuk menyusun mengikut jarak.",
+  "of":"daripada", "Network":"Rangkaian",
   "Avg trips / route":"Purata perjalanan / laluan", "routes":"laluan", "Stops":"Perhentian",
   "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
@@ -762,7 +838,6 @@ const SECTIONS = [
   { id:"mobility",  label:"Vehicles",   icon:"🚗", family:"data-catalogue" },
   { id:"population",label:"Population", icon:"👪", family:"opendosm" },
   { id:"health",    label:"Health",     icon:"🩺", family:"data-catalogue" },
-  { id:"radar",     label:"Trend Radar", icon:"🔥", family:"radar" },
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
 ];
@@ -770,7 +845,7 @@ const SECTIONS = [
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
 const LAZY = new Set(["economy","finance","mobility","population","health",
-                     "radar","transport","live"]);
+                     "transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -1382,6 +1457,9 @@ const FEEDS = [
   { key:"prasarana", label:"Rapid KL", desc:"Prasarana Rapid Bus — Klang Valley network",
     agency:"prasarana", category:"rapid-bus-kl",
     path:"/gtfs-static/prasarana", params:{ category:"rapid-bus-kl" } },
+  { key:"rail", label:"LRT & MRT", desc:"Rapid KL rail — LRT, MRT & monorail lines",
+    agency:"prasarana", category:"rapid-rail-kl",
+    path:"/gtfs-static/prasarana", params:{ category:"rapid-rail-kl" } },
 ];
 /* The upstream /gtfs-static/* redirects to an S3 bucket, so a browser has to
    pass CORS on the redirect target. Prefer the Worker proxy, which does that
@@ -1424,6 +1502,36 @@ async function loadTransport(){
         trips: per.get(r.route_id) || 0,
       })).sort((a,b) => b.trips - a.trips),
     };
+    /* The rail feed carries stop_times and shapes, so build the metro-style
+       line diagrams here: each route gets its ordered station list (from the
+       outbound trip) plus the stations' coordinates. */
+    if (f.key === "rail" && files["stop_times.txt"]){
+      const st = parseCSV(files["stop_times.txt"]);
+      const byStop = new Map(stops.map(s => [s.stop_id, {
+        name:s.stop_name || "—",
+        lat:Number(s.stop_lat), lon:Number(s.stop_lon),
+      }]));
+      const tripByRoute = new Map();
+      for (const t of trips)
+        if (t.direction_id === "0" && !tripByRoute.has(t.route_id))
+          tripByRoute.set(t.route_id, t.trip_id);
+      const lines = [];
+      for (const r of routes){
+        const tid = tripByRoute.get(r.route_id);
+        if (!tid) continue;
+        const seq = st.filter(s => s.trip_id === tid)
+          .sort((a,b) => Number(a.stop_sequence) - Number(b.stop_sequence))
+          .map(s => byStop.get(s.stop_id))
+          .filter(Boolean);
+        if (seq.length < 2) continue;
+        lines.push({
+          id:r.route_id, name:r.route_long_name || r.route_id,
+          color:/^[0-9A-Fa-f]{6}$/.test(r.route_color || "") ? "#" + r.route_color : "#2dd4bf",
+          stations: seq,
+        });
+      }
+      out[f.key].lines = lines;
+    }
   }
   return out;
 }
@@ -3100,6 +3208,103 @@ const haversine = (a, b) => {
 };
 const kmTxt = km => km < 1 ? Math.round(km * 1000) + " m" : km.toFixed(1) + " km";
 
+/* ════════════════════════════ live flights board (Malaysia Airports FIDS) ════════════════════════════ */
+const F_AIRPORTS = [
+  ["KLIA", "KLIA · Kuala Lumpur"], ["klia2", "KLIA2 · Kuala Lumpur"],
+  ["PEN", "Penang"], ["KCH", "Kuching"], ["BKI", "Kota Kinabalu"], ["LGK", "Langkawi"],
+];
+/* status code → [tone class, label]; unknown codes fall back to the raw text */
+const F_STATUS = {
+  FDP:["ok","Departed"], FCL:["warn","Final call"], CLB:["ok","Last bag"],
+  BDA:["warn","Boarding"], LDG:["warn","Landing"], ARV:["ok","Arrived"],
+  DLY:["err","Delayed"], CNL:["err","Cancelled"], SCH:["","On schedule"],
+  ONT:["ok","On time"], GTW:["warn","At gate"], INF:["","Information"],
+  DIV:["warn","Diverted"], RTO:["warn","Returned"], BRD:["warn","Boarding"],
+};
+let fids = { dir:"A", apt:"KLIA", q:"", data:null, last:0, timer:null, err:null };
+
+async function loadFlights(force){
+  const u = `/api/fids?code=${fids.dir}&terminal=${encodeURIComponent(fids.apt)}`;
+  if (!force && fids.data && Date.now() - fids.last < 45000) return fids.data;
+  const r = await fetch(u, { cache:"no-store" });
+  if (!r.ok) throw new ApiError("Flight board unavailable.", "http");
+  const d = await r.json();
+  fids.data = d; fids.last = Date.now();
+  return d;
+}
+
+function fTime(s){
+  /* "2026-08-09 00:05:00" → "00:05" */
+  if (!s) return "—";
+  const m = String(s).match(/(\d{2}):(\d{2})/); return m ? `${m[1]}:${m[2]}` : String(s).slice(5,16);
+}
+
+function paintFlights(){
+  const host = $("#fids-body"); if (!host) return;
+  const d = fids.data;
+  if (!d){ host.innerHTML = `<div class="state">${T("Loading flights…")}</div>`; return; }
+  const q = fids.q.trim().toLowerCase();
+  const rows = (d.flights || []).filter(f =>
+    !q || f.flightNumber.toLowerCase().includes(q) ||
+    (f.origin || "").toLowerCase().includes(q) ||
+    (f.destination || "").toLowerCase().includes(q) ||
+    (f.airline || "").toLowerCase().includes(q));
+  host.innerHTML = `<table>
+    <thead><tr><th>${T("Flight")}</th><th>${fids.dir === "A" ? T("From") : T("To")}</th>
+      <th class="num">${T("Scheduled")}</th><th>${T("Status")}</th><th>${T("Gate")}</th></tr></thead>
+    <tbody>${rows.slice(0, 60).map(f => {
+      const [tone, lab] = F_STATUS[f.statusCode] || ["", f.status || f.statusCode || ""];
+      const city = fids.dir === "A" ? f.origin : f.destination;
+      return `<tr>
+        <td><span class="mono" style="font-weight:650">${esc(f.flightNumber)}</span>
+          <span class="dim" style="display:block;font-size:10.5px">${esc(f.airline)}</span></td>
+        <td class="wrapcell" style="min-width:130px">${esc(city || "—")}</td>
+        <td class="num mono">${fTime(f.scheduled)}</td>
+        <td><span class="fs-badge ${tone}">${esc(lab || "—")}</span></td>
+        <td class="mono dim">${esc(f.gate || "—")}${f.belt ? ` · B${esc(f.belt)}` : ""}</td>
+      </tr>`; }).join("")}
+      ${!rows.length ? `<tr><td colspan="5" class="state">${T("No flights match ")}“${esc(fids.q)}”.</td></tr>` : ""}
+    </tbody></table>`;
+  const cnt = $("#fids-count");
+  if (cnt) cnt.textContent = `${nf(Math.min(rows.length, 60))} / ${nf(d.flights ? d.flights.length : 0)}`;
+}
+
+async function initFlights(){
+  const host = $("#fids-body"); if (!host) return;
+  /* airport chips */
+  $("#fids-apts").innerHTML = F_AIRPORTS
+    .map(([code, label]) => `<button class="chip" data-apt="${code}" title="${esc(label)}"
+      aria-pressed="${fids.apt === code}">${esc(code.toUpperCase())}</button>`).join("");
+  $("#fids-apts").querySelectorAll("[data-apt]").forEach(b => {
+    b.onclick = () => { fids.apt = b.dataset.apt; fids.data = null;
+      $("#fids-apts").querySelectorAll("[data-apt]").forEach(o =>
+        o.setAttribute("aria-pressed", String(o.dataset.apt === fids.apt)));
+      loadFlights(false).then(paintFlights).catch(e => { fids.err = e;
+        host.innerHTML = `<div class="state">${esc(e.message || "Error")}</div>`; }); };
+  });
+  /* arrivals / departures toggle */
+  $("#fids-dir").querySelectorAll("[data-dir]").forEach(b => {
+    b.onclick = () => { fids.dir = b.dataset.dir; fids.data = null;
+      $("#fids-dir").querySelectorAll("[data-dir]").forEach(o =>
+        o.setAttribute("aria-pressed", String(o.dataset.dir === fids.dir)));
+      loadFlights(false).then(paintFlights).catch(e => { fids.err = e;
+        host.innerHTML = `<div class="state">${esc(e.message || "Error")}</div>`; }); };
+  });
+  /* filter input */
+  const fq = $("#fids-q");
+  if (fq){ fq.value = fids.q;
+    fq.oninput = () => { fids.q = fq.value; paintFlights(); }; }
+  /* initial paint + auto-refresh (board refreshes ~every minute upstream) */
+  try { const d = await loadFlights(false); paintFlights(d); }
+  catch (e){ host.innerHTML = `<div class="state">${esc(e.message || "Error")}</div>`; }
+  clearInterval(fids.timer);
+  fids.timer = setInterval(async () => {
+    if (!document.getElementById("fids-body")){ clearInterval(fids.timer); return; }
+    try { await loadFlights(true); paintFlights(); }
+    catch {} /* keep the last good board on a blip */
+  }, 60000);
+}
+
 async function findStopsNear(){
   if (!navigator.geolocation){ tgeo.status = "unsupported"; paintTransport(); return; }
   tgeo.status = "asking"; paintTransport();
@@ -3130,6 +3335,27 @@ const trFeed = () => Object.values(tdata || {})
 function renderTransport(d){
   tdata = d;
   $("#body-transport").innerHTML = `
+    <div class="card mb" id="fids-card">
+      <div class="card-h">
+        <h4>✈️ ${T("Live flights")}</h4>
+        <span class="sub">${T("Malaysia Airports · real-time board")}</span>
+        <span class="right">
+          <input class="inp" id="fids-q" placeholder="${T("Search flight, city, airline…")}" autocomplete="off" style="width:190px">
+          <span class="seg" id="fids-dir" role="group" aria-label="Direction">
+            <button data-dir="A" aria-pressed="true">${T("Arrivals")}</button>
+            <button data-dir="D" aria-pressed="false">${T("Departures")}</button>
+          </span>
+        </span>
+      </div>
+      <div class="card-b">
+        <div class="chips mb" id="fids-apts"></div>
+        <div class="fids-meta">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span id="fids-count"></span>
+        </div>
+        <div class="tw scroll-y" id="fids-body" style="max-height:520px"></div>
+      </div>
+    </div>
     <div class="chips mb" id="tr-filters"></div>
     <div class="grid g2 mb">
       <div class="card">
@@ -3162,6 +3388,7 @@ function renderTransport(d){
   sq.oninput = () => { stopQ = sq.value; paintBlocks(); };
   $("#tr-near").onclick = findStopsNear;
   paintTransport();
+  initFlights();
 }
 
 function paintTransport(){
@@ -3183,16 +3410,11 @@ function paintFilters(){
 }
 function paintBlocks(){
   const host = $("#tr-blocks"); if (!host || !tdata) return;
-  const tq = routeQ.trim().toLowerCase(), sq = stopQ.trim().toLowerCase();
-  host.innerHTML = trFeed().map(f => {
+  const tq = routeQ.trim().toLowerCase();
+  host.innerHTML = `${trFeed().map(f => {
     const routes = f.top.filter(r =>
       !tq || r.short.toLowerCase().includes(tq) || r.long.toLowerCase().includes(tq) || r.id.toLowerCase().includes(tq));
     const near = tgeo.near && tgeo.near[f.key];
-    const stops = f.stopList
-      .filter(s => !sq || s.name.toLowerCase().includes(sq) || s.id.toLowerCase().includes(sq))
-      .sort((a, b) => { const d = (near && near.find(n => n.s.id === a.id)?.km) ?? 1e9;
-        const e = (near && near.find(n => n.s.id === b.id)?.km) ?? 1e9; return d - e; })
-      .slice(0, 200);
     return `<div class="mb" style="margin-bottom:var(--s6)">
       <div class="grid g4 mb">
         <div class="kpi"><div class="lab">${esc(f.label)} · ${T("routes")}</div>
@@ -3205,7 +3427,7 @@ function paintBlocks(){
           <div class="val">${nf(f.routes ? f.trips / f.routes : 0, 1)}</div>
           <div class="sub">${esc(f.desc)}</div></div>
       </div>
-      <div class="card">
+      <div class="card mb">
         <div class="card-h"><h4>${T("Busiest routes — ")}${esc(f.label)}</h4>
           <span class="sub">${T("by scheduled trips")}</span>
           <span class="right"><span class="seg" role="group" aria-label="Rows to show">
@@ -3225,25 +3447,53 @@ function paintBlocks(){
         ${!routes.length ? `<tr><td colspan="4" class="state">${T("No routes match ")}“${esc(routeQ)}”.</td></tr>` : ""}
         </tbody></table></div>
       </div>
-      <div class="card">
-        <div class="card-h"><h4>${T("Stops — ")}${esc(f.label)}</h4>
-          <span class="sub">${nf(f.stopList.length)} ${T("stations & stops")}</span></div>
-        <div class="tw scroll-y"><table>
-          <thead><tr><th>${T("Stop")}</th>${near ? `<th class="num">${T("Distance")}</th>` : `<th>${T("Map")}</th>`}</tr></thead>
-          <tbody>${stops.map(s => {
-            const d = near && near.find(n => n.s.id === s.id);
-            return `<tr><td class="wrapcell" style="min-width:160px;font-weight:550">${esc(s.name)}</td>
-              ${near ? `<td class="num" style="font-weight:650">${d ? kmTxt(d.km) : "—"}</td>`
-                     : `<td><a class="maplink" href="https://www.openstreetmap.org/?mlat=${s.lat.toFixed(5)}&mlon=${s.lon.toFixed(5)}#map=17/${s.lat.toFixed(5)}/${s.lon.toFixed(5)}" target="_blank" rel="noopener">🗺 ${T("View on map")}</a></td>`}</tr>`;
-          }).join("")}
-          ${!stops.length ? `<tr><td colspan="${near ? 2 : 2}" class="state">${T("No stops match ")}“${esc(stopQ)}”.</td></tr>` : ""}
-          </tbody></table></div>
-      </div>
-    </div>`; }).join("");
+    </div>`; }).join("")}
+    <div class="card">
+      <div class="card-h"><h4>${T("All stops — both networks")}</h4>
+        <span class="sub">${T("type to filter or use “Find stops near me”")}</span>
+        <span class="right"><span class="dim" id="tr-stop-count"></span></span></div>
+      <div class="tw scroll-y" style="max-height:420px"><table>
+        <thead><tr><th>${T("Network")}</th><th>${T("Stop")}</th>${tgeo.near ? `<th class="num">${T("Distance")}</th>` : `<th>${T("Map")}</th>`}</tr></thead>
+        <tbody id="tr-stop-rows"></tbody>
+      </table></div>
+    </div>
+  `;
+  paintStops();
   host.querySelectorAll("[data-top]").forEach(b => {
     b.onclick = () => { topN = b.dataset.top === "all" ? "all" : Number(b.dataset.top);
       paintBlocks(); };
   });
+}
+function paintStops(){
+  const rows = $("#tr-stop-rows"); if (!rows || !tdata) return;
+  const sq = stopQ.trim().toLowerCase();
+  const net = netFilter === "all" ? null : netFilter;
+  /* Build one combined list across the visible networks. */
+  const all = trFeed().flatMap(f =>
+    f.stopList.map(s => ({ s, net:f.key, label:f.label })));
+  const near = tgeo.near;
+  const ranked = all
+    .map(x => {
+      const d = (near && near[x.net] && near[x.net].find(n => n.s.id === x.s.id)?.km) ?? null;
+      return { ...x, km:d };
+    })
+    .filter(x => !sq || x.s.name.toLowerCase().includes(sq) || x.s.id.toLowerCase().includes(sq))
+    .sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9))
+    .slice(0, 200);
+  const cnt = $("#tr-stop-count");
+  if (cnt) cnt.textContent = sq || near ? `${nf(ranked.length)} ${T("of")} ${nf(all.length)}` : "";
+  if (!sq && !near){
+    rows.innerHTML = `<tr><td colspan="3" class="state" style="padding:var(--s4)">
+      ${T("Search both networks' stops above, or use “Find stops near me” to rank by distance.")}</td></tr>`;
+    return;
+  }
+  rows.innerHTML = ranked.map(x => `<tr>
+      <td><span class="pill">${esc(x.label)}</span></td>
+      <td class="wrapcell" style="min-width:160px;font-weight:550">${esc(x.s.name)}</td>
+      ${near ? `<td class="num" style="font-weight:650">${x.km != null ? kmTxt(x.km) : "—"}</td>`
+             : `<td><a class="maplink" href="https://www.openstreetmap.org/?mlat=${x.s.lat.toFixed(5)}&mlon=${x.s.lon.toFixed(5)}#map=17/${x.s.lat.toFixed(5)}/${x.s.lon.toFixed(5)}" target="_blank" rel="noopener">🗺 ${T("View on map")}</a></td>`}
+    </tr>`).join("")
+    || `<tr><td colspan="3" class="state">${T("No stops match ")}“${esc(stopQ)}”.</td></tr>`;
 }
 function animateCounters(root){
   root.querySelectorAll("[data-count]").forEach(n => {
@@ -3251,7 +3501,7 @@ function animateCounters(root){
   });
 }
 
-/* ════════════════════════════ trend radar view ════════════════════════════ */
+/* ════════════════════════════ trend radar carousel ════════════════════════════ */
 async function loadRadar(){
   /* radar.json is same-origin static data generated by the CI pipeline —
      no rate-limit family, fetched straight from the site root. */
@@ -3268,40 +3518,113 @@ function fcBadge(st){
   return `<span class="fc-badge ${cls}" title="${esc(st)}">${ic} ${esc(T(st))}</span>`;
 }
 
-function renderRadar(d){
-  const issues = d.top_issues || [];
-  if (!issues.length){
-    $("#body-radar").innerHTML = `<div class="state">${T("No trending issues right now.")}</div>`;
-    return;
-  }
-  $("#body-radar").innerHTML = `
-    <div class="radar-grid">
-      ${issues.map(i => {
-        const fc = i.fact_check || {};
-        const verdict = fc.verdict ? `<span class="fc-verdict">${esc(fc.verdict.replace("_"," "))}</span>` : "";
-        const reason = fc.reason ? `<p class="fc-reason">${esc(fc.reason)}</p>` : "";
-        const srcs = (i.sources || []).filter(s => s.url);
-        return `<article class="card radar-card ${fc.status === "debunked" ? "radar-debunk" : ""}">
-          <div class="card-h">
-            <span class="rank">${i.rank}</span>
-            <h4>${esc(i.title_bm)}</h4>
-            ${fcBadge(fc.status)} ${verdict}
-          </div>
-          <div class="card-b">
-            ${i.title_en && i.title_en !== i.title_bm ? `<p class="dim" style="margin:0 0 6px">${esc(i.title_en)}</p>` : ""}
-            <div class="radar-meta">
-              <span class="pill">${esc(i.category || "lain")}</span>
-              <span class="dim">${i.source_count || (srcs.length)} ${T("sources")}</span>
-            </div>
-            ${reason}
-            ${srcs.length ? `<details class="dt"><summary>${T("View sources")}</summary>
-              <div class="dt-body">${srcs.slice(0,5).map(s =>
-                `<div class="radar-src"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.name)}</a>
-                 <span class="dim">${esc(s.name)}</span></div>`).join("")}</div></details>` : ""}
-          </div>
-        </article>`;
-      }).join("")}
-    </div>`;
+let radarIdx = 0, radarTimer = null, radarIssues = [];
+
+function radarSlide(i, idx){
+  const fc = i.fact_check || {};
+  const verdict = fc.verdict ? `<span class="fc-verdict">${esc(fc.verdict.replace("_"," "))}</span>` : "";
+  const debunk = fc.status === "debunked" ? " radar-debunk" : "";
+  return `<button class="radar-slide${debunk}" data-idx="${idx}" aria-label="${esc(i.title_bm)}">
+    <span class="rank">${i.rank}</span>
+    <div class="rs-body">
+      <h4>${esc(i.title_bm)}</h4>
+      ${i.title_en && i.title_en !== i.title_bm ? `<p class="dim">${esc(i.title_en)}</p>` : ""}
+      <div class="radar-meta">
+        ${fcBadge(fc.status)} ${verdict}
+        <span class="pill">${esc(i.category || "lain")}</span>
+        <span class="dim">${i.source_count || ((i.sources || []).length)} ${T("sources")}</span>
+      </div>
+    </div>
+  </button>`;
+}
+
+function radarDetail(i){
+  const fc = i.fact_check || {};
+  const verdict = fc.verdict ? `<span class="fc-verdict">${esc(fc.verdict.replace("_"," "))}</span>` : "";
+  const reason = fc.reason ? `<p class="fc-reason">${esc(fc.reason)}</p>` : "";
+  const srcs = (i.sources || []).filter(s => s.url);
+  return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-label="${esc(i.title_bm)}">
+    <div class="rd-card card">
+      <div class="card-h">
+        <span class="rank">${i.rank}</span>
+        <h4>${esc(i.title_bm)}</h4>
+        ${fcBadge(fc.status)} ${verdict}
+        <button class="btn" id="radar-close" aria-label="Close">✕</button>
+      </div>
+      <div class="card-b">
+        ${i.title_en && i.title_en !== i.title_bm ? `<p class="dim" style="margin:0 0 6px">${esc(i.title_en)}</p>` : ""}
+        ${reason}
+        ${srcs.length ? `<h5 style="margin:0 0 4px">${T("Sources")}</h5>` +
+          srcs.slice(0,5).map(s =>
+            `<div class="radar-src"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.name)}</a>
+             <span class="dim">${esc(s.name)}</span></div>`).join("") : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function initRadarCarousel(){
+  const band = $("#radar-band"); if (!band) return;
+  let d;
+  try { d = await loadRadar(); } catch { return; }
+  radarIssues = d.top_issues || [];
+  const track = $("#radar-track");
+  if (!radarIssues.length || !track) return;
+  band.hidden = false;
+  track.innerHTML = radarIssues.map((i, idx) => radarSlide(i, idx)).join("");
+  const slides = track.querySelectorAll(".radar-slide");
+  const perView = () => track.clientWidth < 560 ? 1 : track.clientWidth < 900 ? 2 : 3;
+  const maxIdx = () => Math.max(0, slides.length - perView());
+  const render = () => {
+    const s = slides[radarIdx];
+    if (s) s.scrollIntoView({ behavior:"smooth", block:"nearest", inline:"start" });
+    $("#radar-count").textContent = `${radarIdx + 1} / ${slides.length}`;
+    $("#radar-prev").disabled = radarIdx === 0;
+    $("#radar-next").disabled = radarIdx >= maxIdx();
+  };
+  const next = () => { radarIdx = Math.min(radarIdx + 1, maxIdx()); render(); };
+  const prev = () => { radarIdx = Math.max(radarIdx - 1, 0); render(); };
+  const start = () => {
+    clearInterval(radarTimer);
+    radarTimer = setInterval(() => {
+      if (radarIdx >= maxIdx()) radarIdx = 0; else radarIdx++;
+      render();
+    }, 7000);
+  };
+  $("#radar-prev").onclick = () => { prev(); start(); };
+  $("#radar-next").onclick = () => { next(); start(); };
+  track.addEventListener("scroll", () => {
+    const w = track.clientWidth;
+    const n = Math.round(track.scrollLeft / w);
+    radarIdx = Math.min(Math.max(n, 0), maxIdx());
+    $("#radar-count").textContent = `${radarIdx + 1} / ${slides.length}`;
+    $("#radar-prev").disabled = radarIdx === 0;
+    $("#radar-next").disabled = radarIdx >= maxIdx();
+  }, { passive:true });
+  track.addEventListener("mouseenter", () => clearInterval(radarTimer));
+  track.addEventListener("mouseleave", start);
+  track.addEventListener("click", e => {
+    const b = e.target.closest(".radar-slide"); if (!b) return;
+    const issue = radarIssues[Number(b.dataset.idx)];
+    if (!issue) return;
+    const m = document.createElement("div");
+    m.innerHTML = radarDetail(issue);
+    document.body.appendChild(m.firstElementChild);
+    $("#radar-close").onclick = () => $("#radar-modal").remove();
+    $("#radar-modal").onclick = e => { if (e.target.id === "radar-modal") e.target.remove(); };
+  });
+  addEventListener("keydown", e => {
+    if (e.key === "Escape"){ const m = $("#radar-modal"); if (m) m.remove(); }
+  });
+  /* radar.json is static; refresh it on manual refresh so the band follows
+     the CI pipeline without needing a full reload. */
+  $("#refresh").addEventListener("click", async () => {
+    try { const nd = await loadRadar(); radarIssues = nd.top_issues || [];
+      track.innerHTML = radarIssues.map((i, idx) => radarSlide(i, idx)).join("");
+      radarIdx = 0; render(); start();
+    } catch {}
+  });
+  render(); start();
 }
 
 /* ════════════════════════════ live view ════════════════════════════ */
@@ -3479,10 +3802,6 @@ const META = {
     how:"The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.",
     eps:["/data-catalogue?id=blood_donations","/data-catalogue?id=organ_pledges",
          "/data-catalogue?id=pekab40_screenings"] },
-  radar:{ title:"Trend Radar",
-    desc:"The hottest issues and viral claims circulating in Malaysia right now, gathered from news feeds, Google Trends and Sebenarnya.my fact-checks — each verified against real sources.",
-    how:"Clustered daily by AI from news RSS, Google Trends Malaysia and Sebenarnya.my. Claims are fact-checked with web search; debunked items are flagged.",
-    eps:["/radar.json"] },
   transport:{ title:"Public Transport",
     desc:"Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.",
     how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.",
@@ -3546,7 +3865,6 @@ const LOADERS = {
   population:{ load:loadPopulation, render:renderPopulation,
     asOf:d => d.latest },
   health:   { load:loadHealth,    render:renderHealth,    asOf:d => d.updated },
-  radar:    { load:loadRadar,      render:renderRadar,     asOf:d => d.generated_at ? d.generated_at.slice(0,10) : null },
   transport:{ load:loadTransport, render:renderTransport },
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
@@ -3699,6 +4017,7 @@ function boot(){
     savePref(LK_TEXT, textLarge ? "1" : "0"); applyText(); rerenderAll(); };
   geo.status = "waiting";     // resolved once weather data lands
   initPosUtil();
+  initRadarCarousel();
   primeCached();
   /* Start lazy-loading only after weather + fuel have rendered: while the
      page is still skeletons it is short, so every section looks "near" the

@@ -141,6 +141,88 @@ export default {
       return out;
     }
 
+    /* Malaysia Airports FIDS (flight information display) proxy.
+     *
+     * The official live arrivals/departures board on malaysiaairports.com.my
+     * calls api.myairports.com.my with a public x-api-key embedded in its JS
+     * bundle. The API sends no `access-control-allow-origin`, so browsers
+     * cannot call it directly — same story as Nominatim above. Proxying here
+     * keeps the key server-side (it is public, but living in one place makes
+     * rotation trivial) and edge-caches the board so upstream sees one
+     * request per TTL regardless of visitors. Boards refresh roughly every
+     * minute on the site; 90 s is a fair middle ground. */
+    if (url.pathname === "/api/fids") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      const code = url.searchParams.get("code") || "A";
+      const terminal = url.searchParams.get("terminal") || "KLIA";
+      const dayKey = url.searchParams.get("dayKey") || "0";
+      // Strict allowlist — never interpolate user input into the upstream URL.
+      if (!/^[AD]$/.test(code)) return json({ error: "bad_code" }, 400);
+      if (!/^[a-zA-Z0-9-]{1,16}$/.test(terminal)) return json({ error: "bad_terminal" }, 400);
+      if (!/^[0-9]$/.test(dayKey)) return json({ error: "bad_dayKey" }, 400);
+
+      const upstream = new URL(
+        "https://api.myairports.com.my/passenger-fids/api/flights/search-flights");
+      upstream.searchParams.set("code", code);
+      upstream.searchParams.set("key", "all");
+      upstream.searchParams.set("terminal", terminal);
+      upstream.searchParams.set("dayKey", dayKey);
+      upstream.searchParams.set("live", "true");
+      upstream.searchParams.set("skip", "0");
+      upstream.searchParams.set("take", "200");
+
+      const cacheKey = new Request(
+        `${url.origin}/api/fids?code=${code}&terminal=${terminal}&dayKey=${dayKey}`);
+      const cache = caches.default;
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+
+      let res;
+      try {
+        res = await fetch(upstream, {
+          headers: {
+            "x-api-key": env.FIDS_API_KEY,
+            accept: "application/json",
+          },
+          cf: { cacheTtl: 90, cacheEverything: true },
+        });
+      } catch {
+        return json({ error: "upstream_unreachable" }, 502);
+      }
+      if (!res.ok)
+        return json({ error: "upstream_error", status: res.status }, res.status === 429 ? 429 : 502);
+
+      let data;
+      try { data = await res.json(); }
+      catch { return json({ error: "bad_upstream_payload" }, 502); }
+
+      // Slim the payload: the dashboard renders a board, not codeshares and
+      // baggage belt metadata. Keeping only the columns the UI needs trims a
+      // ~1.5 MB response to a few KB and makes the client simpler.
+      const slim = (data.flightStatuses || []).map(f => ({
+        flightNumber: f.flightNumber,
+        airline: (f.airline && f.airline.name) || f.name || "",
+        aircraftOperator: f.aircraftOperator,
+        origin: f.origin && f.origin.city,
+        destination: f.destination && f.destination.city,
+        scheduled: f.scheduledTime || f.flightTime,
+        status: f.status || "",
+        statusCode: f.statusCode || "",
+        gate: f.gate && f.gate.name,
+        belt: f.belt && f.belt.name,
+        terminal: f.terminal,
+        codeshares: (f.codeShareFlights || []).map(c => c.flightNumber),
+      }));
+      const out = json({
+        count: data.count,
+        flights: slim,
+      }, 200, { "cache-control": "public, max-age=90" });
+      ctx.waitUntil(cache.put(cacheKey, out.clone()));
+      return out;
+    }
+
     // Everything else is a static asset. Security headers for those come from
     // public/_headers — the asset router serves them without running this
     // Worker, so setting headers here would have no effect.
