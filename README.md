@@ -77,6 +77,14 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | KKM health | `collect_health.yml`, daily 00:30 UTC | `public/health.json` | blood donations (3y), organ pledges, PeKa B40 |
 | Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance, mobility, economy, population |
 
+- Every collector finishes with `tools/embed_seo.py`, which (a) injects the
+  **current headline values** (fuel, USD/MYR, CPI, blood donations, top radar
+  issues) into the `<noscript>` fallback of `index.html` between the
+  `<!-- SEO:SNAP -->` markers, so crawlers that never run JS still see fresh
+  numbers on first pass, and (b) writes `public/feed.xml`, an RSS 2.0 feed of
+  the Trend Radar issues. Both are idempotent — they only rewrite when the
+  content actually changes, so collector commits stay clean.
+
 - `tools/collect_health.py` and `tools/collect_slow.py` fetch from the
   data.gov.my API with **4 attempts and 5s/10s/15s backoff** (a transient
   failure in unattended CI must not cost a whole day of freshness), then
@@ -109,6 +117,7 @@ tools/
   collect_radar.py      Trend Radar collector (see above)
   collect_health.py     KKM health collector → public/health.json
   collect_slow.py       slow-data collector → public/slow.json
+  embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```
 

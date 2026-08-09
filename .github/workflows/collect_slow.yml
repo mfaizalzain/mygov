@@ -36,11 +36,14 @@ jobs:
         run: |
           python3 tools/collect_slow.py
 
+      - name: Embed live values into index.html + write feed
+        run: python3 tools/embed_seo.py
+
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/slow.json
+          git add public/slow.json public/index.html public/feed.xml
           git diff --quiet && git diff --staged --quiet || (
             git commit -m "chore: update slow.json [skip ci]"
             # Another collector may commit between our commit and push; rebase
