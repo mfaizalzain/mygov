@@ -718,7 +718,47 @@ html[data-text="large"] table{font-size:14px}
     <div class="radar-track" id="radar-track" tabindex="0" aria-label="Trending issues carousel"></div>
   </section>
 
-  <main id="main"></main>
+  <main id="main">
+    <!-- Static fallback: rendered before the app script runs, and visible to
+         browsers/crawlers without JavaScript. buildShell() replaces #main's
+         contents when the script executes, so JS users never see this. -->
+    <noscript>
+      <div class="shell-seo">
+        <section class="sec">
+          <div class="card"><div class="card-b">
+            <h2>mygov — Malaysia Open Data</h2>
+            <p>A live dashboard of Malaysian government open data, refreshed
+               automatically from <a href="https://api.data.gov.my/">api.data.gov.my</a>.
+               This page requires JavaScript for the interactive charts, tables
+               and live feeds; the underlying data is published as plain JSON
+               below and is always accessible.</p>
+            <h3>Sections</h3>
+            <ul>
+              <li><strong>Weather</strong> — seven-day forecast for every state, district and town in Malaysia, plus severe-weather warnings and recent earthquakes.</li>
+              <li><strong>Fuel</strong> — weekly RON95/RON97/diesel pump prices and household income statistics.</li>
+              <li><strong>Population</strong> — population by state, sex and ethnicity.</li>
+              <li><strong>Economy</strong> — CPI inflation, unemployment, GDP and EPF contributions.</li>
+              <li><strong>Finance</strong> — exchange rates, FPX payments and interest rates.</li>
+              <li><strong>Health</strong> — blood donations, organ pledges and PeKa B40 (KKM).</li>
+              <li><strong>Vehicles</strong> — new vehicle registrations and public-transport ridership.</li>
+              <li><strong>Transport</strong> — KTMB and Rapid KL LRT/MRT/Monorail stops, lines and schedules (GTFS).</li>
+              <li><strong>Live</strong> — live vehicle positions and airport flight boards.</li>
+            </ul>
+            <h3>Raw data files</h3>
+            <ul>
+              <li><a href="/radar.json">radar.json</a> — today's trending topics and fact-checked claims.</li>
+              <li><a href="/health.json">health.json</a> — KKM health statistics.</li>
+              <li><a href="/slow.json">slow.json</a> — fuel, finance, mobility, economy and population series.</li>
+            </ul>
+            <p>Data sources: <a href="https://api.data.gov.my/">Malaysia Government Open API</a>,
+               <a href="https://www.met.gov.my/">Malaysian Meteorological Department</a>,
+               <a href="https://www.openstreetmap.org/">OpenStreetMap</a>.</p>
+            <p><a href="https://github.com/mfaizalzain/mygov">Source code on GitHub</a>.</p>
+          </div></div>
+        </section>
+      </div>
+    </noscript>
+  </main>
 
   <footer>
     <div class="foot">
