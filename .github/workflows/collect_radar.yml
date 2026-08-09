@@ -36,14 +36,11 @@ jobs:
         run: |
           python3 tools/collect_radar.py
 
-      - name: Embed live values into index.html + write feed
-        run: python3 tools/embed_seo.py
-
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/radar.json tools/radar_history.json public/index.html public/feed.xml
+          git add public/radar.json tools/radar_history.json
           git diff --quiet && git diff --staged --quiet || (
             git commit -m "chore: update radar.json [skip ci]"
             # Another collector may commit between our commit and push; rebase
