@@ -152,11 +152,15 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .hero{padding:var(--s8) 0 var(--s6)}
 .hero h2{margin:0 0 var(--s2);font-size:30px;font-weight:720;letter-spacing:-.035em;line-height:1.15}
 .hero p{margin:0;color:var(--fg-2);font-size:14.5px;max-width:62ch}
-.hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4);min-height:40px}
+.hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;min-height:40px}
 .hero-loc .loc-chip{text-decoration:none}
 .hero-loc .loc-chip:hover{text-decoration:none;border-color:rgba(45,212,191,.55)}
-/* compact postcode utility under the location chip */
-.pos-util{position:relative;display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2);max-width:420px}
+/* location chip + postcode search share one row; search sits on the right */
+.hero-loc-row{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;
+  margin-top:var(--s4);justify-content:space-between}
+.hero-loc-row .pos-util{margin-top:0}
+/* compact postcode utility */
+.pos-util{position:relative;display:flex;align-items:center;gap:var(--s2);max-width:420px;flex:1;min-width:240px}
 .pos-util .pos-ico{font-size:13px;color:var(--fg-3)}
 .pos-util .inp{flex:1;min-width:0;padding:8px var(--s3);border-radius:var(--r-sm);
   border:1px solid var(--line);background:var(--surface);color:var(--fg);
@@ -573,13 +577,15 @@ html[data-text="large"] table{font-size:14px}
     <h2 data-i18n="Today in Malaysia">Today in Malaysia</h2>
     <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area — fetched live
        from the Malaysian Government Open API.</p>
-    <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
-    <div class="pos-util">
-      <label class="sr" for="pos-q" data-i18n="Postcode lookup">Postcode lookup</label>
-      <span class="pos-ico" aria-hidden="true">🔍</span>
-      <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off" aria-expanded="false">
-      <span class="pos-count" id="pos-count"></span>
-      <div class="pos-panel" id="pos-panel" hidden></div>
+    <div class="hero-loc-row">
+      <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
+      <div class="pos-util">
+        <label class="sr" for="pos-q" data-i18n="Postcode lookup">Postcode lookup</label>
+        <span class="pos-ico" aria-hidden="true">🔍</span>
+        <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off" aria-expanded="false">
+        <span class="pos-count" id="pos-count"></span>
+        <div class="pos-panel" id="pos-panel" hidden></div>
+      </div>
     </div>
     <div class="kpis" id="kpis"></div>
   </div>
@@ -984,17 +990,29 @@ function url(path, params){
 }
 async function request(family, path, params, as){
   return schedule(family, async () => {
-    let res;
-    try { res = await fetch(url(path, params)); }
-    catch { throw new ApiError("Can't reach the API — you may be offline.", "network"); }
-    if (res.status === 429) throw new ApiError("Rate limited by the API. It allows 4 requests per minute.", "rate");
-    if (res.status === 404) throw new ApiError("That dataset no longer exists.", "missing");
-    if (!res.ok) throw new ApiError(`The API returned HTTP ${res.status}.`, "http");
-    if (as === "buffer") return res.arrayBuffer();
-    const data = await res.json();
-    if (data && data.status_code >= 400)
-      throw new ApiError((data.details && data.details[0]) || "API error.", "http");
-    return data;
+    /* One automatic retry for transient failures (offline blip, 5xx). 429
+       and 404 are skipped — the first is a quota state the retry won't fix
+       and the second is permanent. The caller still gets a manual Retry
+       button when even this fails. */
+    for (let attempt = 0; attempt < 2; attempt++){
+      let res;
+      try { res = await fetch(url(path, params)); }
+      catch {
+        if (!attempt){ await sleep(1500); continue; }
+        throw new ApiError("Can't reach the API — you may be offline.", "network");
+      }
+      if (res.status === 429) throw new ApiError("Rate limited by the API. It allows 4 requests per minute.", "rate");
+      if (res.status === 404) throw new ApiError("That dataset no longer exists.", "missing");
+      if (!res.ok){
+        if (!attempt && res.status >= 500){ await sleep(2500); continue; }
+        throw new ApiError(`The API returned HTTP ${res.status}.`, "http");
+      }
+      if (as === "buffer") return res.arrayBuffer();
+      const data = await res.json();
+      if (data && data.status_code >= 400)
+        throw new ApiError((data.details && data.details[0]) || "API error.", "http");
+      return data;
+    }
   });
 }
 
@@ -1305,6 +1323,10 @@ async function loadWeather(){
 }
 
 async function loadFuel(){
+  /* Fuel updates weekly, hh_income yearly — the slow-data collector's file
+     is current within a day of publication. */
+  const slow = await readSlow();
+  if (slow && slow.fuel) return slow.fuel;
   // series_type=level filtering is done server-side (verified working), which
   // halves the payload — the other half is change_weekly deltas we don't chart.
   const fuel = await request("data-catalogue", "/data-catalogue",
@@ -1340,6 +1362,8 @@ function byDivision(rows){
 }
 
 async function loadEconomy(){
+  const slow = await readSlow();
+  if (slow && slow.economy) return slow.economy;
   const core = await request("opendosm", "/opendosm", { id:"cpi_core" });
   /* Only the all-items line is charted against core, so filter the division
      breakdown away server-side — it is ~14x the rows we would keep. */
@@ -1386,6 +1410,8 @@ async function loadEconomy(){
 }
 
 async function loadFinance(){
+  const slow = await readSlow();
+  if (slow && slow.finance) return slow.finance;
   const fx = await request("data-catalogue", "/data-catalogue",
     { id:"exchangerates", sort:"-date" });
   /* The daily series carries 27 currencies x 3 rate types back to 1997. Pin it
@@ -1434,6 +1460,8 @@ const KTMB_SERVICES = [
 ];
 
 async function loadMobility(){
+  const slow = await readSlow();
+  if (slow && slow.mobility) return slow.mobility;
   /* One server-side filter is allowed; "all_types" collapses the per-body-type
      rows (car/bus/lorry/…) that this section does not chart. */
   const reg = await request("data-catalogue", "/data-catalogue",
@@ -1470,6 +1498,8 @@ async function loadSociety(){
 /* Population is annual, published to 1 January of the current year. Only the
    national series is used: population_state has been frozen since 2023. */
 async function loadPopulation(){
+  const slow = await readSlow();
+  if (slow && slow.population) return slow.population;
   /* One server-side filter is allowed, so narrow to the "overall" age band —
      that alone drops ~95% of the rows — and split by sex/ethnicity here. */
   const rows = await request("opendosm", "/opendosm",
@@ -1533,6 +1563,24 @@ function denseDaily(rows, keyCol, valCol){
    history the chart's range toggle never reaches.                           */
 const BLOOD_TYPES = [["a","A","#f87171"], ["b","B","#60a5fa"],
                      ["ab","AB","#a78bfa"], ["o","O","#34d399"]];
+
+/* Slow data: everything that changes at most daily is pre-collected by the
+   GitHub Action into slow.json (same-origin). Loaders below try the static
+   file first and only fall back to the live API when it is missing or older
+   than a few days (e.g. on plain static hosting without the Action). */
+let slowData = null;
+async function readSlow(){
+  if (slowData) return slowData;
+  try {
+    const r = await fetch("slow.json", { cache:"no-store" });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const fresh = j.generated &&
+      (Date.now() - Date.parse(j.generated + "T00:00:00Z")) < 6 * DAY_MS;
+    slowData = fresh ? j : null;
+  } catch { slowData = null; }
+  return slowData;
+}
 
 async function loadHealth(){
   /* Prefer the daily collector's static file (same-origin, no rate-limit

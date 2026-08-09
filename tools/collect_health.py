@@ -12,6 +12,8 @@ Writes: public/health.json  (committed by the GitHub Action, auto-deployed)
 """
 import json
 import sys
+import time
+import urllib.parse
 import urllib.request
 
 BASE = "https://api.data.gov.my/data-catalogue/"
@@ -23,9 +25,20 @@ YEAR_MS = 365.25 * DAY_MS
 def fetch(params):
     qs = "&".join(f"{k}={urllib.parse.quote(str(v))}" for k, v in params.items())
     url = BASE + "?" + qs
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.loads(r.read().decode("utf-8"))
+    last = None
+    for attempt in range(4):
+        try:
+            req = urllib.request.Request(url, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except Exception as e:
+            last = e
+            sys.stderr.write(f"  attempt {attempt + 1}/4 failed for {url[:80]}: {e}\n")
+            if attempt < 3:
+                time.sleep(5 * (attempt + 1))   # 5s, 10s, 15s backoff
+    if last is not None:
+        raise last
+    raise RuntimeError(f"fetch failed for {url}")
 
 
 def dense(rows, key_col, val_col):
@@ -85,5 +98,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import urllib.parse  # noqa: F401  (used by fetch)
     main()

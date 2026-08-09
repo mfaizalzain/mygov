@@ -66,24 +66,30 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
 
 ---
 
-## KKM health data (daily collector)
+## KKM health data + slow-data collector (daily)
 
-The Health section (blood donations, organ pledges, PeKa B40) updates daily,
-and every visitor used to spend **3 of the 4-per-minute `data-catalogue`
-budget** fetching it. It is now pre-collected by a GitHub Action, mirroring
-the Trend Radar pipeline:
+Two collectors pre-fetch everything that changes at most daily, so visitors
+spend zero API budget on it. Both run as GitHub Actions and commit a static
+JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
-- **Collector:** `tools/collect_health.py` — fetches the three MoH catalogue
-  series (`blood_donations` windowed to 3 years, `organ_pledges`,
-  `pekab40_screenings`) and writes `public/health.json` in the same compact
-  `{t0, n, keys, series}` shape the app's `denseDaily()` builds in the
-  browser (82 KB instead of ~700 KB of raw rows).
-- **Workflow:** `.github/workflows/collect_health.yml` — daily 00:30 UTC
-  (8:30 AM MYT) + manual `workflow_dispatch`, syntax-guarded, commits as
-  `github-actions[bot]` with `contents: write`.
-- The dashboard fetches `health.json` (same-origin) and only falls back to
-  the live API when the file is missing or more than ~6 days old (e.g. on
-  plain static hosting without the Action).
+| Collector | Workflow | Writes | Contents |
+| --- | --- | --- | --- |
+| KKM health | `collect_health.yml`, daily 00:30 UTC | `public/health.json` | blood donations (3y), organ pledges, PeKa B40 |
+| Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance, mobility, economy, population |
+
+- `tools/collect_health.py` and `tools/collect_slow.py` fetch from the
+  data.gov.my API with **4 attempts and 5s/10s/15s backoff** (a transient
+  failure in unattended CI must not cost a whole day of freshness), then
+  write the data in the exact compact shapes the browser loaders build
+  (`{t0, n, keys, series}` etc. — 596 KB for slow.json vs ~5 MB of raw rows).
+- The loaders (`loadHealth`, `loadFuel`, `loadFinance`, `loadMobility`,
+  `loadEconomy`, `loadPopulation`) **try the static file first** via
+  `readSlow()`, and only fall back to the live API when the file is missing
+  or more than ~6 days old (e.g. on plain static hosting without the Action).
+- Net effect: a cold visit costs **3 API requests** (weather) plus the
+  real-time feeds — everything else is static. `interestrates` is the one
+  series currently stale *upstream* (last published 2025-12); the collector
+  captures whatever the source publishes.
 
 ---
 
@@ -101,6 +107,8 @@ src/
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
   collect_radar.py      Trend Radar collector (see above)
+  collect_health.py     KKM health collector → public/health.json
+  collect_slow.py       slow-data collector → public/slow.json
 wrangler.jsonc
 ```
 
@@ -186,14 +194,19 @@ no request wastes a redirect hop against the rate limit.
 - enforces a rolling 4-per-60 s token bucket per family;
 - caches results in memory + `localStorage` for 15 minutes;
 - never polls. Refresh is manual.
+- retries transient failures once (network blips and 5xx get a 1.5 s / 2.5 s
+  pause, then a second attempt); 429 and 404 are not retried — the first is a
+  quota state a retry won't fix, the second is permanent. A section that
+  still fails shows an error box with a manual Retry button, keeping any
+  stale content on screen.
 
-Total cold load: **11 requests** — weather 3, catalogue 2, opendosm 4,
-gtfs-static 2, gtfs-realtime 2 — plus the health section's static
-`health.json` (same-origin, produced by the daily KKM collector, no API
-budget spent). GitHub is not called at all. Only weather + fuel (5 requests)
-are fetched on first paint; economy, finance, population, health, postcodes,
-transport and live are lazy-loaded as their sections scroll into view, so the
-first screen renders before the slowest datasets arrive.
+Total cold load: **3 requests** — weather 3 — plus the real-time feeds
+(transport GTFS + live vehicles, which must stay live) and the static
+`health.json` / `slow.json` (same-origin, produced by the daily collectors,
+no API budget spent). GitHub is not called at all. Only weather + fuel (fuel
+reads slow.json) are fetched on first paint; everything else is lazy-loaded
+as its section scrolls into view, so the first screen renders before the
+slowest datasets arrive.
 
 **Dataset ids that exist** (many plausible ones do not — an unknown id returns
 `404` with `{"status_code":404,...}`):
@@ -401,9 +414,10 @@ keeps showing the fetch time.
 
 **Into an existing section** — add one request to the relevant loader in
 `index.html`, reduce it to a compact array, and render it. Mind the 4/min cap:
-`opendosm` is at 4 of 4 (economy 3 + population 1), so a new OpenDOSM series
-must share an existing call or wait out a minute. `data-catalogue` has 2 in use
-(fuel + finance); health moved off the API to a daily static file.
+`weather` is the only family still hit live (3 of 4); the `data-catalogue`
+and `opendosm` families are served by the daily collectors' static files, so a
+new series there should be added to `tools/collect_slow.py` instead of the
+browser loader — that keeps the visitor path static.
 
 ```js
 const x = await request("data-catalogue", "/data-catalogue", { id: "YOUR_ID" });
