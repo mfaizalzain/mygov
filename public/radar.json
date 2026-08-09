@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-08-09T14:30:52.055128+00:00",
+ "generated_at": "2026-08-09T14:35:14.258244+00:00",
  "language": "bm-primary",
  "top_issues": [
   {
    "rank": 1,
-   "title_bm": "Jerebu Teruk Melanda Sarawak, Beberapa Kawasan Catat IPU Tidak Sihat",
-   "title_en": "Severe Haze Hits Sarawak as Air Quality Reaches Unhealthy Levels",
+   "title_bm": "Krisis Jerebu dan Cuaca Panas Lampau Melanda Sarawak",
+   "title_en": "Haze Crisis and Extreme Hot Weather Grip Sarawak",
    "category": "bencana",
    "source_count": 2,
    "sources": [
@@ -35,38 +35,38 @@
     "verdict": "TRUE",
     "reason": "confirmed by multiple reports",
     "sources": [
-     "Bernama",
      "Astro Awani",
-     "FMT"
+     "Bernama",
+     "Buletin TV3"
     ]
    }
   },
   {
    "rank": 2,
-   "title_bm": "Kemelut Dalaman Perikatan Nasional dan Perbincangan Agihan Kerusi PRN Melaka",
-   "title_en": "Internal Tensions in Perikatan Nasional and Melaka State Election Seat Talks",
+   "title_bm": "Dinamika Politik PRN Melaka, Kerjasama Perikatan Nasional-BN & Persiapan PRU16",
+   "title_en": "Political Developments for Melaka State Elections, PN-BN Seat Talks, and GE16 Preparations",
    "category": "politik",
    "source_count": 2,
    "sources": [
-    {
-     "name": "malaymail",
-     "title": "Samsuri says Bersatu remains in Perikatan despite Hadi’s claim",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/samsuri-says-bersatu-remains-in-perikatan-despite-hadis-claim/230711"
-    },
     {
      "name": "malaymail",
      "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
      "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-seat-swaps-on-the-table-for-perikatan-samsuri-tells-bn/230717"
     },
     {
-     "name": "freemalaysiatoday",
-     "title": "Samsuri contradicts Hadi, says Bersatu still in PN",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/samsuri-contradicts-hadi-says-bersatu-still-in-pn"
+     "name": "malaymail",
+     "title": "Melaka Pakatan open to talks, coalition welcomes negotiations ahead state election",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-pakatan-open-to-talks-coalition-welcomes-negotiations-ahead-state-election/230716"
+    },
+    {
+     "name": "malaymail",
+     "title": "Samsuri says Bersatu remains in Perikatan despite Hadi’s claim",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/samsuri-says-bersatu-remains-in-perikatan-despite-hadis-claim/230711"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "PN open to seat swaps with BN, says Samsuri",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/pn-open-to-seat-swaps-with-bn-says-samsuri"
+     "title": "PH in touch with BN on seat talks for Melaka polls",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-in-touch-with-bn-on-seat-talks-for-melaka-polls"
     },
     {
      "name": "freemalaysiatoday",
@@ -80,60 +80,16 @@
     "reason": "confirmed by multiple reports",
     "sources": [
      "Sinar Harian",
-     "Berita Harian",
-     "Free Malaysia Today"
+     "Bernama",
+     "Astro Awani"
     ]
    }
   },
   {
    "rank": 3,
-   "title_bm": "Persiapan Kongres DAP, Desakan Reformasi PH dan Tindakan Bekas Veteran",
-   "title_en": "DAP Congress Preparations, Demands for PH Reform, and Ex-Veteran Shifts",
-   "category": "politik",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "malaymail",
-     "title": "DAP congress set for Aug 16 showdown, stalled reforms and grassroots frustration to dominate agenda",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/dap-congress-set-for-aug-16-showdown-stalled-reforms-and-grassroots-frustration-to-dominate-agenda/230705"
-    },
-    {
-     "name": "malaymail",
-     "title": "Malay-Muslim unity cannot be built on fear of DAP — Phar Kim Beng",
-     "url": "https://www.malaymail.com/news/what-you-think/2026/08/09/malay-muslim-unity-cannot-be-built-on-fear-of-dap-phar-kim-beng/230655"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "PH must make reforms to stave off becoming opposition again, says analyst",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-must-make-reforms-to-stave-off-becoming-opposition-again-says-analyst"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Criticise DAP but labelling it ‘enemy of Islam’ is dangerous, says Marzuki",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/criticise-dap-but-labelling-it-enemy-of-islam-is-dangerous-says-marzuki"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Ex-DAP veteran Ronnie Liu joins PBM",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ex-dap-veteran-ronnie-liu-joins-pbm"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "confirmed by multiple reports",
-    "sources": [
-     "Astro Awani",
-     "Sinar Harian",
-     "Free Malaysia Today"
-    ]
-   }
-  },
-  {
-   "rank": 4,
-   "title_bm": "Pokok Angsana Tumbang Hentam Kereta di Georgetown, MBPP Jelaskan Punca Reput Root",
-   "title_en": "Falling Angsana Tree Crushes Car in George Town, MBPP Blames Root Rot",
-   "category": "lain",
+   "title_bm": "Insiden Pokok Tumbang Hempas Kereta di Jalan Macalister, Pulau Pinang",
+   "title_en": "Tree Collapse Crushes Car on Macalister Road, Penang Due to Root Rot",
+   "category": "bencana",
    "source_count": 2,
    "sources": [
     {
@@ -157,45 +113,16 @@
     "verdict": "TRUE",
     "reason": "confirmed by multiple reports",
     "sources": [
-     "Bernama",
-     "Astro Awani",
-     "Malay Mail"
+     "Sinar Harian",
+     "Utusan Malaysia",
+     "The Star"
     ]
    }
   },
   {
-   "rank": 5,
-   "title_bm": "Pasangan Beregu Negara Tee Kai Wun dan Yap Roy King Juara Korea Masters",
-   "title_en": "Malaysian Doubles Tee Kai Wun and Yap Roy King Crowned Korea Masters Champions",
-   "category": "lain",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "malaymail",
-     "title": "Tee Kai Wun and Yap Roy King click fast as BAM’s doubles shuffle pays off with Korea Masters triumph",
-     "url": "https://www.malaymail.com/news/sports/2026/08/09/tee-kai-wun-and-yap-roy-king-click-fast-as-bams-doubles-shuffle-pays-off-with-korea-masters-triumph/230718"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Kai Wun-Roy King crowned Korea Masters champs",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/kai-wun-roy-king-crowned-korea-masters-champs"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "confirmed by multiple reports",
-    "sources": [
-     "Bernama",
-     "The Star",
-     "Malay Mail"
-    ]
-   }
-  },
-  {
-   "rank": 6,
-   "title_bm": "Kereta Rempuh Balai Pelepasan KKIA Akibat Pemandu Lupa Tukar Gear 'P'",
-   "title_en": "SUV Crashes into KKIA Departure Hall After Driver Forgot to Engage 'P' Gear",
+   "rank": 4,
+   "title_bm": "Kereta Rempuh Balai Pelepasan Lapangan Terbang Antarabangsa Kota Kinabalu",
+   "title_en": "Car Crashes into Departure Hall at Kota Kinabalu International Airport",
    "category": "lain",
    "source_count": 2,
    "sources": [
@@ -211,15 +138,20 @@
     }
    ],
    "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "confirmed by multiple reports",
+    "sources": [
+     "Bernama",
+     "Astro Awani",
+     "FMT"
+    ]
    }
   },
   {
-   "rank": 7,
-   "title_bm": "Tiga Warga Asing Ditahan Atas Kes Seksual Terhadap Wanita OKU di Terengganu",
-   "title_en": "Three Foreign Nationals Arrested Over Sexual Assault of Disabled Woman in Terengganu",
+   "rank": 5,
+   "title_bm": "Tangkapan Tiga Pelarian Myanmar Berhubung Kes Jenayah Seksual Terhadap Wanita OKU",
+   "title_en": "Three Myanmar Refugees Arrested Over Sexual Assault Against Disabled Woman",
    "category": "jenayah",
    "source_count": 2,
    "sources": [
@@ -235,6 +167,59 @@
     }
    ],
    "fact_check": {
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "confirmed by multiple reports",
+    "sources": [
+     "Astro Awani",
+     "FMT",
+     "Sinar Harian"
+    ]
+   }
+  },
+  {
+   "rank": 6,
+   "title_bm": "Isu Penggunaan Logo Jabatan Imigresen Malaysia (JIM) pada Kenderaan Dipandu Warga Asing",
+   "title_en": "Immigration Department Clarifies Vehicle with JIM Logo Driven by Foreigner",
+   "category": "lain",
+   "source_count": 2,
+   "sources": [
+    {
+     "name": "utusan",
+     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
+     "url": "https://www.utusan.com.my/nasional/2026/08/kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport/?utm_source=rss&utm_medium=rss&utm_campaign=kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport"
+    },
+    {
+     "name": "sebenarnya",
+     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+     "url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
+   }
+  },
+  {
+   "rank": 7,
+   "title_bm": "Beregu Lelaki Negara Tee Kai Wun - Yap Roy King Juara Kejohanan Korea Masters",
+   "title_en": "Malaysian Men's Doubles Tee Kai Wun and Yap Roy King Crowned Korea Masters Champions",
+   "category": "lain",
+   "source_count": 2,
+   "sources": [
+    {
+     "name": "malaymail",
+     "title": "Tee Kai Wun and Yap Roy King click fast as BAM’s doubles shuffle pays off with Korea Masters triumph",
+     "url": "https://www.malaymail.com/news/sports/2026/08/09/tee-kai-wun-and-yap-roy-king-click-fast-as-bams-doubles-shuffle-pays-off-with-korea-masters-triumph/230718"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Kai Wun-Roy King crowned Korea Masters champs",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/kai-wun-roy-king-crowned-korea-masters-champs"
+    }
+   ],
+   "fact_check": {
     "status": "no_check_found",
     "sebenarnya_title": null,
     "sebenarnya_url": null
@@ -242,38 +227,33 @@
   },
   {
    "rank": 8,
-   "title_bm": "Dinamik Politik Sabah: Kerjasama Umno-PAS Tidak Terpakai di Sabah",
-   "title_en": "Sabah Political Dynamics: UMNO-PAS Pact Not Applicable in Sabah",
-   "category": "politik",
+   "title_bm": "Ahmad Shabery Cheek Penjelasan Tiada Cadangan Penjualan Hotel Felda Semasa Penggal Beliau",
+   "title_en": "Ahmad Shabery Cheek Denies Proposal to Sell Felda Hotels During His Tenure",
+   "category": "ekonomi",
    "source_count": 2,
    "sources": [
     {
-     "name": "malaymail",
-     "title": "Umno‑PAS pact not for Sabah, Salleh Keruak says politics driven by autonomy rights",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/umnopas-pact-not-for-sabah-salleh-keruak-says-politics-driven-by-autonomy-rights/230707"
+     "name": "freemalaysiatoday",
+     "title": "No Felda hotel sale proposal when I was chairman, says Shabery",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/no-felda-hotel-sale-proposal-when-i-was-chairman-says-shabery"
     },
     {
-     "name": "freemalaysiatoday",
-     "title": "Sabah Umno’s priority must be GRS, not PAS, says Salleh",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/sabah-umno-s-priority-must-be-grs-not-pas-says-salleh"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Warisan in talks with STAR, KDM on GE16 pact",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/warisan-in-talks-with-star-kdm-on-ge16-pact"
+     "name": "trends",
+     "title": "ahmad shabery cheek",
+     "url": "https://trends.google.com/trending?geo=MY"
     }
    ],
    "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Kerjasama Antara Bank Rakyat Dan Kedai Emas Seri Semantan Adalah Tidak Benar",
-    "sebenarnya_url": "https://sebenarnya.my/kerjasama-antara-bank-rakyat-dan-kedai-emas-seri-semantan-adalah-tidak-benar/"
+    "status": "no_check_found",
+    "sebenarnya_title": null,
+    "sebenarnya_url": null
    }
   },
   {
    "rank": 9,
-   "title_bm": "Palsu: Dakwaan Bantuan Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Bagi Semua Rakyat 18 Tahun Ke Atas",
-   "title_en": "Fake: Claim of One-Off RM100 SARA Contribution for All Citizens Aged 18 and Above",
-   "category": "ekonomi",
+   "title_bm": "Amaran Penipuan Pesanan Mesej Kerajaan Berkenaan Sumbangan Tunai Rahmah (STR) & SARA RM100",
+   "title_en": "Warnings Over Fake Messages and Scams Impersonating Government Aid (SARA & STR)",
+   "category": "jenayah",
    "source_count": 1,
    "sources": [
     {
@@ -289,31 +269,26 @@
    ],
    "fact_check": {
     "status": "verified_claim",
-    "sebenarnya_title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Adalah Tidak Benar",
-    "sebenarnya_url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
+    "sebenarnya_title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan Asas Rahmah (SARA)",
+    "sebenarnya_url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
    }
   },
   {
    "rank": 10,
-   "title_bm": "Penjelasan Mengenai Perubahan Harga Runcit Petroleum Tanpa Subsidi Berikutan Risiko Geopolitik Timur Tengah",
-   "title_en": "Clarification on Unsubsidised Petroleum Price Adjustments Amid Middle East Geopolitical Risks",
+   "title_bm": "Penyelarasan Harga Petroleum Tanpa Subsidi Susulan Pergolakan Geopolitik Asia Barat",
+   "title_en": "Unsubsidised Fuel Price Adjustments Due to Middle East Geopolitical Conflicts",
    "category": "ekonomi",
    "source_count": 1,
    "sources": [
     {
      "name": "sebenarnya",
-     "title": "Makluman: Harga Petrol Dan Diesel Tanpa Subsidi Turun 5 Sen Bagi Tempoh 6 Hingga 12 Ogos 2026",
-     "url": "https://sebenarnya.my/makluman-harga-petrol-dan-diesel-tanpa-subsidi-turun-5-sen-bagi-tempoh-6-hingga-12-ogos-2026/"
-    },
-    {
-     "name": "sebenarnya",
-     "title": "Makluman: Konflik Yang Melarat Di Asia Barat Terus Mendorong Peningkatan Harga Petrol Dan Diesel Tanpa Subsidi",
-     "url": "https://sebenarnya.my/makluman-konflik-yang-melarat-di-asia-barat-terus-mendorong-peningkatan-harga-petrol-dan-diesel-tanpa-subsidi/"
-    },
-    {
-     "name": "sebenarnya",
      "title": "Makluman : Harga Runcit RON95 Dan Diesel Tanpa Subsidi Meningkat Susulan Peningkatan Risiko Geopolitik Di Asia",
      "url": "https://sebenarnya.my/makluman-harga-runcit-ron95-dan-diesel-tanpa-subsidi-meningkat-susulan-peningkatan-risiko-geopolitik-di-asia-barat/"
+    },
+    {
+     "name": "sebenarnya",
+     "title": "Penjelasan Mengenai Situasi Pasaran Tenaga dan Jaminan Bekalan Negara",
+     "url": "https://sebenarnya.my/penjelasan-mengenai-situasi-pasaran-tenaga-dan-jaminan-bekalan-negara/"
     }
    ],
    "fact_check": {
@@ -323,5 +298,7 @@
    }
   }
  ],
- "total_signals": 90
+ "total_signals": 110,
+ "history_window_signals": 110,
+ "history_days": 7
 }

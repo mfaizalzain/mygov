@@ -15,6 +15,8 @@ import json, os, re, html, sys, datetime, urllib.request, xml.etree.ElementTree 
 from collections import Counter
 
 OUT = "public/radar.json"
+HISTORY = "tools/radar_history.json"
+HISTORY_DAYS = 7
 UA = {"User-Agent": "mygov-radar/0.1 (+https://mygov.faizalmzain.com)"}
 GEMINI_MODEL = "gemini-flash-latest"
 
@@ -24,6 +26,8 @@ NEWS_FEEDS = [
     ("utusan", "https://www.utusan.com.my/feed/", "ms"),
     ("sebenarnya", "https://sebenarnya.my/feed/", "ms"),
 ]
+
+TRENDS_RSS = "https://trends.google.com/trending/rss?geo=MY"  # curl-able, no browser needed
 
 
 def fetch(url, timeout=20):
@@ -50,6 +54,59 @@ def parse_rss(text, source, lang, limit=30):
     return items
 
 
+def parse_trends_rss(text, limit=15):
+    """Google Trends RSS: <item><title>query</title><ht:approx_traffic>.."""
+    items = []
+    try:
+        root = ET.fromstring(text)
+        for it in root.iter("item"):
+            title = html.unescape((it.findtext("title") or "").strip())
+            traffic = ""
+            for el in it.iter():
+                if el.tag.endswith("approx_traffic"):
+                    traffic = (el.text or "").strip()
+                    break
+            if title:
+                items.append({"source": "trends", "lang": "mixed", "title": title,
+                              "url": "https://trends.google.com/trending?geo=MY",
+                              "pub": "", "traffic": traffic})
+            if len(items) >= limit:
+                break
+    except Exception as e:
+        sys.stderr.write(f"  trends parse err: {e}\n")
+    return items
+
+
+def load_history():
+    try:
+        with open(HISTORY) as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_history(history):
+    with open(HISTORY, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=1)
+
+
+def merge_history(signals):
+    """Append today's signals to the rolling history; prune entries older than
+    HISTORY_DAYS; return the merged list (used for persistence-aware clustering)."""
+    today = str(datetime.date.today())
+    history = load_history()
+    # keep only fresh days
+    cutoff = datetime.date.today() - datetime.timedelta(days=HISTORY_DAYS)
+    history = [s for s in history
+               if s.get("day", "") >= str(cutoff)]
+    history.append({"day": today, "signals": signals})
+    save_history(history)
+    merged = []
+    for entry in history:
+        merged.extend(entry.get("signals", []))
+    return merged
+
+
 def gemini_key():
     k = os.environ.get("GOOGLE_API_KEY")
     if k:
@@ -72,9 +129,10 @@ def cluster_with_gemini(signals):
     compact = []
     for s in signals[:140]:
         compact.append(f"[{s['source']}] {s['title'][:110]}")
-    prompt = f"""You cluster Malaysian news/fact-check signals into the 10 hottest current issues.
+    prompt = f"""You cluster Malaysian news/trend signals into the 10 hottest COLLECTIVE issues.
 
-Today: {datetime.date.today().isoformat()}. Signals (source|title):
+Today: {datetime.date.today().isoformat()}. These signals span the last 7 days
+(the "trends" ones come from Google Trends Malaysia). Signals (source|title):
 {chr(10).join(compact)}
 
 Return STRICT JSON only (no markdown fence), exactly this shape:
@@ -88,7 +146,10 @@ Return STRICT JSON only (no markdown fence), exactly this shape:
 ]}}
 Rules:
 - Dedupe across sources: same story = one issue; source_count = distinct sources.
-- Cross-source frequency + recency drive ranking. Nationwide > niche.
+- PERSISTENCE BEATS ONE-DAY SPIKES: topics that appear on MULTIPLE DAYS or in
+  MULTIPLE sources rank ABOVE single-day viral spikes. This is about what
+  Malaysia is COLLECTIVELY discussing, not today's headlines. A sports match
+  is a one-day spike — rank it low or exclude it.
 - sebenarnya signals are fact-check posts: if one addresses the issue,
   status=debunked (claim is false) or verified_claim; else no_check_found.
 - URLs: fill from the signal urls you were given (match by source+title); if
@@ -251,15 +312,28 @@ def main():
         except Exception as e:
             sys.stderr.write(f"  fetch err {source}: {e}\n")
 
+    # Google Trends MY RSS — catches topics before they hit the news
+    try:
+        trends = parse_trends_rss(fetch(TRENDS_RSS))
+        print(f"  trends: {len(trends)} items")
+        signals.extend(trends)
+    except Exception as e:
+        sys.stderr.write(f"  trends err: {e}\n")
+
+    # Persistence: merge into rolling 7-day history so Gemini ranks
+    # multi-day topics above one-day spikes (collective trends, not news flashes)
+    merged = merge_history(signals)
+    print(f"  history window: {len(merged)} signals (7-day rolling)")
+
     issues = None
     try:
-        issues = cluster_with_gemini(signals)
+        issues = cluster_with_gemini(merged)
     except Exception as e:
         sys.stderr.write(f"  gemini err: {e}\n")
     if issues:
         print(f"  gemini: {len(issues)} issues")
     else:
-        issues = cluster_keyword(signals)
+        issues = cluster_keyword(merged)
         print(f"  fallback keyword clustering: {len(issues)} issues")
 
     issues = backfill_urls(issues, signals)
@@ -285,10 +359,12 @@ def main():
         "language": "bm-primary",
         "top_issues": issues,
         "total_signals": len(signals),
+        "history_window_signals": len(merged),
+        "history_days": HISTORY_DAYS,
     }
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=1)
-    print(f"[radar] wrote {OUT} — {len(issues)} issues from {len(signals)} signals")
+    print(f"[radar] wrote {OUT} — {len(issues)} issues from {len(signals)} signals ({len(merged)} in 7-day window)")
 
 
 if __name__ == "__main__":
