@@ -1977,9 +1977,10 @@ function initWxCarousel(){
   if (n <= 1){ c.querySelector(".wx-ctl").style.display = "none"; return; }
   const perView = () => track.clientWidth < 640 ? 1 : track.clientWidth < 980 ? 2 : 3;
   const maxIdx = () => Math.max(0, n - perView());
+  /* each card is a fixed width + the track gap; this is the scroll step */
+  const step = () => (slides[0] ? slides[0].offsetWidth : 340) + 12;
   const render = () => {
-    const s = slides[wxCtl.idx];
-    if (s) track.scrollTo({ left: s.offsetLeft, behavior: "smooth" });
+    track.scrollTo({ left: wxCtl.idx * step(), behavior: "smooth" });
     $("#wx-count").textContent = `${wxCtl.idx + 1} / ${n}`;
     $("#wx-prev").disabled = wxCtl.idx === 0;
     $("#wx-next").disabled = wxCtl.idx >= maxIdx();
@@ -1994,7 +1995,8 @@ function initWxCarousel(){
   $("#wx-prev").onclick = () => { wxCtl.idx = Math.max(0, wxCtl.idx - 1); render(); start(); };
   $("#wx-next").onclick = () => { wxCtl.idx = Math.min(wxCtl.idx + 1, maxIdx()); render(); start(); };
   track.addEventListener("scroll", () => {
-    const n0 = Math.round(track.scrollLeft / track.clientWidth);
+    const st = step();
+    const n0 = st ? Math.round(track.scrollLeft / st) : 0;
     wxCtl.idx = Math.min(Math.max(n0, 0), maxIdx());
     $("#wx-count").textContent = `${wxCtl.idx + 1} / ${n}`;
     $("#wx-prev").disabled = wxCtl.idx === 0;
@@ -3698,9 +3700,10 @@ async function initRadarCarousel(){
   const slides = track.querySelectorAll(".radar-slide");
   const perView = () => track.clientWidth < 560 ? 1 : track.clientWidth < 900 ? 2 : 3;
   const maxIdx = () => Math.max(0, slides.length - perView());
+  /* each slide is a fixed width + the track gap; this is the scroll step */
+  const step = () => (slides[0] ? slides[0].offsetWidth : 320) + 12;
   const render = () => {
-    const s = slides[radarIdx];
-    if (s) track.scrollTo({ left: s.offsetLeft, behavior: "smooth" });
+    track.scrollTo({ left: radarIdx * step(), behavior: "smooth" });
     $("#radar-count").textContent = `${radarIdx + 1} / ${slides.length}`;
     $("#radar-prev").disabled = radarIdx === 0;
     $("#radar-next").disabled = radarIdx >= maxIdx();
@@ -3717,8 +3720,8 @@ async function initRadarCarousel(){
   $("#radar-prev").onclick = () => { prev(); start(); };
   $("#radar-next").onclick = () => { next(); start(); };
   track.addEventListener("scroll", () => {
-    const w = track.clientWidth;
-    const n = Math.round(track.scrollLeft / w);
+    const st = step();
+    const n = st ? Math.round(track.scrollLeft / st) : 0;
     radarIdx = Math.min(Math.max(n, 0), maxIdx());
     $("#radar-count").textContent = `${radarIdx + 1} / ${slides.length}`;
     $("#radar-prev").disabled = radarIdx === 0;
