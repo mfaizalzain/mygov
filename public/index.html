@@ -302,7 +302,7 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
   border:1px solid var(--line);background:var(--surface-2);color:var(--fg-2);font-size:13px;
   cursor:pointer;display:grid;place-items:center;transition:var(--t)}
 .rd-x:hover{background:var(--surface-3);color:var(--fg);border-color:var(--line)}
-.rd-head{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s5) var(--s5) var(--s3);
+.rd-head{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s6) var(--s6) var(--s4);
   border-bottom:1px solid var(--line-soft)}
 .rd-head .rank{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
   background:var(--bg-2);border:1px solid var(--line);font-family:var(--mono);
@@ -312,7 +312,7 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .rd-titles{min-width:0}
 .rd-en{margin:4px 0 0;color:var(--fg-3);font-size:12.5px;line-height:1.45}
 .rd-head .pill{flex:none;margin:2px 44px 0 0;text-transform:capitalize}
-.rd-body{padding:var(--s4) var(--s5) var(--s5)}
+.rd-body{padding:var(--s4) var(--s6) var(--s6)}
 .rd-verdict{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--s4);
   border-radius:var(--r);border:1px solid var(--line-soft);margin-bottom:var(--s4)}
 .rd-verdict .rd-vicon{font-size:20px;line-height:1}
@@ -1544,7 +1544,9 @@ async function loadTransport(){
   const out = {};
   for (const f of FEEDS){
     const buf = await fetchGtfsZip(f);
-    const files = await unzipSelected(buf, ["routes.txt","trips.txt","stops.txt","agency.txt"]);
+    const want = ["routes.txt","trips.txt","stops.txt","agency.txt"];
+    if (f.key === "rail") want.push("stop_times.txt");
+    const files = await unzipSelected(buf, want);
     const routes = parseCSV(files["routes.txt"]), trips = parseCSV(files["trips.txt"]);
     const stops = parseCSV(files["stops.txt"]), agency = parseCSV(files["agency.txt"])[0] || {};
     const per = new Map();
@@ -3320,7 +3322,9 @@ const kmTxt = km => km < 1 ? Math.round(km * 1000) + " m" : km.toFixed(1) + " km
 /* ════════════════════════════ live flights board (Malaysia Airports FIDS) ════════════════════════════ */
 const F_AIRPORTS = [
   ["KLIA", "KLIA · Kuala Lumpur"], ["klia2", "KLIA2 · Kuala Lumpur"],
-  ["PEN", "Penang"], ["KCH", "Kuching"], ["BKI", "Kota Kinabalu"], ["LGK", "Langkawi"],
+  ["SZB", "Subang · Kuala Lumpur"], ["PEN", "Penang"], ["BKI", "Kota Kinabalu"],
+  ["KCH", "Kuching"], ["LGK", "Langkawi"], ["TWU", "Tawau"],
+  ["AOR", "Alor Setar"], ["TGG", "Terengganu"],
 ];
 /* status code → [tone class, label]; unknown codes fall back to the raw text */
 const F_STATUS = {
