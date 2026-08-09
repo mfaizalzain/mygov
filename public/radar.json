@@ -1,33 +1,28 @@
 {
- "generated_at": "2026-08-09T14:10:13.348613+00:00",
+ "generated_at": "2026-08-09T14:14:58.333308+00:00",
  "language": "bm-primary",
  "top_issues": [
   {
    "rank": 1,
-   "title_bm": "Jerebu Teruk Dan Cuaca Panas Landa Sarawak",
-   "title_en": "Severe Haze and Hot Weather Grip Sarawak",
+   "title_bm": "Jerebu Sarawak Makin Teruk, Bacaan API Tidak Sihat di Serian, Kuching dan Bintulu",
+   "title_en": "Sarawak chokes under worsening haze as API hits unhealthy levels in Serian, Kuching, Bintulu",
    "category": "bencana",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
      "title": "Sarawak chokes under haze blanket as hot weather grips state until Aug 14",
-     "url": ""
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/sarawak-chokes-under-haze-blanket-as-hot-weather-grips-state-until-aug-14/230730"
     },
     {
      "name": "malaymail",
      "title": "Sarawak haze thickens, Serian tops API at 170 as Kuching, Bintulu readings hit 155",
-     "url": ""
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/sarawak-haze-thickens-serian-tops-api-at-170-as-kuching-bintulu-readings-hit-155/230703"
     },
     {
      "name": "freemalaysiatoday",
      "title": "Unhealthy air spreads to more areas of Sarawak",
-     "url": ""
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "5 areas in Sarawak record unhealthy API readings",
-     "url": ""
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/unhealthy-air-spreads-to-more-areas-of-sarawak"
     }
    ],
    "fact_check": {
@@ -38,30 +33,30 @@
   },
   {
    "rank": 2,
-   "title_bm": "Pertikaian Status Kedudukan Bersatu Dalam Perikatan Nasional",
-   "title_en": "Dispute Over Bersatu's Status and Membership in Perikatan Nasional",
+   "title_bm": "Rundingan Kerusi PRN Melaka: PN-BN dan PH Terbuka Berbincang Sebelum Pilihan Raya Negeri",
+   "title_en": "Melaka state polls: PN-BN and PH open to seat negotiations ahead of state election",
    "category": "politik",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Samsuri says Bersatu remains in Perikatan despite Hadi’s claim",
-     "url": ""
+     "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-seat-swaps-on-the-table-for-perikatan-samsuri-tells-bn/230717"
+    },
+    {
+     "name": "malaymail",
+     "title": "Melaka Pakatan open to talks, coalition welcomes negotiations ahead state election",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-pakatan-open-to-talks-coalition-welcomes-negotiations-ahead-state-election/230716"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Samsuri contradicts Hadi, says Bersatu still in PN",
-     "url": ""
+     "title": "PH in touch with BN on seat talks for Melaka polls",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-in-touch-with-bn-on-seat-talks-for-melaka-polls"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Bersatu to take PN membership dispute to RoS",
-     "url": ""
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Now Terengganu Bersatu No 2 quits post",
-     "url": ""
+     "title": "PN open to seat swaps with BN, says Samsuri",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/pn-open-to-seat-swaps-with-bn-says-samsuri"
     }
    ],
    "fact_check": {
@@ -72,25 +67,30 @@
   },
   {
    "rank": 3,
-   "title_bm": "Insiden Pokok Tumbang Akibat Akar Reput di George Town",
-   "title_en": "Tree Collapse Caused by Root Rot in George Town",
-   "category": "bencana",
+   "title_bm": "Pertikaian Status Bersatu dalam PN: Samsuri Bercanggah dengan Hadi, Kes Dibawa ke RoS",
+   "title_en": "Bersatu-PN membership dispute: Samsuri contradicts Hadi, matter referred to RoS",
+   "category": "politik",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "MBPP blames root rot and trunk cavity for Angsana collapse in George Town",
-     "url": ""
+     "title": "Samsuri says Bersatu remains in Perikatan despite Hadi's claim",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/samsuri-says-bersatu-remains-in-perikatan-despite-hadis-claim/230711"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Root rot, cavity contributed to 90-year-old tree collapse, says MBPP",
-     "url": ""
+     "title": "Samsuri contradicts Hadi, says Bersatu still in PN",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/samsuri-contradicts-hadi-says-bersatu-still-in-pn"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "3 cheat death after falling tree crushes car on Macalister Road",
-     "url": ""
+     "title": "Bersatu to take PN membership dispute to RoS",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/bersatu-to-take-pn-membership-dispute-to-ros"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Now Terengganu Bersatu No 2 quits post",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/now-terengganu-bersatu-no-2-quits-post"
     }
    ],
    "fact_check": {
@@ -101,44 +101,64 @@
   },
   {
    "rank": 4,
-   "title_bm": "Penjelasan Penggunaan Logo Imigresen Pada Kenderaan Persendirian Warga Asing",
-   "title_en": "Clarification on Use of Immigration Department Logo on Foreigner-Driven Vehicle",
-   "category": "jenayah",
+   "title_bm": "Kongres DAP 16 Ogos dan Perdebatan Perpaduan Melayu-Islam Mencetus Kontroversi",
+   "title_en": "DAP congress Aug 16 showdown amid Malay-Muslim unity debate",
+   "category": "politik",
    "source_count": 2,
    "sources": [
     {
-     "name": "utusan",
-     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
-     "url": ""
+     "name": "malaymail",
+     "title": "DAP congress set for Aug 16 showdown, stalled reforms and grassroots frustration to dom...",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/dap-congress-set-for-aug-16-showdown-stalled-reforms-and-grassroots-frustration-to-dominate-agenda/230705"
     },
     {
-     "name": "sebenarnya",
-     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-     "url": ""
+     "name": "malaymail",
+     "title": "Malay-Muslim unity cannot be built on fear of DAP — Phar Kim Beng",
+     "url": "https://www.malaymail.com/news/what-you-think/2026/08/09/malay-muslim-unity-cannot-be-built-on-fear-of-dap-phar-kim-beng/230655"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Criticise DAP but labelling it 'enemy of Islam' is dangerous, says Marzuki",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/criticise-dap-but-labelling-it-enemy-of-islam-is-dangerous-says-marzuki"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Ex-DAP veteran Ronnie Liu joins PBM",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ex-dap-veteran-ronnie-liu-joins-pbm"
     }
    ],
    "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+    "status": "no_check_found",
+    "sebenarnya_title": null,
     "sebenarnya_url": null
    }
   },
   {
    "rank": 5,
-   "title_bm": "Kereta Rempuh Balai Pelepasan Lapangan Terbang KKIA Akibat Gagal Masuk Gear 'P'",
-   "title_en": "Car Crashes Into KKIA Departure Hall Due to Gear Engagement Failure",
-   "category": "lain",
+   "title_bm": "Strategi Umno Sabah dan Perlis Jelang PRU16, Warisan Berbincang Pakatan dengan STAR-KDM",
+   "title_en": "Sabah & Perlis Umno GE16 strategies; Warisan in talks with STAR, KDM on pact",
+   "category": "politik",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Driver forgot to put SUV in park before crashing into KKIA departure hall, police say",
-     "url": ""
+     "title": "Umno-PAS pact not for Sabah, Salleh Keruak says politics driven by autonomy rights",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/umnopas-pact-not-for-sabah-salleh-keruak-says-politics-driven-by-autonomy-rights/230707"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Failure to engage ‘P’ gear led to car crash at KKIA departure hall",
-     "url": ""
+     "title": "Sabah Umno's priority must be GRS, not PAS, says Salleh",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/sabah-umno-s-priority-must-be-grs-not-pas-says-salleh"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Perlis Umno wants to go solo at next polls, says PN incompetent",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/perlis-umno-wants-to-go-solo-at-next-polls-says-pn-incompetent"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Warisan in talks with STAR, KDM on GE16 pact",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/warisan-in-talks-with-star-kdm-on-ge16-pact"
     }
    ],
    "fact_check": {
@@ -149,20 +169,25 @@
   },
   {
    "rank": 6,
-   "title_bm": "Pasangan Beregu Tee Kai Wun-Yap Roy King Juara Kejohanan Korea Masters",
-   "title_en": "Doubles Pair Tee Kai Wun & Yap Roy King Crowned Korea Masters Champions",
-   "category": "lain",
+   "title_bm": "Pokok Tumbang di Pulau Pinang: MBPP Sahkan Reput Akar dan Rongga Punca Kejadian",
+   "title_en": "Penang tree collapses: MBPP cites root rot and cavity; 3 escape death on Macalister Road",
+   "category": "bencana",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Tee Kai Wun and Yap Roy King click fast as BAM’s doubles shuffle pays off with Korea Masters triumph",
-     "url": ""
+     "title": "MBPP blames root rot and trunk cavity for Angsana collapse in George Town",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/root-rot-and-trunk-cavity-blamed-for-angsana-tree-collapse-in-george-town/230731"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Kai Wun-Roy King crowned Korea Masters champs",
-     "url": ""
+     "title": "Root rot, cavity contributed to 90-year-old tree collapse, says MBPP",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/root-rot-cavity-contributed-to-90-year-old-tree-collapse-says-mbpp"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "3 cheat death after falling tree crushes car on Macalister Road",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/3-cheat-death-after-falling-tree-crushes-car-on-macalister-road"
     }
    ],
    "fact_check": {
@@ -173,20 +198,20 @@
   },
   {
    "rank": 7,
-   "title_bm": "Tiga Lelaki Warga Asing Ditahan Disyaki Lakukan Serangan Seksual Ke Atas Wanita OKU",
-   "title_en": "Three Foreign Men Arrested Over Alleged Sexual Offence Against Disabled Woman",
+   "title_bm": "Tiga Lelaki Myanmar Ditahan atas Kes Gangguan Seksual Wanita OKU di Terengganu",
+   "title_en": "Three Myanmar men arrested over sexual offence against disabled woman in Terengganu",
    "category": "jenayah",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
      "title": "Terengganu police arrest three Myanmar men over sexual offence against disabled woman",
-     "url": ""
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/terengganu-police-arrest-three-myanmar-men-over-sexual-offence-against-disabled-woman/230727"
     },
     {
      "name": "freemalaysiatoday",
      "title": "3 refugees held after report of sexual offence against disabled woman",
-     "url": ""
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/3-refugees-held-after-report-of-sexual-offence-against-disabled-woman"
     }
    ],
    "fact_check": {
@@ -197,30 +222,20 @@
   },
   {
    "rank": 8,
-   "title_bm": "Perundingan Kerusi PRN Melaka Antara Parti-Parti Politik",
-   "title_en": "Seat Negotiation Discussions Ahead of Melaka State Election",
-   "category": "politik",
+   "title_bm": "Remaja Tembak Guru di Thailand: Suspek Pernah Bawa BB Gun ke Sekolah dan Tonton Video Ganas",
+   "title_en": "Thailand teen shooter once brought BB gun to school and watched violent videos",
+   "category": "antarabangsa",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
-     "url": ""
+     "title": "Thailand teen shooter once brought BB gun to school, say police",
+     "url": "https://www.malaymail.com/news/world/2026/08/09/thailand-teen-shooter-once-brought-bb-gun-to-school-say-police/230728"
     },
     {
-     "name": "malaymail",
-     "title": "Melaka Pakatan open to talks, coalition welcomes negotiations ahead state election",
-     "url": ""
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "PH in touch with BN on seat talks for Melaka polls",
-     "url": ""
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Melaka seat talks crucial for BN-PN pact, says analyst",
-     "url": ""
+     "name": "utusan",
+     "title": "Remaja tembak guru pernah tonton video ganas",
+     "url": "https://www.utusan.com.my/luar-negara/2026/08/remaja-tembak-guru-pernah-tonton-video-ganas/?utm_source=rss&utm_medium=rss&utm_campaign=remaja-tembak-guru-pernah-tonton-video-ganas"
     }
    ],
    "fact_check": {
@@ -231,44 +246,49 @@
   },
   {
    "rank": 9,
-   "title_bm": "Siasatan Kes Khianat Menganiaya dan Membunuh Haiwan",
-   "title_en": "Investigation into Alleged Animal Cruelty and Killing",
+   "title_bm": "Amaran Penipuan SARA/STR dan Dakwaan Palsu Sumbangan RM100 Secara One-Off",
+   "title_en": "Scam warnings on SARA/STR and false claim of RM100 one-off handout debunked",
    "category": "jenayah",
-   "source_count": 2,
+   "source_count": 1,
    "sources": [
     {
-     "name": "freemalaysiatoday",
-     "title": "Lawyers want probe after puppy allegedly run over twice",
-     "url": ""
+     "name": "sebenarnya",
+     "title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SAR...",
+     "url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
     },
     {
      "name": "sebenarnya",
-     "title": "Penjelasan Berkenaan Kes Khianat Dengan Membunuh Haiwan",
-     "url": ""
+     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah...",
+     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+    },
+    {
+     "name": "sebenarnya",
+     "title": "Waspada Penipuan Pesanan Kerajaan Bagi Tempahan Makanan Dan Cenderahati",
+     "url": "https://sebenarnya.my/waspada-penipuan-pesanan-kerajaan-bagi-tempahan-makanan-dan-cenderahati/"
     }
    ],
    "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Penjelasan Berkenaan Kes Khianat Dengan Membunuh Haiwan",
-    "sebenarnya_url": null
+    "status": "debunked",
+    "sebenarnya_title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Adalah Tidak Benar",
+    "sebenarnya_url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
    }
   },
   {
    "rank": 10,
-   "title_bm": "UMNO Sabah Tekan Kerjasama Hak Otonomi Dan GRS",
-   "title_en": "Sabah UMNO Emphasises Local Autonomy Rights and GRS Alliance",
-   "category": "politik",
+   "title_bm": "Kereta Rempuh Dewan Berlepas KKIA Selepas Pemandu Lupa Letak Gear 'P'",
+   "title_en": "Car crashes into KKIA departure hall after driver fails to engage 'P' gear",
+   "category": "lain",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Umno‑PAS pact not for Sabah, Salleh Keruak says politics driven by autonomy rights",
-     "url": ""
+     "title": "Driver forgot to put SUV in park before crashing into KKIA departure hall, police say",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/driver-forgot-to-put-suv-in-park-before-crashing-at-kkia-police-say/230715"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Sabah Umno’s priority must be GRS, not PAS, says Salleh",
-     "url": ""
+     "title": "Failure to engage 'P' gear led to car crash at KKIA departure hall",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/failure-to-engage-p-gear-led-to-car-crash-at-kkia-departure-hall"
     }
    ],
    "fact_check": {
