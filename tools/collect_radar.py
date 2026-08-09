@@ -50,7 +50,8 @@ def parse_rss(text, source, lang, limit=30):
             if len(items) >= limit:
                 break
     except Exception as e:
-        sys.stderr.write(f"  rss parse err {source}: {e}\n")
+        sys.stderr.write(f"  rss parse err {source}: {e}
+")
     return items
 
 
@@ -73,7 +74,8 @@ def parse_trends_rss(text, limit=15):
             if len(items) >= limit:
                 break
     except Exception as e:
-        sys.stderr.write(f"  trends parse err: {e}\n")
+        sys.stderr.write(f"  trends parse err: {e}
+")
     return items
 
 
@@ -129,10 +131,9 @@ def cluster_with_gemini(signals):
     compact = []
     for s in signals[:140]:
         compact.append(f"[{s['source']}] {s['title'][:110]}")
-    prompt = f"""You cluster Malaysian news/trend signals into the 10 hottest COLLECTIVE issues.
+    prompt = f"""You cluster Malaysian news/trend/fact-check signals into the 10 hottest issues THAT REQUIRE FACT-CHECKING OR VERIFICATION.
 
-Today: {datetime.date.today().isoformat()}. These signals span the last 7 days
-(the "trends" ones come from Google Trends Malaysia). Signals (source|title):
+Today: {datetime.date.today().isoformat()}. These signals span the last 7 days. Signals (source|title):
 {chr(10).join(compact)}
 
 Return STRICT JSON only (no markdown fence), exactly this shape:
@@ -145,16 +146,12 @@ Return STRICT JSON only (no markdown fence), exactly this shape:
       "sebenarnya_title": "matched sebenarnya post or null", "sebenarnya_url": null}}}}
 ]}}
 Rules:
-- Dedupe across sources: same story = one issue; source_count = distinct sources.
-- PERSISTENCE BEATS ONE-DAY SPIKES: topics that appear on MULTIPLE DAYS or in
-  MULTIPLE sources rank ABOVE single-day viral spikes. This is about what
-  Malaysia is COLLECTIVELY discussing, not today's headlines. A sports match
-  is a one-day spike — rank it low or exclude it.
-- sebenarnya signals are fact-check posts: if one addresses the issue,
-  status=debunked (claim is false) or verified_claim; else no_check_found.
-- URLs: fill from the signal urls you were given (match by source+title); if
-  you cannot match, use "" for url.
-- Exactly 10 issues (fewer only if genuinely fewer distinct issues)."""
+- FOCUS EXCLUSIVELY ON VIRAL CLAIMS, RUMORS, CONTROVERSIES, AND STATEMENTS THAT REQUIRE FACT-CHECKING.
+- FILTER OUT standard breaking news, routine accidents, sports scores, daily road/weather updates, and routine political speeches.
+- Dedupe across sources: same claim/issue = one issue; source_count = distinct sources.
+- sebenarnya signals are official fact-check posts: if one addresses the issue, status=debunked (if false) or verified_claim; else no_check_found.
+- URLs: fill from the signal urls you were given (match by source+title); if you cannot match, use "" for url.
+- Exactly 10 issues (fewer only if genuinely fewer distinct issues requiring verification)."""
     body = json.dumps({"contents": [{"parts": [{"text": prompt}]}],
                        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192}}).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
@@ -270,14 +267,13 @@ def factcheck_with_search(issue):
     if not key:
         return {"status": "no_check_found", "verdict": None, "reason": None, "sources": []}
     title = issue.get("title_bm") or issue.get("title_en") or ""
-    prompt = f"""A news trend is circulating in Malaysia: "{title}".
+    prompt = f"""A news trend or claim is circulating in Malaysia: "{title}".
 Treat it as a claim to verify. Use Google Search to check the latest
-reports. Reply STRICT JSON only (no markdown):
+reports and fact-checks. Reply STRICT JSON only (no markdown):
 {{"verdict": "TRUE|FALSE|PARTLY_TRUE|UNVERIFIED",
  "reason": "one sentence, in English",
- "sources": ["up to 3 short source names, e.g. AFP Fact Check, UNHCR"]}}
-If it is a factual news event (not a claim), verdict TRUE with reason
-"confirmed by multiple reports". If it is a false/fake claim, FALSE."""
+ "sources": ["up to 3 short source names, e.g. AFP Fact Check, SEBENARNYA.MY"]}}
+If it is a verified true claim, verdict TRUE. If it is a false/fake claim or rumor, FALSE. If unverified, UNVERIFIED."""
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}],
@@ -297,7 +293,8 @@ If it is a factual news event (not a claim), verdict TRUE with reason
         return {"status": status, "verdict": verdict,
                 "reason": parsed.get("reason"), "sources": parsed.get("sources", [])}
     except Exception as e:
-        sys.stderr.write(f"  factcheck err: {e}\n")
+        sys.stderr.write(f"  factcheck err: {e}
+")
         return {"status": "no_check_found", "verdict": None, "reason": None, "sources": []}
 
 
@@ -310,7 +307,8 @@ def main():
             print(f"  {source}: {len(items)} items")
             signals.extend(items)
         except Exception as e:
-            sys.stderr.write(f"  fetch err {source}: {e}\n")
+            sys.stderr.write(f"  fetch err {source}: {e}
+")
 
     # Google Trends MY RSS — catches topics before they hit the news
     try:
@@ -318,7 +316,8 @@ def main():
         print(f"  trends: {len(trends)} items")
         signals.extend(trends)
     except Exception as e:
-        sys.stderr.write(f"  trends err: {e}\n")
+        sys.stderr.write(f"  trends err: {e}
+")
 
     # Persistence: merge into rolling 7-day history so Gemini ranks
     # multi-day topics above one-day spikes (collective trends, not news flashes)
@@ -329,7 +328,8 @@ def main():
     try:
         issues = cluster_with_gemini(merged)
     except Exception as e:
-        sys.stderr.write(f"  gemini err: {e}\n")
+        sys.stderr.write(f"  gemini err: {e}
+")
     if issues:
         print(f"  gemini: {len(issues)} issues")
     else:
@@ -338,8 +338,7 @@ def main():
 
     issues = backfill_urls(issues, signals)
 
-    # Grounded fact-check (Gemini + Google Search) on top 5 — trends like
-    # Rohingya are claim landscapes; verify with real sources.
+    # Grounded fact-check (Gemini + Google Search) on top 5 — verify claims against real sources
     seben_fc = {i.get("rank"): i.get("fact_check", {}) for i in issues}
     checked = 0
     for i in issues[:5]:
