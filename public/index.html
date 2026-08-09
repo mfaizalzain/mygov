@@ -2039,9 +2039,18 @@ function paintMaps(){
     const el = document.getElementById("lvmap-" + f.key); if (!el) continue;
     if (lvMaps[f.key]){ lvMaps[f.key].remove(); delete lvMaps[f.key]; }
     const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 7);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
+    /* The public OSM tile server occasionally answers 503; retry each failed
+       tile once so a transient blip doesn't leave grey holes in the map. */
+    tiles.on("tileerror", e => {
+      const t = e.tile;
+      if (t && !t.dataset.retried){
+        t.dataset.retried = "1";
+        setTimeout(() => { if (t.isConnected) t.src = t.src; }, 800);
+      }
+    });
     if (f.vehicles.length){
       const pts = f.vehicles.map(v => {
         const m = L.circleMarker([v.lat, v.lon], {
