@@ -862,24 +862,46 @@ function errorBox(id, err, retry){
 /* ════════════════════════ location awareness ════════════════════════ */
 const geo = { status:"idle", label:null, matchedId:null, candidates:[] };
 
+/* OSM often names the local authority rather than the place — "Majlis
+   Perbandaran Kajang" for Kajang. Strip council wording so the place name is
+   left. Note "kota"/"bandar" are NOT stripped: they are genuine parts of
+   Malaysian names (Kota Bharu, Kota Kinabalu), and both sides normalise
+   identically anyway. */
 const norm = s => String(s || "").toLowerCase()
-  .replace(/\b(daerah|district|bandar|kota|wilayah persekutuan|w\.p\.)\b/g, " ")
+  .replace(/\bmajlis (perbandaran|daerah|bandaraya)\b/g, " ")
+  .replace(/\b(dewan bandaraya|majlis|pihak berkuasa tempatan)\b/g, " ")
+  .replace(/\b(daerah|district|wilayah persekutuan|w\.?p\.?)\b/g, " ")
   .replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 
-/** Score a forecast location against the names OSM gave us. */
-function scoreLocation(loc, terms){
+function matchQuality(name, term){
+  if (!name || !term) return 0;
+  if (name === term) return 100;
+  if (name.startsWith(term) || term.startsWith(name)) return 80;
+  if (name.includes(term) || term.includes(name)) return 60;
+  return 0;
+}
+
+/** Score a forecast location against the names OSM gave us.
+ *
+ *  `fine` holds specific place names (town, suburb, council, district);
+ *  `coarse` is just the state. A fine match always outranks the state — being
+ *  "in Selangor" must never beat being in Kajang — and within the fine tier
+ *  granularity decides. Previously an exact state match (100) beat a
+ *  substring district match (60) because the tier penalty was only 4/rank.
+ */
+function scoreLocation(loc, fine, coarse){
   const n = norm(loc.name);
   if (!n) return 0;
-  let best = 0;
-  for (const t of terms){
-    if (!t) continue;
-    if (n === t) best = Math.max(best, 100);
-    else if (n.startsWith(t) || t.startsWith(n)) best = Math.max(best, 78);
-    else if (n.includes(t) || t.includes(n)) best = Math.max(best, 60);
+  let q = 0;
+  for (const t of fine) q = Math.max(q, matchQuality(n, t));
+  if (q) return 1000 - (TYPE_RANK[loc.kind] ?? 5) * 20 + q;
+  // Only a state entry may satisfy the state term, so being in Selangor never
+  // suggests the unrelated district "Kuala Selangor".
+  if (loc.kind === "St"){
+    const qs = matchQuality(n, coarse);
+    if (qs) return 100 + qs;
   }
-  if (!best) return 0;
-  // Prefer finer granularity: district > town > division > recreation > state.
-  return best - (TYPE_RANK[loc.kind] ?? 5) * 4;
+  return 0;
 }
 
 async function locate(){
@@ -903,19 +925,22 @@ async function locate(){
   } catch { /* proxy unavailable (e.g. plain static host) */ }
 
   if (!addr){ geo.status = "noproxy"; paintWeather(); return; }
-  const terms = [addr.city, addr.town, addr.village, addr.suburb, addr.county,
-                 addr.state_district, addr.state].filter(Boolean).map(norm);
-  geo.osm = [addr.city || addr.town || addr.village || addr.suburb,
+  const fine = [addr.city, addr.town, addr.village, addr.suburb, addr.county,
+                addr.state_district].filter(Boolean).map(norm).filter(Boolean);
+  const coarse = norm(addr.state);
+  geo.osm = [addr.city || addr.town || addr.village || addr.suburb || addr.county,
              addr.state].filter(Boolean).join(", ");
 
   const data = wx.data;
   if (!data){ geo.status = "waiting"; return; }
-  const ranked = data.locs.map(l => ({ loc:l, score:scoreLocation(l, terms) }))
+  const ranked = data.locs.map(l => ({ loc:l, score:scoreLocation(l, fine, coarse) }))
     .filter(x => x.score > 0).sort((a, b) => b.score - a.score);
 
   if (!ranked.length){ geo.status = "nomatch"; paintWeather(); return; }
   const top = ranked[0];
-  const ties = ranked.filter(x => x.score >= top.score - 6).slice(0, 3);
+  // Offer alternatives only among genuinely comparable matches, so a state
+  // fallback never appears as an alternative to a district-level hit.
+  const ties = ranked.filter(x => x.score >= top.score - 25).slice(0, 3);
   geo.candidates = ties.map(x => x.loc);
   geo.status = ties.length > 1 ? "ambiguous" : "matched";
   geo.matchedId = top.loc.id;
