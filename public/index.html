@@ -751,6 +751,7 @@ const I18N = {
   "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
+  "No stops found within your area — try widening your search or switching network.":"Tiada perhentian ditemui dalam kawasan anda — cuba luaskan carian atau tukar rangkaian.",
   "Location permission denied — search by name instead.":"Kebenaran lokasi dinafikan — cari mengikut nama sebaliknya.",
   "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
   "All networks":"Semua rangkaian", "Busiest routes — ":"Laluan paling sibuk — ",
@@ -3593,6 +3594,8 @@ function paintStops(){
       return { ...x, km:d };
     })
     .filter(x => !sq || x.s.name.toLowerCase().includes(sq) || x.s.id.toLowerCase().includes(sq))
+    /* "near me" mode: stops beyond the radius have no distance — drop them */
+    .filter(x => !near || x.km != null)
     .sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9))
     .slice(0, 200);
   const cnt = $("#tr-stop-count");
@@ -3608,7 +3611,9 @@ function paintStops(){
       ${near ? `<td class="num" style="font-weight:650">${x.km != null ? kmTxt(x.km) : "—"}</td>`
              : `<td><a class="maplink" href="https://www.openstreetmap.org/?mlat=${x.s.lat.toFixed(5)}&mlon=${x.s.lon.toFixed(5)}#map=17/${x.s.lat.toFixed(5)}/${x.s.lon.toFixed(5)}" target="_blank" rel="noopener">🗺 ${T("View on map")}</a></td>`}
     </tr>`).join("")
-    || `<tr><td colspan="3" class="state">${T("No stops match ")}“${esc(stopQ)}”.</td></tr>`;
+    || `<tr><td colspan="3" class="state">${near
+        ? T("No stops found within your area — try widening your search or switching network.")
+        : T("No stops match ") + "“" + esc(stopQ) + "”."}</td></tr>`;
 }
 function animateCounters(root){
   root.querySelectorAll("[data-count]").forEach(n => {
