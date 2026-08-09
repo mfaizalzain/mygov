@@ -33,7 +33,9 @@
   --bg:#0a0c10; --bg-2:#0d1016; --surface:#12151d; --surface-2:#171b25; --surface-3:#1d2230;
   --line:#232838; --line-soft:#1a1e2a;
   /* text */
-  --fg:#e8ecf4; --fg-2:#9aa4b8; --fg-3:#737f99;
+  /* --fg-3 is the tertiary text token: table headers, .sub, .dim, timestamps.
+     Kept at >=4.5:1 against every surface step, --surface-3 included. */
+  --fg:#e8ecf4; --fg-2:#9aa4b8; --fg-3:#8590a8;
   /* one accent, used sparingly */
   --accent:#2dd4bf; --accent-2:#22d3ee; --accent-dim:rgba(45,212,191,.12);
   /* semantic */
@@ -52,10 +54,14 @@
 html[data-theme="light"]{
   --bg:#f4f6fa; --bg-2:#eef1f6; --surface:#ffffff; --surface-2:#f7f9fc; --surface-3:#e8ecf3;
   --line:#d5dbe6; --line-soft:#e0e5ee;
-  --fg:#11151d; --fg-2:#46536a; --fg-3:#66738a;
-  --accent:#0d9488; --accent-2:#0284c7; --accent-dim:rgba(13,148,136,.1);
-  --ok:#059669; --warn:#b45309; --danger:#dc2626; --info:#2563eb;
-  --chip-fg:#0d9488;
+  --fg:#11151d; --fg-2:#46536a; --fg-3:#5f6b80;
+  /* the teal that reads fine on a dark page is only ~3.5:1 on white, so the
+     light theme uses a darker shade for links, chips and accented text */
+  --accent:#0f766e; --accent-2:#0284c7; --accent-dim:rgba(15,118,110,.1);
+  --ok:#047857; --warn:#b45309; --danger:#c81e1e; --info:#2563eb;
+  /* a shade darker again than --accent: chip text sits on accent-dim, which
+     lightens it, and chips appear on --bg-2 and --surface-3 as well as white */
+  --chip-fg:#0d6a62;
   --grid:rgba(17,21,29,.07);
   color-scheme:light;
   --shadow:0 1px 2px rgba(16,24,40,.06), 0 8px 24px -12px rgba(16,24,40,.14);
@@ -68,11 +74,19 @@ html[data-theme="light"] body{
 html[data-theme="light"] header,
 html[data-theme="light"] nav.sections{background:rgba(255,255,255,.86)}
 html[data-theme="light"] tbody tr:nth-child(even){background:rgba(17,21,29,.025)}
+/* the dark theme's near-black label on a bright teal fill inverts here: the
+   light accent is dark, so the fill needs white text and a darker hover */
+html[data-theme="light"] .btn-a{color:#fff}
+html[data-theme="light"] .btn-a:hover:not(:disabled){background:#0b5f58;border-color:#0b5f58}
 *{box-sizing:border-box}
 /* Author `display` on .badge/.btn outranks the UA stylesheet's [hidden] rule,
    so the attribute alone would not hide those elements. */
 [hidden]{display:none!important}
-html{scroll-behavior:smooth; scroll-padding-top:132px}
+/* --hdr and --nav are measured from the real elements at runtime (see
+   trackStickyHeights). They must not be hardcoded: the header wraps to two or
+   three rows on narrow screens, and a fixed offset there parks the section nav
+   underneath it — invisible, since the header sits one z-index higher. */
+html{scroll-behavior:smooth; scroll-padding-top:calc(var(--hdr,61px) + var(--nav,53px) + 18px)}
 body{
   margin:0; background:var(--bg); color:var(--fg); font-family:var(--sans);
   font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;
@@ -85,6 +99,13 @@ body{
 a{color:var(--accent); text-decoration:none}
 a:hover{text-decoration:underline}
 button{font:inherit; color:inherit}
+/* Structural iconography. Emoji were doing this job, but they render at a
+   different weight, size and colour on every platform and ignore
+   currentColor, so a row of them reads as noise rather than as one set.
+   These inherit colour and scale with the type they sit next to. */
+.ico{width:1em;height:1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;
+  stroke-linecap:round;stroke-linejoin:round;vertical-align:-.14em}
+.ico-sprite{position:absolute;width:0;height:0;overflow:hidden}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:var(--r-xs)}
 .wrap{max-width:1240px; margin:0 auto; padding:0 var(--s6) 80px}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
@@ -133,7 +154,7 @@ header{position:sticky; top:0; z-index:40; background:rgba(10,12,16,.86);
 #topbtn:hover{background:var(--surface-3);border-color:var(--accent);color:var(--accent)}
 
 /* sticky section nav */
-nav.sections{position:sticky;top:61px;z-index:39;background:rgba(10,12,16,.86);
+nav.sections{position:sticky;top:var(--hdr,61px);z-index:39;background:rgba(10,12,16,.86);
   backdrop-filter:blur(14px);border-bottom:1px solid var(--line-soft)}
 nav.sections ul{max-width:1240px;margin:0 auto;padding:var(--s2) var(--s6);
   display:flex;gap:var(--s1);list-style:none;overflow-x:auto;scrollbar-width:none}
@@ -152,12 +173,26 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .hero{padding:var(--s8) 0 var(--s6)}
 .hero h2{margin:0 0 var(--s2);font-size:30px;font-weight:720;letter-spacing:-.035em;line-height:1.15}
 .hero p{margin:0;color:var(--fg-2);font-size:14.5px;max-width:62ch}
+/* Above 1100px the copy caps out at 62ch and leaves the right half of the
+   hero empty down to the KPI row, so the KPIs move up beside it into a 2x3
+   block. Below that they go back to a full-width band under the copy. */
+@media (min-width:1100px){
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+    column-gap:var(--s8);align-items:start}
+  .hero h2,.hero p,.hero-loc-row{grid-column:1}
+  /* two columns, not three: three would make the cards narrower than the
+     full-width row they replaced, which is the opposite of the point */
+  .hero .kpis{grid-column:2;grid-row:1 / span 3;margin-top:6px;
+    grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 .hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;min-height:40px}
 .hero-loc .loc-chip{text-decoration:none}
 .hero-loc .loc-chip:hover{text-decoration:none;border-color:rgba(45,212,191,.55)}
-/* location chip + postcode search share one row; search sits on the right */
+/* Location chip and postcode search are one control group, so they sit
+   together on the left. They used to be pushed to opposite ends of a full
+   width row, which read as two unrelated widgets with a gap between them. */
 .hero-loc-row{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;
-  margin-top:var(--s4);justify-content:space-between}
+  margin-top:var(--s4)}
 .hero-loc-row .pos-util{margin-top:0}
 /* compact postcode utility */
 .pos-util{position:relative;display:flex;align-items:center;gap:var(--s2);max-width:420px;flex:1;min-width:240px}
@@ -176,13 +211,23 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .pos-panel tr:last-child td{border-bottom:none}
 .pos-panel tr:hover td{background:var(--surface-3)}
 .pos-panel .state{text-align:center;color:var(--fg-3);padding:var(--s4)}
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--s3);margin-top:var(--s6)}
+/* auto-fit rather than a fixed 6: at 1240px six tracks give 232px cards, which
+   is too narrow for names like "Pusat Konservasi Gajah Kebangsaan" — they wrap
+   to a second line and desynchronise the row's heights */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));
+  gap:var(--s3);margin-top:var(--s6)}
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);transition:var(--t)}
 .kpi:hover{transform:translateY(-2px);border-color:var(--line)}
 .kpi .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
-  color:var(--fg-3);font-weight:650}
+  color:var(--fg-3);font-weight:650;display:inline-flex;align-items:center;gap:5px}
+.kpi .lab .ico{width:13px;height:13px;stroke-width:2}
+/* the value/sub shimmer while a KPI is still pending — sized to the type it
+   replaces so cards do not resize when the number lands */
+.kpi-load{pointer-events:none}
+.skel-val{display:block;height:25px;width:62%;margin:6px 0 0;border-radius:7px}
+.skel-sub{display:block;height:11px;width:82%;margin:5px 0 0}
 .kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
 .kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
 .kpi-t{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
@@ -282,6 +327,15 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .radar-track{display:flex;gap:var(--s3);overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:none;padding-bottom:2px}
 .radar-track::-webkit-scrollbar{display:none}
+/* These tracks hide their scrollbar, so a card clipped at the right edge is
+   the only hint that the row scrolls — and it reads as a layout bug rather
+   than an affordance. The mask fades the cut instead. data-end is set by the
+   scroll handler so the fade disappears once you reach the end. */
+.radar-track,.wx-track,.metro-scroll,nav.sections ul{
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 56px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 56px),transparent)}
+.radar-track[data-end="1"],.wx-track[data-end="1"],.metro-scroll[data-end="1"],
+nav.sections ul[data-end="1"]{-webkit-mask-image:none;mask-image:none}
 .radar-slide{flex:0 0 320px;scroll-snap-align:start;display:flex;gap:var(--s3);
   align-items:flex-start;text-align:left;cursor:pointer;background:var(--surface);
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
@@ -443,9 +497,9 @@ tr.sel .pick{color:var(--chip-fg)}
 /* alerts — weather warnings strip */
 .alert{border:1px solid var(--line-soft);border-left:4px solid var(--warn);
   border-radius:var(--r);background:var(--surface);padding:var(--s4);box-shadow:var(--shadow)}
-.alert h5{margin:0 0 var(--s2);font-size:13.5px;font-weight:650;display:flex;
+.alert h4{margin:0 0 var(--s2);font-size:13.5px;font-weight:650;display:flex;
   align-items:center;gap:var(--s2);flex-wrap:wrap}
-.alert h5 .alert-ico{flex:none;font-size:15px;line-height:1}
+.alert h4 .alert-ico{flex:none;font-size:15px;line-height:1}
 .alert p{margin:0;color:var(--fg-2);font-size:12.5px}
 .alert .meta{margin-top:var(--s2);font-family:var(--mono);font-size:10.5px;color:var(--fg-3)}
 .alert.storm{border-left-color:var(--warn);
@@ -514,7 +568,15 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
   .vgrid{grid-template-columns:1fr} .lvmap{height:260px}
-  html{scroll-padding-top:112px}
+  /* the header has to stay one short row here — two sticky bars plus a wrapped
+     header would eat a fifth of a phone screen. The timestamp keeps only its
+     progress count, and the display toggles collapse to icons. */
+  .hd{gap:var(--s3)}
+  .hd-r{gap:6px}
+  #stamp{padding:5px 10px}
+  #stamp-t .stamp-time{display:none}
+  #lang,#textsize,#theme{padding:8px 10px}
+  #install span{display:none}
 }
 @media (pointer:coarse){
   .btn{padding:11px 16px}
@@ -522,6 +584,14 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .seg button{min-height:40px;padding:6px 14px}
   .chip{min-height:40px;padding:9px 14px;display:inline-flex;align-items:center}
   .pick{min-height:44px;padding:11px 9px}
+  /* the small text-styled controls: map links in the earthquake and stops
+     tables, the location links, and every disclosure summary. All well under
+     24px tall at their type size, so the hit area comes from padding. */
+  a.maplink{min-height:36px;padding:8px 12px}
+  .link-btn{min-height:36px;padding:7px 8px;display:inline-flex;align-items:center}
+  details.meta summary,details.dt summary,.wx-other summary{min-height:36px;
+    padding:9px 0;align-items:center}
+  details.dt summary,.wx-other summary{display:inline-flex}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -543,6 +613,26 @@ html[data-text="large"] table{font-size:14px}
 </head>
 <body>
 <a class="skip" href="#main" data-i18n="Skip to content">Skip to content</a>
+
+<!-- Icon sprite. Referenced by <use href="#i-…"> via ico() in the script;
+     every symbol is stroke-only so it takes its colour and weight from .ico. -->
+<svg class="ico-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><defs>
+  <symbol id="i-weather" viewBox="0 0 24 24"><path d="M17.4 15.6H7.9a4.4 4.4 0 0 1 .3-8.8 5.5 5.5 0 0 1 10.2 1.4 3.6 3.6 0 0 1-1 7.4Z"/><path d="M8.8 18.6v1.9M12.5 18.2v3M16.2 18.6v1.9"/></symbol>
+  <symbol id="i-fuel" viewBox="0 0 24 24"><path d="M3 21h12"/><path d="M4.5 21V5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v16"/><path d="M6.5 10h5"/><path d="M13.5 9H16a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0v-5.6L18 7.7"/></symbol>
+  <symbol id="i-population" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.2 5.6a3.2 3.2 0 0 1 0 6.1"/><path d="M17.6 14.4A6 6 0 0 1 21 20"/></symbol>
+  <symbol id="i-economy" viewBox="0 0 24 24"><path d="M3 17.5 8.6 12l3.5 3.5L21 6.5"/><path d="M15 6.5h6v6"/></symbol>
+  <symbol id="i-finance" viewBox="0 0 24 24"><path d="M4 8.5h13"/><path d="M14 5.5l3 3-3 3"/><path d="M20 15.5H7"/><path d="M10 12.5l-3 3 3 3"/></symbol>
+  <symbol id="i-health" viewBox="0 0 24 24"><path d="M20.4 6.8a4.9 4.9 0 0 0-7 0L12 8.2l-1.4-1.4a4.9 4.9 0 1 0-7 7l7.7 7.7a1 1 0 0 0 1.4 0l7.7-7.7a4.9 4.9 0 0 0 0-7Z"/></symbol>
+  <symbol id="i-mobility" viewBox="0 0 24 24"><path d="M5 13.6l1.5-4.5a2 2 0 0 1 1.9-1.4h7.2a2 2 0 0 1 1.9 1.4l1.5 4.5"/><path d="M4.6 13.6h14.8a1.6 1.6 0 0 1 1.6 1.6V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-1.8a1.6 1.6 0 0 1 1.6-1.6Z"/><circle cx="7.4" cy="18" r="1.5"/><circle cx="16.6" cy="18" r="1.5"/></symbol>
+  <symbol id="i-transport" viewBox="0 0 24 24"><rect x="5" y="3.2" width="14" height="13" rx="3"/><path d="M5 10.2h14"/><path d="M9 13.3h.01M15 13.3h.01"/><path d="M7.5 20l1.8-3.8M16.5 20l-1.8-3.8"/></symbol>
+  <symbol id="i-live" viewBox="0 0 24 24"><path d="M20 10.5c0 5.2-6.3 10.4-7.4 11.3a1 1 0 0 1-1.2 0C10.3 20.9 4 15.7 4 10.5a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10.3" r="2.8"/></symbol>
+  <symbol id="i-temp" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4.5 4.5 0 1 0 4 0Z"/><path d="M12 9.5v5.8"/></symbol>
+  <symbol id="i-ev" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4H11l-.9 8.1 8.4-10.9H12.3l.9-8.1Z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 4.4 2.7 17.5A2 2 0 0 0 4.4 20.5h15.2a2 2 0 0 0 1.7-3L13.7 4.4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4.2"/><path d="M12 17.2h.01"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="M15.4 15.4 20 20"/></symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="13" rx="2.5"/><path d="M4 10.2h16"/><path d="M8 13.4h.01M16 13.4h.01"/><path d="M6.8 16.5V19M17.2 16.5V19"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21.8a6.5 6.5 0 0 1-6.5-6.5c0-2.4 1.1-4.4 2.3-5.9.4-.5 1.2-.3 1.3.4.1 1 .5 1.8 1.1 2.3.4-2.6 1.7-5 3.7-7 .4-.4 1.1-.2 1.2.4.5 3.2 3.4 5.3 3.4 9.8a6.5 6.5 0 0 1-6.5 6.5Z"/><path d="M12 21.8a3 3 0 0 1-3-3c0-1.6 1.2-2.6 2.1-4.1.3-.6 1.1-.6 1.4 0 .9 1.5 2.5 2.5 2.5 4.1a3 3 0 0 1-3 3Z"/></symbol>
+</defs></svg>
 
 <header>
   <div class="hd">
@@ -581,7 +671,7 @@ html[data-text="large"] table{font-size:14px}
       <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
       <div class="pos-util">
         <label class="sr" for="pos-q" data-i18n="Postcode lookup">Postcode lookup</label>
-        <span class="pos-ico" aria-hidden="true">🔍</span>
+        <span class="pos-ico" aria-hidden="true"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-search"/></svg></span>
         <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off" aria-expanded="false">
         <span class="pos-count" id="pos-count"></span>
         <div class="pos-panel" id="pos-panel" hidden></div>
@@ -593,7 +683,7 @@ html[data-text="large"] table{font-size:14px}
   <section class="radar-band" id="radar-band" hidden aria-labelledby="radar-h">
     <div class="radar-band-h">
       <div class="radar-band-t">
-        <div class="sec-ico" aria-hidden="true">🔥</div>
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg></div>
         <div>
           <h3 id="radar-h" data-i18n="Trend Radar">Trend Radar</h3>
           <p data-i18n="The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.">The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.</p>
@@ -673,6 +763,7 @@ const I18N = {
   "footerC":" penyumbang. Data diambil terus oleh pelayar anda dan dicache setempat selama 15 minit bagi menghormati had 4-permintaan-seminit API. Tiada analitik, tiada penjejakan.",
   "bmc":"Sokong projek ini di Buy Me a Coffee",
   "Weather":"Cuaca", "Fuel":"Minyak", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
+  "Trending":"Trend",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
   "Seven-day forecast for every state, district and town in Malaysia — plus severe-weather warnings and recent earthquakes.":"Ramalan tujuh hari untuk setiap negeri, daerah dan bandar di Malaysia — serta amaran cuaca buruk dan gempa bumi terkini.",
@@ -908,10 +999,12 @@ function applyLang(){
   document.querySelectorAll("[data-i18n-aria]").forEach(n =>
     n.setAttribute("aria-label", T(n.dataset.i18nAria)));
   const b = $("#lang"); if (b) b.textContent = LANG === "ms" ? "EN" : "BM";
+  const ra = $("#nav-radar-band");
+  if (ra) ra.innerHTML = ico("flame") + " " + esc(T("Trending"));
   SECTIONS.forEach(s => {
     const a = $("#nav-" + s.id); if (a){
       const dot = a.querySelector(".dot");
-      a.innerHTML = (dot ? dot.outerHTML : "") + s.icon + " " + esc(T(s.label));
+      a.innerHTML = (dot ? dot.outerHTML : "") + ico(s.icon) + " " + esc(T(s.label));
     }
     const h = $("#h-" + s.id); if (h) h.textContent = T(META[s.id].title);
     const sec = document.getElementById(s.id);
@@ -936,16 +1029,20 @@ function rerenderAll(){
   renderKpis();
 }
 
+/** An <svg> referencing a sprite symbol. Decorative by default — every call
+ *  site here pairs the icon with a visible text label. */
+const ico = (name, size) =>
+  `<svg class="ico" aria-hidden="true" focusable="false"${size ? ` style="width:${size};height:${size}"` : ""}><use href="#i-${name}"/></svg>`;
 const SECTIONS = [
-  { id:"weather",   label:"Weather",    icon:"🌦", family:"weather" },
-  { id:"fuel",      label:"Fuel",       icon:"⛽", family:"data-catalogue" },
-  { id:"population",label:"Population", icon:"👪", family:"opendosm" },
-  { id:"economy",   label:"Economy",    icon:"📈", family:"opendosm" },
-  { id:"finance",   label:"Finance",    icon:"💱", family:"data-catalogue" },
-  { id:"health",    label:"Health",     icon:"🩺", family:"data-catalogue" },
-  { id:"mobility",  label:"Vehicles",   icon:"🚗", family:"data-catalogue" },
-  { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
-  { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
+  { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
+  { id:"fuel",      label:"Fuel",       icon:"fuel",       family:"data-catalogue" },
+  { id:"population",label:"Population", icon:"population", family:"opendosm" },
+  { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
+  { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
+  { id:"health",    label:"Health",     icon:"health",     family:"data-catalogue" },
+  { id:"mobility",  label:"Vehicles",   icon:"mobility",   family:"data-catalogue" },
+  { id:"transport", label:"Transport",  icon:"transport",  family:"gtfs-static" },
+  { id:"live",      label:"Live",       icon:"live",       family:"gtfs-realtime" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
@@ -1768,17 +1865,72 @@ function baseOpts(extra){
 }
 
 /* ════════════════════════════ shell ════════════════════════════ */
+/* Publishes the two sticky bars' real heights as CSS variables. The header
+   grows to two or three rows on narrow screens and when the install/offline
+   badges appear, so every offset derived from it — the nav's `top`, the
+   scroll-padding for anchor jumps, the scroll-spy's root margin — has to be
+   measured rather than assumed. */
+function trackStickyHeights(){
+  const hdr = document.querySelector("header"), nav = document.querySelector("nav.sections");
+  const root = document.documentElement;
+  let lastH = -1, lastN = -1;
+  const sync = () => {
+    const h = hdr.offsetHeight, n = nav.offsetHeight;
+    if (h === lastH && n === lastN) return;   // no redundant writes
+    lastH = h; lastN = n;
+    root.style.setProperty("--hdr", h + "px");
+    root.style.setProperty("--nav", n + "px");
+  };
+  sync();
+  /* Both, deliberately. ResizeObserver catches the reflows a resize event
+     never fires for — the install prompt appearing, the offline badge, a
+     font swap, BM labels being longer than the English ones. The resize and
+     pageshow listeners cover the case where observer callbacks are not being
+     delivered, e.g. a backgrounded tab restored from the bfcache. */
+  if (window.ResizeObserver){
+    const ro = new ResizeObserver(sync);
+    ro.observe(hdr); ro.observe(nav);
+  }
+  addEventListener("resize", sync);
+  addEventListener("orientationchange", sync);
+  addEventListener("pageshow", sync);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sync);
+  return () => hdr.offsetHeight + nav.offsetHeight;
+}
+/* Clears the right-edge fade on a horizontal track once it is scrolled to the
+   end, and on tracks short enough not to scroll at all. */
+const TRACKS = ".radar-track,.wx-track,.metro-scroll,nav.sections ul";
+function syncTrackFades(){
+  document.querySelectorAll(TRACKS).forEach(t => {
+    const atEnd = t.scrollLeft + t.clientWidth >= t.scrollWidth - 2;
+    if (atEnd) t.setAttribute("data-end", "1"); else t.removeAttribute("data-end");
+  });
+}
+/* capture, so it catches scrolls on any track without re-binding per render */
+addEventListener("scroll", e => {
+  const t = e.target;
+  if (t && t.nodeType === 1 && t.matches && t.matches(TRACKS)) syncTrackFades();
+}, true);
+addEventListener("resize", syncTrackFades);
+
 function buildShell(){
   const nav = $("#navlist"), main = $("#main");
+  /* Radar sits above <main> and is not part of SECTIONS — it has no data
+     family, no status dot and no lazy load — but it is a destination, so it
+     gets a nav entry and joins the scroll-spy below. */
+  const radarLi = el("li");
+  radarLi.hidden = true;
+  radarLi.innerHTML = `<a href="#radar-band" id="nav-radar-band">${ico("flame")} ${esc(T("Trending"))}</a>`;
+  nav.appendChild(radarLi);
   for (const s of SECTIONS){
     const li = el("li");
-    li.innerHTML = `<a href="#${s.id}" id="nav-${s.id}"><span class="dot" id="dot-${s.id}"></span>${s.icon} ${esc(T(s.label))}</a>`;
+    li.innerHTML = `<a href="#${s.id}" id="nav-${s.id}"><span class="dot" id="dot-${s.id}"></span>${ico(s.icon)} ${esc(T(s.label))}</a>`;
     nav.appendChild(li);
     const sec = el("section");
     sec.id = s.id;
     sec.setAttribute("aria-labelledby", `h-${s.id}`);
     sec.innerHTML = `<div class="sec-h">
-        <div class="sec-ico" aria-hidden="true">${s.icon}</div>
+        <div class="sec-ico" aria-hidden="true">${ico(s.icon, "20px")}</div>
         <div><h3 id="h-${s.id}">${esc(T(META[s.id].title))}</h3>
           <p>${esc(T(META[s.id].desc))}</p>
           <details class="meta">
@@ -1791,14 +1943,17 @@ function buildShell(){
       <div id="body-${s.id}"></div>`;
     main.appendChild(sec);
   }
-  // highlight the section currently in view
+  // highlight the section currently in view — the top margin has to clear the
+  // sticky bars, otherwise a section counts as "in view" while still hidden
+  const stackH = trackStickyHeights();
   const obs = new IntersectionObserver(entries => {
     for (const e of entries) if (e.isIntersecting){
       document.querySelectorAll("nav.sections a").forEach(a => a.removeAttribute("aria-current"));
       const a = $("#nav-" + e.target.id); if (a) a.setAttribute("aria-current", "true");
     }
-  }, { rootMargin:"-160px 0px -70% 0px", threshold:0 });
+  }, { rootMargin:`-${stackH() + 46}px 0px -70% 0px`, threshold:0 });
   SECTIONS.forEach(s => obs.observe(document.getElementById(s.id)));
+  const band = document.getElementById("radar-band"); if (band) obs.observe(band);
 }
 const setDot = (id, st) => { const d = $("#dot-" + id); if (d) d.className = "dot " + st; };
 const skeleton = (id, n = 4) => {
@@ -2040,7 +2195,7 @@ function renderWeather(d){
             <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
             <td>${txt(q.loc || "—")}</td><td class="num dim">${nf(q.dep,0)} km</td>
             <td class="dim">${txt(q.near || "—")}</td>
-            <td><a class="mono" style="font-size:11.5px" target="_blank" rel="noopener"
+            <td><a class="maplink" target="_blank" rel="noopener"
               href="https://www.google.com/maps?q=${q.lat},${q.lon}"
               aria-label="Open earthquake location in Google Maps">map ↗</a></td></tr>`;
         }).join("") || `<tr><td colspan="6" class="state">${T("No earthquake records.")}</td></tr>`}
@@ -2072,9 +2227,12 @@ const SEV_ICON = { storm:"🌀", heat:"🌡️", rain:"🌧️", wind:"💨", ad
 function warnCard(x){
   const [cls, label, color] = sevClass(x);
   const icon = x.info ? "✅" : (SEV_ICON[cls] || "⚠️");
+  /* h4, not h5: these alert cards are siblings of the section's other cards,
+     which are h4 under the section's h3 — an h5 here made the outline read
+     3 → 5 → 4 as you moved down the weather section. */
   return `<div class="alert ${x.info ? "info" : cls}">
-    <h5><span class="alert-ico" aria-hidden="true">${icon}</span> ${txt(warnHead(x) || x.title)}
-      <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${T(label)}</span></h5>
+    <h4><span class="alert-ico" aria-hidden="true">${icon}</span> ${txt(warnHead(x) || x.title)}
+      <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${T(label)}</span></h4>
     <p>${txt(warnText(x) || "")}</p>
     ${warnInstr(x) ? `<p style="margin-top:6px">${txt(warnInstr(x))}</p>` : ""}
     ${x.dated ? `<div class="meta">${T("valid")} ${esc(ymd(x.from))} ${esc(hhmm(x.from))} → ${esc(ymd(x.to))} ${esc(hhmm(x.to))}</div>` : ""}
@@ -2227,28 +2385,28 @@ function paintHeroLoc(){
   const S = geo.status;
   let html = "";
   if (geo.manual)
-    html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
+    html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a>
             <button class="link-btn" id="hero-loc-change">change</button>
             <span class="dim" style="font-size:11.5px">${T("selected area")}</span>`;
-  else if (S === "asking") html = `<span class="loc-chip off">📍 ${T("Locating…")}</span>`;
+  else if (S === "asking") html = `<span class="loc-chip off">${ico("live")} ${T("Locating…")}</span>`;
   else if (S === "matched" || S === "cached")
-    html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
+    html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a>
             <button class="link-btn" id="hero-loc-change">${T("change")}</button>`;
   else if (S === "ambiguous")
-    html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
+    html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a>
             <span class="dim" style="font-size:11.5px">${T("did you mean")}</span>` +
       geo.candidates.slice(1).map(c =>
         `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
-  else if (S === "denied") html = `<span class="loc-chip off">📍 ${T("Location off")}</span>
+  else if (S === "denied") html = `<span class="loc-chip off">${ico("live")} ${T("Location off")}</span>
       <button class="link-btn" id="hero-loc-try">${T("use my location")}</button>`;
-  else if (S === "unavailable") html = `<span class="loc-chip off">📍 ${T("Couldn't pin your location")}</span>
+  else if (S === "unavailable") html = `<span class="loc-chip off">${ico("live")} ${T("Couldn't pin your location")}</span>
       <button class="link-btn" id="hero-loc-try">${T("try again")}</button>`;
-  else if (S === "nomatch") html = `<span class="loc-chip off">📍 ${esc(geo.osm || T("Not in the forecast list"))}</span>
+  else if (S === "nomatch") html = `<span class="loc-chip off">${ico("live")} ${esc(geo.osm || T("Not in the forecast list"))}</span>
       <a class="link-btn" href="#weather">${T("search below")}</a>`;
-  else if (S === "noproxy") html = `<span class="loc-chip off">📍 ${T("Location lookup unavailable")}</span>
+  else if (S === "noproxy") html = `<span class="loc-chip off">${ico("live")} ${T("Location lookup unavailable")}</span>
       <a class="link-btn" href="#weather">${T("search below")}</a>`;
-  else if (S === "unsupported") html = `<span class="loc-chip off">📍 ${T("Not supported")}</span>`;
-  else html = `<button class="btn btn-a" id="hero-loc-try">📍 ${T("use my location")}</button>`;
+  else if (S === "unsupported") html = `<span class="loc-chip off">${ico("live")} ${T("Not supported")}</span>`;
+  else html = `<button class="btn btn-a" id="hero-loc-try">${ico("live")} ${T("use my location")}</button>`;
   host.innerHTML = html;
   const t = $("#hero-loc-try"); if (t) t.onclick = locate;
   const c = $("#hero-loc-change"); if (c) c.onclick = locate;
@@ -2262,28 +2420,28 @@ function paintLocChip(){
   const chip = (cls, text) => `<span class="loc-chip ${cls}">${text}</span>`;
   let html = "";
   if (geo.manual)
-    html = chip("", `📍 ${esc(geo.label || "")}`) +
+    html = chip("", `${ico("live")} ${esc(geo.label || "")}`) +
            `<button class="link-btn" id="loc-change">${T("change")}</button>
             <span class="dim" style="font-size:11.5px">${T("selected")}</span>`;
-  else if (S === "asking") html = chip("off", `📍 ${T("Locating…")}`);
+  else if (S === "asking") html = chip("off", `${ico("live")} ${T("Locating…")}`);
   else if (S === "matched" || S === "cached")
-    html = chip("", `📍 ${T("Near you: ")}${esc(geo.label || "")}`) +
+    html = chip("", `${ico("live")} ${T("Near you: ")}${esc(geo.label || "")}`) +
            `<button class="link-btn" id="loc-change">${T("change")}</button>`;
   else if (S === "ambiguous")
-    html = chip("", `📍 ${esc(geo.label || "")}`) +
+    html = chip("", `${ico("live")} ${esc(geo.label || "")}`) +
       `<span class="dim" style="font-size:11.5px">${T("did you mean")}</span>` +
       geo.candidates.slice(1).map(c =>
         `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
-  else if (S === "denied")  html = chip("off", `📍 ${T("Location off")}`) +
+  else if (S === "denied")  html = chip("off", `${ico("live")} ${T("Location off")}`) +
       `<button class="link-btn" id="loc-try">${T("use my location")}</button>`;
-  else if (S === "unavailable") html = chip("off", `📍 ${T("Couldn't pin your location")}`) +
+  else if (S === "unavailable") html = chip("off", `${ico("live")} ${T("Couldn't pin your location")}`) +
       `<button class="link-btn" id="loc-try">${T("try again")}</button>`;
-  else if (S === "nomatch") html = chip("off", `📍 ${esc(geo.osm || T("Not in the forecast list"))}`) +
+  else if (S === "nomatch") html = chip("off", `${ico("live")} ${esc(geo.osm || T("Not in the forecast list"))}`) +
       `<span class="dim" style="font-size:11.5px">— ${T("search below")}</span>`;
-  else if (S === "noproxy") html = chip("off", `📍 ${T("Location lookup unavailable")}`) +
+  else if (S === "noproxy") html = chip("off", `${ico("live")} ${T("Location lookup unavailable")}`) +
       `<span class="dim" style="font-size:11.5px">— ${T("search below")}</span>`;
-  else if (S === "unsupported") html = chip("off", `📍 ${T("Not supported")}`);
-  else html = `<button class="link-btn" id="loc-try">📍 ${T("use my location")}</button>`;
+  else if (S === "unsupported") html = chip("off", `${ico("live")} ${T("Not supported")}`);
+  else html = `<button class="link-btn" id="loc-try">${ico("live")} ${T("use my location")}</button>`;
   host.innerHTML = html;
   const t = $("#loc-try"); if (t) t.onclick = locate;
   const c = $("#loc-change"); if (c) c.onclick = locate;
@@ -3648,7 +3806,7 @@ function renderTransport(d){
         <div class="card-b">
           <label class="sr" for="tr-sq">${T("Search stops")}</label>
           <input class="inp" id="tr-sq" placeholder="${T("Station or stop name…")}" autocomplete="off">
-          <button class="btn" id="tr-near" style="margin-top:var(--s2)">📍 ${T("Find stops near me")}</button>
+          <button class="btn" id="tr-near" style="margin-top:var(--s2)">${ico("live")} ${T("Find stops near me")}</button>
           <div id="tr-near-st" style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)"></div>
         </div>
       </div>
@@ -4020,7 +4178,12 @@ async function initRadarCarousel(){
   const track = $("#radar-track");
   if (!radarIssues.length || !track) return;
   band.hidden = false;
+  /* the nav entry ships hidden and only appears once the band has content,
+     so it never points at an empty destination */
+  const navItem = $("#nav-radar-band");
+  if (navItem) navItem.parentElement.hidden = false;
   track.innerHTML = radarIssues.map((i, idx) => radarSlide(i, idx)).join("");
+  syncTrackFades();
   const slides = track.querySelectorAll(".radar-slide");
   const perView = () => track.clientWidth < 560 ? 1 : track.clientWidth < 900 ? 2 : 3;
   const maxIdx = () => Math.max(0, slides.length - perView());
@@ -4200,21 +4363,28 @@ const kpiState = {};
 function renderKpis(){
   const host = $("#kpis");
   const cards = [
-    { k:"hot",   lab:"Hottest today",   ico:"🌡", href:"#weather" },
-    { k:"ron95", lab:"RON 95",          ico:"⛽", href:"#fuel" },
-    { k:"cpi",   lab:"Inflation y/y",   ico:"📈", href:"#economy" },
-    { k:"ev",    lab:"New EVs",         ico:"🔌", href:"#mobility" },
-    { k:"warn",  lab:"Active warnings", ico:"⚠️", href:"#weather" },
-    { k:"live",  lab:"Vehicles live",   ico:"🚍", href:"#live" },
+    { k:"hot",   lab:"Hottest today",   ico:"temp",     href:"#weather" },
+    { k:"ron95", lab:"RON 95",          ico:"fuel",     href:"#fuel" },
+    { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
+    { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
+    { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#weather" },
+    { k:"live",  lab:"Vehicles live",   ico:"bus",      href:"#live" },
   ];
+  /* Pending cards get the same shimmer the sections use. Six cards each
+     spelling out "loading…" was a wall of the same word, and with the
+     inter-request gap they sit that way for a while. */
+  const pending = cards.some(c => !kpiState[c.k]);
+  host.setAttribute("aria-busy", pending ? "true" : "false");
   host.innerHTML = cards.map(c => {
     const s = kpiState[c.k];
-    return `<a class="kpi${s ? " fade" : ""}" href="${c.href}"
+    return `<a class="kpi${s ? " fade" : " kpi-load"}" href="${c.href}"
       aria-label="${esc(T(c.lab))} — go to the ${esc(c.href.slice(1))} section">
-      <div class="kpi-t"><span class="lab">${c.ico} ${esc(T(c.lab))}</span>
+      <div class="kpi-t"><span class="lab">${ico(c.ico)} ${esc(T(c.lab))}</span>
         <span class="go" aria-hidden="true">↗</span></div>
-      <div class="val" id="kpi-${c.k}">${s ? "" : "—"}</div>
-      <div class="sub">${s ? esc(s.sub) : T("loading…")}</div></a>`;
+      ${s ? `<div class="val" id="kpi-${c.k}"></div>
+      <div class="sub">${esc(s.sub)}</div>`
+          : `<div class="val" id="kpi-${c.k}"><span class="skel skel-val"></span></div>
+      <div class="sub"><span class="skel skel-sub"></span></div>`}</a>`;
   }).join("");
   for (const c of cards){
     const s = kpiState[c.k]; if (!s) continue;
@@ -4392,12 +4562,16 @@ async function loadSection(id, force){
   }
 }
 function tick(){
+  syncTrackFades();   // a section that just rendered may contain a new track
   const ts = Object.values(stamps), bar = $("#bar i");
   bar.style.width = (ts.length / SECTIONS.length * 100) + "%";
   if (ts.length === SECTIONS.length) setTimeout(() => { bar.style.width = "0%"; }, 800);
-  $("#stamp-t").textContent = ts.length
-    ? `${T("Updated")} ${hms(Math.max(...ts))} · ${ts.length}/${SECTIONS.length}`
-    : T("Loading…");
+  /* the clock is wrapped so the narrow-screen rule can drop it and leave the
+     progress count — at full width it is the widest thing in the header and
+     forces the whole control row to wrap */
+  $("#stamp-t").innerHTML = ts.length
+    ? `<span class="stamp-time">${esc(T("Updated"))} ${esc(hms(Math.max(...ts)))} · </span>${ts.length}/${SECTIONS.length}`
+    : esc(T("Loading…"));
 }
 let busy = false;
 async function loadAll(force){
