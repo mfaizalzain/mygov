@@ -337,8 +337,8 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .rd-srcs .dim{display:block;font-size:11px;font-family:var(--mono)}
 @media (max-width:560px){.radar-slide{flex-basis:calc(100vw - 64px)}}
 /* LRT & MRT metro diagram */
-.metro-wrap{display:flex;flex-direction:column;gap:var(--s3)}
-.metro-head{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap}
+.metro-wrap{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s6)}
+.metro-head{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;padding:var(--s2) 2px 0}
 .metro-head h4{margin:0}
 .metro-scroll{display:flex;gap:var(--s4);overflow-x:auto;padding:var(--s2) 2px var(--s4);
   scroll-snap-type:x proximity}
@@ -923,11 +923,11 @@ function rerenderAll(){
 const SECTIONS = [
   { id:"weather",   label:"Weather",    icon:"🌦", family:"weather" },
   { id:"fuel",      label:"Fuel",       icon:"⛽", family:"data-catalogue" },
+  { id:"population",label:"Population", icon:"👪", family:"opendosm" },
   { id:"economy",   label:"Economy",    icon:"📈", family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"💱", family:"data-catalogue" },
-  { id:"mobility",  label:"Vehicles",   icon:"🚗", family:"data-catalogue" },
-  { id:"population",label:"Population", icon:"👪", family:"opendosm" },
   { id:"health",    label:"Health",     icon:"🩺", family:"data-catalogue" },
+  { id:"mobility",  label:"Vehicles",   icon:"🚗", family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
 ];
