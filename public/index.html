@@ -13,17 +13,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="mygov">
-<!-- Pinned + subresource-integrity checked: if the CDN ever served altered
-     bytes the browser refuses to execute them rather than running them. -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
+<!-- Self-hosted + subresource-integrity checked: if the files were ever
+     altered the browser refuses to execute them rather than running them.
+     (Serving locally also removes the CDN as a single point of failure and
+     keeps the app working fully offline.) -->
+<script src="/vendor/chart.umd.min.js"
         integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt"
-        crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"
+        defer></script>
+<link rel="stylesheet" href="/vendor/leaflet.min.css"
       integrity="sha384-b8ANgTJvdlAnWM5YGMpKn7Kodm+1k7NYNG9zdjTCcZcKatzYHwZ0RLdWarbJJVzU"
-      crossorigin="anonymous" referrerpolicy="no-referrer">
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"
+      >
+<script src="/vendor/leaflet.min.js"
         integrity="sha384-u5N8qJeJOO2iqNjIKTdl6KeKsEikMAmCUBPc6sC6uGpgL34aPJ4VgNhuhumedpEk"
-        crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+        defer></script>
 <style>
 /* ═══════════════════════════ design system ═══════════════════════════ */
 :root{

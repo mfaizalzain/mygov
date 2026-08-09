@@ -31,6 +31,7 @@ public/
   sw.js                 service worker (offline shell + API fallback)
   manifest.webmanifest  PWA manifest
   icons/                generated PNGs (192, 512, apple-touch)
+  vendor/               self-hosted Chart.js + Leaflet (SRI-pinned)
 src/
   index.js              Worker: static assets + /api/reverse
 tools/
@@ -80,14 +81,14 @@ if the proxy is absent, so the page works on plain static hosting too.
   same-origin) and `strict-origin-when-cross-origin` referrer policy. All in
   `public/_headers`.
 - **Chart.js and Leaflet are pinned and SRI-checked** (`integrity="sha384-…"`),
-  so altered CDN bytes are refused rather than executed.
+  so altered bytes are refused rather than executed.
 - Both API routes **validate input against a strict allowlist** and never
   interpolate user input into an upstream URL, and they reject cross-origin
   callers — they exist for this page, not as a public proxy.
 - No secrets, tokens or account identifiers are in the repo; the app needs
   none. `.dev.vars` and `.wrangler/` are gitignored.
-- No analytics, no third-party requests beyond the pinned Chart.js and
-  Leaflet from the CDN and map tiles from `tile.openstreetmap.org`. The
+- No analytics, no third-party requests beyond map tiles from
+  `tile.openstreetmap.org` (Chart.js and Leaflet are self-hosted). The
   "Buy me a coffee" button is a plain link, not their tracking widget.
 
 ---
@@ -164,8 +165,10 @@ Three things that would normally pull in a library:
 - **Icons** — `tools/make-icons.mjs` renders the PNGs with a hand-written
   encoder (`zlib` + CRC32), supersampled 4× for clean edges.
 
-Chart.js and Leaflet are the only runtime dependencies, loaded from a CDN with
-subresource integrity and precached by the service worker.
+Chart.js and Leaflet are the only runtime dependencies. They live in
+`public/vendor/` (self-hosted with subresource integrity, so there is no CDN
+to go down and the app works fully offline) and are precached by the service
+worker.
 
 ## Preferences
 
