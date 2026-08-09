@@ -137,6 +137,68 @@ def cluster_keyword(signals):
                             "sebenarnya_url": None}} for i, w in enumerate(top)]
 
 
+def backfill_urls(issues, signals):
+    """Attach real URLs to each issue's sources + fact_check by title matching.
+
+    Gemini gets titles but often returns empty urls; we post-match against the
+    collected signals (fuzzy, case-insensitive, first 40 chars) and fill in.
+    Fact-check matching is done deterministically here (Gemini is unreliable
+    at remembering sebenarnya titles between runs)."""
+    def norm(t):
+        t = (t or "").lower()
+        t = t.replace("\xa0", " ")  # non-breaking space
+        return re.sub(r"[^a-z0-9 ]", "", t)[:60].strip()
+
+    def words(t):
+        return set((t or "").lower().split())
+
+    # index signals: normalized title prefix -> signal
+    index = {}
+    seben_signals = [s for s in signals if s["source"] == "sebenarnya"]
+    for s in signals:
+        k = norm(s["title"])
+        if k and k not in index:
+            index[k] = s
+
+    def lookup(title):
+        if not title:
+            return None
+        n = norm(title)
+        if n in index:
+            return index[n]
+        for k, s in index.items():
+            if k[:45] == n[:45]:
+                return s
+        return None
+
+    def factcheck(issue_title, issue_title_en):
+        """Deterministic: find a sebenarnya post sharing significant keywords."""
+        stop = set("penjelasan berkenaan penggunaan kes dengan pada bagi yang dan untuk oleh seorang individu warga asing the a an of on in to for with about".split())
+        iw = words(issue_title) | (words(issue_title_en) if issue_title_en else set())
+        iw = {w for w in iw if len(w) > 4 and w not in stop}
+        best, best_score = None, 0
+        for s in seben_signals:
+            sw = {w for w in words(s["title"]) if len(w) > 4 and w not in stop}
+            overlap = len(iw & sw)
+            if overlap > best_score:
+                best, best_score = s, overlap
+        if best and best_score >= 2:
+            return {"status": "verified_claim", "sebenarnya_title": best["title"],
+                    "sebenarnya_url": best["url"]}
+        return {"status": "no_check_found", "sebenarnya_title": None,
+                "sebenarnya_url": None}
+
+    for issue in issues:
+        for src in issue.get("sources", []):
+            if not src.get("url"):
+                m = lookup(src.get("title"))
+                if m:
+                    src["url"] = m["url"]
+        # deterministic fact-check (overrides Gemini's unreliable memory)
+        issue["fact_check"] = factcheck(issue.get("title_bm"), issue.get("title_en"))
+    return issues
+
+
 def main():
     print(f"[radar] {datetime.datetime.now():%Y-%m-%d %H:%M} collecting...")
     signals = []
@@ -158,6 +220,8 @@ def main():
     else:
         issues = cluster_keyword(signals)
         print(f"  fallback keyword clustering: {len(issues)} issues")
+
+    issues = backfill_urls(issues, signals)
 
     payload = {
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
