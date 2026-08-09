@@ -193,7 +193,7 @@ a.kpi:hover{text-decoration:none}
 .up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
 
 /* ═══════════════════════════ sections ═══════════════════════════ */
-section{padding-top:var(--s8);scroll-margin-top:124px}
+section{padding-top:var(--s8)}
 .sec-h{display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4);flex-wrap:wrap}
 .sec-ico{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
   background:var(--accent-dim);border:1px solid rgba(45,212,191,.22);font-size:18px}
@@ -1797,7 +1797,7 @@ function buildShell(){
       document.querySelectorAll("nav.sections a").forEach(a => a.removeAttribute("aria-current"));
       const a = $("#nav-" + e.target.id); if (a) a.setAttribute("aria-current", "true");
     }
-  }, { rootMargin:"-130px 0px -70% 0px", threshold:0 });
+  }, { rootMargin:"-160px 0px -70% 0px", threshold:0 });
   SECTIONS.forEach(s => obs.observe(document.getElementById(s.id)));
 }
 const setDot = (id, st) => { const d = $("#dot-" + id); if (d) d.className = "dot " + st; };
