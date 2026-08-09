@@ -788,6 +788,7 @@ const I18N = {
   "Rapid KL rail — click a station to open it on the map":"Rel Rapid KL — klik stesen untuk buka pada peta",
   "stns":"stesen",
   "Station":"Stesen", "Interchange":"Pertukaran",
+  "Schematic":"Skematik", "Network map":"Peta rangkaian",
   "Location permission denied — search by name instead.":"Kebenaran lokasi dinafikan — cari mengikut nama sebaliknya.",
   "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
   "All networks":"Semua rangkaian", "Busiest routes — ":"Laluan paling sibuk — ",
@@ -3573,11 +3574,16 @@ function paintRailDiagram(){
   const padT = 26, padB = 12;
   host.innerHTML = `<div class="metro-wrap"><div class="metro-head">
       <h4>${T("LRT & MRT network")}</h4>
-      <span class="sub">${T("Rapid KL rail — click a station to open it on the map")}</span></div>
+      <span class="sub">${T("Rapid KL rail — click a station to open it on the map")}</span>
+      <span class="right"><span class="seg" role="group" aria-label="View">
+        <button data-mv="schematic" aria-pressed="true">${T("Schematic")}</button>
+        <button data-mv="map" aria-pressed="false">${T("Network map")}</button>
+      </span></span></div>
     <div class="metro-legend" aria-hidden="true">
       <span class="ml-item"><span class="ml-dot"></span>${T("Station")}</span>
       <span class="ml-item"><span class="ml-ring"><span class="ml-dot"></span></span>${T("Interchange")}</span>
     </div>
+    <div id="metro-schematic">
     <div class="metro-scroll">` +
     rail.lines.map(l => {
       const n = l.stations.length;
@@ -3612,7 +3618,10 @@ function paintRailDiagram(){
         </svg>
       </div>`;
     }).join("") +
-    `</div></div>`;
+    `</div></div>
+    </div>
+    <div id="rail-map" class="lvmap" hidden></div>
+  </div>`;
   /* click/tap a station → open OSM at that station */
   host.querySelectorAll(".metro-stn").forEach(g => {
     g.onclick = () => {
@@ -3624,6 +3633,73 @@ function paintRailDiagram(){
     };
   });
   host.hidden = false;
+  /* Schematic ⇄ network-map toggle */
+  host.querySelectorAll("[data-mv]").forEach(b => {
+    b.onclick = () => {
+      host.querySelectorAll("[data-mv]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      const mapMode = b.dataset.mv === "map";
+      $("#metro-schematic").hidden = mapMode;
+      const rm = $("#rail-map"); rm.hidden = !mapMode;
+      if (mapMode) paintRailMap(rail, rm);
+    };
+  });
+}
+/* All 8 lines as colored polylines on one Leaflet map — interchanges show
+   as ringed dots where the lines physically cross. Lazy-built on first
+   "Network map" click because Leaflet cannot measure hidden containers. */
+let railMapInst = null;
+function paintRailMap(rail, el){
+  if (!window.L) return;
+  if (railMapInst){ railMapInst.invalidateSize(); return; }
+  const map = L.map(el, { scrollWheelZoom:false }).setView([3.12, 101.68], 11);
+  const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+  const fallback = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 20, subdomains: "abcd", attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  });
+  let omsFailed = 0, fellBack = false;
+  tiles.on("tileerror", e => {
+    const t = e.tile; if (!t) return;
+    omsFailed++;
+    const n = +(t.dataset.retries || 0);
+    if (n < 3 && !fellBack){
+      t.dataset.retries = String(n + 1);
+      setTimeout(() => { if (t.isConnected) t.src = t.src; }, [1200, 3000, 6000][n] || 6000);
+    } else if (!fellBack && omsFailed >= 8){
+      fellBack = true; map.removeLayer(tiles); fallback.addTo(map);
+    }
+  });
+  tiles.on("tileload", () => { omsFailed = Math.max(0, omsFailed - 1); });
+  /* station name → lines, for the interchange rings */
+  const calls = new Map();
+  for (const l of rail.lines)
+    for (const s of l.stations){
+      const k = (s.name || "").toUpperCase().trim();
+      if (!k) continue;
+      if (!calls.has(k)) calls.set(k, []);
+      calls.get(k).push(l.name);
+    }
+  const all = [];
+  for (const l of rail.lines){
+    const pts = l.stations.filter(s => s.lat != null).map(s => [s.lat, s.lon]);
+    if (pts.length > 1)
+      L.polyline(pts, { color: l.color, weight: 4, opacity: .9 }).addTo(map);
+    for (const s of l.stations){
+      if (s.lat == null) continue;
+      const k = (s.name || "").toUpperCase().trim();
+      const multi = calls.has(k) && calls.get(k).length > 1;
+      const m = L.circleMarker([s.lat, s.lon], {
+        radius: multi ? 7 : 4.5, color: multi ? l.color : "#0a0c10",
+        weight: multi ? 2 : 1.5,
+        fillColor: multi ? "#0a0c10" : l.color, fillOpacity: .95,
+      }).addTo(map);
+      m.bindPopup(`<b>${esc(s.name)}</b>${multi ? `<br><span style="font-size:11px;color:#888">${esc((calls.get(k) || []).join(" · "))}</span>` : ""}`);
+      all.push([s.lat, s.lon]);
+    }
+  }
+  if (all.length > 1) map.fitBounds(all, { padding:[36, 36], maxZoom: 14 });
+  railMapInst = map;
 }
 function paintFilters(){
   const host = $("#tr-filters"); if (!host) return;
