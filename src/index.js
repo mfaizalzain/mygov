@@ -63,7 +63,7 @@ export default {
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
 
-      const upstream = `${NOMINATIM}?format=json&zoom=10&addressdetails=1&lat=${rlat}&lon=${rlon}`;
+      const upstream = `${NOMINATIM}?format=json&zoom=13&addressdetails=1&lat=${rlat}&lon=${rlon}`;
       let res;
       try {
         res = await fetch(upstream, {
@@ -221,6 +221,30 @@ export default {
       }, 200, { "cache-control": "public, max-age=90" });
       ctx.waitUntil(cache.put(cacheKey, out.clone()));
       return out;
+    }
+
+    /* IP-based location fallback.
+     *
+     * Browser geolocation (getCurrentPosition) is unreliable on desktops —
+     * no GPS, and Chrome/Firefox depend on Google's network-location service
+     * which is often blocked or slow. Cloudflare populates request.cf with
+     * the visitor's IP-derived location (city, region, country, lat/lon), so
+     * this route hands that to the app as a fallback. Same-origin only. */
+    if (url.pathname === "/api/geoip") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const cf = request.cf || {};
+      const out = {
+        city: cf.city || null,
+        region: cf.region || null,
+        country: cf.country || null,
+        latitude: cf.latitude != null ? Number(cf.latitude) : null,
+        longitude: cf.longitude != null ? Number(cf.longitude) : null,
+      };
+      // Only useful if we actually got a coordinate pair.
+      if (out.latitude == null || out.longitude == null)
+        return json({ error: "no_geoip" }, 404);
+      return json(out, 200, { "cache-control": "public, max-age=3600" });
     }
 
     // Everything else is a static asset. Security headers for those come from

@@ -1864,23 +1864,23 @@ function scoreLocation(loc, fine, coarse){
 }
 
 async function locate(){
-  if (!navigator.geolocation){ geo.status = "unsupported"; paintWeather(); return; }
+  if (!navigator.geolocation){ geoipLocate(); return; }
   geo.status = "asking"; paintWeather();
-  let pos;
-  try {
-    // A cached fix returns in ~0 ms; a cold one can take well over 8 s on a
-    // desktop with no GPS, so give it a little longer before giving up.
-    pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej,
-        { timeout:12000, maximumAge:600000, enableHighAccuracy:false }));
-  } catch (e) {
-    // 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT. Only the
-    // first means the user said no — reporting a slow fix as "location off"
-    // tells them they denied something they actually allowed.
-    geo.status = (e && e.code === 1) ? "denied" : "unavailable";
-    paintWeather();
-    return;
+  let pos = null;
+  for (let attempt = 0; attempt < 2 && !pos; attempt++){
+    try {
+      // A cached fix returns in ~0 ms; a cold one can take well over 8 s on a
+      // desktop with no GPS. Try twice before falling back to IP location.
+      pos = await new Promise((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej,
+          { timeout: attempt ? 8000 : 6000, maximumAge:600000, enableHighAccuracy:false }));
+    } catch (e) {
+      // 1 = PERMISSION_DENIED — the user said no, respect it.
+      if (e && e.code === 1){ geo.status = "denied"; paintWeather(); return; }
+      // 2/3 = unavailable/timeout — try IP-based location instead.
+    }
   }
+  if (!pos){ await geoipLocate(); return; }
 
   const { latitude:lat, longitude:lon } = pos.coords;
   let addr = null;
@@ -1908,6 +1908,67 @@ async function locate(){
   const top = ranked[0];
   // Offer alternatives only among genuinely comparable matches, so a state
   // fallback never appears as an alternative to a district-level hit.
+  const ties = ranked.filter(x => x.score >= top.score - 25).slice(0, 3);
+  geo.candidates = ties.map(x => x.loc);
+  geo.status = ties.length > 1 ? "ambiguous" : "matched";
+  geo.matchedId = top.loc.id;
+  geo.label = top.loc.name;
+  geo.manual = false;
+  wx.pick = top.loc.id;
+  try { localStorage.setItem(LK, JSON.stringify({ id:top.loc.id, label:top.loc.name, osm:geo.osm })); } catch {}
+  paintWeather();
+}
+
+/* IP-based fallback: Cloudflare's request.cf knows the visitor's approximate
+   location (city-level, from the IP). It is coarser than GPS but works on
+   every desktop where browser geolocation is blocked, slow or absent. */
+async function geoipLocate(){
+  let g = null;
+  try {
+    const r = await fetch("/api/geoip");
+    if (r.ok) g = await r.json();
+  } catch { g = null; }
+  if (!g || g.latitude == null || g.longitude == null){
+    geo.status = "unavailable"; paintWeather(); return;
+  }
+  const data = wx.data;
+  /* We already have a city name from Cloudflare — match it straight against
+     the forecast list before spending a reverse-geocode hop. */
+  if (data && g.city){
+    const term = norm(g.city);
+    if (term){
+      const hit = data.locs
+        .map(l => ({ loc:l, q:matchQuality(norm(l.name), term) }))
+        .filter(x => x.q > 0).sort((a, b) => b.q - a.q);
+      if (hit.length){
+        geo.status = "matched"; geo.matchedId = hit[0].loc.id;
+        geo.label = hit[0].loc.name; geo.manual = false;
+        geo.osm = [g.city, g.region || g.country].filter(Boolean).join(", ");
+        wx.pick = hit[0].loc.id;
+        try { localStorage.setItem(LK, JSON.stringify({ id:hit[0].loc.id, label:hit[0].loc.name, osm:geo.osm })); } catch {}
+        paintWeather();
+        return;
+      }
+    }
+  }
+  /* No name match — reverse-geocode the IP coordinates and run the normal
+     pipeline so a suburb/town match can still land. */
+  let addr = null;
+  try {
+    const r = await fetch(`/api/reverse?lat=${g.latitude.toFixed(5)}&lon=${g.longitude.toFixed(5)}`);
+    if (r.ok) addr = (await r.json()).address || null;
+  } catch { addr = null; }
+  if (!addr){ geo.status = "noproxy"; paintWeather(); return; }
+  const fine = [addr.city, addr.town, addr.village, addr.suburb, addr.county,
+                addr.state_district].filter(Boolean).map(norm).filter(Boolean);
+  const coarse = norm(addr.state);
+  geo.osm = [addr.city || addr.town || addr.village || addr.suburb || addr.county,
+             addr.state].filter(Boolean).join(", ");
+  if (!data){ geo.status = "waiting"; return; }
+  const ranked = data.locs.map(l => ({ loc:l, score:scoreLocation(l, fine, coarse) }))
+    .filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+  if (!ranked.length){ geo.status = "nomatch"; paintWeather(); return; }
+  const top = ranked[0];
   const ties = ranked.filter(x => x.score >= top.score - 25).slice(0, 3);
   geo.candidates = ties.map(x => x.loc);
   geo.status = ties.length > 1 ? "ambiguous" : "matched";
