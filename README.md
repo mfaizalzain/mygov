@@ -303,10 +303,11 @@ is welcome — a 1970-2026 population series is more useful than a short one —
 but a series whose *last* update is years old has nothing to compare against,
 and charting it invites readers to mistake stale numbers for today's.
 
-So: every section header prints **"Data as of &lt;date&gt;"**, taken from the
-newest row the section actually renders, and adds a muted **"⚠️ may be
-delayed"** when the oldest of its datasets is more than six months behind.
-That line comes from `LOADERS[id].asOf(data)` — see *Adding a dataset*.
+So: the pill in each section header shows **"data as of &lt;date&gt;"** — the
+newest row that section actually renders, not when we fetched it — and appends
+**"⚠️ may be delayed"** once that date is more than 183 days old. The date
+comes from `LOADERS[id].asOf(data)`; a section that returns nothing (a static
+lookup, a live feed) keeps the old "updated HH:MM" fetch time instead.
 
 Datasets that had stopped updating entirely were removed rather than captioned:
 
@@ -318,8 +319,8 @@ Datasets that had stopped updating entirely were removed rather than captioned:
 | `population_state` | 2023-01-01 |
 
 `poskod` is exempt: it is a static reference table, not a time series, so it
-has no publication date that can go stale. Its header says so instead of
-showing a date.
+has no publication date that can go stale. It defines no `asOf`, so its pill
+keeps showing the fetch time.
 
 ---
 
@@ -341,9 +342,8 @@ SECTIONS.push({ id:"myid", label:"My Data", icon:"🧭", family:"data-catalogue"
 META.myid    = { title, desc, how, eps:[...] }
 LOADERS.myid = { load, render, after, asOf }
 // after(data) feeds the top KPI row.
-// asOf(data)  returns the latest data date of every dataset the section shows;
-//             the header prints the newest and flags the section when the
-//             oldest is more than six months behind.
+// asOf(data)  returns the newest data date the section renders, for the
+//             "data as of …" pill. Omit it and the pill shows the fetch time.
 ```
 
 Nav entry, scroll-spy, skeleton, error/retry, caching and throttling are all

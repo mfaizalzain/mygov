@@ -172,10 +172,6 @@ section{padding-top:var(--s8);scroll-margin-top:124px}
 .sec-time{margin-left:auto;flex:none;font-size:11px;font-family:var(--mono);color:var(--fg-3);
   background:var(--bg-2);border:1px solid var(--line-soft);border-radius:99px;padding:4px 10px;
   white-space:nowrap}
-/* How current the DATA is, as opposed to when we last fetched it (.sec-time) */
-.sec-asof{margin:6px 0 0 !important;font-size:11.5px;color:var(--fg-3);font-family:var(--mono)}
-.sec-asof:empty{display:none}
-.sec-asof .stale{color:var(--warn)}
 .sec-time.loading{color:var(--warn)}
 .sec-time.error{color:var(--danger)}
 details.meta{margin-top:var(--s2)}
@@ -475,6 +471,35 @@ const I18N = {
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
   "Data source & methodology":"Sumber data & kaedah",
   "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
+  "Population":"Penduduk", "Population growth":"Pertumbuhan penduduk",
+  "How many people live in Malaysia, every year since 1970, and how the population is made up today.":"Berapa ramai penduduk Malaysia, setiap tahun sejak 1970, dan komposisi penduduk hari ini.",
+  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Hanya siri kebangsaan dipaparkan — set data peringkat negeri tidak dikemas kini sejak 2023.",
+  "Composition":"Komposisi", "Largest group":"Kumpulan terbesar",
+  "Year-on-year":"Tahun ke tahun", "Years on record":"Tahun direkod",
+  "millions · annual":"juta · tahunan", "people":"orang", "vs ":"berbanding ",
+  "Group":"Kumpulan", "7-day average":"Purata 7 hari",
+  "Bumiputera Malay":"Bumiputera Melayu", "Bumiputera other":"Bumiputera lain",
+  "Chinese":"Cina", "Indian":"India", "Other citizens":"Warganegara lain",
+  "Non-citizens":"Bukan warganegara",
+  "Health":"Kesihatan", "Health & Donations":"Kesihatan & Derma",
+  "Blood donations, blood stock by type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.":"Pendermaan darah, stok darah mengikut jenis, ikrar derma organ dan saringan kesihatan PeKa B40 — diterbitkan setiap hari oleh Kementerian Kesihatan.",
+  "These come from KKMNOW, which the Ministry of Health publishes as Parquet files in a public GitHub repository rather than through the government API; your browser reads them directly. Donations run from 2012, organ pledges from 2009 and PeKa B40 screenings from 2019. Blood stock is a short 2022 window — that is all MoH has published. Federal-territory rows were renamed mid-2022 and are folded back together here.":"Data ini daripada KKMNOW, yang diterbitkan oleh Kementerian Kesihatan sebagai fail Parquet dalam repositori GitHub awam dan bukan melalui API kerajaan; pelayar anda membacanya terus. Pendermaan bermula 2012, ikrar organ 2009 dan saringan PeKa B40 2019. Stok darah hanya meliputi tempoh singkat pada 2022 — itu sahaja yang diterbitkan KKM. Baris wilayah persekutuan dinamakan semula pertengahan 2022 dan digabungkan semula di sini.",
+  "Health data updated":"Data kesihatan dikemas kini", "Date range":"Julat tarikh",
+  "Blood donations":"Pendermaan darah", "Donations, last 7 days":"Pendermaan, 7 hari lepas",
+  "Organ pledges":"Ikrar derma organ", "cumulative since 2009":"terkumpul sejak 2009",
+  "PeKa B40 screenings":"Saringan PeKa B40", "per day · last 7 days":"sehari · 7 hari lepas",
+  "donors per day · 7-day average":"penderma sehari · purata 7 hari",
+  "Daily donors":"Penderma harian", "Daily screenings":"Saringan harian",
+  "Pledges to date":"Ikrar terkumpul", "health screenings per day":"saringan kesihatan sehari",
+  "Blood stock by type":"Stok darah mengikut jenis", "% of optimal level":"% paras optimum",
+  "No data for this state":"Tiada data untuk negeri ini",
+  "Blood donations are published for 13 states and Kuala Lumpur only.":"Pendermaan darah diterbitkan untuk 13 negeri dan Kuala Lumpur sahaja.",
+  "Stock is published as a share of the optimal level and capped at 100%. MoH last updated this series in October 2022 — the window shown is all there is.":"Stok diterbitkan sebagai peratusan paras optimum dan dihadkan pada 100%. KKM mengemas kini siri ini kali terakhir pada Oktober 2022 — itu sahaja tempoh yang ada.",
+  "No blood-stock series was published for this state.":"Tiada siri stok darah diterbitkan untuk negeri ini.",
+  "No pledge series was published for this state.":"Tiada siri ikrar diterbitkan untuk negeri ini.",
+  "PeKa B40 screenings start in April 2019.":"Saringan PeKa B40 bermula pada April 2019.",
+  "Data: MoH KKMNOW (GitHub)":"Data: KKMNOW, KKM (GitHub)",
+  "data as of ":"data sehingga ", "may be delayed":"mungkin tertunda",
   "refresh failed — showing last data":"gagal dimuat semula — memaparkan data terakhir",
   "Hottest today":"Paling panas hari ini", "Inflation y/y":"Inflasi t/t",
   "Active warnings":"Amaran aktif", "Vehicles live":"Kenderaan langsung",
@@ -516,9 +541,11 @@ const I18N = {
   "Unemployment rate":"Kadar pengangguran", "monthly":"bulanan",
   "Real GDP":"KDNK benar", "quarterly · RM million":"suku tahunan · RM juta",
   "Date":"Tarikh", "Month":"Bulan", "Quarter":"Suku", "RM million":"RM juta",
-  "Finance":"Kewangan",
+  "Finance":"Kewangan", "Postcodes":"Poskod",
   "Exchange rates and interest rates from Bank Negara Malaysia — the ringgit against key currencies, and what banks lend and pay.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia — ringgit berbanding mata wang utama, serta kadar pinjaman dan simpanan bank.",
   "Exchange rates are Bank Negara's daily reference rates, published here as monthly averages and month-end values. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it.":"Kadar pertukaran ialah kadar rujukan harian Bank Negara, diterbitkan di sini sebagai purata bulanan dan nilai akhir bulan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya.",
+  "The national postcode reference list — look up any postcode, city or state.":"Senarai rujukan poskod kebangsaan — cari sebarang poskod, bandar atau negeri.",
+  "Pos Malaysia's national postcode reference list, kept as a static lookup table.":"Senarai rujukan poskod kebangsaan Pos Malaysia, dikekalkan sebagai jadual rujukan statik.",
   "Exchange rates":"Kadar pertukaran",
   "RM per unit · daily reference rates":"RM seunit · kadar rujukan harian",
   "Daily Bank Negara reference rates — monthly average values.":"Kadar rujukan harian Bank Negara — nilai purata bulanan.",
@@ -534,40 +561,6 @@ const I18N = {
   "Postcode":"Poskod", "City":"Bandar", "State":"Negeri",
   "matches":"padanan", "postcodes":"poskod", "type to filter":"taip untuk menapis",
   "No postcodes match ":"Tiada poskod sepadan ",
-  "Data as of":"Data setakat", "may be delayed":"mungkin lewat",
-  "static reference list":"senarai rujukan statik",
-  "operator-published schedules":"jadual terbitan pengendali",
-  "Postcodes":"Poskod", "Postcode Lookup":"Carian Poskod",
-  "Every Malaysian postcode with its city and state — search by any of the three.":"Setiap poskod Malaysia dengan bandar dan negerinya — cari mengikut mana-mana daripada tiga.",
-  "The national postcode reference list. It is a static lookup table rather than a time series, so it has no publication date to go stale.":"Senarai rujukan poskod kebangsaan. Ia jadual carian statik dan bukan siri masa, jadi tiada tarikh terbitan yang boleh menjadi lapuk.",
-  "Population":"Penduduk", "Population growth":"Pertumbuhan penduduk",
-  "How many people live in Malaysia, every year since 1970, and how the population is made up today.":"Berapa ramai penduduk Malaysia, setiap tahun sejak 1970, dan komposisi penduduk hari ini.",
-  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Hanya siri kebangsaan dipaparkan — set data peringkat negeri tidak dikemas kini sejak 2023.",
-  "Composition":"Komposisi", "Largest group":"Kumpulan terbesar",
-  "Year-on-year":"Tahun ke tahun", "Years on record":"Tahun direkod",
-  "millions · annual":"juta · tahunan", "people":"orang", "vs ":"berbanding ",
-  "Group":"Kumpulan", "7-day average":"Purata 7 hari",
-  "Bumiputera Malay":"Bumiputera Melayu", "Bumiputera other":"Bumiputera lain",
-  "Chinese":"Cina", "Indian":"India", "Other citizens":"Warganegara lain",
-  "Non-citizens":"Bukan warganegara",
-  "Health":"Kesihatan", "Health & Donations":"Kesihatan & Derma",
-  "Blood donations, blood stock by type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.":"Pendermaan darah, stok darah mengikut jenis, ikrar derma organ dan saringan kesihatan PeKa B40 — diterbitkan setiap hari oleh Kementerian Kesihatan.",
-  "These come from KKMNOW, which the Ministry of Health publishes as Parquet files in a public GitHub repository rather than through the government API; your browser reads them directly. Donations run from 2012, organ pledges from 2009 and PeKa B40 screenings from 2019. Blood stock is a short 2022 window — that is all MoH has published. Federal-territory rows were renamed mid-2022 and are folded back together here.":"Data ini daripada KKMNOW, yang diterbitkan oleh Kementerian Kesihatan sebagai fail Parquet dalam repositori GitHub awam dan bukan melalui API kerajaan; pelayar anda membacanya terus. Pendermaan bermula 2012, ikrar organ 2009 dan saringan PeKa B40 2019. Stok darah hanya meliputi tempoh singkat pada 2022 — itu sahaja yang diterbitkan KKM. Baris wilayah persekutuan dinamakan semula pertengahan 2022 dan digabungkan semula di sini.",
-  "Health data updated":"Data kesihatan dikemas kini", "Date range":"Julat tarikh",
-  "Blood donations":"Pendermaan darah", "Donations, last 7 days":"Pendermaan, 7 hari lepas",
-  "Organ pledges":"Ikrar derma organ", "cumulative since 2009":"terkumpul sejak 2009",
-  "PeKa B40 screenings":"Saringan PeKa B40", "per day · last 7 days":"sehari · 7 hari lepas",
-  "donors per day · 7-day average":"penderma sehari · purata 7 hari",
-  "Daily donors":"Penderma harian", "Daily screenings":"Saringan harian",
-  "Pledges to date":"Ikrar terkumpul", "health screenings per day":"saringan kesihatan sehari",
-  "Blood stock by type":"Stok darah mengikut jenis", "% of optimal level":"% paras optimum",
-  "No data for this state":"Tiada data untuk negeri ini",
-  "Blood donations are published for 13 states and Kuala Lumpur only.":"Pendermaan darah diterbitkan untuk 13 negeri dan Kuala Lumpur sahaja.",
-  "Stock is published as a share of the optimal level and capped at 100%. MoH last updated this series in October 2022 — the window shown is all there is.":"Stok diterbitkan sebagai peratusan paras optimum dan dihadkan pada 100%. KKM mengemas kini siri ini kali terakhir pada Oktober 2022 — itu sahaja tempoh yang ada.",
-  "No blood-stock series was published for this state.":"Tiada siri stok darah diterbitkan untuk negeri ini.",
-  "No pledge series was published for this state.":"Tiada siri ikrar diterbitkan untuk negeri ini.",
-  "PeKa B40 screenings start in April 2019.":"Saringan PeKa B40 bermula pada April 2019.",
-  "Data: MoH KKMNOW (GitHub)":"Data: KKMNOW, KKM (GitHub)",
   "valid":"sah", "No active warnings":"Tiada amaran aktif",
   "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
@@ -666,8 +659,7 @@ function applyLang(){
 function rerenderAll(){
   for (const id of loaded){
     const d = dataMap[id]; if (!d) continue;
-    try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d);
-           setSecAsOf(id, d); } catch {}
+    try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d); } catch {}
   }
   renderKpis();
 }
@@ -677,16 +669,16 @@ const SECTIONS = [
   { id:"fuel",      label:"Fuel",       icon:"⛽", family:"data-catalogue" },
   { id:"economy",   label:"Economy",    icon:"📈", family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"💱", family:"data-catalogue" },
-  { id:"population",label:"Population",  icon:"👪", family:"opendosm" },
+  { id:"population",label:"Population", icon:"👪", family:"opendosm" },
   { id:"health",    label:"Health",     icon:"🩺", family:"moh" },
-  { id:"postcodes", label:"Postcodes",  icon:"📮", family:"data-catalogue" },
+  { id:"society",   label:"Postcodes",  icon:"🔍", family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["economy","finance","population","health","postcodes","transport","live"]);
+const LAZY = new Set(["economy","finance","population","health","society","transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -1098,14 +1090,13 @@ async function loadFinance(){
   };
 }
 
-/* The postcode list is a static reference table, not a time series — it is
-   exempt from the freshness rule that removed the frozen demographic
-   datasets that used to share this section. */
-async function loadPostcodes(){
+async function loadSociety(){
+  /* Postcode reference table is static data — the freshness policy does not
+     apply to it. */
   const po = await request("data-catalogue", "/data-catalogue", { id:"poskod" });
   return {
-    pos: (po || []).map(r => [r.postcode, r.city, r.state])
-      .sort((a, b) => Number(a[0]) - Number(b[0])),
+    pos:  (po || []).map(r => [r.postcode, r.city, r.state])
+      .sort((a,b) => Number(a[0]) - Number(b[0])),
   };
 }
 
@@ -1255,7 +1246,6 @@ async function loadHealth(){
     peka:  denseByState(peka,  ["daily"]),
   };
 }
-
 const FEEDS = [
   { key:"ktmb", label:"KTMB", desc:"Keretapi Tanah Melayu — Komuter, ETS & intercity",
     agency:"ktmb", category:null, path:"/gtfs-static/ktmb", params:null },
@@ -1390,7 +1380,6 @@ function buildShell(){
         <div class="sec-ico" aria-hidden="true">${s.icon}</div>
         <div><h3 id="h-${s.id}">${esc(T(META[s.id].title))}</h3>
           <p>${esc(T(META[s.id].desc))}</p>
-          <p class="sec-asof" id="asof-${s.id}"></p>
           <details class="meta">
             <summary>${esc(T("Data source & methodology"))}</summary>
             <p>${esc(T(META[s.id].how))}</p>
@@ -1846,14 +1835,6 @@ function cutoff(years){
   if (years % 1) d.setMonth(d.getMonth() - Math.round((years % 1) * 12));
   return d.toISOString().slice(0, 10);
 }
-/** Same as cutoff() but anchored to a given date instead of "now" — needed
-    for series whose latest point is in the past (births stops in 2023). */
-function cutoffFrom(dateStr, years){
-  const d = new Date(dateStr); d.setFullYear(d.getFullYear() - Math.floor(years));
-  if (years % 1) d.setMonth(d.getMonth() - Math.round((years % 1) * 12));
-  return d.toISOString().slice(0, 10);
-}
-
 /* ═══════════ finance constants ═══════════ */
 const CURR = {
   usd:{ label:"USD", color:"#34d399" },
@@ -2230,16 +2211,11 @@ function paintIr(d){
     })), [3]);
 }
 
-
-/* ════════════════════════ postcodes view ════════════════════════
-   What is left of the old "Society" section: births, health expenditure and
-   the other demographic series were all frozen years ago and were removed
-   under the freshness policy. The postcode list is a static reference table,
-   so it stays. */
+/* ════════════════════════════ postcode view ════════════════════════════ */
 let posQ = "";
 
-function renderPostcodes(d){
-  $("#body-postcodes").innerHTML = `
+function renderSociety(d){
+  $("#body-society").innerHTML = `
     <div class="card">
       <div class="card-h"><h4>${T("Postcode lookup")}</h4>
         <span class="sub">${T("postcode → city → state")}</span></div>
@@ -2248,7 +2224,7 @@ function renderPostcodes(d){
         <input class="inp" id="pos-q" placeholder="${T("Search postcode, city or state…")}" autocomplete="off">
         <div style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)" id="pos-count"></div>
       </div>
-      <div class="tw scroll-y" style="max-height:420px"><table>
+      <div class="tw scroll-y" style="max-height:340px"><table>
         <thead><tr><th class="num">${T("Postcode")}</th><th>${T("City")}</th><th>${T("State")}</th></tr></thead>
         <tbody id="pos-rows"></tbody>
       </table></div>
@@ -2674,7 +2650,6 @@ function paintPeka(d){
   if (dt) dt.innerHTML = hTable([T("Date"), T("Daily screenings"), T("7-day average")],
     labels, [daily, mean]);
 }
-
 /* ════════════════════════════ transport view ════════════════════════════ */
 let topN = 10;
 let netFilter = "all";        // all | ktmb | prasarana
@@ -2985,15 +2960,15 @@ const META = {
     desc:"How many people live in Malaysia, every year since 1970, and how the population is made up today.",
     how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.",
     eps:["/opendosm?id=population_malaysia&filter=overall@age"] },
-  postcodes:{ title:"Postcode Lookup",
-    desc:"Every Malaysian postcode with its city and state — search by any of the three.",
-    how:"The national postcode reference list. It is a static lookup table rather than a time series, so it has no publication date to go stale.",
-    eps:["/data-catalogue?id=poskod"] },
   health:{ title:"Health & Donations",
     desc:"Blood donations, blood stock by type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.",
     how:"These come from KKMNOW, which the Ministry of Health publishes as Parquet files in a public GitHub repository rather than through the government API; your browser reads them directly. Donations run from 2012, organ pledges from 2009 and PeKa B40 screenings from 2019. Blood stock is a short 2022 window — that is all MoH has published. Federal-territory rows were renamed mid-2022 and are folded back together here.",
     eps:["kkmnow-data/blood_02_timeseries.parquet","kkmnow-data/blood_01_stock_timeseries.parquet",
          "kkmnow-data/organ_01_timeseries.parquet","kkmnow-data/pekab40_01_timeseries.parquet"] },
+  society:{ title:"Postcodes",
+    desc:"The national postcode reference list — look up any postcode, city or state.",
+    how:"Pos Malaysia's national postcode reference list, kept as a static lookup table.",
+    eps:["/data-catalogue?id=poskod"] },
   transport:{ title:"Public Transport",
     desc:"Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.",
     how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.",
@@ -3003,16 +2978,8 @@ const META = {
     how:"Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","/gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl"] },
 };
-/* `asOf` returns the latest data date of every dataset a section shows — not
-   when we fetched it. The header prints the newest of them, and flags the
-   section when the *oldest* of them is more than six months behind. Sections
-   with nothing dated (a static lookup, a live feed) return an empty list. */
 const LOADERS = {
-  weather:  { load:loadWeather,   render:renderWeather,
-    /* The FIRST forecast day, not the last: a seven-day outlook runs a week
-       into the future, and "data as of" means when it was issued. */
-    asOf:d => [d.rows.reduce((a, r) => !a || String(r[1]) < a ? String(r[1]) : a, "")],
-    after:d => {
+  weather:  { load:loadWeather,   render:renderWeather,   after:d => {
       let hot = null;
       const first = new Map();
       for (const r of d.rows){ const c = first.get(r[0]);
@@ -3022,30 +2989,33 @@ const LOADERS = {
       const active = d.warn.filter(w => !w.info).length;
       kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
       if (geo.status === "waiting") locate();
+    }, asOf:d => {   /* the forecast starts today */
+      let m = null; for (const r of d.rows){ const x = String(r[1]); if (x && (m === null || x < m)) m = x; }
+      return m;
     } },
-  fuel:     { load:loadFuel,      render:renderFuel,
-    asOf:d => [d.latest && d.latest.date, d.hh.length && d.hh[d.hh.length - 1][0]],
-    after:d => {
+  fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
       if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
-        sub:T("week of ") + ymd(d.latest.date) }; } },
-  economy:  { load:loadEconomy,   render:renderEconomy,
-    asOf:d => [(d.cpi.find(s => s.name === 'overall') || { pts:[] }).pts.slice(-1).flat()[0],
-               d.lfs.length && d.lfs[d.lfs.length - 1][0],
-               d.gdp.length && d.gdp[d.gdp.length - 1][0]],
-    after:d => {
+        sub:T("week of ") + ymd(d.latest.date) }; }, asOf:d => d.latest ? d.latest.date : null },
+  economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
       const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
       if (ov.length > 12){
         const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
         kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
-      } } },
-  finance:  { load:loadFinance,   render:renderFinance,
-    asOf:d => [d.fx.length && d.fx[d.fx.length - 1][0],
-               d.ir.reduce((a, r) => String(r[1]) > a ? String(r[1]) : a, '')] },
-  population:{ load:loadPopulation, render:renderPopulation, asOf:d => [d.latest] },
+      } }, asOf:d => {
+      let m = "";
+      const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
+      for (const p of ov) if (String(p[0]) > m) m = String(p[0]);
+      if (d.lfs.length){ const x = String(d.lfs[d.lfs.length-1][0]); if (x > m) m = x; }
+      if (d.gdp.length){ const x = String(d.gdp[d.gdp.length-1][0]); if (x > m) m = x; }
+      return m || null;
+    } },
+  finance:  { load:loadFinance,   render:renderFinance,   asOf:d => d.fx.length ? d.fx[d.fx.length-1][0] : null },
+  population:{ load:loadPopulation, render:renderPopulation,
+    asOf:d => d.latest },
   health:   { load:loadHealth,    render:renderHealth,
-    asOf:d => [d.updated && d.updated.slice(0, 10)] },
-  postcodes:{ load:loadPostcodes, render:renderPostcodes, asOfNote:'static reference list' },
-  transport:{ load:loadTransport, render:renderTransport, asOfNote:'operator-published schedules' },
+    asOf:d => d.updated ? d.updated.slice(0, 10) : null },
+  society:  { load:loadSociety,   render:renderSociety },
+  transport:{ load:loadTransport, render:renderTransport },
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
       kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
@@ -3056,36 +3026,23 @@ const loaded = new Set();    // sections whose content is currently on screen
 const loading = new Set();   // sections mid-fetch (guard against races)
 const dataMap = {};          // last data per section, for theme/lang re-renders
 const secMode = {};          // last freshness state per section ("updated"…)
+const dataDate = {};         // latest data date per section, for the "data as of" pill
 function setSecTime(id, mode){
   const n = $("#time-" + id); if (!n) return;
   const at = stamps[id] ? hhmm(stamps[id]) : "";
+  const dd = dataDate[id];
+  /* 183 days ≈ 6 months — the freshness policy's "may be delayed" threshold. */
+  const stale = dd ? (Date.now() - new Date(dd).getTime() > 183 * 86400000) : false;
   let text = "", cls = "";
   if (mode === "loading"){ text = "loading…"; cls = " loading"; }
-  else if (mode === "updated") text = T("updated ") + at;
-  else if (mode === "cached") text = T("cached · fetched ") + at;
+  else if (mode === "updated" || mode === "cached"){
+    if (dd){ text = T("data as of ") + md(dd); if (stale){ text += " ⚠️ " + T("may be delayed"); cls = " warn"; } }
+    else text = (mode === "cached" ? T("cached · fetched ") : T("updated ")) + at;
+  }
   else if (mode === "error"){ text = T("refresh failed — showing last data"); cls = " error"; }
   n.textContent = text; n.className = "sec-time" + cls;
   secMode[id] = mode;
 }
-/* Six months is the line the freshness policy draws: past that, a series is
-   stale enough that a reader should be told before they draw conclusions. */
-const STALE_MS = 183 * 86400000;
-function setSecAsOf(id, data){
-  const node = $("#asof-" + id); if (!node) return;
-  const cfg = LOADERS[id];
-  let dates = [];
-  try { dates = (cfg.asOf ? cfg.asOf(data) : []).filter(Boolean).map(v => String(v).slice(0, 10)); }
-  catch { dates = []; }
-  if (!dates.length){
-    node.textContent = cfg.asOfNote ? T(cfg.asOfNote) : "";
-    return;
-  }
-  dates.sort();
-  const stale = Date.now() - Date.parse(dates[0]) > STALE_MS;
-  node.innerHTML = `${esc(T("Data as of"))} ${esc(ymd(dates[dates.length - 1]))}` +
-    (stale ? ` · <span class="stale">⚠️ ${esc(T("may be delayed"))}</span>` : "");
-}
-
 async function loadSection(id, force){
   if (loading.has(id)) return;
   loading.add(id);
@@ -3098,7 +3055,8 @@ async function loadSection(id, force){
       try {
         cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
-        setDot(id, "ok"); setSecTime(id, "cached"); setSecAsOf(id, cached.d);
+        dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
+        setDot(id, "ok"); setSecTime(id, "cached");
         tick(); renderKpis();
         return;
       } catch { /* shape drift — refetch */ }
@@ -3112,7 +3070,10 @@ async function loadSection(id, force){
       const rec = cacheSet(id, data);
       cfg.render(data); if (cfg.after) cfg.after(data);
       loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
-      setDot(id, "ok"); setSecTime(id, "updated"); setSecAsOf(id, data);
+      dataDate[id] = cfg.asOf ? cfg.asOf(data) : null;
+      setDot(id, "ok"); setSecTime(id, "updated");      cfg.render(data); if (cfg.after) cfg.after(data);
+      loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
+      setDot(id, "ok"); setSecTime(id, "updated");
     } catch (err){
       setDot(id, "err");
       if (!hasContent) errorBox(id, err, () => loadSection(id, true));
@@ -3153,7 +3114,7 @@ function primeCached(){
       LOADERS[s.id].render(rec.d);
       if (LOADERS[s.id].after) LOADERS[s.id].after(rec.d);
       loaded.add(s.id); stamps[s.id] = rec.t; dataMap[s.id] = rec.d;
-      setDot(s.id, "ok"); setSecTime(s.id, "cached"); setSecAsOf(s.id, rec.d);
+      setDot(s.id, "ok"); setSecTime(s.id, "cached");
     } catch { /* shape drift — refetch on load */ }
   }
   tick(); renderKpis();
