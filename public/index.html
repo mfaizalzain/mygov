@@ -172,6 +172,10 @@ section{padding-top:var(--s8);scroll-margin-top:124px}
 .sec-time{margin-left:auto;flex:none;font-size:11px;font-family:var(--mono);color:var(--fg-3);
   background:var(--bg-2);border:1px solid var(--line-soft);border-radius:99px;padding:4px 10px;
   white-space:nowrap}
+/* How current the DATA is, as opposed to when we last fetched it (.sec-time) */
+.sec-asof{margin:6px 0 0 !important;font-size:11.5px;color:var(--fg-3);font-family:var(--mono)}
+.sec-asof:empty{display:none}
+.sec-asof .stale{color:var(--warn)}
 .sec-time.loading{color:var(--warn)}
 .sec-time.error{color:var(--danger)}
 details.meta{margin-top:var(--s2)}
@@ -201,6 +205,17 @@ details.dt{margin-top:var(--s2);border-top:1px dashed var(--line-soft);padding-t
 details.dt summary{cursor:pointer;font-size:11.5px;color:var(--fg-2);user-select:none}
 details.dt summary:hover{color:var(--fg)}
 details.dt .dt-body{margin-top:var(--s2)}
+/* health: one state picker drives every chart in the section, so it lives in
+   a bar above them rather than being repeated in four card headers */
+.hbar{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+  padding:var(--s3) var(--s4);box-shadow:var(--shadow)}
+.hbar .hstamp{font-size:11.5px;color:var(--fg-3);font-family:var(--mono)}
+.hbar .right{margin-left:auto;display:flex;gap:var(--s2);align-items:center}
+.hbar label{font-size:11.5px;color:var(--fg-2);white-space:nowrap}
+.hbar select{width:auto;max-width:240px}
+.credit{margin-top:var(--s3);font-size:11.5px;color:var(--fg-3)}
+.credit a{color:var(--fg-2)}
 /* live map + vehicle cards */
 .lvmap{position:relative;z-index:0;height:340px;background:var(--bg-2)}
 html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.7)}
@@ -419,7 +434,7 @@ const CAP = 4;                // requests per family per rolling minute
 const WINDOW = 60000;
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
-const CK = "mygov.cache.v5.";
+const CK = "mygov.cache.v6.";
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -501,13 +516,9 @@ const I18N = {
   "Unemployment rate":"Kadar pengangguran", "monthly":"bulanan",
   "Real GDP":"KDNK benar", "quarterly · RM million":"suku tahunan · RM juta",
   "Date":"Tarikh", "Month":"Bulan", "Quarter":"Suku", "RM million":"RM juta",
-  "Finance":"Kewangan", "Tourism":"Pelancongan", "Society":"Masyarakat",
+  "Finance":"Kewangan",
   "Exchange rates and interest rates from Bank Negara Malaysia — the ringgit against key currencies, and what banks lend and pay.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia — ringgit berbanding mata wang utama, serta kadar pinjaman dan simpanan bank.",
   "Exchange rates are Bank Negara's daily reference rates, published here as monthly averages and month-end values. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it.":"Kadar pertukaran ialah kadar rujukan harian Bank Negara, diterbitkan di sini sebagai purata bulanan dan nilai akhir bulan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya.",
-  "Tourist arrivals by country and passports issued by state, from the Immigration Department.":"Ketibaan pelancong mengikut negara dan pasport dikeluarkan mengikut negeri, daripada Jabatan Imigresen.",
-  "Arrivals are monthly counts by country of residence; 2021-22 figures collapsed to near zero when borders closed during COVID — that is real data. Passports are the monthly totals issued, by state and office.":"Ketibaan ialah kiraan bulanan mengikut negara kediaman; angka 2021-22 menjunam ke hampir sifar apabila sempadan ditutup semasa COVID — itu data sebenar. Pasport ialah jumlah bulanan dikeluarkan, mengikut negeri dan pejabat.",
-  "Daily births, national health spending and a Malaysia postcode lookup.":"Kelahiran harian, perbelanjaan kesihatan negara dan carian poskod Malaysia.",
-  "Births are DOSM's daily registered births for Malaysia as a whole — the dataset has no per-state breakdown. Health spending comes from the National Health Accounts (MNHA). Postcodes are the national reference list.":"Kelahiran ialah kelahiran berdaftar harian DOSM untuk Malaysia keseluruhan — set data tiada pecahan mengikut negeri. Perbelanjaan kesihatan daripada Akaun Kesihatan Negara (MNHA). Poskod ialah senarai rujukan negara.",
   "Exchange rates":"Kadar pertukaran",
   "RM per unit · daily reference rates":"RM seunit · kadar rujukan harian",
   "Daily Bank Negara reference rates — monthly average values.":"Kadar rujukan harian Bank Negara — nilai purata bulanan.",
@@ -518,32 +529,45 @@ const I18N = {
   "Rate":"Kadar", "Bank":"Bank", "Commercial":"Komersial", "Investment":"Pelaburan",
   "Base rate":"Kadar asas", "Average lending rate":"Kadar pinjaman purata",
   "Savings rate":"Kadar simpanan", "Deposit 3m":"Deposit 3b", "Deposit 12m":"Deposit 12b",
-  "Total arrivals":"Jumlah ketibaan", "vs previous month":"berbanding bulan lepas",
-  "Top source":"Sumber teratas", "arrivals":"ketibaan", "Arrivals":"Ketibaan",
-  "Passports issued":"Pasport dikeluarkan", "Passports":"Pasport",
-  "Months on record":"Bulan direkod", "arrivals · passports":"ketibaan · pasport",
-  "Top 10 source countries":"10 negara sumber teratas",
-  "Monthly arrivals":"Ketibaan bulanan", "all countries":"semua negara",
-  "The collapse to near zero in 2021-22 is real data — border closures during COVID.":"Kejatuhan ke hampir sifar pada 2021-22 ialah data sebenar — penutupan sempadan semasa COVID.",
-  "Passports issued by state":"Pasport dikeluarkan mengikut negeri",
-  "Country":"Negara", "of top 10":"daripada 10 teratas",
-  "Latest day":"Hari terkini", "7-day average":"Purata 7 hari",
-  "births per day":"kelahiran sehari", "Peak day":"Hari puncak",
-  "Days on record":"Hari direkod", "since Jan 2021":"sejak Jan 2021",
-  "Daily births":"Kelahiran harian", "Malaysia · registered births":"Malaysia · kelahiran berdaftar",
-  "No state breakdown in this dataset — births are published for Malaysia as a whole.":"Tiada pecahan negeri dalam set data ini — kelahiran diterbitkan untuk Malaysia keseluruhan.",
-  "Births":"Kelahiran",
-  "Health expenditure":"Perbelanjaan kesihatan",
-  "National Health Accounts · RM billion":"Akaun Kesihatan Negara · RM bilion",
-  "Total":"Jumlah", "Public":"Awam", "Private":"Swasta",
-  "TEH — total expenditure":"TEH — jumlah perbelanjaan",
-  "CEH — current expenditure":"CEH — perbelanjaan semasa",
-  "Sector":"Sektor", "Variable":"Pemboleh ubah", "RM bn":"RM bilion",
   "Postcode lookup":"Carian poskod", "postcode → city → state":"poskod → bandar → negeri",
   "Search postcode, city or state…":"Cari poskod, bandar atau negeri…",
   "Postcode":"Poskod", "City":"Bandar", "State":"Negeri",
   "matches":"padanan", "postcodes":"poskod", "type to filter":"taip untuk menapis",
   "No postcodes match ":"Tiada poskod sepadan ",
+  "Data as of":"Data setakat", "may be delayed":"mungkin lewat",
+  "static reference list":"senarai rujukan statik",
+  "operator-published schedules":"jadual terbitan pengendali",
+  "Postcodes":"Poskod", "Postcode Lookup":"Carian Poskod",
+  "Every Malaysian postcode with its city and state — search by any of the three.":"Setiap poskod Malaysia dengan bandar dan negerinya — cari mengikut mana-mana daripada tiga.",
+  "The national postcode reference list. It is a static lookup table rather than a time series, so it has no publication date to go stale.":"Senarai rujukan poskod kebangsaan. Ia jadual carian statik dan bukan siri masa, jadi tiada tarikh terbitan yang boleh menjadi lapuk.",
+  "Population":"Penduduk", "Population growth":"Pertumbuhan penduduk",
+  "How many people live in Malaysia, every year since 1970, and how the population is made up today.":"Berapa ramai penduduk Malaysia, setiap tahun sejak 1970, dan komposisi penduduk hari ini.",
+  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Hanya siri kebangsaan dipaparkan — set data peringkat negeri tidak dikemas kini sejak 2023.",
+  "Composition":"Komposisi", "Largest group":"Kumpulan terbesar",
+  "Year-on-year":"Tahun ke tahun", "Years on record":"Tahun direkod",
+  "millions · annual":"juta · tahunan", "people":"orang", "vs ":"berbanding ",
+  "Group":"Kumpulan", "7-day average":"Purata 7 hari",
+  "Bumiputera Malay":"Bumiputera Melayu", "Bumiputera other":"Bumiputera lain",
+  "Chinese":"Cina", "Indian":"India", "Other citizens":"Warganegara lain",
+  "Non-citizens":"Bukan warganegara",
+  "Health":"Kesihatan", "Health & Donations":"Kesihatan & Derma",
+  "Blood donations, blood stock by type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.":"Pendermaan darah, stok darah mengikut jenis, ikrar derma organ dan saringan kesihatan PeKa B40 — diterbitkan setiap hari oleh Kementerian Kesihatan.",
+  "These come from KKMNOW, which the Ministry of Health publishes as Parquet files in a public GitHub repository rather than through the government API; your browser reads them directly. Donations run from 2012, organ pledges from 2009 and PeKa B40 screenings from 2019. Blood stock is a short 2022 window — that is all MoH has published. Federal-territory rows were renamed mid-2022 and are folded back together here.":"Data ini daripada KKMNOW, yang diterbitkan oleh Kementerian Kesihatan sebagai fail Parquet dalam repositori GitHub awam dan bukan melalui API kerajaan; pelayar anda membacanya terus. Pendermaan bermula 2012, ikrar organ 2009 dan saringan PeKa B40 2019. Stok darah hanya meliputi tempoh singkat pada 2022 — itu sahaja yang diterbitkan KKM. Baris wilayah persekutuan dinamakan semula pertengahan 2022 dan digabungkan semula di sini.",
+  "Health data updated":"Data kesihatan dikemas kini", "Date range":"Julat tarikh",
+  "Blood donations":"Pendermaan darah", "Donations, last 7 days":"Pendermaan, 7 hari lepas",
+  "Organ pledges":"Ikrar derma organ", "cumulative since 2009":"terkumpul sejak 2009",
+  "PeKa B40 screenings":"Saringan PeKa B40", "per day · last 7 days":"sehari · 7 hari lepas",
+  "donors per day · 7-day average":"penderma sehari · purata 7 hari",
+  "Daily donors":"Penderma harian", "Daily screenings":"Saringan harian",
+  "Pledges to date":"Ikrar terkumpul", "health screenings per day":"saringan kesihatan sehari",
+  "Blood stock by type":"Stok darah mengikut jenis", "% of optimal level":"% paras optimum",
+  "No data for this state":"Tiada data untuk negeri ini",
+  "Blood donations are published for 13 states and Kuala Lumpur only.":"Pendermaan darah diterbitkan untuk 13 negeri dan Kuala Lumpur sahaja.",
+  "Stock is published as a share of the optimal level and capped at 100%. MoH last updated this series in October 2022 — the window shown is all there is.":"Stok diterbitkan sebagai peratusan paras optimum dan dihadkan pada 100%. KKM mengemas kini siri ini kali terakhir pada Oktober 2022 — itu sahaja tempoh yang ada.",
+  "No blood-stock series was published for this state.":"Tiada siri stok darah diterbitkan untuk negeri ini.",
+  "No pledge series was published for this state.":"Tiada siri ikrar diterbitkan untuk negeri ini.",
+  "PeKa B40 screenings start in April 2019.":"Saringan PeKa B40 bermula pada April 2019.",
+  "Data: MoH KKMNOW (GitHub)":"Data: KKMNOW, KKM (GitHub)",
   "valid":"sah", "No active warnings":"Tiada amaran aktif",
   "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
@@ -642,7 +666,8 @@ function applyLang(){
 function rerenderAll(){
   for (const id of loaded){
     const d = dataMap[id]; if (!d) continue;
-    try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d); } catch {}
+    try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d);
+           setSecAsOf(id, d); } catch {}
   }
   renderKpis();
 }
@@ -652,15 +677,16 @@ const SECTIONS = [
   { id:"fuel",      label:"Fuel",       icon:"⛽", family:"data-catalogue" },
   { id:"economy",   label:"Economy",    icon:"📈", family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"💱", family:"data-catalogue" },
-  { id:"tourism",   label:"Tourism",    icon:"✈️", family:"data-catalogue" },
-  { id:"society",   label:"Society",    icon:"👪", family:"data-catalogue" },
+  { id:"population",label:"Population",  icon:"👪", family:"opendosm" },
+  { id:"health",    label:"Health",     icon:"🩺", family:"moh" },
+  { id:"postcodes", label:"Postcodes",  icon:"📮", family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["economy","finance","tourism","society","transport","live"]);
+const LAZY = new Set(["economy","finance","population","health","postcodes","transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -1072,33 +1098,161 @@ async function loadFinance(){
   };
 }
 
-async function loadTourism(){
-  const arr = await request("data-catalogue", "/data-catalogue",
-    { id:"arrivals", sort:"-date" });
-  /* Server-side filter keeps only the per-state totals, dropping the ~80
-     individual passport offices — we only chart states. */
-  const pp = await request("data-catalogue", "/data-catalogue",
-    { id:"passports", sort:"-date", filter:"All@office" });
+/* The postcode list is a static reference table, not a time series — it is
+   exempt from the freshness rule that removed the frozen demographic
+   datasets that used to share this section. */
+async function loadPostcodes(){
+  const po = await request("data-catalogue", "/data-catalogue", { id:"poskod" });
   return {
-    arr: (arr || []).map(r => [r.date, r.country, r.arrivals]),
-    pp:  (pp || []).map(r => [r.date, r.state, r.passports]),
+    pos: (po || []).map(r => [r.postcode, r.city, r.state])
+      .sort((a, b) => Number(a[0]) - Number(b[0])),
   };
 }
 
-async function loadSociety(){
-  /* Births run daily back to 1920 (37,833 rows) — far too much for a chart,
-     so fetch a recent window server-side. The dataset is Malaysia-only. */
-  const b  = await request("data-catalogue", "/data-catalogue",
-    { id:"births", sort:"-date", date_start:"2021-01-01@date" });
-  const mn = await request("data-catalogue", "/data-catalogue",
-    { id:"mnha", sort:"-date" });
-  const po = await request("data-catalogue", "/data-catalogue", { id:"poskod" });
+/* Population is annual, published to 1 January of the current year. Only the
+   national series is used: population_state has been frozen since 2023. */
+async function loadPopulation(){
+  /* One server-side filter is allowed, so narrow to the "overall" age band —
+     that alone drops ~95% of the rows — and split by sex/ethnicity here. */
+  const rows = await request("opendosm", "/opendosm",
+    { id:"population_malaysia", filter:"overall@age", sort:"date" });
+  const both = (rows || []).filter(r => r.sex === "both");
+  const trend = both.filter(r => r.ethnicity === "overall")
+    .map(r => [r.date, r.population])
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  const latest = trend.length ? trend[trend.length - 1][0] : null;
   return {
-    births: (b || []).map(r => [r.date, r.births])
-      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
-    mnha: (mn || []).map(r => [r.date, r.sector, r.variable, r.expenditure]),
-    pos:  (po || []).map(r => [r.postcode, r.city, r.state])
-      .sort((a,b) => Number(a[0]) - Number(b[0])),
+    trend,
+    latest,
+    /* Thousands of people, as published. */
+    ethnicity: both.filter(r => r.date === latest && r.ethnicity !== "overall")
+      .map(r => [r.ethnicity, r.population])
+      .sort((a, b) => b[1] - a[1]),
+  };
+}
+
+/* ═══════════════════ MoH KKMNOW (GitHub, Parquet) ═══════════════════
+   Health data does not come from api.data.gov.my at all — the Ministry of
+   Health publishes it as Parquet files in a public GitHub repo, refreshed
+   daily and served with `access-control-allow-origin: *`, so the browser can
+   read them directly. They are deliberately NOT put through request()/
+   schedule(): that machinery exists to stay inside the government API's
+   4-requests-per-minute limit, and raw.githubusercontent.com is a different
+   host with no such limit. Serialising them behind the same chain would add
+   seconds of artificial delay for nothing.                                   */
+const MOH = "https://raw.githubusercontent.com/MoH-Malaysia/kkmnow-data/main/";
+const HYPARQUET_SRI = "sha384-p5nMsu6Tw/sizSeQiciHStUBS34HQil8MGVjza0ewGACtZe6hUvmt5Iuz4o7AY6q";
+/* The Parquet reader is 150 kB — a sixth of it brotli's static dictionary — and
+   only this one section needs it, so it is fetched on first use rather than
+   loaded on every page view. See tools/build-hyparquet.mjs for the bundle. */
+let readerLoad = null;
+/* The bundle publishes itself as window.hyparquet — check for the export, not
+   just the name, so a half-loaded script can't be mistaken for a ready one. */
+const readerReady = () => window.hyparquet && window.hyparquet.parquetReadObjects
+  ? window.hyparquet : null;
+function parquetReader(){
+  const ready = readerReady();
+  if (ready) return Promise.resolve(ready);
+  if (!readerLoad) readerLoad = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "/vendor/hyparquet.min.js";
+    s.integrity = HYPARQUET_SRI;
+    s.onload = () => { const r = readerReady();
+      if (r) resolve(r);
+      else { readerLoad = null;
+        reject(new ApiError("The Parquet reader failed to start.", "http")); } };
+    s.onerror = () => { readerLoad = null;         // let a retry try again
+      s.remove();
+      reject(new ApiError("Couldn't load the Parquet reader.", "network")); };
+    document.head.appendChild(s);
+  });
+  return readerLoad;
+}
+async function mohParquet(name){
+  const { parquetReadObjects, compressors } = await parquetReader();
+  let res;
+  try { res = await fetch(MOH + name + ".parquet"); }
+  catch { throw new ApiError("Can't reach the MoH data repository — you may be offline.", "network"); }
+  if (!res.ok) throw new ApiError(`GitHub returned HTTP ${res.status} for ${name}.`, "http");
+  /* Every KKMNOW file is brotli-compressed, which hyparquet core can't read and
+     browsers don't expose to script — hence the bundled BROTLI decompressor. */
+  return parquetReadObjects({ file: await res.arrayBuffer(), compressors });
+}
+
+const DAY_MS = 86400000;
+/* Around September 2022 the organ feed renamed "W.P. Labuan" to "Wp Labuan"
+   and ran both spellings for eight days. Fold them together so the federal
+   territories aren't listed twice — and, on the overlapping days, keep the
+   larger of the two rather than adding them, because the old series was
+   already tapering off as the new one took over. */
+const mohState = s => String(s ?? "").replace(/^Wp\s+/i, "W.P. ").trim();
+const mohDay = v => Math.round((v instanceof Date ? v.getTime() : Date.parse(v)) / DAY_MS);
+
+/** Fold one row per state per day into { t0, states, series:{state:[…]} }.
+ *
+ *  Every one of these files is dense — one row per state for every day in its
+ *  range, no gaps — so a series collapses to a start day plus a flat array of
+ *  daily values. That is roughly a quarter the size of the parsed rows, which
+ *  matters: this section alone would otherwise be most of the localStorage
+ *  budget the other seven sections also share.
+ */
+function denseByState(rows, keys){
+  const acc = new Map();
+  let lo = Infinity, hi = -Infinity;
+  for (const r of rows){
+    const day = mohDay(r.date);
+    if (!Number.isFinite(day)) continue;
+    if (day < lo) lo = day;
+    if (day > hi) hi = day;
+    const st = mohState(r.state);
+    let m = acc.get(st); if (!m) acc.set(st, m = new Map());
+    const prev = m.get(day), val = keys.map(k => Number(r[k]));
+    m.set(day, prev ? val.map((v, i) => Math.max(v, prev[i])) : val);
+  }
+  if (!acc.size) return { t0:0, n:0, states:[], series:{} };
+  const n = hi - lo + 1, series = {};
+  for (const [st, m] of acc){
+    const cols = keys.map(() => new Array(n).fill(null));
+    for (let d = lo; d <= hi; d++){
+      const v = m.get(d); if (!v) continue;
+      for (let k = 0; k < keys.length; k++)
+        cols[k][d - lo] = Number.isFinite(v[k]) ? Math.round(v[k] * 10) / 10 : null;
+    }
+    series[st] = keys.length === 1 ? cols[0] : cols;
+  }
+  return { t0:lo, n, states:[...acc.keys()].sort(), series };
+}
+
+/* metadata_updated_date.json is keyed by KKMNOW dashboard, each holding one
+   timestamp per chart. Only these three feed this section. */
+const MOH_GROUPS = ["blood_donation", "organ_donation", "peka_b40"];
+
+async function loadHealth(){
+  let updated = null;
+  try {
+    const r = await fetch(MOH + "metadata_updated_date.json");
+    if (r.ok){
+      const meta = await r.json();
+      for (const g of MOH_GROUPS)
+        for (const v of Object.values(meta[g] || {}))
+          if (typeof v === "string" && (!updated || v > updated)) updated = v;
+    }
+  } catch { /* a missing timestamp is cosmetic — the data still renders */ }
+
+  /* Fetched together: different host, no rate limit, and four sequential
+     round-trips to a CDN would be pure latency. */
+  const [don, stock, organ, peka] = await Promise.all([
+    mohParquet("blood_02_timeseries"),
+    mohParquet("blood_01_stock_timeseries"),
+    mohParquet("organ_01_timeseries"),
+    mohParquet("pekab40_01_timeseries"),
+  ]);
+  return {
+    updated,
+    don:   denseByState(don,   ["daily"]),
+    stock: denseByState(stock, ["stock_a","stock_ab","stock_b","stock_o"]),
+    organ: denseByState(organ, ["daily"]),
+    peka:  denseByState(peka,  ["daily"]),
   };
 }
 
@@ -1236,6 +1390,7 @@ function buildShell(){
         <div class="sec-ico" aria-hidden="true">${s.icon}</div>
         <div><h3 id="h-${s.id}">${esc(T(META[s.id].title))}</h3>
           <p>${esc(T(META[s.id].desc))}</p>
+          <p class="sec-asof" id="asof-${s.id}"></p>
           <details class="meta">
             <summary>${esc(T("Data source & methodology"))}</summary>
             <p>${esc(T(META[s.id].how))}</p>
@@ -1699,71 +1854,7 @@ function cutoffFrom(dateStr, years){
   return d.toISOString().slice(0, 10);
 }
 
-/* ═══════════ finance & tourism constants ═══════════ */
-/* ISO 3166-1 alpha-3 → English name, generated from the official country
-   list (plus the two non-ISO codes the arrivals feed uses: ANT and XXX). */
-const COUNTRY = {
-  ABW:"Aruba", AFG:"Afghanistan", AGO:"Angola", AIA:"Anguilla",
-  ALA:"Åland Islands", ALB:"Albania", AND:"Andorra", ANT:"Netherlands Antilles",
-  ARE:"United Arab Emirates", ARG:"Argentina", ARM:"Armenia", ASM:"American Samoa",
-  ATA:"Antarctica", ATF:"French Southern Territories", ATG:"Antigua and Barbuda",
-  AUS:"Australia", AUT:"Austria", AZE:"Azerbaijan", BDI:"Burundi", BEL:"Belgium",
-  BEN:"Benin", BES:"Bonaire, Sint Eustatius and Saba", BFA:"Burkina Faso",
-  BGD:"Bangladesh", BGR:"Bulgaria", BHR:"Bahrain", BHS:"Bahamas",
-  BIH:"Bosnia and Herzegovina", BLM:"Saint Barthélemy", BLR:"Belarus", BLZ:"Belize",
-  BMU:"Bermuda", BOL:"Bolivia", BRA:"Brazil", BRB:"Barbados", BRN:"Brunei Darussalam",
-  BTN:"Bhutan", BVT:"Bouvet Island", BWA:"Botswana", CAF:"Central African Republic",
-  CAN:"Canada", CCK:"Cocos (Keeling) Islands", CHE:"Switzerland", CHL:"Chile",
-  CHN:"China", CIV:"Côte d'Ivoire", CMR:"Cameroon", COD:"DR Congo", COG:"Congo",
-  COK:"Cook Islands", COL:"Colombia", COM:"Comoros", CPV:"Cabo Verde", CRI:"Costa Rica",
-  CUB:"Cuba", CUW:"Curaçao", CXR:"Christmas Island", CYM:"Cayman Islands",
-  CYP:"Cyprus", CZE:"Czechia", DEU:"Germany", DJI:"Djibouti", DMA:"Dominica",
-  DNK:"Denmark", DOM:"Dominican Republic", DZA:"Algeria", ECU:"Ecuador", EGY:"Egypt",
-  ERI:"Eritrea", ESH:"Western Sahara", ESP:"Spain", EST:"Estonia", ETH:"Ethiopia",
-  FIN:"Finland", FJI:"Fiji", FLK:"Falkland Islands", FRA:"France", FRO:"Faroe Islands",
-  FSM:"Micronesia", GAB:"Gabon", GBR:"United Kingdom", GEO:"Georgia", GGY:"Guernsey",
-  GHA:"Ghana", GIB:"Gibraltar", GIN:"Guinea", GLP:"Guadeloupe", GMB:"Gambia",
-  GNB:"Guinea-Bissau", GNQ:"Equatorial Guinea", GRC:"Greece", GRD:"Grenada",
-  GRL:"Greenland", GTM:"Guatemala", GUF:"French Guiana", GUM:"Guam", GUY:"Guyana",
-  HKG:"Hong Kong", HMD:"Heard Island and McDonald Islands", HND:"Honduras",
-  HRV:"Croatia", HTI:"Haiti", HUN:"Hungary", IDN:"Indonesia", IMN:"Isle of Man",
-  IND:"India", IOT:"British Indian Ocean Territory", IRL:"Ireland", IRN:"Iran",
-  IRQ:"Iraq", ISL:"Iceland", ISR:"Israel", ITA:"Italy", JAM:"Jamaica", JEY:"Jersey",
-  JOR:"Jordan", JPN:"Japan", KAZ:"Kazakhstan", KEN:"Kenya", KGZ:"Kyrgyzstan",
-  KHM:"Cambodia", KIR:"Kiribati", KNA:"Saint Kitts and Nevis", KOR:"South Korea",
-  KWT:"Kuwait", LAO:"Laos", LBN:"Lebanon", LBR:"Liberia", LBY:"Libya",
-  LCA:"Saint Lucia", LIE:"Liechtenstein", LKA:"Sri Lanka", LSO:"Lesotho",
-  LTU:"Lithuania", LUX:"Luxembourg", LVA:"Latvia", MAC:"Macao", MAF:"Saint Martin",
-  MAR:"Morocco", MCO:"Monaco", MDA:"Moldova", MDG:"Madagascar", MDV:"Maldives",
-  MEX:"Mexico", MHL:"Marshall Islands", MKD:"North Macedonia", MLI:"Mali",
-  MLT:"Malta", MMR:"Myanmar", MNE:"Montenegro", MNG:"Mongolia",
-  MNP:"Northern Mariana Islands", MOZ:"Mozambique", MRT:"Mauritania", MSR:"Montserrat",
-  MTQ:"Martinique", MUS:"Mauritius", MYS:"Malaysia", MYT:"Mayotte", NAM:"Namibia",
-  NCL:"New Caledonia", NER:"Niger", NFK:"Norfolk Island", NGA:"Nigeria", NIC:"Nicaragua",
-  NIU:"Niue", NLD:"Netherlands", NOR:"Norway", NPL:"Nepal", NRU:"Nauru",
-  NZL:"New Zealand", OMN:"Oman", PAK:"Pakistan", PAN:"Panama", PCN:"Pitcairn",
-  PER:"Peru", PHL:"Philippines", PLW:"Palau", PNG:"Papua New Guinea", POL:"Poland",
-  PRI:"Puerto Rico", PRK:"North Korea", PRT:"Portugal", PRY:"Paraguay",
-  PSE:"Palestine", PYF:"French Polynesia", QAT:"Qatar", REU:"Réunion", ROU:"Romania",
-  RUS:"Russia", RWA:"Rwanda", SAU:"Saudi Arabia", SDN:"Sudan", SEN:"Senegal",
-  SGP:"Singapore", SGS:"South Georgia and the South Sandwich Islands",
-  SHN:"Saint Helena, Ascension and Tristan da Cunha", SJM:"Svalbard and Jan Mayen",
-  SLB:"Solomon Islands", SLE:"Sierra Leone", SLV:"El Salvador", SMR:"San Marino",
-  SOM:"Somalia", SPM:"Saint Pierre and Miquelon", SRB:"Serbia", SSD:"South Sudan",
-  STP:"Sao Tome and Principe", SUR:"Suriname", SVK:"Slovakia", SVN:"Slovenia",
-  SWE:"Sweden", SWZ:"Eswatini", SXM:"Sint Maarten (Dutch part)", SYC:"Seychelles",
-  SYR:"Syria", TCA:"Turks and Caicos Islands", TCD:"Chad", TGO:"Togo", THA:"Thailand",
-  TJK:"Tajikistan", TKL:"Tokelau", TKM:"Turkmenistan", TLS:"Timor-Leste", TON:"Tonga",
-  TTO:"Trinidad and Tobago", TUN:"Tunisia", TUR:"Türkiye", TUV:"Tuvalu",
-  TWN:"Taiwan", TZA:"Tanzania", UGA:"Uganda", UKR:"Ukraine",
-  UMI:"United States Minor Outlying Islands", URY:"Uruguay", USA:"United States",
-  UZB:"Uzbekistan", VAT:"Holy See", VCT:"Saint Vincent and the Grenadines",
-  VEN:"Venezuela", VGB:"British Virgin Islands", VIR:"U.S. Virgin Islands",
-  VNM:"Vietnam", VUT:"Vanuatu", WLF:"Wallis and Futuna", WSM:"Samoa",
-  XXX:"Unknown / Other", YEM:"Yemen", ZAF:"South Africa", ZMB:"Zambia", ZWE:"Zimbabwe"
-};
-const countryName = c => COUNTRY[c] || c;
-
+/* ═══════════ finance constants ═══════════ */
 const CURR = {
   usd:{ label:"USD", color:"#34d399" },
   gbp:{ label:"GBP", color:"#fbbf24" },
@@ -1778,8 +1869,6 @@ const RATE_LABEL = { br:"Base rate", alr:"Average lending rate", blr:"Base lendi
   sr:"Savings rate", fdr_3mo:"Deposit 3m", fdr_12mo:"Deposit 12m",
   wabr:"Weighted avg base rate", wablr:"Weighted avg base lending rate",
   walr:"Weighted avg lending rate", wasr:"Weighted avg savings rate" };
-const SECTOR_LABEL = { total:"Total", public:"Public", private:"Private" };
-const VAR_LABEL = { teh:"TEH — total expenditure", ceh:"CEH — current expenditure" };
 
 function renderFuel(d){
   const L = d.latest, P = d.prev;
@@ -2141,216 +2230,16 @@ function paintIr(d){
     })), [3]);
 }
 
-/* ════════════════════════════ tourism view ════════════════════════════ */
-let arrMonth = null, ppMonth = null;
-const monthList = rows => [...new Set(rows.map(r => r[0]))]
-  .sort((a,b) => String(b).localeCompare(String(a)));   // newest first
 
-function renderTourism(d){
-  const months = monthList(d.arr);
-  if (!arrMonth || !months.includes(arrMonth)) arrMonth = months[0];
-  const pmonths = monthList(d.pp);
-  if (!ppMonth || !pmonths.includes(ppMonth)) ppMonth = pmonths[0];
-
-  const all = d.arr.filter(r => r[1] === "ALL")
-    .sort((a,b) => String(a[0]).localeCompare(String(b[0])));
-  const cur = all.find(r => r[0] === arrMonth);
-  const prev = all[all.findIndex(r => r[0] === arrMonth) - 1];
-  const mo = (cur && prev) ? (cur[2]/prev[2] - 1) * 100 : null;
-  const top = d.arr.filter(r => r[0] === arrMonth && r[1] !== "ALL")
-    .sort((a,b) => b[2] - a[2])[0];
-  const ppTotal = (d.pp.find(r => r[0] === ppMonth && r[1] === "Malaysia") || [])[2];
-  const ppPrevM = pmonths[pmonths.indexOf(ppMonth) + 1];
-  const ppPrev = ppPrevM ? (d.pp.find(r => r[0] === ppPrevM && r[1] === "Malaysia") || [])[2] : null;
-  const ppMo = (ppTotal != null && ppPrev != null) ? (ppTotal/ppPrev - 1) * 100 : null;
-
-  $("#body-tourism").innerHTML = `
-    <div class="grid g4 mb">
-      <div class="kpi"><div class="lab">${T("Total arrivals")} · ${esc(cur ? ymd(cur[0]) : "—")}</div>
-        <div class="val" data-count="${cur ? cur[2] : 0}">0</div>
-        <div class="sub">${mo == null ? "" :
-          `<span class="${mo > 0 ? "down" : "up"}">${mo > 0 ? "▲" : "▼"} ${nf(Math.abs(mo),1)}%</span> ${T("vs previous month")}`}</div></div>
-      <div class="kpi"><div class="lab">${T("Top source")}</div>
-        <div class="val" style="font-size:20px">${esc(top ? countryName(top[1]) : "—")}</div>
-        <div class="sub">${top ? nf(top[2]) + " " + T("arrivals") : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Passports issued")} · ${esc(ymd(ppMonth))}</div>
-        <div class="val" data-count="${ppTotal || 0}">0</div>
-        <div class="sub">${ppMo == null ? "" :
-          `<span class="${ppMo > 0 ? "down" : "up"}">${ppMo > 0 ? "▲" : "▼"} ${nf(Math.abs(ppMo),1)}%</span> ${T("vs previous month")}`}</div></div>
-      <div class="kpi"><div class="lab">${T("Months on record")}</div>
-        <div class="val" style="font-size:20px">${nf(months.length)} · ${nf(pmonths.length)}</div>
-        <div class="sub">${T("arrivals · passports")}</div></div>
-    </div>
-    <div class="grid g2 mb">
-      <div class="card">
-        <div class="card-h"><h4>${T("Top 10 source countries")}</h4>
-          <span class="sub">${esc(ymd(arrMonth))}</span>
-          <span class="right"><label class="sr" for="arr-month">${T("Month")}</label>
-            <select class="inp" id="arr-month" style="max-width:180px" aria-label="${T("Month")}">
-              ${months.map(m => `<option value="${m}" ${m === arrMonth ? "selected" : ""}>${esc(ymd(m))}</option>`).join("")}
-            </select></span></div>
-        <div class="card-b"><div class="chart"><canvas id="arr-chart" role="img" aria-label="Top 10 source countries"></canvas></div>
-          <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="arr-dt"></div></details></div>
-      </div>
-      <div class="card">
-        <div class="card-h"><h4>${T("Monthly arrivals")}</h4><span class="sub">${T("all countries")}</span></div>
-        <div class="card-b"><div class="chart"><canvas id="arr-trend" role="img" aria-label="Monthly tourist arrivals"></canvas></div>
-          <p class="note">ℹ️ ${T("The collapse to near zero in 2021-22 is real data — border closures during COVID.")}</p>
-          <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="arr-trend-dt"></div></details></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-h"><h4>${T("Passports issued by state")}</h4>
-        <span class="sub">${esc(ymd(ppMonth))}</span>
-        <span class="right"><label class="sr" for="pp-month">${T("Month")}</label>
-          <select class="inp" id="pp-month" style="max-width:180px" aria-label="${T("Month")}">
-            ${pmonths.map(m => `<option value="${m}" ${m === ppMonth ? "selected" : ""}>${esc(ymd(m))}</option>`).join("")}
-          </select></span></div>
-      <div class="card-b"><div class="chart tall"><canvas id="pp-chart" role="img" aria-label="Passports by state"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="pp-dt"></div></details></div>
-    </div>`;
-
-  const am = $("#arr-month");
-  if (am) am.onchange = () => { arrMonth = am.value; renderTourism(d); };
-  const pm = $("#pp-month");
-  if (pm) pm.onchange = () => { ppMonth = pm.value; renderTourism(d); };
-  paintArr(d); paintArrTrend(d); paintPp(d);
-  animateCounters($("#body-tourism"));
-}
-
-function paintArr(d){
-  const top10 = d.arr.filter(r => r[0] === arrMonth && r[1] !== "ALL")
-    .sort((a,b) => b[2] - a[2]).slice(0, 10);
-  const total = top10.reduce((a,r) => a + r[2], 0);
-  chart("arr-chart", {
-    type:"bar",
-    data:{ labels: top10.slice().reverse().map(r => countryName(r[1])),
-      datasets:[{ label:T("Arrivals"), data:top10.slice().reverse().map(r => r[2]),
-        backgroundColor:top10.map((_, i) => i === 0 ? "#2dd4bf" : "rgba(45,212,191,.42)").reverse(),
-        borderRadius:5, borderSkipped:false, barThickness:"flex", maxBarThickness:26 }] },
-    options: baseOpts({ indexAxis:"y",
-      plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
-          callbacks:{
-            title: items => items.length ? countryName(top10[top10.length - 1 - items[0].dataIndex][1]) : "",
-            label: it => ` ${nf(it.parsed.x)} ${T("arrivals")}`,
-            afterBody: items => { const r = top10[top10.length - 1 - items[0].dataIndex];
-              return total ? ` ${nf((r[2]/total)*100,1)}% ${T("of top 10")}` : ""; } } } },
-      scales:{
-        x:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } },
-        y:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } } } }),
-  });
-  const dt = $("#arr-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Country"),T("Arrivals"),T("Share")],
-    top10.map(r => [countryName(r[1]), r[2], total ? (r[2]/total*100).toFixed(1) + "%" : "—"]), [1]);
-}
-
-function paintArrTrend(d){
-  const all = d.arr.filter(r => r[1] === "ALL")
-    .sort((a,b) => String(a[0]).localeCompare(String(b[0])));
-  chart("arr-trend", {
-    type:"line",
-    data:{ labels: all.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
-      datasets:[{ label:T("Arrivals"), data:all.map(r => r[2]),
-        borderColor:"#34d399", borderWidth:2, pointRadius:0, tension:.25, fill:true,
-        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#34d399") }] },
-    options: baseOpts({ plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } } } }),
-  });
-  const dt = $("#arr-trend-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Month"),T("Arrivals")],
-    all.map(r => [md(r[0]) + " '" + String(r[0]).slice(2,4), r[2]]), [1]);
-}
-
-function paintPp(d){
-  const st = d.pp.filter(r => r[0] === ppMonth && r[1] !== "Malaysia")
-    .sort((a,b) => b[2] - a[2]);
-  chart("pp-chart", {
-    type:"bar",
-    data:{ labels: st.slice().reverse().map(r => r[1]),
-      datasets:[{ label:T("Passports"), data:st.slice().reverse().map(r => r[2]),
-        backgroundColor:"rgba(34,211,238,.55)", borderRadius:5, borderSkipped:false,
-        barThickness:"flex", maxBarThickness:20 }] },
-    options: baseOpts({ indexAxis:"y",
-      plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } },
-        y:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } } } }),
-  });
-  const dt = $("#pp-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("State"),T("Passports")],
-    st.map(r => [r[1], r[2]]), [1]);
-}
-
-/* ════════════════════════════ society view ════════════════════════════ */
-let birthsRange = "1y";
-let mnhaVar = "teh", mnhaSector = new Set(["total"]);
+/* ════════════════════════ postcodes view ════════════════════════
+   What is left of the old "Society" section: births, health expenditure and
+   the other demographic series were all frozen years ago and were removed
+   under the freshness policy. The postcode list is a static reference table,
+   so it stays. */
 let posQ = "";
-const SECTOR_COLOR = { total:"#2dd4bf", public:"#22d3ee", private:"#fbbf24" };
 
-function renderSociety(d){
-  const last = d.births[d.births.length - 1];
-  const last7 = d.births.slice(-7);
-  const avg7 = last7.length ? Math.round(last7.reduce((a,r) => a + r[1], 0) / last7.length) : null;
-  const peak = d.births.reduce((a,r) => r[1] > (a ? a[1] : -1) ? r : a, null);
-  $("#body-society").innerHTML = `
-    <div class="grid g4 mb">
-      <div class="kpi"><div class="lab">${T("Latest day")}</div>
-        <div class="val" data-count="${last ? last[1] : 0}">0</div>
-        <div class="sub">${last ? esc(ymd(last[0])) : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("7-day average")}</div>
-        <div class="val" data-count="${avg7 || 0}">0</div>
-        <div class="sub">${T("births per day")}</div></div>
-      <div class="kpi"><div class="lab">${T("Peak day")}</div>
-        <div class="val" style="font-size:20px" data-count="${peak ? peak[1] : 0}">0</div>
-        <div class="sub">${peak ? esc(ymd(peak[0])) : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Days on record")}</div>
-        <div class="val" style="font-size:20px">${nf(d.births.length)}</div>
-        <div class="sub">${T("since Jan 2021")}</div></div>
-    </div>
-    <div class="card mb">
-      <div class="card-h"><h4>${T("Daily births")}</h4>
-        <span class="sub">${T("Malaysia · registered births")}</span>
-        <span class="right"><span class="seg" role="group" aria-label="Date range">
-          ${["6m","1y","all"].map(r => `<button data-brange="${r}" aria-pressed="${r === birthsRange}">${r.toUpperCase()}</button>`).join("")}
-        </span></span></div>
-      <div class="card-b">
-        <p class="note" style="margin-top:0">ℹ️ ${T("No state breakdown in this dataset — births are published for Malaysia as a whole.")}</p>
-        <div class="chart tall"><canvas id="births-chart" role="img" aria-label="Daily births"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="births-dt"></div></details></div>
-    </div>
-    <div class="card mb">
-      <div class="card-h"><h4>${T("Health expenditure")}</h4>
-        <span class="sub">${T("National Health Accounts · RM billion")}</span></div>
-      <div class="card-b" style="padding-bottom:8px">
-        <div class="chips mb" id="mnha-sectors"></div>
-        <span class="seg" role="group" aria-label="Variable">
-          ${Object.keys(VAR_LABEL).map(v =>
-            `<button data-mvar="${v}" aria-pressed="${v === mnhaVar}">${esc(T(VAR_LABEL[v]))}</button>`).join("")}
-        </span>
-      </div>
-      <div class="card-b" style="padding-top:8px">
-        <div class="chart tall"><canvas id="mnha-chart" role="img" aria-label="Health expenditure by sector"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="mnha-dt"></div></details></div>
-    </div>
+function renderPostcodes(d){
+  $("#body-postcodes").innerHTML = `
     <div class="card">
       <div class="card-h"><h4>${T("Postcode lookup")}</h4>
         <span class="sub">${T("postcode → city → state")}</span></div>
@@ -2359,101 +2248,15 @@ function renderSociety(d){
         <input class="inp" id="pos-q" placeholder="${T("Search postcode, city or state…")}" autocomplete="off">
         <div style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)" id="pos-count"></div>
       </div>
-      <div class="tw scroll-y" style="max-height:340px"><table>
+      <div class="tw scroll-y" style="max-height:420px"><table>
         <thead><tr><th class="num">${T("Postcode")}</th><th>${T("City")}</th><th>${T("State")}</th></tr></thead>
         <tbody id="pos-rows"></tbody>
       </table></div>
     </div>`;
-  $("#body-society").querySelectorAll("[data-brange]").forEach(b => {
-    b.onclick = () => { birthsRange = b.dataset.brange;
-      $("#body-society").querySelectorAll("[data-brange]")
-        .forEach(o => o.setAttribute("aria-pressed", String(o.dataset.brange === birthsRange)));
-      paintBirths(d); };
-  });
-  const sc = $("#mnha-sectors");
-  Object.keys(SECTOR_LABEL).forEach(k => {
-    const c = el("button", "chip", esc(T(SECTOR_LABEL[k])));
-    c.dataset.sec = k;
-    c.setAttribute("aria-pressed", String(mnhaSector.has(k)));
-    c.onclick = () => { mnhaSector.has(k) ? mnhaSector.delete(k) : mnhaSector.add(k);
-      if (!mnhaSector.size) mnhaSector.add("total");
-      sc.querySelectorAll(".chip").forEach(o =>
-        o.setAttribute("aria-pressed", String(mnhaSector.has(o.dataset.sec))));
-      paintMnha(d); };
-    sc.appendChild(c);
-  });
-  $("#body-society").querySelectorAll("[data-mvar]").forEach(b => {
-    b.onclick = () => { mnhaVar = b.dataset.mvar;
-      $("#body-society").querySelectorAll("[data-mvar]")
-        .forEach(o => o.setAttribute("aria-pressed", String(o.dataset.mvar === mnhaVar)));
-      paintMnha(d); };
-  });
   const q = $("#pos-q");
   q.value = posQ;
   q.oninput = () => { posQ = q.value; paintPos(d); };
-  paintBirths(d); paintMnha(d); paintPos(d);
-  animateCounters($("#body-society"));
-}
-
-function paintBirths(d){
-  const last = d.births[d.births.length - 1];
-  const from = birthsRange === "all" ? "0000"
-    : cutoffFrom(last ? last[0] : "2023-07-31", RANGES[birthsRange]);
-  const rows = d.births.filter(r => String(r[0]) >= from);
-  chart("births-chart", {
-    type:"line",
-    data:{ labels: rows.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
-      datasets:[{ label:T("Births"), data:rows.map(r => r[1]),
-        borderColor:"#fbbf24", borderWidth:1.6, pointRadius:0, tension:.15, fill:true,
-        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#fbbf24") }] },
-    options: baseOpts({ plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, suggestedMin:0,
-                    callback:v => nf(v) } } } }),
-  });
-  const dt = $("#births-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Date"),T("Births")],
-    rows.map(r => [ymd(r[0]), r[1]]), [1]);
-}
-
-function paintMnha(d){
-  const years = [...new Set(d.mnha.map(r => r[0]))].sort();
-  const sectors = Object.keys(SECTOR_LABEL).filter(k => mnhaSector.has(k));
-  const bySector = {};
-  for (const k of sectors) bySector[k] = new Map();
-  for (const [date, sector, variable, exp] of d.mnha)
-    if (variable === mnhaVar && bySector[sector]) bySector[sector].set(date, exp / 1e9);
-  chart("mnha-chart", {
-    type:"bar",
-    data:{ labels: years.map(y => String(y).slice(0,4)),
-      datasets: sectors.map(k => ({
-        label:T(SECTOR_LABEL[k]),
-        data:years.map(y => bySector[k].get(y) ?? null),
-        backgroundColor:SECTOR_COLOR[k] + "b3", borderRadius:5, borderSkipped:false,
-        barThickness:"flex", maxBarThickness:26,
-      })) },
-    options: baseOpts({ plugins:{ legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8,
-          usePointStyle:true, pointStyle:"circle", font:{ size:11 }, padding:14 } },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10 } },
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxRotation:0 } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
-                    callback:v => "RM " + nf(v,1) } } } }),
-  });
-  const dt = $("#mnha-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Year"),T("Sector"),T("Variable"),T("RM bn")],
-    d.mnha.filter(r => mnhaSector.has(r[1]) && r[2] === mnhaVar)
-      .sort((a,b) => String(b[0]).localeCompare(String(a[0])))
-      .map(r => [String(r[0]).slice(0,4), T(SECTOR_LABEL[r[1]]), T(VAR_LABEL[r[2]]),
-                 (r[3]/1e9).toFixed(2)]), [3]);
+  paintPos(d);
 }
 
 function paintPos(d){
@@ -2471,6 +2274,405 @@ function paintPos(d){
     `<tr><td class="num mono" style="font-weight:650">${esc(r[0])}</td>
      <td>${esc(r[1])}</td><td class="dim">${esc(r[2])}</td></tr>`).join("")
     || `<tr><td colspan="3" class="state">${T("No postcodes match ")}“${esc(posQ)}”.</td></tr>`;
+}
+
+/* ════════════════════════════ population view ════════════════════════════ */
+/* DOSM publishes in thousands of people; everything here converts to whole
+   people at the edges so the reader never has to do the arithmetic. */
+const ETHNIC = [
+  ["bumi_malay",      "Bumiputera Malay", "#2dd4bf"],
+  ["bumi_other",      "Bumiputera other", "#22d3ee"],
+  ["chinese",         "Chinese",          "#fbbf24"],
+  ["indian",          "Indian",           "#a78bfa"],
+  /* A muted slate for the 0.7% residual — it should not read as a peer of the
+     four named groups, and green here sat too close to the Bumiputera teal. */
+  ["other_citizen",   "Other citizens",   "#94a3b8"],
+  ["other_noncitizen","Non-citizens",     "#f87171"],
+];
+const ethnicLabel = k => T((ETHNIC.find(e => e[0] === k) || [, k])[1]);
+
+function renderPopulation(d){
+  const last = d.trend[d.trend.length - 1];
+  const prev = d.trend[d.trend.length - 2];
+  const yoy = (last && prev) ? (last[1] / prev[1] - 1) * 100 : null;
+  const total = last ? last[1] * 1000 : null;
+  const ethTotal = d.ethnicity.reduce((a, r) => a + r[1], 0);
+  const top = d.ethnicity[0];
+
+  $("#body-population").innerHTML = `
+    <div class="grid g4 mb">
+      <div class="kpi"><div class="lab">${T("Population")}</div>
+        <div class="val" data-count="${total || 0}" data-dec="0">0</div>
+        <div class="sub">${last ? esc(ymd(last[0])) : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("Year-on-year")}</div>
+        <div class="val" style="font-size:22px">${yoy == null ? "—" :
+          `<span class="${yoy > 0 ? "down" : "up"}">${yoy > 0 ? "▲" : "▼"} ${nf(Math.abs(yoy), 2)}%</span>`}</div>
+        <div class="sub">${prev ? T("vs ") + esc(String(prev[0]).slice(0, 4)) : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("Largest group")}</div>
+        <div class="val" style="font-size:20px">${top ? esc(ethnicLabel(top[0])) : "—"}</div>
+        <div class="sub">${top && ethTotal ? nf(top[1] / ethTotal * 100, 1) + "%" : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("Years on record")}</div>
+        <div class="val" style="font-size:20px">${nf(d.trend.length)}</div>
+        <div class="sub">${d.trend.length ? esc(String(d.trend[0][0]).slice(0, 4)) + "–" +
+          esc(String(last[0]).slice(0, 4)) : ""}</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h4>${T("Population growth")}</h4>
+          <span class="sub">${T("millions · annual")}</span></div>
+        <div class="card-b"><div class="chart"><canvas id="pop-chart" role="img"
+          aria-label="Malaysian population since 1970"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="pop-dt"></div></details></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>${T("Composition")}</h4>
+          <span class="sub">${last ? esc(ymd(last[0])) : ""}</span></div>
+        <div class="card-b"><div class="chart"><canvas id="eth-chart" role="img"
+          aria-label="Population by ethnic group"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="eth-dt"></div></details></div>
+      </div>
+    </div>`;
+  paintPopulation(d); paintEthnicity(d);
+  animateCounters($("#body-population"));
+}
+
+function paintPopulation(d){
+  const mil = d.trend.map(r => r[1] / 1000);
+  chart("pop-chart", {
+    type:"line",
+    data:{ labels: d.trend.map(r => String(r[0]).slice(0, 4)),
+      datasets:[{ label:T("Population"), data:mil, borderColor:"#2dd4bf", borderWidth:2,
+        pointRadius:0, tension:.25, fill:true,
+        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf") }] },
+    options: baseOpts({ plugins:{ legend:{ display:false },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          callbacks:{ label: it => ` ${nf(it.parsed.y * 1e6)} ${T("people")}` } } },
+      scales:{
+        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:10, maxRotation:0 } },
+        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
+                    callback:v => nf(v, 0) + "M" } } } }),
+  });
+  const dt = $("#pop-dt");
+  if (dt) dt.innerHTML = dataTableHTML([T("Year"), T("Population")],
+    d.trend.slice().reverse().map(r => [String(r[0]).slice(0, 4), nf(r[1] * 1000)]), [1]);
+}
+
+function paintEthnicity(d){
+  const rows = d.ethnicity.filter(r => ETHNIC.some(e => e[0] === r[0]));
+  const total = rows.reduce((a, r) => a + r[1], 0);
+  chart("eth-chart", {
+    type:"doughnut",
+    data:{ labels: rows.map(r => ethnicLabel(r[0])),
+      datasets:[{ data: rows.map(r => r[1]),
+        backgroundColor: rows.map(r => (ETHNIC.find(e => e[0] === r[0]) || [,, "#60a5fa"])[2]),
+        borderColor: cssVar("--surface"), borderWidth: 2, hoverOffset: 6 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:"58%",
+      animation: reduceMotion() ? false : undefined,
+      plugins:{
+        legend:{ position:"right", labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8,
+          usePointStyle:true, pointStyle:"circle", font:{ size:11 }, padding:12 } },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
+          callbacks:{ label: it => ` ${nf(it.parsed * 1000)} · ` +
+            (total ? nf(it.parsed / total * 100, 1) + "%" : "—") } },
+      },
+    },
+  });
+  const dt = $("#eth-dt");
+  if (dt) dt.innerHTML = dataTableHTML([T("Group"), T("Population"), T("Share")],
+    rows.map(r => [ethnicLabel(r[0]), nf(r[1] * 1000),
+      total ? nf(r[1] / total * 100, 1) + "%" : "—"]), [1, 2]);
+}
+
+/* ════════════════════════════ health view ════════════════════════════ */
+/* One state selection drives all four charts — pick Sabah once and the whole
+   section is about Sabah. Malaysia is the national total, not a sum the page
+   computes. */
+let hState = "Malaysia", donRange = "1y", pekaRange = "1y";
+const H_RANGES = { "6m":183, "1y":365, "all":Infinity };
+const BLOOD_TYPE = [["stock_a","A","#f87171"], ["stock_b","B","#60a5fa"],
+                    ["stock_ab","AB","#a78bfa"], ["stock_o","O","#34d399"]];
+/* Chart.js redraws every point on hover; past a few thousand the animation is
+   what makes it feel slow, not the draw. */
+const H_ANIM_MAX = 1500;
+/* A "view data table" listing 14 years of days would be tens of thousands of
+   rows of DOM. Show the most recent slice — the chart above it is the full
+   picture, and the table exists for screen readers and spot-checks. */
+const H_TABLE_MAX = 400;
+
+const hIso = (ds, i) => new Date((ds.t0 + i) * DAY_MS).toISOString().slice(0, 10);
+const hHas = (ds, st) => !!(ds && ds.series && ds.series[st]);
+
+/** Trailing 7-day mean. Matches MoH's own daily_7dma column exactly from the
+ *  seventh day on (verified against all four files), so it is computed here
+ *  instead of being stored — that halves what this section puts in the cache. */
+function dma7(a){
+  const out = new Array(a.length).fill(null);
+  let sum = 0;
+  for (let i = 0; i < a.length; i++){
+    sum += a[i] || 0;
+    if (i >= 7) sum -= a[i - 7] || 0;
+    if (i >= 6) out[i] = sum / 7;
+  }
+  return out;
+}
+/** Index of the first point to show for a range, anchored to the end of the
+ *  series rather than to today — several of these feeds lag by a few days. */
+const hFrom = (len, range) => Math.max(0, len - (H_RANGES[range] ?? Infinity));
+
+const hEmpty = msg => `<div class="state"><div class="big">🗂</div>
+  <strong>${esc(T("No data for this state"))}</strong><div>${esc(msg)}</div></div>`;
+
+function renderHealth(d){
+  const states = [...new Set([...d.don.states, ...d.stock.states,
+                              ...d.organ.states, ...d.peka.states])]
+    .sort((a, b) => a === "Malaysia" ? -1 : b === "Malaysia" ? 1
+                  : a.localeCompare(b));
+  if (!states.includes(hState)) hState = states[0] || "Malaysia";
+
+  const don = d.don.series[hState] || [];
+  const lastDon = don.length ? don[don.length - 1] : null;
+  const week = don.length ? don.slice(-7).reduce((a, v) => a + (v || 0), 0) : null;
+  const organ = d.organ.series[hState] || [];
+  const pledges = organ.length ? organ.reduce((a, v) => a + (v || 0), 0) : null;
+  const peka = d.peka.series[hState] || [];
+  const pekaWeek = peka.slice(-7);
+  const pekaAvg = pekaWeek.length
+    ? Math.round(pekaWeek.reduce((a, v) => a + (v || 0), 0) / pekaWeek.length) : null;
+  /* A state MoH doesn't publish gets an em dash, not a zero — "no blood bank
+     reports here" and "nobody donated" are very different statements. */
+  const kpiVal = v => v == null ? `<div class="val">—</div>`
+                                : `<div class="val" data-count="${v}">0</div>`;
+
+  const rangeSeg = (name, cur) => `<span class="seg" role="group" aria-label="${T("Date range")}">
+    ${Object.keys(H_RANGES).map(r => `<button data-${name}="${r}"
+      aria-pressed="${r === cur}">${r.toUpperCase()}</button>`).join("")}</span>`;
+
+  $("#body-health").innerHTML = `
+    <div class="hbar mb">
+      <span class="hstamp">🗓 ${T("Health data updated")}: ${esc(d.updated ? d.updated.slice(0,10) : "—")}</span>
+      <span class="right">
+        <label for="h-state">${T("State")}</label>
+        <select class="inp" id="h-state" aria-label="${T("State")}">
+          ${states.map(s => `<option value="${esc(s)}" ${s === hState ? "selected" : ""}>${esc(s)}</option>`).join("")}
+        </select></span>
+    </div>
+    <div class="grid g4 mb">
+      <div class="kpi"><div class="lab">${T("Blood donations")}</div>
+        ${kpiVal(lastDon)}
+        <div class="sub">${don.length ? esc(ymd(hIso(d.don, don.length - 1))) : esc(hState)}</div></div>
+      <div class="kpi"><div class="lab">${T("Donations, last 7 days")}</div>
+        ${kpiVal(week)}
+        <div class="sub">${esc(hState)}</div></div>
+      <div class="kpi"><div class="lab">${T("Organ pledges")}</div>
+        ${kpiVal(pledges)}
+        <div class="sub">${T("cumulative since 2009")}</div></div>
+      <div class="kpi"><div class="lab">${T("PeKa B40 screenings")}</div>
+        ${kpiVal(pekaAvg)}
+        <div class="sub">${T("per day · last 7 days")}</div></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Blood donations")} — ${esc(hState)}</h4>
+        <span class="sub">${T("donors per day · 7-day average")}</span>
+        <span class="right">${rangeSeg("don", donRange)}</span></div>
+      <div class="card-b">${hHas(d.don, hState) ? `
+        <div class="chart tall"><canvas id="don-chart" role="img"
+          aria-label="Daily blood donations"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="don-dt"></div></details>`
+        : hEmpty(T("Blood donations are published for 13 states and Kuala Lumpur only."))}</div>
+    </div>
+    <div class="grid g2 mb">
+      <div class="card">
+        <div class="card-h"><h4>${T("Blood stock by type")}</h4>
+          <span class="sub">${T("% of optimal level")}</span></div>
+        <div class="card-b">${hHas(d.stock, hState) ? `
+          <div class="chart"><canvas id="stock-chart" role="img"
+            aria-label="Blood stock by blood type"></canvas></div>
+          <p class="note">ℹ️ ${T("Stock is published as a share of the optimal level and capped at 100%. MoH last updated this series in October 2022 — the window shown is all there is.")}</p>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="stock-dt"></div></details>`
+          : hEmpty(T("No blood-stock series was published for this state."))}</div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>${T("Organ pledges")}</h4>
+          <span class="sub">${T("cumulative since 2009")}</span></div>
+        <div class="card-b">${hHas(d.organ, hState) ? `
+          <div class="chart"><canvas id="organ-chart" role="img"
+            aria-label="Cumulative organ donation pledges"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="organ-dt"></div></details>`
+          : hEmpty(T("No pledge series was published for this state."))}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>${T("PeKa B40 screenings")} — ${esc(hState)}</h4>
+        <span class="sub">${T("health screenings per day")}</span>
+        <span class="right">${rangeSeg("peka", pekaRange)}</span></div>
+      <div class="card-b">${hHas(d.peka, hState) ? `
+        <div class="chart"><canvas id="peka-chart" role="img"
+          aria-label="Daily PeKa B40 screenings"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="peka-dt"></div></details>`
+        : hEmpty(T("PeKa B40 screenings start in April 2019."))}</div>
+    </div>
+    <p class="credit">${T("Data: MoH KKMNOW (GitHub)")} —
+      <a href="https://github.com/MoH-Malaysia/kkmnow-data" target="_blank" rel="noopener"
+        >MoH-Malaysia/kkmnow-data</a></p>`;
+
+  const sel = $("#h-state");
+  if (sel) sel.onchange = () => { hState = sel.value; renderHealth(d); };
+  const seg = (name, set) => $("#body-health").querySelectorAll(`[data-${name}]`).forEach(b => {
+    b.onclick = () => {
+      set(b.dataset[name]);
+      $("#body-health").querySelectorAll(`[data-${name}]`).forEach(o =>
+        o.setAttribute("aria-pressed", String(o.dataset[name] === b.dataset[name])));
+      paintHealth(d);
+    };
+  });
+  seg("don", v => { donRange = v; });
+  seg("peka", v => { pekaRange = v; });
+  paintHealth(d);
+  animateCounters($("#body-health"));
+}
+
+function paintHealth(d){
+  paintDonations(d); paintStock(d); paintOrgan(d); paintPeka(d);
+}
+
+/** Shared options for the three daily-series line charts here. */
+function hLineOpts(points, unit){
+  const o = baseOpts({
+    plugins:{
+      legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
+        pointStyle:"circle", font:{ size:11 }, padding:14 } },
+      tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+        titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+        usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
+        callbacks:{ label: it => ` ${it.dataset.label}: ` +
+          nf(it.parsed.y, Number.isInteger(it.parsed.y) ? 0 : 1) + (unit || "") } },
+    },
+    scales:{
+      x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+          ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:10, maxRotation:0 } },
+      y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          beginAtZero:true,
+          ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } },
+    },
+  });
+  if (points > H_ANIM_MAX) o.animation = false;
+  return o;
+}
+/** Last H_TABLE_MAX rows, newest first. */
+const hTable = (headers, labels, cols) => {
+  const from = Math.max(0, labels.length - H_TABLE_MAX);
+  const rows = [];
+  for (let i = labels.length - 1; i >= from; i--)
+    rows.push([labels[i], ...cols.map(c =>
+      c[i] == null ? null : nf(c[i], Number.isInteger(c[i]) ? 0 : 1))]);
+  return dataTableHTML(headers, rows, cols.map((_, i) => i + 1));
+};
+
+function paintDonations(d){
+  const all = d.don.series[hState]; if (!all) return;
+  const avg = dma7(all);                        // over the full series, then sliced
+  const from = hFrom(all.length, donRange);
+  const labels = [], daily = [], mean = [];
+  for (let i = from; i < all.length; i++){
+    labels.push(md(hIso(d.don, i)) + " '" + hIso(d.don, i).slice(2, 4));
+    daily.push(all[i]); mean.push(avg[i] == null ? null : Math.round(avg[i] * 10) / 10);
+  }
+  chart("don-chart", {
+    type:"line",
+    data:{ labels, datasets:[
+      /* Daily donations are spiky — weekday drives run into the thousands, weekends
+         near zero — so the raw series is drawn faintly and the average on top of it. */
+      { label:T("Daily donors"), data:daily, borderColor:"rgba(248,113,113,.5)", borderWidth:1,
+        pointRadius:0, tension:.2, fill:true,
+        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#f87171") },
+      { label:T("7-day average"), data:mean, borderColor:"#2dd4bf", borderWidth:2.4,
+        pointRadius:0, tension:.3, spanGaps:true },
+    ] },
+    options: hLineOpts(labels.length),
+  });
+  const dt = $("#don-dt");
+  if (dt) dt.innerHTML = hTable([T("Date"), T("Daily donors"), T("7-day average")],
+    labels, [daily, mean]);
+}
+
+function paintStock(d){
+  const cols = d.stock.series[hState]; if (!cols) return;
+  const idx = { stock_a:0, stock_ab:1, stock_b:2, stock_o:3 };
+  const labels = cols[0].map((_, i) => ymd(hIso(d.stock, i)));
+  chart("stock-chart", {
+    type:"line",
+    data:{ labels, datasets: BLOOD_TYPE.map(([key, label, color]) => ({
+      label, data: cols[idx[key]], borderColor:color, borderWidth:1.8,
+      pointRadius:0, tension:.3, spanGaps:true })) },
+    options: (() => { const o = hLineOpts(labels.length, "%");
+      o.scales.y.max = 100;              // the series is a capped percentage
+      o.scales.y.ticks.callback = v => nf(v) + "%";
+      return o; })(),
+  });
+  const dt = $("#stock-dt");
+  if (dt) dt.innerHTML = hTable([T("Date"), ...BLOOD_TYPE.map(t => t[1])],
+    labels, BLOOD_TYPE.map(t => cols[idx[t[0]]]));
+}
+
+function paintOrgan(d){
+  const all = d.organ.series[hState]; if (!all) return;
+  /* Cumulative from the very first day — the pledge count is a running total,
+     so it is never windowed by a range toggle. */
+  const labels = [], cum = [];
+  let run = 0;
+  for (let i = 0; i < all.length; i++){
+    run += all[i] || 0;
+    labels.push(ymd(hIso(d.organ, i)));
+    cum.push(run);
+  }
+  chart("organ-chart", {
+    type:"line",
+    data:{ labels, datasets:[
+      { label:T("Pledges to date"), data:cum, borderColor:"#a78bfa", borderWidth:2,
+        pointRadius:0, tension:.15, fill:true,
+        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#a78bfa") },
+    ] },
+    options: hLineOpts(labels.length),
+  });
+  const dt = $("#organ-dt");
+  if (dt) dt.innerHTML = hTable([T("Date"), T("Pledges to date")], labels, [cum]);
+}
+
+function paintPeka(d){
+  const all = d.peka.series[hState]; if (!all) return;
+  const avg = dma7(all);
+  const from = hFrom(all.length, pekaRange);
+  const labels = [], daily = [], mean = [];
+  for (let i = from; i < all.length; i++){
+    labels.push(md(hIso(d.peka, i)) + " '" + hIso(d.peka, i).slice(2, 4));
+    daily.push(all[i]); mean.push(avg[i] == null ? null : Math.round(avg[i] * 10) / 10);
+  }
+  chart("peka-chart", {
+    type:"line",
+    data:{ labels, datasets:[
+      { label:T("Daily screenings"), data:daily, borderColor:"rgba(251,191,36,.5)", borderWidth:1,
+        pointRadius:0, tension:.2, fill:true,
+        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#fbbf24") },
+      { label:T("7-day average"), data:mean, borderColor:"#22d3ee", borderWidth:2.4,
+        pointRadius:0, tension:.3, spanGaps:true },
+    ] },
+    options: hLineOpts(labels.length),
+  });
+  const dt = $("#peka-dt");
+  if (dt) dt.innerHTML = hTable([T("Date"), T("Daily screenings"), T("7-day average")],
+    labels, [daily, mean]);
 }
 
 /* ════════════════════════════ transport view ════════════════════════════ */
@@ -2779,14 +2981,19 @@ const META = {
     desc:"Exchange rates and interest rates from Bank Negara Malaysia — the ringgit against key currencies, and what banks lend and pay.",
     how:"Exchange rates are Bank Negara's daily reference rates, published here as monthly averages and month-end values. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it.",
     eps:["/data-catalogue?id=exchangerates","/data-catalogue?id=interestrates"] },
-  tourism:{ title:"Tourism",
-    desc:"Tourist arrivals by country and passports issued by state, from the Immigration Department.",
-    how:"Arrivals are monthly counts by country of residence; 2021-22 figures collapsed to near zero when borders closed during COVID — that is real data. Passports are the monthly totals issued, by state and office.",
-    eps:["/data-catalogue?id=arrivals","/data-catalogue?id=passports"] },
-  society:{ title:"Society",
-    desc:"Daily births, national health spending and a Malaysia postcode lookup.",
-    how:"Births are DOSM's daily registered births for Malaysia as a whole — the dataset has no per-state breakdown. Health spending comes from the National Health Accounts (MNHA). Postcodes are the national reference list.",
-    eps:["/data-catalogue?id=births","/data-catalogue?id=mnha","/data-catalogue?id=poskod"] },
+  population:{ title:"Population",
+    desc:"How many people live in Malaysia, every year since 1970, and how the population is made up today.",
+    how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.",
+    eps:["/opendosm?id=population_malaysia&filter=overall@age"] },
+  postcodes:{ title:"Postcode Lookup",
+    desc:"Every Malaysian postcode with its city and state — search by any of the three.",
+    how:"The national postcode reference list. It is a static lookup table rather than a time series, so it has no publication date to go stale.",
+    eps:["/data-catalogue?id=poskod"] },
+  health:{ title:"Health & Donations",
+    desc:"Blood donations, blood stock by type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.",
+    how:"These come from KKMNOW, which the Ministry of Health publishes as Parquet files in a public GitHub repository rather than through the government API; your browser reads them directly. Donations run from 2012, organ pledges from 2009 and PeKa B40 screenings from 2019. Blood stock is a short 2022 window — that is all MoH has published. Federal-territory rows were renamed mid-2022 and are folded back together here.",
+    eps:["kkmnow-data/blood_02_timeseries.parquet","kkmnow-data/blood_01_stock_timeseries.parquet",
+         "kkmnow-data/organ_01_timeseries.parquet","kkmnow-data/pekab40_01_timeseries.parquet"] },
   transport:{ title:"Public Transport",
     desc:"Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.",
     how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.",
@@ -2796,8 +3003,16 @@ const META = {
     how:"Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","/gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl"] },
 };
+/* `asOf` returns the latest data date of every dataset a section shows — not
+   when we fetched it. The header prints the newest of them, and flags the
+   section when the *oldest* of them is more than six months behind. Sections
+   with nothing dated (a static lookup, a live feed) return an empty list. */
 const LOADERS = {
-  weather:  { load:loadWeather,   render:renderWeather,   after:d => {
+  weather:  { load:loadWeather,   render:renderWeather,
+    /* The FIRST forecast day, not the last: a seven-day outlook runs a week
+       into the future, and "data as of" means when it was issued. */
+    asOf:d => [d.rows.reduce((a, r) => !a || String(r[1]) < a ? String(r[1]) : a, "")],
+    after:d => {
       let hot = null;
       const first = new Map();
       for (const r of d.rows){ const c = first.get(r[0]);
@@ -2808,19 +3023,29 @@ const LOADERS = {
       kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
       if (geo.status === "waiting") locate();
     } },
-  fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
+  fuel:     { load:loadFuel,      render:renderFuel,
+    asOf:d => [d.latest && d.latest.date, d.hh.length && d.hh[d.hh.length - 1][0]],
+    after:d => {
       if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
         sub:T("week of ") + ymd(d.latest.date) }; } },
-  economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
+  economy:  { load:loadEconomy,   render:renderEconomy,
+    asOf:d => [(d.cpi.find(s => s.name === 'overall') || { pts:[] }).pts.slice(-1).flat()[0],
+               d.lfs.length && d.lfs[d.lfs.length - 1][0],
+               d.gdp.length && d.gdp[d.gdp.length - 1][0]],
+    after:d => {
       const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
       if (ov.length > 12){
         const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
         kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
       } } },
-  finance:  { load:loadFinance,   render:renderFinance },
-  tourism:  { load:loadTourism,   render:renderTourism },
-  society:  { load:loadSociety,   render:renderSociety },
-  transport:{ load:loadTransport, render:renderTransport },
+  finance:  { load:loadFinance,   render:renderFinance,
+    asOf:d => [d.fx.length && d.fx[d.fx.length - 1][0],
+               d.ir.reduce((a, r) => String(r[1]) > a ? String(r[1]) : a, '')] },
+  population:{ load:loadPopulation, render:renderPopulation, asOf:d => [d.latest] },
+  health:   { load:loadHealth,    render:renderHealth,
+    asOf:d => [d.updated && d.updated.slice(0, 10)] },
+  postcodes:{ load:loadPostcodes, render:renderPostcodes, asOfNote:'static reference list' },
+  transport:{ load:loadTransport, render:renderTransport, asOfNote:'operator-published schedules' },
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
       kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
@@ -2842,6 +3067,25 @@ function setSecTime(id, mode){
   n.textContent = text; n.className = "sec-time" + cls;
   secMode[id] = mode;
 }
+/* Six months is the line the freshness policy draws: past that, a series is
+   stale enough that a reader should be told before they draw conclusions. */
+const STALE_MS = 183 * 86400000;
+function setSecAsOf(id, data){
+  const node = $("#asof-" + id); if (!node) return;
+  const cfg = LOADERS[id];
+  let dates = [];
+  try { dates = (cfg.asOf ? cfg.asOf(data) : []).filter(Boolean).map(v => String(v).slice(0, 10)); }
+  catch { dates = []; }
+  if (!dates.length){
+    node.textContent = cfg.asOfNote ? T(cfg.asOfNote) : "";
+    return;
+  }
+  dates.sort();
+  const stale = Date.now() - Date.parse(dates[0]) > STALE_MS;
+  node.innerHTML = `${esc(T("Data as of"))} ${esc(ymd(dates[dates.length - 1]))}` +
+    (stale ? ` · <span class="stale">⚠️ ${esc(T("may be delayed"))}</span>` : "");
+}
+
 async function loadSection(id, force){
   if (loading.has(id)) return;
   loading.add(id);
@@ -2854,7 +3098,7 @@ async function loadSection(id, force){
       try {
         cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
-        setDot(id, "ok"); setSecTime(id, "cached");
+        setDot(id, "ok"); setSecTime(id, "cached"); setSecAsOf(id, cached.d);
         tick(); renderKpis();
         return;
       } catch { /* shape drift — refetch */ }
@@ -2868,7 +3112,7 @@ async function loadSection(id, force){
       const rec = cacheSet(id, data);
       cfg.render(data); if (cfg.after) cfg.after(data);
       loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
-      setDot(id, "ok"); setSecTime(id, "updated");
+      setDot(id, "ok"); setSecTime(id, "updated"); setSecAsOf(id, data);
     } catch (err){
       setDot(id, "err");
       if (!hasContent) errorBox(id, err, () => loadSection(id, true));
@@ -2909,7 +3153,7 @@ function primeCached(){
       LOADERS[s.id].render(rec.d);
       if (LOADERS[s.id].after) LOADERS[s.id].after(rec.d);
       loaded.add(s.id); stamps[s.id] = rec.t; dataMap[s.id] = rec.d;
-      setDot(s.id, "ok"); setSecTime(s.id, "cached");
+      setDot(s.id, "ok"); setSecTime(s.id, "cached"); setSecAsOf(s.id, rec.d);
     } catch { /* shape drift — refetch on load */ }
   }
   tick(); renderKpis();

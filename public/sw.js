@@ -9,7 +9,7 @@
  *   Freshness is driven by the app's own 15-minute TTL in index.html, which is
  *   the "revalidate" half of SWR moved into a rate-limit-aware layer.
  */
-const VERSION    = "mygov-v3";
+const VERSION    = "mygov-v4";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -47,8 +47,15 @@ self.addEventListener("activate", event => {
   })());
 });
 
+/* Data requests: network first, last-good copy as the offline fallback.
+ * raw.githubusercontent.com is included because that is where MoH publishes the
+ * KKMNOW health datasets — without it those Parquet files would fall through to
+ * the cache-first branch below, which never revalidates, and a daily-updated
+ * dataset would be frozen at whatever copy arrived first. */
 const isApi = url =>
-  url.hostname === "api.data.gov.my" || url.pathname.startsWith("/api/");
+  url.hostname === "api.data.gov.my" ||
+  url.hostname === "raw.githubusercontent.com" ||
+  url.pathname.startsWith("/api/");
 
 self.addEventListener("fetch", event => {
   const { request } = event;

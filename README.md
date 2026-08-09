@@ -19,8 +19,9 @@ proxies the reverse-geocoding and GTFS archive calls.
 | Fuel & Households | Ministry of Finance | Weekly RON95 / RON97 / diesel ceiling prices, household income |
 | Economy | DOSM (OpenDOSM) | Core CPI by expenditure division, unemployment, quarterly real GDP |
 | Finance | Bank Negara Malaysia | Exchange rates vs key currencies, interest rates (commercial base rate) by bank type |
-| Tourism | Immigration Department | Tourist arrivals by country, passports issued by state |
-| Society | DOSM · MoH · Pos Malaysia | Daily births, national health accounts, postcode lookup |
+| Population | DOSM (OpenDOSM) | National population 1970-present, ethnic composition |
+| Health | Ministry of Health (KKMNOW) | Blood donations, blood stock by type, organ pledges, PeKa B40 screenings |
+| Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana | GTFS schedules — route and stop search, nearest stops, busiest routes |
 | Live | KTMB, Prasarana | GTFS-Realtime vehicle positions on a live map, with "last seen" cards |
 
@@ -34,11 +35,12 @@ public/
   sw.js                 service worker (offline shell + API fallback)
   manifest.webmanifest  PWA manifest
   icons/                generated PNGs (192, 512, apple-touch)
-  vendor/               self-hosted Chart.js + Leaflet (SRI-pinned)
+  vendor/               self-hosted Chart.js, Leaflet, hyparquet (SRI-pinned)
 src/
   index.js              Worker: static assets + /api/reverse
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
+  build-hyparquet.mjs   rebuilds the vendored Parquet reader + prints its SRI hash
 wrangler.jsonc
 ```
 
@@ -83,16 +85,21 @@ if the proxy is absent, so the page works on plain static hosting too.
   `X-Frame-Options`, a restrictive `Permissions-Policy` (only `geolocation`,
   same-origin) and `strict-origin-when-cross-origin` referrer policy. All in
   `public/_headers`.
-- **Chart.js and Leaflet are pinned and SRI-checked** (`integrity="sha384-…"`),
-  so altered bytes are refused rather than executed.
+- **Chart.js, Leaflet and hyparquet are pinned and SRI-checked**
+  (`integrity="sha384-…"`), so altered bytes are refused rather than executed.
+  hyparquet is injected at runtime and carries the same hash.
 - Both API routes **validate input against a strict allowlist** and never
   interpolate user input into an upstream URL, and they reject cross-origin
   callers — they exist for this page, not as a public proxy.
 - No secrets, tokens or account identifiers are in the repo; the app needs
   none. `.dev.vars` and `.wrangler/` are gitignored.
-- No analytics, no third-party requests beyond map tiles from
-  `tile.openstreetmap.org` (Chart.js and Leaflet are self-hosted). The
-  "Buy me a coffee" button is a plain link, not their tracking widget.
+- No analytics. The page connects to exactly four hosts: itself (static assets
+  and `/api/*`), `api.data.gov.my`, `raw.githubusercontent.com` (the MoH
+  health Parquet files) and `tile.openstreetmap.org` (map tiles in the Live
+  section). Every library is self-hosted. The "Buy me a coffee" button is a
+  plain link, not their tracking widget. Earthquake and live-vehicle cards
+  include an outbound Google Maps link — a normal link the reader chooses to
+  follow, not a request the page makes.
 
 ---
 
@@ -114,23 +121,26 @@ no request wastes a redirect hop against the rate limit.
 - caches results in memory + `localStorage` for 15 minutes;
 - never polls. Refresh is manual.
 
-Total cold load: **19 requests** — weather 3, catalogue 9, opendosm 3,
-gtfs-static 2, gtfs-realtime 2. Only weather + fuel (5 requests) are fetched
-on first paint; economy, finance, tourism, society, transport and live are
-lazy-loaded as their sections scroll into view, so the first screen renders
-before the slowest datasets arrive.
+Total cold load: **16 requests** — weather 3, catalogue 5, opendosm 4,
+gtfs-static 2, gtfs-realtime 2 — plus 5 straight to GitHub for the MoH health
+files. GitHub is a different host with no such limit, so those are fetched in
+parallel and outside the token bucket. Only weather + fuel (5 requests) are
+fetched on first paint; economy, finance, population, health, postcodes,
+transport and live are lazy-loaded as their sections scroll into view, so the
+first screen renders before the slowest datasets arrive.
 
 **Dataset ids that exist** (many plausible ones do not — an unknown id returns
 `404` with `{"status_code":404,...}`):
 
-- `data-catalogue`: `fuelprice`, `hh_income`, `population_malaysia`,
-  `exchangerates`, `arrivals`, `interestrates`, `passports`, `births`, `poskod`, `mnha`
-- `opendosm`: `cpi_core`, `cpi_headline`, `lfs_month`, `gdp_qtr_real`
+- `data-catalogue`: `fuelprice`, `hh_income`, `exchangerates`,
+  `interestrates`, `poskod` — plus `arrivals`, `passports`, `births` and
+  `mnha`, which exist but are frozen (see *Data freshness* below)
+- `opendosm`: `cpi_core`, `cpi_headline`, `lfs_month`, `gdp_qtr_real`,
+  `population_malaysia`
 - Not found: `electrictariff`, `watertariff`, `interestrate`, `unemployment`,
   `cpi_2d`, `opr`
 
-**Gotchas in the finance/tourism datasets** (all verified against live
-responses):
+**Gotchas in the catalogue datasets** (all verified against live responses):
 
 - `interestrates` has **no `opr` series** — the rate codes are lending and
   deposit rates (`br`, `alr`, `sr`, `fdr_*`, `wabr`…). The Finance section
@@ -138,19 +148,15 @@ responses):
   tracks the OPR, and says so in the UI.
 - `exchangerates` publishes each month five times (`start`/`low`/`high`/`avg`/
   `end`); filter to `indicator=avg` for a single monthly series.
-- `births` is daily for **Malaysia only** — 37,833 rows back to 1920, no state
-  column, so there is no state selector. Fetch it with `date_start=…@date` to
-  avoid downloading the whole century.
 - `poskod` has no `date` column, so `sort=-date` fails on it (columns are
   `city`, `state`, `postcode`).
-- `arrivals` uses ISO 3166-1 alpha-3 country codes (plus `ALL`, `ANT`, `XXX`);
-  names are resolved from an embedded map. The 2021-22 COVID collapse to tens
-  of thousands a month is real data.
-- `passports` has ~80 individual offices per state; `filter=All@office` keeps
-  only the per-state totals, which is all the chart needs.
+- `population_malaysia` is published in **thousands of people**, one row per
+  year × sex × ethnicity × age band. Only one `filter` is allowed per request,
+  so narrow to `filter=overall@age` (which drops ~95% of the rows) and split
+  by sex and ethnicity in the browser.
 
 **Date-range filters** use `<YYYY-MM-DD>@<date_column>` syntax, e.g.
-`?id=births&date_start=2021-01-01@date`.
+`?id=fuelprice&date_start=2021-01-01@date`.
 
 **Server-side filtering works** and is worth using:
 `?id=fuelprice&filter=level@series_type` returns only the price levels,
@@ -193,10 +199,25 @@ Three things that would normally pull in a library:
 - **Icons** — `tools/make-icons.mjs` renders the PNGs with a hand-written
   encoder (`zlib` + CRC32), supersampled 4× for clean edges.
 
-Chart.js and Leaflet are the only runtime dependencies. They live in
-`public/vendor/` (self-hosted with subresource integrity, so there is no CDN
-to go down and the app works fully offline) and are precached by the service
-worker.
+Chart.js, Leaflet and hyparquet are the only runtime dependencies. They live
+in `public/vendor/` (self-hosted with subresource integrity, so there is no
+CDN to go down and the app works fully offline). Chart.js and Leaflet are
+precached by the service worker; hyparquet is not, because only one section
+needs it — it is injected on demand the first time Health loads, and cached
+from then on.
+
+### Why Parquet needs a vendored reader
+
+MoH publishes the health data as Parquet, and every KKMNOW file is
+**brotli**-compressed. hyparquet's core handles snappy and gzip only, and no
+browser exposes brotli to script — `DecompressionStream` is gzip/deflate. So
+`tools/build-hyparquet.mjs` bundles hyparquet with exactly one decompressor
+lifted from `hyparquet-compressors` (BROTLI, not the zstd/lz4/snappy-wasm the
+full package drags along) and prints the SRI hash to paste into `index.html`.
+The versions are pinned in that script, so the bundle is reproducible.
+
+Two things the reader gives back need converting: `date` columns arrive as
+`Date` objects and `int64` columns as `BigInt`.
 
 ## Preferences
 
@@ -275,11 +296,39 @@ secrets are required.
 
 ---
 
+## Data freshness
+
+A dataset earns its place by being **current**, not by being long. Deep history
+is welcome — a 1970-2026 population series is more useful than a short one —
+but a series whose *last* update is years old has nothing to compare against,
+and charting it invites readers to mistake stale numbers for today's.
+
+So: every section header prints **"Data as of &lt;date&gt;"**, taken from the
+newest row the section actually renders, and adds a muted **"⚠️ may be
+delayed"** when the oldest of its datasets is more than six months behind.
+That line comes from `LOADERS[id].asOf(data)` — see *Adding a dataset*.
+
+Datasets that had stopped updating entirely were removed rather than captioned:
+
+| Removed | Last update |
+| --- | --- |
+| `arrivals`, `passports` (the whole Tourism section) | 2024-10-01 |
+| `births` | 2023-07-31 |
+| `mnha` (national health accounts) | 2022-01-01 |
+| `population_state` | 2023-01-01 |
+
+`poskod` is exempt: it is a static reference table, not a time series, so it
+has no publication date that can go stale. Its header says so instead of
+showing a date.
+
+---
+
 ## Adding a dataset
 
 **Into an existing section** — add one request to the relevant loader in
 `index.html`, reduce it to a compact array, and render it. Mind the 4/min cap:
-`opendosm` already uses 3 of its 4 slots.
+`opendosm` is at 4 of 4 (economy 3 + population 1), so a new OpenDOSM series
+must share an existing call or wait out a minute. `data-catalogue` has 5 in use.
 
 ```js
 const x = await request("data-catalogue", "/data-catalogue", { id: "YOUR_ID" });
@@ -290,7 +339,11 @@ const x = await request("data-catalogue", "/data-catalogue", { id: "YOUR_ID" });
 ```js
 SECTIONS.push({ id:"myid", label:"My Data", icon:"🧭", family:"data-catalogue" })
 META.myid    = { title, desc, how, eps:[...] }
-LOADERS.myid = { load, render, after }   // after() feeds the top KPI row
+LOADERS.myid = { load, render, after, asOf }
+// after(data) feeds the top KPI row.
+// asOf(data)  returns the latest data date of every dataset the section shows;
+//             the header prints the newest and flags the section when the
+//             oldest is more than six months behind.
 ```
 
 Nav entry, scroll-spy, skeleton, error/retry, caching and throttling are all
