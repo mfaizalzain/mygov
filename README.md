@@ -110,7 +110,10 @@ no request wastes a redirect hop against the rate limit.
 - never polls. Refresh is manual.
 
 Total cold load: **14 requests** — weather 3, catalogue 2, opendosm 3,
-gtfs-static 2, gtfs-realtime 2.
+gtfs-static 2, gtfs-realtime 2. Only weather + fuel (5 requests) are fetched
+on first paint; economy, transport and live are lazy-loaded as their sections
+scroll into view, so the first screen renders before the slowest datasets
+arrive.
 
 **Dataset ids that exist** (many plausible ones do not — an unknown id returns
 `404` with `{"status_code":404,...}`):

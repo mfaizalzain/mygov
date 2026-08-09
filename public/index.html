@@ -25,7 +25,7 @@
   --bg:#0a0c10; --bg-2:#0d1016; --surface:#12151d; --surface-2:#171b25; --surface-3:#1d2230;
   --line:#232838; --line-soft:#1a1e2a;
   /* text */
-  --fg:#e8ecf4; --fg-2:#9aa4b8; --fg-3:#616b80;
+  --fg:#e8ecf4; --fg-2:#9aa4b8; --fg-3:#737f99;
   /* one accent, used sparingly */
   --accent:#2dd4bf; --accent-2:#22d3ee; --accent-dim:rgba(45,212,191,.12);
   /* semantic */
@@ -113,6 +113,9 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .hero{padding:var(--s8) 0 var(--s6)}
 .hero h2{margin:0 0 var(--s2);font-size:30px;font-weight:720;letter-spacing:-.035em;line-height:1.15}
 .hero p{margin:0;color:var(--fg-2);font-size:14.5px;max-width:62ch}
+.hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4);min-height:40px}
+.hero-loc .loc-chip{text-decoration:none}
+.hero-loc .loc-chip:hover{text-decoration:none;border-color:rgba(45,212,191,.55)}
 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s3);margin-top:var(--s6)}
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
@@ -122,18 +125,32 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   color:var(--fg-3);font-weight:650}
 .kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
 .kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
+.kpi-t{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
+a.kpi{color:inherit;text-decoration:none}
+a.kpi:hover{text-decoration:none}
+.kpi .go{font-size:13px;color:var(--fg-3);opacity:0;transform:translateX(-3px);transition:var(--t)}
+.kpi:hover .go,.kpi:focus-visible .go{opacity:1;transform:none;color:var(--accent)}
 .up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
 
 /* ═══════════════════════════ sections ═══════════════════════════ */
 section{padding-top:var(--s8);scroll-margin-top:124px}
-.sec-h{display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4)}
+.sec-h{display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4);flex-wrap:wrap}
 .sec-ico{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
   background:var(--accent-dim);border:1px solid rgba(45,212,191,.22);font-size:18px}
 .sec-h h3{margin:0;font-size:20px;font-weight:680;letter-spacing:-.025em}
 .sec-h p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:13.5px;max-width:76ch}
-.eps{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
-.ep{font-family:var(--mono);font-size:10.5px;color:var(--fg-3);background:var(--bg-2);
-  border:1px solid var(--line-soft);border-radius:99px;padding:3px 9px}
+.sec-time{margin-left:auto;flex:none;font-size:11px;font-family:var(--mono);color:var(--fg-3);
+  background:var(--bg-2);border:1px solid var(--line-soft);border-radius:99px;padding:4px 10px;
+  white-space:nowrap}
+.sec-time.loading{color:var(--warn)}
+.sec-time.error{color:var(--danger)}
+details.meta{margin-top:var(--s2)}
+details.meta summary{cursor:pointer;font-size:12px;color:var(--fg-2);display:inline-flex;
+  align-items:center;gap:4px;user-select:none}
+details.meta summary:hover{color:var(--fg)}
+details.meta ul{margin:var(--s2) 0 0;padding-left:18px;color:var(--fg-3);font-size:12px}
+details.meta code{font-family:var(--mono);font-size:10.5px;color:var(--fg-2)}
+details.meta p{margin:var(--s2) 0 0;color:var(--fg-3);font-size:11.5px;max-width:76ch}
 
 .card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
   box-shadow:var(--shadow);overflow:hidden;transition:var(--t)}
@@ -150,6 +167,10 @@ section{padding-top:var(--s8);scroll-margin-top:124px}
 .mb{margin-bottom:var(--s3)}
 .chart{position:relative;height:300px}
 .chart.tall{height:340px}
+details.dt{margin-top:var(--s2);border-top:1px dashed var(--line-soft);padding-top:var(--s2)}
+details.dt summary{cursor:pointer;font-size:11.5px;color:var(--fg-2);user-select:none}
+details.dt summary:hover{color:var(--fg)}
+details.dt .dt-body{margin-top:var(--s2)}
 
 /* controls */
 .seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--line-soft);
@@ -183,12 +204,15 @@ th[aria-sort] .arrow{opacity:1;color:var(--accent)}
 td{padding:9px var(--s3);border-bottom:1px solid var(--line-soft);white-space:nowrap}
 tbody tr:nth-child(even){background:rgba(255,255,255,.014)}
 tbody tr:last-child td{border-bottom:none}
-tbody tr[data-pick]{cursor:pointer;transition:background var(--t)}
-tbody tr[data-pick]:hover{background:var(--surface-2)}
 tbody tr.sel{background:var(--accent-dim)}
 tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .wrapcell{white-space:normal;min-width:210px;color:var(--fg-2)}
+.pick{background:none;border:0;color:var(--fg);font:inherit;font-weight:550;padding:7px 9px;
+  margin:-7px -9px;border-radius:6px;cursor:pointer;text-align:left;white-space:nowrap;
+  transition:color var(--t)}
+.pick:hover{color:var(--accent)}
+tr.sel .pick{color:#a5f3ea}
 .mono{font-family:var(--mono)} .dim{color:var(--fg-3)}
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;
   font-weight:650;font-family:var(--mono)}
@@ -199,9 +223,19 @@ tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .alert{border:1px solid var(--line-soft);border-left:3px solid var(--warn);
   border-radius:var(--r);background:var(--surface);padding:var(--s4);box-shadow:var(--shadow)}
 .alert.info{border-left-color:var(--ok)}
-.alert h5{margin:0 0 var(--s2);font-size:13.5px;font-weight:650}
+.alert h5{margin:0 0 var(--s2);font-size:13.5px;font-weight:650;display:flex;
+  align-items:center;gap:var(--s2);flex-wrap:wrap}
 .alert p{margin:0;color:var(--fg-2);font-size:12.5px}
 .alert .meta{margin-top:var(--s2);font-family:var(--mono);font-size:10.5px;color:var(--fg-3)}
+.wx-summary{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;padding:var(--s3) var(--s4);
+  background:var(--accent-dim);border:1px solid rgba(45,212,191,.22);border-radius:var(--r);
+  font-size:13px;font-weight:600;margin-bottom:var(--s3)}
+.wx-summary .pill{margin-left:auto}
+.alert.storm{border-left-color:var(--warn)}
+.alert.rain,.alert.wind{border-left-color:var(--info)}
+.alert.heat{border-left-color:var(--danger)}
+.wx-other{margin-top:var(--s3)}
+.wx-other summary{cursor:pointer;font-size:12px;color:var(--fg-2);padding:var(--s2) 0;user-select:none}
 
 /* states */
 .state{padding:38px var(--s6);text-align:center;color:var(--fg-3);font-size:13px}
@@ -243,6 +277,13 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
   html{scroll-padding-top:112px}
 }
+@media (pointer:coarse){
+  .btn{padding:11px 16px}
+  .inp{min-height:44px}
+  .seg button{min-height:40px;padding:6px 14px}
+  .chip{min-height:40px;padding:9px 14px;display:inline-flex;align-items:center}
+  .pick{min-height:44px;padding:11px 9px}
+}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
@@ -281,10 +322,10 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 
 <div class="wrap">
   <div class="hero">
-    <h2>Malaysia, by the numbers</h2>
-    <p>Everything below is fetched live from the Malaysian Government Open API — weather from
-       MET Malaysia, fuel prices from the Ministry of Finance, statistics from DOSM, and
-       public-transport schedules and vehicle positions from KTMB and Prasarana.</p>
+    <h2>Today in Malaysia</h2>
+    <p>Weather, fuel prices, warnings and transport updates for your area — fetched live
+       from the Malaysian Government Open API.</p>
+    <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
     <div class="kpis" id="kpis"></div>
   </div>
 
@@ -329,6 +370,10 @@ const SECTIONS = [
   { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
 ];
+/* Loaded first, then the rest lazily as their section nears the viewport.
+   Keeps the rate limiter happy (requests are globally serialised anyway) while
+   making the first screen feel fast. */
+const LAZY = new Set(["economy","transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -443,6 +488,15 @@ const hhmm = ts => new Date(ts).toLocaleTimeString("en-MY", { hour:"2-digit", mi
 const hms = ts => new Date(ts).toLocaleTimeString("en-MY",
   { hour:"2-digit", minute:"2-digit", second:"2-digit" });
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** Accessible alternative to a chart: a plain sortable-free table. */
+function dataTableHTML(headers, rows, numCols = []){
+  return `<div class="tw scroll-y" style="max-height:280px"><table>
+    <thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${r.map((c, i) =>
+      `<td class="${numCols.includes(i) ? "num" : ""}">${c == null || c === "" ? "—" : esc(String(c))}</td>`
+    ).join("")}</tr>`).join("") || `<tr><td colspan="${headers.length}" class="state">No data.</td></tr>`}
+    </tbody></table></div>`;
+}
 
 /** Count a KPI up to its value; instant when reduced motion is requested. */
 function countTo(node, value, decimals, prefix, suffix){
@@ -827,8 +881,13 @@ function buildShell(){
         <div class="sec-ico" aria-hidden="true">${s.icon}</div>
         <div><h3 id="h-${s.id}">${esc(META[s.id].title)}</h3>
           <p>${esc(META[s.id].desc)}</p>
-          <div class="eps">${META[s.id].eps.map(e => `<span class="ep">GET ${esc(e)}</span>`).join("")}</div>
-        </div></div>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>${esc(META[s.id].how)}</p>
+            <ul>${META[s.id].eps.map(e => `<li><code>GET ${esc(e)}</code></li>`).join("")}</ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-${s.id}"></span></div>
       <div id="body-${s.id}"></div>`;
     main.appendChild(sec);
   }
@@ -860,7 +919,7 @@ function errorBox(id, err, retry){
 }
 
 /* ════════════════════════ location awareness ════════════════════════ */
-const geo = { status:"idle", label:null, matchedId:null, candidates:[] };
+const geo = { status:"idle", label:null, matchedId:null, candidates:[], manual:false };
 
 /* OSM often names the local authority rather than the place — "Majlis
    Perbandaran Kajang" for Kajang. Strip council wording so the place name is
@@ -954,6 +1013,7 @@ async function locate(){
   geo.status = ties.length > 1 ? "ambiguous" : "matched";
   geo.matchedId = top.loc.id;
   geo.label = top.loc.name;
+  geo.manual = false;
   wx.pick = top.loc.id;
   try { localStorage.setItem(LK, JSON.stringify({ id:top.loc.id, label:top.loc.name, osm:geo.osm })); } catch {}
   paintWeather();
@@ -977,6 +1037,7 @@ function renderWeather(d){
     }
   }
   $("#body-weather").innerHTML = `
+    <div class="sr" id="wx-live" aria-live="polite"></div>
     <div id="wx-warn" class="mb"></div>
     <div class="grid g2 mb">
       <div class="card">
@@ -984,7 +1045,9 @@ function renderWeather(d){
           <span class="sub" id="wx-name"></span>
           <span class="right" id="wx-loc"></span></div>
         <div class="card-b"><div class="chart"><canvas id="wx-chart"
-          role="img" aria-label="Seven day minimum and maximum temperature"></canvas></div></div>
+          role="img" aria-label="Seven day minimum and maximum temperature"></canvas></div>
+          <details class="dt"><summary>View data table</summary>
+            <div class="dt-body" id="wx-dt"></div></details></div>
       </div>
       <div class="card">
         <div class="card-h"><h4>All locations</h4><span class="sub" id="wx-count"></span></div>
@@ -1022,27 +1085,50 @@ function renderWeather(d){
       </tbody></table></div>
     </div>`;
 
-  const w = $("#wx-warn");
-  const active = d.warn.filter(x => !x.info).length;
-  w.innerHTML = !d.warn.length
-    ? `<div class="card"><div class="state"><div class="big">✅</div>
-         <strong>No active weather warnings</strong>MET Malaysia has nothing on issue.</div></div>`
-    : `<div class="card-h" style="border:0;padding:0 2px 10px">
-         <h4>${active ? `${active} active warning${active > 1 ? "s" : ""}` : "No active warnings"}</h4>
-         <span class="sub">MET Malaysia · ${d.warn.length} notices</span></div>
-       <div class="grid g2">${d.warn.map(x => `
-         <div class="alert${x.info ? " info" : ""}">
-           <h5>${x.info ? "✅" : "⚠️"} ${txt(x.head || x.title)}</h5>
-           <p>${txt(x.text || "")}</p>
-           ${x.instr ? `<p style="margin-top:6px">${txt(x.instr)}</p>` : ""}
-           ${x.dated ? `<div class="meta">valid ${esc(ymd(x.from))} → ${esc(ymd(x.to))}</div>` : ""}
-         </div>`).join("")}</div>`;
-
+  paintWarnings();
   const q = $("#wx-q");
   q.value = wx.q;
   q.oninput = () => { wx.q = q.value; paintWxRows(); };
   sortable($("#wx-table"), () => wxTableRows(), rows => paintWxRows(rows));
   paintWeather();
+}
+
+/** Guess a short severity label from the warning's own text. */
+function sevClass(x){
+  const t = (x.head + " " + x.text + " " + (x.instr || "")).toLowerCase();
+  if (/thunder|ribut|storm/i.test(t)) return ["storm","Storm","var(--warn)"];
+  if (/heatwave|heat wave|heat|panas/i.test(t)) return ["heat","Heat","var(--danger)"];
+  if (/heavy rain|hujan lebat|rain/i.test(t)) return ["rain","Rain","var(--info)"];
+  if (/strong wind|wind|angin kencang/i.test(t)) return ["wind","Wind","var(--info)"];
+  return ["adv","Advisory","var(--fg-2)"];
+}
+function warnCard(x){
+  const [cls, label, color] = sevClass(x);
+  return `<div class="alert ${x.info ? "info" : cls}">
+    <h5>${x.info ? "✅" : "⚠️"} ${txt(x.head || x.title)}
+      <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${label}</span></h5>
+    <p>${txt(x.text || "")}</p>
+    ${x.instr ? `<p style="margin-top:6px">${txt(x.instr)}</p>` : ""}
+    ${x.dated ? `<div class="meta">valid ${esc(ymd(x.from))} → ${esc(ymd(x.to))}</div>` : ""}
+  </div>`;
+}
+/** Active warnings first with a summary; all-clear notices collapsed below. */
+function paintWarnings(){
+  const d = wx.data; const w = $("#wx-warn"); if (!w) return;
+  const active = d.warn.filter(x => !x.info);
+  const notices = d.warn.filter(x => x.info);
+  const first = active[0];
+  w.innerHTML =
+    (first ? `<div class="wx-summary">⚠️ <span>${txt(first.head || first.title)}</span>
+        <span class="pill" style="color:var(--warn);border:1px solid #fbbf2455;background:#fbbf2418">
+          ${active.length} active</span></div>`
+          : `<div class="card mb"><div class="state"><div class="big">✅</div>
+             <strong>No active weather warnings</strong>MET Malaysia has nothing on issue.</div></div>`) +
+    (active.length ? `<div class="grid g2">${active.map(warnCard).join("")}</div>` : "") +
+    (notices.length ? `<details class="wx-other">
+        <summary>Other notices — ${notices.length} all clear</summary>
+        <div class="grid g2" style="margin-top:var(--s2)">${notices.map(warnCard).join("")}</div>
+      </details>` : "");
 }
 
 /** Today's row per location, flattened for the table + sorting. */
@@ -1065,30 +1151,78 @@ function paintWxRows(pre){
   if (term) rows = rows.filter(r => r.name.toLowerCase().includes(term) || r.kind.includes(term));
   $("#wx-count").textContent = `${rows.length} of ${wx.data.locs.length}`;
   $("#wx-rows").innerHTML = rows.slice(0, 400).map(r => `
-    <tr data-pick="${esc(r.id)}" class="${r.id === wx.pick ? "sel" : ""}">
-      <td style="font-weight:550">${esc(r.name)}</td>
+    <tr class="${r.id === wx.pick ? "sel" : ""}">
+      <td><button class="pick" data-pick="${esc(r.id)}"
+        ${r.id === wx.pick ? 'aria-pressed="true"' : ""}>${esc(r.name)}</button></td>
       <td><span class="tag">${esc(r.kind)}</span></td>
       <td class="num dim">${nf(r.min)}°</td>
       <td class="num" style="font-weight:650">${nf(r.max)}°</td>
       <td class="wrapcell">${esc(r.today)}</td></tr>`).join("")
     || `<tr><td colspan="5" class="state">No location matches “${esc(wx.q)}”.</td></tr>`;
-  $("#wx-rows").querySelectorAll("tr[data-pick]").forEach(tr => {
-    tr.onclick = () => { wx.pick = tr.getAttribute("data-pick");
-      try { const l = wx.data.locs.find(x => x.id === wx.pick);
-        localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
-      paintWxRows(); paintWxChart(); };
+  $("#wx-rows").querySelectorAll("button[data-pick]").forEach(b => {
+    b.onclick = () => pickLoc(b.getAttribute("data-pick"));
   });
+}
+/** Select a forecast location from anywhere (table, chips, hero). */
+function pickLoc(id){
+  wx.pick = id;
+  const l = wx.data.locs.find(x => x.id === id);
+  if (l){
+    geo.label = l.name;
+    geo.manual = true;
+    try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
+    const live = $("#wx-live"); if (live) live.textContent = "Showing forecast for " + l.name;
+  }
+  paintWxRows(); paintWxChart(); paintHeroLoc(); paintLocChip();
 }
 function paintWeather(){
   if (!wx.data) return;
-  paintWxRows(); paintWxChart(); paintLocChip();
+  paintWxRows(); paintWxChart(); paintLocChip(); paintHeroLoc();
+}
+function paintHeroLoc(){
+  const host = $("#hero-loc"); if (!host) return;
+  const S = geo.status;
+  let html = "";
+  if (geo.manual)
+    html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
+            <button class="link-btn" id="hero-loc-change">change</button>
+            <span class="dim" style="font-size:11.5px">selected area</span>`;
+  else if (S === "asking") html = `<span class="loc-chip off">📍 Locating…</span>`;
+  else if (S === "matched" || S === "cached")
+    html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
+            <button class="link-btn" id="hero-loc-change">change</button>`;
+  else if (S === "ambiguous")
+    html = `<a class="loc-chip" href="#weather">📍 ${esc(geo.label || "")}</a>
+            <span class="dim" style="font-size:11.5px">did you mean</span>` +
+      geo.candidates.slice(1).map(c =>
+        `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
+  else if (S === "denied") html = `<span class="loc-chip off">📍 Location off</span>
+      <button class="link-btn" id="hero-loc-try">use my location</button>`;
+  else if (S === "unavailable") html = `<span class="loc-chip off">📍 Couldn't pin your location</span>
+      <button class="link-btn" id="hero-loc-try">try again</button>`;
+  else if (S === "nomatch") html = `<span class="loc-chip off">📍 ${esc(geo.osm || "Not in the forecast list")}</span>
+      <a class="link-btn" href="#weather">search below</a>`;
+  else if (S === "noproxy") html = `<span class="loc-chip off">📍 Location lookup unavailable</span>
+      <a class="link-btn" href="#weather">search below</a>`;
+  else if (S === "unsupported") html = `<span class="loc-chip off">📍 Not supported</span>`;
+  else html = `<button class="btn btn-a" id="hero-loc-try">📍 Use my location</button>`;
+  host.innerHTML = html;
+  const t = $("#hero-loc-try"); if (t) t.onclick = locate;
+  const c = $("#hero-loc-change"); if (c) c.onclick = locate;
+  host.querySelectorAll("[data-cand]").forEach(b => {
+    b.onclick = () => pickLoc(b.getAttribute("data-cand"));
+  });
 }
 function paintLocChip(){
   const host = $("#wx-loc"); if (!host) return;
   const S = geo.status;
   const chip = (cls, text) => `<span class="loc-chip ${cls}">${text}</span>`;
   let html = "";
-  if (S === "asking") html = chip("off", "📍 Locating…");
+  if (geo.manual)
+    html = chip("", `📍 ${esc(geo.label || "")}`) +
+           `<button class="link-btn" id="loc-change">change</button>
+            <span class="dim" style="font-size:11.5px">selected</span>`;
+  else if (S === "asking") html = chip("off", "📍 Locating…");
   else if (S === "matched" || S === "cached")
     html = chip("", `📍 Near you: ${esc(geo.label || "")}`) +
            `<button class="link-btn" id="loc-change">change</button>`;
@@ -1111,11 +1245,7 @@ function paintLocChip(){
   const t = $("#loc-try"); if (t) t.onclick = locate;
   const c = $("#loc-change"); if (c) c.onclick = locate;
   host.querySelectorAll("[data-cand]").forEach(b => {
-    b.onclick = () => { wx.pick = b.getAttribute("data-cand");
-      const l = wx.data.locs.find(x => x.id === wx.pick);
-      geo.label = l.name; geo.status = "matched";
-      try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
-      paintWeather(); };
+    b.onclick = () => { geo.status = "matched"; pickLoc(b.getAttribute("data-cand")); };
   });
 }
 function paintWxChart(){
@@ -1157,6 +1287,14 @@ function paintWxChart(){
       },
     }),
   });
+  const dt = $("#wx-dt");
+  if (dt) dt.innerHTML = dataTableHTML(
+    ["Day","Min","Max","Morning","Afternoon","Night"],
+    rows.map(r => [ `${md(r[1])} ${dow(r[1])}`,
+                    r[2] == null ? null : r[2] + "°",
+                    r[3] == null ? null : r[3] + "°",
+                    d.dict[r[4]] || "—", d.dict[r[5]] || "—", d.dict[r[6]] || "—" ]),
+    [1, 2]);
 }
 
 /* ════════════════════════════ fuel view ════════════════════════════ */
@@ -1190,12 +1328,16 @@ function renderFuel(d){
           ${Object.keys(RANGES).map(r => `<button data-range="${r}" aria-pressed="${r === fuelRange}">${r.toUpperCase()}</button>`).join("")}
         </span></span></div>
       <div class="card-b"><div class="chart tall"><canvas id="fuel-chart"
-        role="img" aria-label="Fuel prices over time"></canvas></div></div>
+        role="img" aria-label="Fuel prices over time"></canvas></div>
+        <details class="dt"><summary>View data table</summary>
+          <div class="dt-body" id="fuel-dt"></div></details></div>
     </div>
     <div class="card">
       <div class="card-h"><h4>Household income</h4><span class="sub">RM per month · mean vs median</span></div>
       <div class="card-b"><div class="chart"><canvas id="hh-chart"
-        role="img" aria-label="Household income over time"></canvas></div></div>
+        role="img" aria-label="Household income over time"></canvas></div>
+        <details class="dt"><summary>View data table</summary>
+          <div class="dt-body" id="hh-dt"></div></details></div>
     </div>`;
   $("#body-fuel").querySelectorAll("[data-range]").forEach(b => {
     b.onclick = () => { fuelRange = b.dataset.range;
@@ -1219,6 +1361,9 @@ function renderFuel(d){
       y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
           ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => "RM " + nf(v) } } } }),
   });
+  const hdt = $("#hh-dt");
+  if (hdt) hdt.innerHTML = dataTableHTML(["Year","Mean RM","Median RM"],
+    d.hh.map(r => [String(r[0]).slice(0,4), r[1], r[2]]), [1,2]);
 }
 function paintFuel(d){
   const from = cutoff(RANGES[fuelRange]);
@@ -1242,6 +1387,9 @@ function paintFuel(d){
           ticks:{ color:"#616b80", font:{size:10}, padding:8,
                   callback:v => "RM " + Number(v).toFixed(2) } } } }),
   });
+  const fdt = $("#fuel-dt");
+  if (fdt) fdt.innerHTML = dataTableHTML(["Week","RON 95","RON 97","Diesel"],
+    rows.map(r => [ymd(r[0]), r[1], r[2], r[3]]), [1,2,3]);
 }
 
 /* ════════════════════════════ economy view ════════════════════════════ */
@@ -1282,13 +1430,19 @@ function renderEconomy(d){
         </span></span></div>
       <div class="card-b" style="padding-bottom:8px"><div class="chips" id="cpi-chips"></div></div>
       <div class="card-b" style="padding-top:8px">
-        <div class="chart tall"><canvas id="cpi-chart" role="img" aria-label="CPI by division"></canvas></div></div>
+        <div class="chart tall"><canvas id="cpi-chart" role="img" aria-label="CPI by division"></canvas></div>
+        <details class="dt"><summary>View data table</summary>
+          <div class="dt-body" id="cpi-dt"></div></details></div>
     </div>
     <div class="grid g2">
       <div class="card"><div class="card-h"><h4>Unemployment rate</h4><span class="sub">monthly</span></div>
-        <div class="card-b"><div class="chart"><canvas id="lfs-chart" role="img" aria-label="Unemployment rate"></canvas></div></div></div>
+        <div class="card-b"><div class="chart"><canvas id="lfs-chart" role="img" aria-label="Unemployment rate"></canvas></div>
+        <details class="dt"><summary>View data table</summary>
+          <div class="dt-body" id="lfs-dt"></div></details></div></div>
       <div class="card"><div class="card-h"><h4>Real GDP</h4><span class="sub">quarterly · RM million</span></div>
-        <div class="card-b"><div class="chart"><canvas id="gdp-chart" role="img" aria-label="Real GDP"></canvas></div></div></div>
+        <div class="card-b"><div class="chart"><canvas id="gdp-chart" role="img" aria-label="Real GDP"></canvas></div>
+        <details class="dt"><summary>View data table</summary>
+          <div class="dt-body" id="gdp-dt"></div></details></div></div>
     </div>`;
 
   const chips = $("#cpi-chips");
@@ -1348,6 +1502,26 @@ function renderEconomy(d){
         y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
           ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => nf(v) } } } }),
   });
+  const cdt = $("#cpi-dt");
+  if (cdt){
+    const cols = d.cpi.filter(s => cpiPick.has(s.name));
+    const maps = cols.map(s => new Map(s.pts));
+    cdt.innerHTML = dataTableHTML(
+      ["Date"].concat(cols.map(s => divLabel(s.name))),
+      labels.map(x => {
+        const row = [md(x) + " '" + String(x).slice(2,4)];
+        for (const m of maps) row.push(m.get(x) ?? null);
+        return row;
+      }),
+      cols.map((_, i) => i + 1));
+  }
+  const ldt = $("#lfs-dt");
+  if (ldt) ldt.innerHTML = dataTableHTML(["Month","Unemployment %","Participation %"],
+    d.lfs.map(r => [md(r[0]) + " '" + String(r[0]).slice(2,4), r[1], r[2]]), [1,2]);
+  const gdt = $("#gdp-dt");
+  if (gdt) gdt.innerHTML = dataTableHTML(["Quarter","RM million"],
+    d.gdp.map(r => { const t = new Date(r[0]);
+      return [isNaN(t) ? r[0] : `Q${Math.floor(t.getMonth()/3)+1} ${t.getFullYear()}`, r[1]]; }), [1]);
 }
 
 /* ════════════════════════════ transport view ════════════════════════════ */
@@ -1361,7 +1535,7 @@ function renderTransport(d){
         <div class="kpi"><div class="lab">Stops</div>
           <div class="val" data-count="${f.stops}">0</div><div class="sub">stations & stops</div></div>
         <div class="kpi"><div class="lab">Trips</div>
-          <div class="val" data-count="${f.trips}">0</div><div class="sub">per service pattern</div></div>
+          <div class="val" data-count="${f.trips}">0</div><div class="sub">scheduled trips</div></div>
         <div class="kpi"><div class="lab">Avg trips / route</div>
           <div class="val" data-count="${(f.routes ? f.trips / f.routes : 0).toFixed(1)}" data-dec="1">0</div>
           <div class="sub">${esc(f.desc)}</div></div>
@@ -1408,16 +1582,16 @@ function renderLive(d){
         <div class="kpi"><div class="lab">${esc(f.label)} live now</div>
           <div class="val" style="color:${n ? "var(--ok)" : "var(--fg-3)"}" data-count="${n}">0</div>
           <div class="sub">${n ? "broadcasting a position" : "none reporting"}</div></div>
-        <div class="kpi"><div class="lab">Feed timestamp</div>
+        <div class="kpi"><div class="lab">Last feed update</div>
           <div class="val" style="font-size:19px">${esc(ts)}</div>
-          <div class="sub">GTFS-realtime v${esc(f.version || "?")}</div></div>
+          <div class="sub">operator feed · v${esc(f.version || "?")}</div></div>
         <div class="kpi"><div class="lab">Distinct routes</div>
           <div class="val" data-count="${new Set(f.vehicles.map(v => v.routeId).filter(Boolean)).size}">0</div>
           <div class="sub">among live ${esc(f.noun)}</div></div>
       </div>
       <div class="card">
         <div class="card-h"><h4>Active ${esc(f.noun)}</h4>
-          <span class="sub">protobuf decoded in-browser</span></div>
+          <span class="sub">positions decoded in your browser</span></div>
         ${n ? `<div class="tw scroll-y"><table>
           <thead><tr><th>Vehicle</th><th>Route</th><th>Trip</th><th class="num">Lat</th>
             <th class="num">Lon</th><th class="num">Speed</th><th>Updated</th><th></th></tr></thead>
@@ -1448,18 +1622,20 @@ const kpiState = {};
 function renderKpis(){
   const host = $("#kpis");
   const cards = [
-    { k:"hot",   lab:"Hottest today",   ico:"🌡" },
-    { k:"ron95", lab:"RON 95",          ico:"⛽" },
-    { k:"cpi",   lab:"Inflation y/y",   ico:"📈" },
-    { k:"warn",  lab:"Active warnings", ico:"⚠️" },
-    { k:"live",  lab:"Vehicles live",   ico:"🚍" },
+    { k:"hot",   lab:"Hottest today",   ico:"🌡", href:"#weather" },
+    { k:"ron95", lab:"RON 95",          ico:"⛽", href:"#fuel" },
+    { k:"cpi",   lab:"Inflation y/y",   ico:"📈", href:"#economy" },
+    { k:"warn",  lab:"Active warnings", ico:"⚠️", href:"#weather" },
+    { k:"live",  lab:"Vehicles live",   ico:"🚍", href:"#live" },
   ];
   host.innerHTML = cards.map(c => {
     const s = kpiState[c.k];
-    return `<div class="kpi${s ? " fade" : ""}">
-      <div class="lab">${c.ico} ${esc(c.lab)}</div>
+    return `<a class="kpi${s ? " fade" : ""}" href="${c.href}"
+      aria-label="${esc(c.lab)} — go to the ${esc(c.href.slice(1))} section">
+      <div class="kpi-t"><span class="lab">${c.ico} ${esc(c.lab)}</span>
+        <span class="go" aria-hidden="true">↗</span></div>
       <div class="val" id="kpi-${c.k}">${s ? "" : "—"}</div>
-      <div class="sub">${s ? esc(s.sub) : "loading…"}</div></div>`;
+      <div class="sub">${s ? esc(s.sub) : "loading…"}</div></a>`;
   }).join("");
   for (const c of cards){
     const s = kpiState[c.k]; if (!s) continue;
@@ -1472,19 +1648,24 @@ function renderKpis(){
 /* ════════════════════════════ orchestration ════════════════════════════ */
 const META = {
   weather:{ title:"Weather & Warnings",
-    desc:"Seven-day forecasts for every MET Malaysia location — 360 of them, from states down to individual towns and highland resorts — plus severe-weather warnings and recent regional earthquakes.",
+    desc:"Seven-day forecast for every state, district and town in Malaysia — plus severe-weather warnings and recent earthquakes.",
+    how:"Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.",
     eps:["/weather/forecast","/weather/warning","/weather/warning/earthquake"] },
   fuel:{ title:"Fuel & Households",
-    desc:"The weekly retail ceiling price set by the Ministry of Finance, alongside long-run household income. Fuel is filtered server-side to the price level series.",
+    desc:"The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.",
+    how:"Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.",
     eps:["/data-catalogue?id=fuelprice","/data-catalogue?id=hh_income"] },
   economy:{ title:"Economy",
-    desc:"Department of Statistics Malaysia: consumer price index by expenditure division, the monthly labour force survey, and quarterly real GDP.",
+    desc:"Department of Statistics Malaysia — inflation by spending category, the monthly unemployment rate, and quarterly real GDP.",
+    how:"Core CPI is broken down by expenditure division, labour-force figures are monthly, and real GDP is quarterly. All three come from OpenDOSM.",
     eps:["/opendosm?id=cpi_core","/opendosm?id=lfs_month","/opendosm?id=gdp_qtr_real"] },
   transport:{ title:"Public Transport",
-    desc:"GTFS Static schedules delivered as ZIP archives, unzipped and parsed in your browser. Only routes, trips and stops are inflated — the 5.6 MB stop_times.txt is skipped on purpose.",
+    desc:"Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.",
+    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.",
     eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl"] },
   live:{ title:"Live Vehicles",
-    desc:"GTFS-Realtime protobuf feeds, decoded in the browser by a hand-written wire-format reader — no protobuf library. Shows every train or bus currently broadcasting a GPS position.",
+    desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
+    how:"Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","/gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl"] },
 };
 const LOADERS = {
@@ -1515,27 +1696,54 @@ const LOADERS = {
 };
 
 let stamps = {};
+const loaded = new Set();    // sections whose content is currently on screen
+const loading = new Set();   // sections mid-fetch (guard against races)
+function setSecTime(id, mode){
+  const n = $("#time-" + id); if (!n) return;
+  const at = stamps[id] ? hhmm(stamps[id]) : "";
+  let text = "", cls = "";
+  if (mode === "loading"){ text = "loading…"; cls = " loading"; }
+  else if (mode === "updated") text = "updated " + at;
+  else if (mode === "cached") text = "cached · fetched " + at;
+  else if (mode === "error"){ text = "refresh failed — showing last data"; cls = " error"; }
+  n.textContent = text; n.className = "sec-time" + cls;
+}
 async function loadSection(id, force){
+  if (loading.has(id)) return;
+  loading.add(id);
   const cfg = LOADERS[id];
-  setDot(id, "load");
-  const cached = force ? null : cacheGet(id);
-  if (cached){
-    try {
-      cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
-      setDot(id, "ok"); stamps[id] = cached.t; tick(); renderKpis(); return;
-    } catch { /* shape drift — refetch */ }
-  }
-  skeleton(id);
   try {
-    const data = await cfg.load();
-    const rec = cacheSet(id, data);
-    cfg.render(data); if (cfg.after) cfg.after(data);
-    setDot(id, "ok"); stamps[id] = rec.t;
-  } catch (err){
-    setDot(id, "err");
-    errorBox(id, err, () => loadSection(id, true));
+    setDot(id, "load");
+    setSecTime(id, "loading");
+    const cached = force ? null : cacheGet(id);
+    if (cached){
+      try {
+        cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
+        loaded.add(id); stamps[id] = cached.t;
+        setDot(id, "ok"); setSecTime(id, "cached");
+        tick(); renderKpis();
+        return;
+      } catch { /* shape drift — refetch */ }
+    }
+    /* Keep whatever is already on screen during a refresh — never replace
+       existing content with skeletons. Only first load shows them. */
+    const hasContent = loaded.has(id);
+    if (!hasContent) skeleton(id);
+    try {
+      const data = await cfg.load();
+      const rec = cacheSet(id, data);
+      cfg.render(data); if (cfg.after) cfg.after(data);
+      loaded.add(id); stamps[id] = rec.t;
+      setDot(id, "ok"); setSecTime(id, "updated");
+    } catch (err){
+      setDot(id, "err");
+      if (!hasContent) errorBox(id, err, () => loadSection(id, true));
+      else setSecTime(id, "error");   // stale content stays visible
+    }
+    tick(); renderKpis();
+  } finally {
+    loading.delete(id);
   }
-  tick(); renderKpis();
 }
 function tick(){
   const ts = Object.values(stamps), bar = $("#bar i");
@@ -1552,9 +1760,25 @@ async function loadAll(force){
   const btn = $("#refresh");
   btn.disabled = true; $("#ref-ico").className = "spin"; $("#ref-t").textContent = "Refreshing…";
   if (force){ cacheClear(); stamps = {}; }
-  for (const s of SECTIONS) await loadSection(s.id, force);   // sequential, never parallel
+  /* Weather + fuel first; the rest are lazy-loaded on scroll. A full refresh
+     still covers every section so the button means "update everything". */
+  for (const s of SECTIONS) if (!LAZY.has(s.id)) await loadSection(s.id, force);
+  if (force) for (const s of SECTIONS) if (LAZY.has(s.id)) await loadSection(s.id, force);
   busy = false;
   btn.disabled = false; $("#ref-ico").className = ""; $("#ref-t").textContent = "Refresh";
+}
+/** Paint whatever is already in the cache immediately, before any network. */
+function primeCached(){
+  for (const s of SECTIONS){
+    const rec = cacheGet(s.id); if (!rec) continue;
+    try {
+      LOADERS[s.id].render(rec.d);
+      if (LOADERS[s.id].after) LOADERS[s.id].after(rec.d);
+      loaded.add(s.id); stamps[s.id] = rec.t;
+      setDot(s.id, "ok"); setSecTime(s.id, "cached");
+    } catch { /* shape drift — refetch on load */ }
+  }
+  tick(); renderKpis();
 }
 
 /* ════════════════════════════ PWA plumbing ════════════════════════════ */
@@ -1594,7 +1818,21 @@ function boot(){
   pwa();
   $("#refresh").onclick = () => loadAll(true);
   geo.status = "waiting";     // resolved once weather data lands
-  loadAll(false);
+  primeCached();
+  /* Start lazy-loading only after weather + fuel have rendered: while the
+     page is still skeletons it is short, so every section looks "near" the
+     viewport and IntersectionObserver would fire immediately. Once the eager
+     sections are painted the page is full-height and the rest load on scroll. */
+  loadAll(false).then(() => {
+    const obs = new IntersectionObserver(entries => {
+      for (const e of entries) if (e.isIntersecting && LAZY.has(e.target.id)){
+        obs.unobserve(e.target);
+        if (!loaded.has(e.target.id)) loadSection(e.target.id, false);
+      }
+    }, { rootMargin:"0px 0px 45% 0px", threshold:0 });
+    for (const s of SECTIONS) if (LAZY.has(s.id) && !loaded.has(s.id))
+      obs.observe(document.getElementById(s.id));
+  });
   setInterval(tick, 30000);
 }
 /* Chart.js is deferred, so it exists only after parsing; wait for both. */
