@@ -336,6 +336,27 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .rd-srcs a:hover{color:var(--accent);text-decoration:underline}
 .rd-srcs .dim{display:block;font-size:11px;font-family:var(--mono)}
 @media (max-width:560px){.radar-slide{flex-basis:calc(100vw - 64px)}}
+/* LRT & MRT metro diagram */
+.metro-wrap{display:flex;flex-direction:column;gap:var(--s3)}
+.metro-head{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap}
+.metro-head h4{margin:0}
+.metro-scroll{display:flex;gap:var(--s4);overflow-x:auto;padding:var(--s2) 2px var(--s4);
+  scroll-snap-type:x proximity}
+.metro-col{flex:none;scroll-snap-align:start;border:1px solid var(--line-soft);
+  border-radius:var(--r);background:var(--bg-2);overflow:hidden}
+.metro-line-h{display:flex;align-items:center;gap:7px;padding:10px 12px;
+  border-bottom:1px solid var(--line-soft);position:sticky;top:0;background:var(--bg-2);z-index:1}
+.metro-line-dot{width:11px;height:11px;border-radius:99px;flex:none}
+.metro-line-name{font-size:12.5px;font-weight:680;white-space:nowrap}
+.metro-line-n{font-size:10.5px;color:var(--fg-3);font-family:var(--mono);margin-left:auto;white-space:nowrap}
+.metro-svg{display:block}
+.metro-stn{cursor:pointer}
+.metro-stn .metro-lbl{font-size:9px;fill:var(--fg-2);font-weight:600;font-family:inherit}
+.metro-stn .metro-lbl-s{font-size:7.5px;fill:var(--fg-3);font-family:var(--mono)}
+.metro-stn:hover .metro-lbl{fill:var(--accent)}
+.metro-stn:hover circle[r="4.5"]{stroke:#fff;stroke-width:2.2}
+.metro-stn:focus{outline:none}
+.metro-stn:focus circle[r="4.5"]{stroke:#fff;stroke-width:2.2}
 /* live flights board */
 .fids-meta{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2);
   font-size:11px;font-family:var(--mono);color:var(--fg-3)}
@@ -624,6 +645,9 @@ const I18N = {
     "bmc":"Support this project on Buy Me a Coffee",
     "verified_claim":"Verified claim",
     "no_check_found":"Not checked yet",
+    "LRT & MRT network":"LRT & MRT network",
+    "Rapid KL rail — click a station to open it on the map":"Rapid KL rail — click a station to open it on the map",
+    "stns":"stns",
   },
   ms: {
   "Refresh":"Muat semula", "Refreshing…":"Memuat semula…", "Loading…":"Memuatkan…",
@@ -752,6 +776,9 @@ const I18N = {
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
   "No stops found within your area — try widening your search or switching network.":"Tiada perhentian ditemui dalam kawasan anda — cuba luaskan carian atau tukar rangkaian.",
+  "LRT & MRT network":"Rangkaian LRT & MRT",
+  "Rapid KL rail — click a station to open it on the map":"Rel Rapid KL — klik stesen untuk buka pada peta",
+  "stns":"stesen",
   "Location permission denied — search by name instead.":"Kebenaran lokasi dinafikan — cari mengikut nama sebaliknya.",
   "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
   "All networks":"Semua rangkaian", "Busiest routes — ":"Laluan paling sibuk — ",
@@ -1982,9 +2009,14 @@ function initWxCarousel(){
   const maxIdx = () => Math.max(0, n - perView());
   /* each card is a fixed width + the track gap; this is the scroll step */
   const step = () => (slides[0] ? slides[0].offsetWidth : 340) + 12;
+  /* count reads 1/N at the left edge and N/N at the right edge */
+  const pageNum = (i) => {
+    const m = maxIdx();
+    return m ? Math.round((i / m) * (n - 1)) + 1 : 1;
+  };
   const render = () => {
     track.scrollTo({ left: wxCtl.idx * step(), behavior: "smooth" });
-    $("#wx-count").textContent = `${wxCtl.idx + 1} / ${n}`;
+    $("#wx-count").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
     $("#wx-prev").disabled = wxCtl.idx === 0;
     $("#wx-next").disabled = wxCtl.idx >= maxIdx();
   };
@@ -2001,7 +2033,7 @@ function initWxCarousel(){
     const st = step();
     const n0 = st ? Math.round(track.scrollLeft / st) : 0;
     wxCtl.idx = Math.min(Math.max(n0, 0), maxIdx());
-    $("#wx-count").textContent = `${wxCtl.idx + 1} / ${n}`;
+    $("#wx-count").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
     $("#wx-prev").disabled = wxCtl.idx === 0;
     $("#wx-next").disabled = wxCtl.idx >= maxIdx();
   }, { passive:true });
@@ -3508,7 +3540,77 @@ function renderTransport(d){
 }
 
 function paintTransport(){
-  paintFilters(); paintBlocks();
+  paintFilters(); paintBlocks(); paintRailDiagram();
+}
+/* Metro-style line diagram for the LRT/MRT rail feed: one vertical column
+   per line with station dots + labels on the colored spine; interchange
+   stations (present on 2+ lines) are ringed. Tooltip shows the station
+   name + which lines call there. */
+function paintRailDiagram(){
+  const host = $("#rail-diagram"); if (!host) return;
+  const rail = tdata && tdata.rail;
+  if (!rail || !rail.lines || !rail.lines.length){ host.hidden = true; return; }
+  /* name → lines that call there (interchange detection) */
+  const calls = new Map();
+  for (const l of rail.lines)
+    for (const s of l.stations){
+      const k = (s.name || "").toUpperCase().trim();
+      if (!k) continue;
+      if (!calls.has(k)) calls.set(k, []);
+      calls.get(k).push(l.name);
+    }
+  const colW = 132;
+  const railH = 24, dotR = 4.5;
+  const padT = 26, padB = 12;
+  host.innerHTML = `<div class="metro-wrap"><div class="metro-head">
+      <h4>${T("LRT & MRT network")}</h4>
+      <span class="sub">${T("Rapid KL rail — click a station to open it on the map")}</span></div>
+    <div class="metro-scroll">` +
+    rail.lines.map(l => {
+      const n = l.stations.length;
+      const h = padT + (n - 1) * railH + padB;
+      const dot = (i) => {
+        const y = padT + i * railH;
+        const s = l.stations[i];
+        const k = (s.name || "").toUpperCase().trim();
+        const multi = calls.has(k) && calls.get(k).length > 1;
+        const linesHere = (calls.get(k) || []).join(", ");
+        return `<g class="metro-stn" data-idx="${i}" tabindex="0" role="button" aria-label="${esc(s.name)}">
+          <title>${esc(s.name)}${multi ? " — " + esc(linesHere) : ""}</title>
+          ${multi ? `<circle cx="${colW / 2}" cy="${y}" r="${dotR + 3.5}" fill="none" stroke="${esc(l.color)}" stroke-width="1.6"/>` : ""}
+          <circle cx="${colW / 2}" cy="${y}" r="${dotR}" fill="${esc(l.color)}" stroke="var(--bg)" stroke-width="1.5"/>
+          <text x="${colW / 2 + 12}" y="${y + 3.5}" class="metro-lbl">${esc(s.name)}</text>
+          <text x="${colW / 2 + 12}" y="${y + 13}" class="metro-lbl-s">${multi ? esc(linesHere) : ""}</text>
+        </g>`;
+      };
+      const links = [];
+      for (let i = 0; i < n - 1; i++){
+        const y1 = padT + i * railH, y2 = y1 + railH;
+        links.push(`<line x1="${colW / 2}" y1="${y1}" x2="${colW / 2}" y2="${y2}" stroke="${esc(l.color)}" stroke-width="5" stroke-linecap="round"/>`);
+      }
+      return `<div class="metro-col" data-line-idx="${rail.lines.indexOf(l)}">
+        <div class="metro-line-h" style="--lc:${esc(l.color)}">
+          <span class="metro-line-dot" style="background:${esc(l.color)}"></span>
+          <span class="metro-line-name">${esc(l.name)}</span>
+          <span class="metro-line-n">${n} ${T("stns")}</span>
+        </div>
+        <svg class="metro-svg" width="${colW}" height="${h}" viewBox="0 0 ${colW} ${h}">
+          ${links.join("")}${l.stations.map((s, i) => dot(i)).join("")}
+        </svg>
+      </div>`;
+    }).join("") +
+    `</div></div>`;
+  /* click/tap a station → open OSM at that station */
+  host.querySelectorAll(".metro-stn").forEach(g => {
+    g.onclick = () => {
+      const col = g.closest(".metro-col");
+      const line = rail.lines[Number(col.dataset.lineIdx)];
+      const stn = line && line.stations[Number(g.dataset.idx)];
+      if (!stn || stn.lat == null) return;
+      open(`https://www.openstreetmap.org/?mlat=${stn.lat}&mlon=${stn.lon}#map=16/${stn.lat}/${stn.lon}`, "_blank");
+    };
+  });
+  host.hidden = false;
 }
 function paintFilters(){
   const host = $("#tr-filters"); if (!host) return;
@@ -3712,9 +3814,14 @@ async function initRadarCarousel(){
   const maxIdx = () => Math.max(0, slides.length - perView());
   /* each slide is a fixed width + the track gap; this is the scroll step */
   const step = () => (slides[0] ? slides[0].offsetWidth : 320) + 12;
+  /* count reads 1/N at the left edge and N/N at the right edge */
+  const pageNum = (i) => {
+    const m = maxIdx();
+    return m ? Math.round((i / m) * (slides.length - 1)) + 1 : 1;
+  };
   const render = () => {
     track.scrollTo({ left: radarIdx * step(), behavior: "smooth" });
-    $("#radar-count").textContent = `${radarIdx + 1} / ${slides.length}`;
+    $("#radar-count").textContent = `${pageNum(radarIdx)} / ${slides.length}`;
     $("#radar-prev").disabled = radarIdx === 0;
     $("#radar-next").disabled = radarIdx >= maxIdx();
   };
@@ -3733,7 +3840,7 @@ async function initRadarCarousel(){
     const st = step();
     const n = st ? Math.round(track.scrollLeft / st) : 0;
     radarIdx = Math.min(Math.max(n, 0), maxIdx());
-    $("#radar-count").textContent = `${radarIdx + 1} / ${slides.length}`;
+    $("#radar-count").textContent = `${pageNum(radarIdx)} / ${slides.length}`;
     $("#radar-prev").disabled = radarIdx === 0;
     $("#radar-next").disabled = radarIdx >= maxIdx();
   }, { passive:true });
