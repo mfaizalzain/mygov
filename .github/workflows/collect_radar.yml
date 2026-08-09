@@ -20,6 +20,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Syntax check collector
+        run: |
+          python3 -m py_compile tools/collect_radar.py
+          echo "syntax OK"
+
       - name: Run collector (Gemini clustering)
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
