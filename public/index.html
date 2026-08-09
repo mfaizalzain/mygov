@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en-MY">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>mygov — Malaysia Open Data</title>
+<meta name="description" content="Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.">
+<meta name="theme-color" content="#0a0c10">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="mygov">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<style>
+/* ═══════════════════════════ design system ═══════════════════════════ */
+:root{
+  /* surfaces — layered elevation, each step subtly lighter than the page */
+  --bg:#0a0c10; --bg-2:#0d1016; --surface:#12151d; --surface-2:#171b25; --surface-3:#1d2230;
+  --line:#232838; --line-soft:#1a1e2a;
+  /* text */
+  --fg:#e8ecf4; --fg-2:#9aa4b8; --fg-3:#616b80;
+  /* one accent, used sparingly */
+  --accent:#2dd4bf; --accent-2:#22d3ee; --accent-dim:rgba(45,212,191,.12);
+  /* semantic */
+  --ok:#34d399; --warn:#fbbf24; --danger:#f87171; --info:#60a5fa;
+  /* spacing scale 4/8/12/16/24/32 */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px;
+  --r:14px; --r-sm:10px; --r-xs:7px;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --t:170ms cubic-bezier(.2,.7,.3,1);
+}
+*{box-sizing:border-box}
+/* Author `display` on .badge/.btn outranks the UA stylesheet's [hidden] rule,
+   so the attribute alone would not hide those elements. */
+[hidden]{display:none!important}
+html{scroll-behavior:smooth; scroll-padding-top:132px}
+body{
+  margin:0; background:var(--bg); color:var(--fg); font-family:var(--sans);
+  font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+  background-image:
+    radial-gradient(1100px 520px at 10% -10%, rgba(45,212,191,.10), transparent 62%),
+    radial-gradient(820px 420px at 96% -14%, rgba(34,211,238,.07), transparent 60%);
+  background-attachment:fixed;
+}
+a{color:var(--accent); text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:var(--r-xs)}
+.wrap{max-width:1240px; margin:0 auto; padding:0 var(--s6) 80px}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:fixed;top:-60px;left:var(--s4);z-index:100;background:var(--surface-2);
+      padding:var(--s2) var(--s3);border-radius:var(--r-xs);transition:top var(--t)}
+.skip:focus{top:var(--s2)}
+
+/* ═══════════════════════════ header ═══════════════════════════ */
+header{position:sticky; top:0; z-index:40; background:rgba(10,12,16,.86);
+  backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line-soft)}
+.hd{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6);
+    display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:var(--s3);min-width:0}
+.mark{width:36px;height:36px;border-radius:11px;flex:none;box-shadow:var(--shadow)}
+.brand h1{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
+.brand p{margin:0;font-size:11.5px;color:var(--fg-3)}
+.hd-r{margin-left:auto;display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:var(--s2);padding:6px var(--s3);
+  border-radius:99px;border:1px solid var(--line);background:var(--surface);
+  font-size:11.5px;font-family:var(--mono);color:var(--fg-2);white-space:nowrap}
+.badge b{color:var(--fg);font-weight:600}
+.badge .pulse{width:6px;height:6px;border-radius:50%;background:var(--ok);flex:none}
+.badge.off .pulse{background:var(--warn)}
+.btn{display:inline-flex;align-items:center;gap:var(--s2);padding:8px var(--s3);
+  border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface-2);
+  cursor:pointer;font-size:13px;font-weight:550;transition:var(--t);white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--surface-3);border-color:#2e3548;transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(0)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-a{background:var(--accent);border-color:var(--accent);color:#04241f;font-weight:650}
+.btn-a:hover:not(:disabled){background:#3ee0cc;border-color:#3ee0cc}
+.spin{display:inline-block;animation:sp 900ms linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#bar{height:2px;background:transparent;overflow:hidden}
+#bar i{display:block;height:100%;width:0;transition:width 400ms ease;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+
+/* sticky section nav */
+nav.sections{position:sticky;top:61px;z-index:39;background:rgba(10,12,16,.86);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line-soft)}
+nav.sections ul{max-width:1240px;margin:0 auto;padding:var(--s2) var(--s6);
+  display:flex;gap:var(--s1);list-style:none;overflow-x:auto;scrollbar-width:none}
+nav.sections ul::-webkit-scrollbar{display:none}
+nav.sections a{display:flex;align-items:center;gap:var(--s2);padding:7px var(--s3);
+  border-radius:var(--r-sm);color:var(--fg-3);font-weight:550;font-size:13px;
+  white-space:nowrap;transition:var(--t);border:1px solid transparent}
+nav.sections a:hover{color:var(--fg-2);background:var(--surface);text-decoration:none}
+nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);border-color:var(--line)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--fg-3);flex:none;transition:var(--t)}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--danger)}
+.dot.load{background:var(--warn);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ═══════════════════════════ hero + KPIs ═══════════════════════════ */
+.hero{padding:var(--s8) 0 var(--s6)}
+.hero h2{margin:0 0 var(--s2);font-size:30px;font-weight:720;letter-spacing:-.035em;line-height:1.15}
+.hero p{margin:0;color:var(--fg-2);font-size:14.5px;max-width:62ch}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s3);margin-top:var(--s6)}
+.kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
+  border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
+  box-shadow:var(--shadow);transition:var(--t)}
+.kpi:hover{transform:translateY(-2px);border-color:var(--line)}
+.kpi .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--fg-3);font-weight:650}
+.kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
+.kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
+.up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
+
+/* ═══════════════════════════ sections ═══════════════════════════ */
+section{padding-top:var(--s8);scroll-margin-top:124px}
+.sec-h{display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4)}
+.sec-ico{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
+  background:var(--accent-dim);border:1px solid rgba(45,212,191,.22);font-size:18px}
+.sec-h h3{margin:0;font-size:20px;font-weight:680;letter-spacing:-.025em}
+.sec-h p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:13.5px;max-width:76ch}
+.eps{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
+.ep{font-family:var(--mono);font-size:10.5px;color:var(--fg-3);background:var(--bg-2);
+  border:1px solid var(--line-soft);border-radius:99px;padding:3px 9px}
+
+.card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden;transition:var(--t)}
+.card:hover{border-color:var(--line)}
+.card-h{padding:var(--s3) var(--s4);border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+.card-h h4{margin:0;font-size:13.5px;font-weight:640}
+.card-h .sub{font-size:11.5px;color:var(--fg-3);font-family:var(--mono)}
+.card-h .right{margin-left:auto;display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap}
+.card-b{padding:var(--s4)}
+.grid{display:grid;gap:var(--s3)}
+.g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.mb{margin-bottom:var(--s3)}
+.chart{position:relative;height:300px}
+.chart.tall{height:340px}
+
+/* controls */
+.seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--line-soft);
+  border-radius:var(--r-sm);padding:2px;gap:2px}
+.seg button{padding:5px 11px;border:0;background:none;border-radius:var(--r-xs);
+  font-size:11.5px;font-weight:600;color:var(--fg-3);cursor:pointer;transition:var(--t)}
+.seg button:hover{color:var(--fg-2)}
+.seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--fg)}
+.inp{width:100%;padding:9px var(--s3);border-radius:var(--r-sm);border:1px solid var(--line);
+  background:var(--bg-2);color:var(--fg);font-size:13px;transition:var(--t)}
+.inp::placeholder{color:var(--fg-3)}
+.inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.chip{padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--bg-2);
+  cursor:pointer;font-size:11.5px;color:var(--fg-3);transition:var(--t);white-space:nowrap}
+.chip:hover{color:var(--fg-2);border-color:#2e3548}
+.chip[aria-pressed="true"]{background:var(--accent-dim);border-color:rgba(45,212,191,.45);color:#a5f3ea}
+.chips{display:flex;gap:var(--s2);flex-wrap:wrap}
+.swatch{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+/* tables */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll-y{max-height:430px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{position:sticky;top:0;z-index:1;background:var(--surface-2);text-align:left;
+  padding:9px var(--s3);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--fg-3);font-weight:650;border-bottom:1px solid var(--line);white-space:nowrap}
+th.sortable{cursor:pointer;user-select:none;transition:var(--t)}
+th.sortable:hover{color:var(--fg-2)}
+th .arrow{opacity:.4;margin-left:3px}
+th[aria-sort] .arrow{opacity:1;color:var(--accent)}
+td{padding:9px var(--s3);border-bottom:1px solid var(--line-soft);white-space:nowrap}
+tbody tr:nth-child(even){background:rgba(255,255,255,.014)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr[data-pick]{cursor:pointer;transition:background var(--t)}
+tbody tr[data-pick]:hover{background:var(--surface-2)}
+tbody tr.sel{background:var(--accent-dim)}
+tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrapcell{white-space:normal;min-width:210px;color:var(--fg-2)}
+.mono{font-family:var(--mono)} .dim{color:var(--fg-3)}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;
+  font-weight:650;font-family:var(--mono)}
+.tag{display:inline-block;padding:1px 6px;border-radius:5px;font-size:9.5px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;background:var(--surface-3);color:var(--fg-3)}
+
+/* alerts */
+.alert{border:1px solid var(--line-soft);border-left:3px solid var(--warn);
+  border-radius:var(--r);background:var(--surface);padding:var(--s4);box-shadow:var(--shadow)}
+.alert.info{border-left-color:var(--ok)}
+.alert h5{margin:0 0 var(--s2);font-size:13.5px;font-weight:650}
+.alert p{margin:0;color:var(--fg-2);font-size:12.5px}
+.alert .meta{margin-top:var(--s2);font-family:var(--mono);font-size:10.5px;color:var(--fg-3)}
+
+/* states */
+.state{padding:38px var(--s6);text-align:center;color:var(--fg-3);font-size:13px}
+.state .big{font-size:26px;margin-bottom:var(--s2);opacity:.6}
+.state strong{display:block;color:var(--fg-2);font-size:13.5px;margin-bottom:var(--s1)}
+.state.err strong{color:#fca5a5}
+.skel{background:linear-gradient(90deg,var(--surface) 25%,var(--surface-3) 50%,var(--surface) 75%);
+  background-size:200% 100%;animation:sh 1.5s infinite;border-radius:6px;height:12px;margin:11px 0}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.fade{opacity:0;transform:translateY(8px);animation:fade 420ms var(--t) forwards}
+@keyframes fade{to{opacity:1;transform:none}}
+
+/* location chip */
+.loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.loc-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;
+  background:var(--accent-dim);border:1px solid rgba(45,212,191,.3);color:#a5f3ea;font-size:12px;font-weight:600}
+.loc-chip.off{background:var(--surface-2);border-color:var(--line);color:var(--fg-3)}
+.link-btn{background:none;border:0;color:var(--accent);cursor:pointer;font-size:11.5px;
+  padding:2px 4px;border-radius:4px}
+.link-btn:hover{text-decoration:underline}
+
+footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0;
+  color:var(--fg-3);font-size:12px}
+
+@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
+@media (max-width:620px){
+  .wrap{padding:0 var(--s4) 64px} .hd{padding:var(--s3) var(--s4)}
+  nav.sections ul{padding:var(--s2) var(--s4)}
+  .kpis{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:1fr}
+  .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
+  .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
+  html{scroll-padding-top:112px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important}
+  .kpi:hover,.btn:hover{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <div class="hd">
+    <div class="brand">
+      <img class="mark" src="/icons/icon-192.png" alt="" width="36" height="36">
+      <div>
+        <h1>mygov</h1>
+        <p>Malaysia Open Data · api.data.gov.my</p>
+      </div>
+    </div>
+    <div class="hd-r">
+      <span class="badge" id="net" hidden><span class="pulse"></span><span id="net-t">Online</span></span>
+      <span class="badge" id="stamp"><span class="pulse"></span><span id="stamp-t">Loading…</span></span>
+      <button class="btn" id="install" hidden aria-label="Install mygov as an app">⬇ Install app</button>
+      <button class="btn btn-a" id="refresh" aria-label="Refresh all data">
+        <span id="ref-ico">↻</span><span id="ref-t">Refresh</span>
+      </button>
+    </div>
+  </div>
+  <div id="bar"><i></i></div>
+</header>
+
+<nav class="sections" aria-label="Sections">
+  <ul id="navlist"></ul>
+</nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h2>Malaysia, by the numbers</h2>
+    <p>Everything below is fetched live from the Malaysian Government Open API — weather from
+       MET Malaysia, fuel prices from the Ministry of Finance, statistics from DOSM, and
+       public-transport schedules and vehicle positions from KTMB and Prasarana.</p>
+    <div class="kpis" id="kpis"></div>
+  </div>
+
+  <main id="main"></main>
+
+  <footer>
+    Data: <a href="https://developer.data.gov.my" target="_blank" rel="noopener">Malaysian Government Open API</a>
+    (MET Malaysia · MOF · DOSM · KTMB · Prasarana). Reverse geocoding by
+    <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
+    Data is fetched directly by your browser and cached locally for 15 minutes to respect the
+    API's 4-requests-per-minute limit. No analytics, no tracking.
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ════════════════════════════ config ════════════════════════════ */
+const API = "https://api.data.gov.my";
+const TTL = 15 * 60 * 1000;   // cache lifetime
+const GAP = 1200;             // ms between any two requests
+const FGAP = 3000;            // ms between two requests of the SAME family
+const CAP = 4;                // requests per family per rolling minute
+const WINDOW = 60000;
+/* BUMP when a loader's returned shape changes, or a stale cache is replayed
+   into a renderer that expects different fields. */
+const CK = "mygov.cache.v3.";
+const LK = "mygov.location.v1";
+
+const SECTIONS = [
+  { id:"weather",   label:"Weather",    icon:"🌦", family:"weather" },
+  { id:"fuel",      label:"Fuel",       icon:"⛽", family:"data-catalogue" },
+  { id:"economy",   label:"Economy",    icon:"📈", family:"opendosm" },
+  { id:"transport", label:"Transport",  icon:"🚉", family:"gtfs-static" },
+  { id:"live",      label:"Live",       icon:"📍", family:"gtfs-realtime" },
+];
+
+/* ════════════════════════════ throttled fetch ════════════════════════════ */
+const hits = {};
+let chain = Promise.resolve(), lastAt = 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function slotWait(family){
+  const now = Date.now();
+  const arr = (hits[family] = (hits[family] || []).filter(t => now - t < WINDOW));
+  // Bursts trip the limiter even when the per-minute count is legal.
+  const spacing = arr.length ? Math.max(0, FGAP - (now - arr[arr.length - 1])) : 0;
+  if (arr.length < CAP) return spacing;
+  return Math.max(spacing, WINDOW - (now - arr[0]) + 250);
+}
+function schedule(family, run){
+  const job = chain.then(async () => {
+    const w = slotWait(family); if (w) await sleep(w);
+    const since = Date.now() - lastAt;
+    if (since < GAP) await sleep(GAP - since);
+    lastAt = Date.now();
+    (hits[family] = hits[family] || []).push(lastAt);
+    return run();
+  });
+  chain = job.catch(() => {});
+  return job;
+}
+class ApiError extends Error {
+  constructor(msg, kind){ super(msg); this.kind = kind; }
+}
+/* The API 301-redirects paths without a trailing slash — always send one so no
+   request wastes a redirect hop against the rate limit. */
+function url(path, params){
+  const u = new URL(API + (path.endsWith("/") ? path : path + "/"));
+  for (const [k, v] of Object.entries(params || {})) u.searchParams.set(k, v);
+  return u.toString();
+}
+async function request(family, path, params, as){
+  return schedule(family, async () => {
+    let res;
+    try { res = await fetch(url(path, params)); }
+    catch { throw new ApiError("Can't reach the API — you may be offline.", "network"); }
+    if (res.status === 429) throw new ApiError("Rate limited by the API. It allows 4 requests per minute.", "rate");
+    if (res.status === 404) throw new ApiError("That dataset no longer exists.", "missing");
+    if (!res.ok) throw new ApiError(`The API returned HTTP ${res.status}.`, "http");
+    if (as === "buffer") return res.arrayBuffer();
+    const data = await res.json();
+    if (data && data.status_code >= 400)
+      throw new ApiError((data.details && data.details[0]) || "API error.", "http");
+    return data;
+  });
+}
+
+/* ════════════════════════════ cache ════════════════════════════ */
+const mem = new Map();
+try { Object.keys(localStorage).filter(k => k.startsWith("mygov.cache.") && !k.startsWith(CK))
+        .forEach(k => localStorage.removeItem(k)); } catch {}
+
+function cacheGet(key){
+  const hit = mem.get(key);
+  if (hit && Date.now() - hit.t < TTL) return hit;
+  try {
+    const raw = localStorage.getItem(CK + key); if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (Date.now() - p.t >= TTL){ localStorage.removeItem(CK + key); return null; }
+    mem.set(key, p); return p;
+  } catch { return null; }
+}
+function cacheSet(key, data){
+  const rec = { t: Date.now(), d: data };
+  mem.set(key, rec);
+  try { localStorage.setItem(CK + key, JSON.stringify(rec)); }
+  catch {
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith(CK) && k !== CK + key)
+        .forEach(k => localStorage.removeItem(k));
+      localStorage.setItem(CK + key, JSON.stringify(rec));
+    } catch { /* memory-only for this session */ }
+  }
+  return rec;
+}
+function cacheClear(){
+  mem.clear();
+  try { Object.keys(localStorage).filter(k => k.startsWith(CK)).forEach(k => localStorage.removeItem(k)); } catch {}
+}
+
+/* ════════════════════════════ helpers ════════════════════════════ */
+const $ = (s, r = document) => r.querySelector(s);
+const el = (t, c, h) => { const n = document.createElement(t);
+  if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+/* MET sends some free text with entities already encoded ("&amp;"); decode
+   once so the reader doesn't see the raw entity, then escape for insertion. */
+const ENT = { amp:"&", lt:"<", gt:">", quot:'"', apos:"'", nbsp:" " };
+const deent = s => String(s ?? "").replace(/&(#\d+|#x[0-9a-f]+|\w+);/gi, (m, e) => {
+  const k = e.toLowerCase();
+  if (ENT[k] != null) return ENT[k];
+  if (k[0] === "#"){ const n = k[1] === "x" ? parseInt(k.slice(2),16) : parseInt(k.slice(1),10);
+    return isNaN(n) ? m : String.fromCodePoint(n); }
+  return m;
+});
+const txt = s => esc(deent(s));
+const nf = (n, d = 0) => n == null || isNaN(n) ? "—"
+  : Number(n).toLocaleString("en-MY", { minimumFractionDigits:d, maximumFractionDigits:d });
+const ymd = d => { const t = new Date(d); return isNaN(t) ? String(d)
+  : t.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" }); };
+const md = d => { const t = new Date(d); return isNaN(t) ? String(d)
+  : t.toLocaleDateString("en-MY", { day:"2-digit", month:"short" }); };
+const dow = d => { const t = new Date(d); return isNaN(t) ? ""
+  : t.toLocaleDateString("en-MY", { weekday:"short" }); };
+const hhmm = ts => new Date(ts).toLocaleTimeString("en-MY", { hour:"2-digit", minute:"2-digit" });
+const hms = ts => new Date(ts).toLocaleTimeString("en-MY",
+  { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Count a KPI up to its value; instant when reduced motion is requested. */
+function countTo(node, value, decimals, prefix, suffix){
+  const fmt = v => (prefix || "") + nf(v, decimals) + (suffix || "");
+  if (value == null || isNaN(value)){ node.textContent = "—"; return; }
+  // Write the real value first: requestAnimationFrame is throttled in
+  // background tabs, and an animation that never runs must not leave the
+  // number blank. The count-up below is decoration on top of correct text.
+  node.textContent = fmt(value);
+  if (reduceMotion() || document.hidden) return;
+  const dur = 620, t0 = performance.now();
+  const step = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    node.textContent = fmt(value * eased);
+    if (p < 1) requestAnimationFrame(step); else node.textContent = fmt(value);
+  };
+  requestAnimationFrame(step);
+}
+
+/** Make a table sortable by clicking its headers. */
+function sortable(table, getRows, render){
+  let col = -1, dir = 1;
+  table.querySelectorAll("th.sortable").forEach((th, i) => {
+    th.setAttribute("tabindex", "0");
+    th.setAttribute("role", "button");
+    const go = () => {
+      if (col === i) dir = -dir; else { col = i; dir = th.dataset.desc ? -1 : 1; }
+      table.querySelectorAll("th").forEach(o => o.removeAttribute("aria-sort"));
+      th.setAttribute("aria-sort", dir === 1 ? "ascending" : "descending");
+      const key = th.dataset.key, num = th.dataset.num === "1";
+      const rows = getRows().slice().sort((a, b) => {
+        let x = a[key], y = b[key];
+        if (num){ x = Number(x); y = Number(y);
+          if (isNaN(x)) x = -Infinity; if (isNaN(y)) y = -Infinity; return (x - y) * dir; }
+        return String(x ?? "").localeCompare(String(y ?? "")) * dir;
+      });
+      render(rows);
+    };
+    th.onclick = go;
+    th.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); go(); } };
+  });
+}
+
+/* ════════════════════════════ ZIP reader ════════════════════════════
+   Central-directory based; inflates only the entries we parse. Prasarana's
+   stop_times.txt is 5.6 MB and is deliberately never decompressed.          */
+async function unzipSelected(arrayBuffer, wanted){
+  const bytes = new Uint8Array(arrayBuffer), dv = new DataView(arrayBuffer);
+  let eocd = -1; const floor = Math.max(0, bytes.length - 66000);
+  for (let i = bytes.length - 22; i >= floor; i--)
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  if (eocd < 0) throw new Error("Not a ZIP archive.");
+  let count = dv.getUint16(eocd + 10, true), cdOff = dv.getUint32(eocd + 16, true);
+  if (cdOff === 0xffffffff || count === 0xffff){                  // ZIP64
+    for (let i = eocd - 20; i >= floor; i--)
+      if (dv.getUint32(i, true) === 0x07064b50){
+        const z = Number(dv.getBigUint64(i + 8, true));
+        if (dv.getUint32(z, true) === 0x06064b50){
+          count = Number(dv.getBigUint64(z + 32, true));
+          cdOff = Number(dv.getBigUint64(z + 48, true));
+        } break;
+      }
+  }
+  const want = new Set(wanted), out = {}, dec = new TextDecoder();
+  let p = cdOff;
+  for (let i = 0; i < count && p + 46 <= bytes.length; i++){
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true), comp = dv.getUint32(p + 20, true);
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true);
+    const cl = dv.getUint16(p + 32, true), lo = dv.getUint32(p + 42, true);
+    const name = dec.decode(bytes.subarray(p + 46, p + 46 + nl));
+    p += 46 + nl + xl + cl;
+    if (!want.has(name)) continue;
+    const lnl = dv.getUint16(lo + 26, true), lxl = dv.getUint16(lo + 28, true);
+    const start = lo + 30 + lnl + lxl, raw = bytes.subarray(start, start + comp);
+    if (method === 0) out[name] = dec.decode(raw);
+    else if (method === 8) out[name] = await new Response(
+      new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+    else throw new Error("Unsupported ZIP method " + method);
+  }
+  return out;
+}
+/* Parsed by header NAME because column order differs between agencies. */
+function parseCSV(text){
+  if (!text) return [];
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (q){ if (c === '"'){ if (text[i+1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n"){ row.push(f); f = ""; rows.push(row); row = []; }
+    else if (c !== "\r") f += c;
+  }
+  if (f.length || row.length){ row.push(f); rows.push(row); }
+  if (!rows.length) return [];
+  const head = rows[0].map(h => h.trim()), out = [];
+  for (let i = 1; i < rows.length; i++){
+    if (rows[i].length === 1 && rows[i][0] === "") continue;
+    const o = {}; for (let j = 0; j < head.length; j++) o[head[j]] = rows[i][j] ?? "";
+    out.push(o);
+  }
+  return out;
+}
+
+/* ════════════════════════ GTFS-realtime protobuf ════════════════════════
+   FeedMessage{1 header,2 entity} FeedEntity{1 id,4 vehicle}
+   VehiclePosition{1 trip,2 position,5 timestamp,8 vehicle}
+   Position{1 lat f32,2 lon f32,3 bearing,5 speed}
+   TripDescriptor{1 trip_id,5 route_id}  VehicleDescriptor{1 id,2 label}     */
+function decodeVehiclePositions(arrayBuffer){
+  const bytes = new Uint8Array(arrayBuffer), view = new DataView(arrayBuffer);
+  const dec = new TextDecoder();
+  function reader(start, end){
+    let p = start;
+    const r = {
+      get done(){ return p >= end; },
+      varint(){ let n = 0, s = 0;
+        while (p < end){ const b = bytes[p++]; n += (b & 0x7f) * Math.pow(2, s);
+          if (!(b & 0x80)) break; s += 7; } return n; },
+      f32(){ const x = view.getFloat32(p, true); p += 4; return x; },
+      key(){ const k = r.varint(); return [k >>> 3, k & 7]; },
+      sub(){ const n = r.varint(), s = p; p += n; return [s, p]; },
+      str(a, b){ return dec.decode(bytes.subarray(a, b)); },
+      skip(w){ if (w === 0) r.varint(); else if (w === 1) p += 8;
+        else if (w === 2) p += r.varint(); else if (w === 5) p += 4; else p = end; },
+    };
+    return r;
+  }
+  const out = { version:null, feedTimestamp:null, vehicles:[] };
+  const top = reader(0, bytes.length);
+  while (!top.done){
+    const [fld, w] = top.key();
+    if (w !== 2){ top.skip(w); continue; }
+    const [s, e] = top.sub();
+    if (fld === 1){
+      const h = reader(s, e);
+      while (!h.done){ const [f, hw] = h.key();
+        if (f === 1 && hw === 2){ const [a,b] = h.sub(); out.version = h.str(a,b); }
+        else if (f === 3 && hw === 0) out.feedTimestamp = h.varint();
+        else h.skip(hw); }
+    } else if (fld === 2){
+      const ent = reader(s, e); let id = null, vp = null;
+      while (!ent.done){ const [f, ew] = ent.key();
+        if (f === 1 && ew === 2){ const [a,b] = ent.sub(); id = ent.str(a,b); }
+        else if (f === 4 && ew === 2) vp = ent.sub();
+        else ent.skip(ew); }
+      if (!vp) continue;
+      const v = { entityId:id, vehicleId:null, label:null, tripId:null, routeId:null,
+                  lat:null, lon:null, bearing:null, speed:null, timestamp:null };
+      const q = reader(vp[0], vp[1]);
+      while (!q.done){
+        const [f, qw] = q.key();
+        if (f === 1 && qw === 2){ const [a,b] = q.sub(), t = reader(a,b);
+          while (!t.done){ const [tf, tw] = t.key();
+            if (tf === 1 && tw === 2){ const [x,y] = t.sub(); v.tripId = t.str(x,y); }
+            else if (tf === 5 && tw === 2){ const [x,y] = t.sub(); v.routeId = t.str(x,y); }
+            else t.skip(tw); } }
+        else if (f === 2 && qw === 2){ const [a,b] = q.sub(), pr = reader(a,b);
+          while (!pr.done){ const [pf, pw] = pr.key();
+            if (pf === 1 && pw === 5) v.lat = pr.f32();
+            else if (pf === 2 && pw === 5) v.lon = pr.f32();
+            else if (pf === 3 && pw === 5) v.bearing = pr.f32();
+            else if (pf === 5 && pw === 5) v.speed = pr.f32();
+            else pr.skip(pw); } }
+        else if (f === 5 && qw === 0) v.timestamp = q.varint();
+        else if (f === 8 && qw === 2){ const [a,b] = q.sub(), d = reader(a,b);
+          while (!d.done){ const [df, dw] = d.key();
+            if (df === 1 && dw === 2){ const [x,y] = d.sub(); v.vehicleId = d.str(x,y); }
+            else if (df === 2 && dw === 2){ const [x,y] = d.sub(); v.label = d.str(x,y); }
+            else d.skip(dw); } }
+        else q.skip(qw);
+      }
+      out.vehicles.push(v);
+    }
+  }
+  return out;
+}
+
+/* ════════════════════════════ loaders ════════════════════════════ */
+
+/* The forecast feed has 360 distinct location_id values but only ~284 distinct
+   NAMES — "Perlis" exists as a state (St001), a district (Ds002) and a town
+   (Tn001), each with its own forecast. Keying by name silently merges them, so
+   everything here is keyed by location_id and the type is shown to the user. */
+const LOC_TYPE = { St:"state", Ds:"district", Tn:"town", Rc:"recreation", Dv:"division" };
+const TYPE_RANK = { Ds:0, Tn:1, Dv:2, Rc:3, St:4 };   // district > town > … > state
+
+async function loadWeather(){
+  const forecast = await request("weather", "/weather/forecast");
+  const warnings = await request("weather", "/weather/warning");
+  const quakes   = await request("weather", "/weather/warning/earthquake");
+
+  // Dictionary-compress the repeated forecast strings before caching.
+  const dict = [], idx = new Map();
+  const key = s => { const t = s ?? ""; if (!idx.has(t)){ idx.set(t, dict.length); dict.push(t); }
+                     return idx.get(t); };
+  const locs = [], locIdx = new Map(), rows = [];
+  for (const r of forecast || []){
+    const L = r.location || {};
+    const id = L.location_id || ("?" + (L.location_name || ""));
+    if (!locIdx.has(id)){
+      locIdx.set(id, locs.length);
+      locs.push({ id, name: L.location_name || "Unknown", kind: String(id).slice(0,2) });
+    }
+    rows.push([ locIdx.get(id), r.date, r.min_temp, r.max_temp,
+                key(r.morning_forecast), key(r.afternoon_forecast),
+                key(r.night_forecast), key(r.summary_forecast) ]);
+  }
+  const eq = (quakes || []).filter(q => q.visible !== false)
+    .sort((a,b) => String(b.localdatetime).localeCompare(String(a.localdatetime)))
+    .slice(0, 40)
+    .map(q => ({ t:q.localdatetime, lat:q.lat, lon:q.lon, dep:q.depth,
+                 loc:q.location_original || q.location, mag:q.magdefault, near:q.n_distancemas }));
+
+  const warn = (warnings || []).map(w => {
+    const head = w.heading_en || "", text = w.text_en || "";
+    // MET publishes "all clear" notices here too, often with null validity.
+    const info = /no advisory|no tropical cyclone|tiada/i.test(head + " " + text);
+    const real = v => { const t = new Date(v); return !!v && !isNaN(t) && t.getUTCFullYear() > 1970; };
+    return { title:(w.warning_issue && w.warning_issue.title_en) || head || "Weather warning",
+             head, text, instr:w.instruction_en, from:w.valid_from, to:w.valid_to,
+             info, dated: real(w.valid_from) && real(w.valid_to) };
+  }).sort((a,b) => Number(a.info) - Number(b.info));
+
+  return { locs, rows, dict, warn, eq };
+}
+
+async function loadFuel(){
+  // series_type=level filtering is done server-side (verified working), which
+  // halves the payload — the other half is change_weekly deltas we don't chart.
+  const fuel = await request("data-catalogue", "/data-catalogue",
+    { id:"fuelprice", filter:"level@series_type" });
+  const lv = (fuel || []).sort((a,b) => String(a.date).localeCompare(String(b.date)));
+  const hh = await request("data-catalogue", "/data-catalogue", { id:"hh_income" });
+  return {
+    rows: lv.map(r => [r.date, r.ron95, r.ron97, r.diesel]),
+    latest: lv[lv.length - 1] || null,
+    prev: lv[lv.length - 2] || null,
+    hh: (hh || []).map(r => [r.date, r.income_mean, r.income_median]),
+  };
+}
+
+function byDivision(rows){
+  const m = new Map();
+  for (const r of rows || []){
+    const d = r.division || "overall";
+    if (!m.has(d)) m.set(d, []);
+    m.get(d).push([r.date, r.index]);
+  }
+  for (const v of m.values()) v.sort((a,b) => String(a[0]).localeCompare(String(b[0])));
+  return [...m.entries()].map(([name, pts]) => ({ name, pts }));
+}
+
+async function loadEconomy(){
+  const core = await request("opendosm", "/opendosm", { id:"cpi_core" });
+  const lfs  = await request("opendosm", "/opendosm", { id:"lfs_month" });
+  const gdp  = await request("opendosm", "/opendosm", { id:"gdp_qtr_real" });
+  return {
+    cpi: byDivision(core),
+    lfs: (lfs || []).map(r => [r.date, r.u_rate, r.p_rate, r.lf_employed]),
+    gdp: (gdp || []).filter(r => r.series === "abs" || r.series == null).map(r => [r.date, r.value]),
+  };
+}
+
+const FEEDS = [
+  { key:"ktmb", label:"KTMB", desc:"Keretapi Tanah Melayu — Komuter, ETS & intercity",
+    path:"/gtfs-static/ktmb", params:null },
+  { key:"prasarana", label:"Rapid KL", desc:"Prasarana Rapid Bus — Klang Valley network",
+    path:"/gtfs-static/prasarana", params:{ category:"rapid-bus-kl" } },
+];
+async function loadTransport(){
+  const out = {};
+  for (const f of FEEDS){
+    const buf = await request("gtfs-static", f.path, f.params, "buffer");
+    const files = await unzipSelected(buf, ["routes.txt","trips.txt","stops.txt","agency.txt"]);
+    const routes = parseCSV(files["routes.txt"]), trips = parseCSV(files["trips.txt"]);
+    const stops = parseCSV(files["stops.txt"]), agency = parseCSV(files["agency.txt"])[0] || {};
+    const per = new Map();
+    for (const t of trips) per.set(t.route_id, (per.get(t.route_id) || 0) + 1);
+    out[f.key] = {
+      label:f.label, desc:f.desc, agency:agency.agency_name || f.label,
+      routes:routes.length, stops:stops.length, trips:trips.length,
+      top: routes.map(r => ({
+        id:r.route_id, short:r.route_short_name || r.route_id, long:r.route_long_name || "",
+        color:/^[0-9A-Fa-f]{6}$/.test(r.route_color || "") ? "#" + r.route_color : "#2dd4bf",
+        trips: per.get(r.route_id) || 0,
+      })).sort((a,b) => b.trips - a.trips),
+    };
+  }
+  return out;
+}
+
+const RT = [
+  { key:"ktmb", label:"KTMB trains", noun:"trains", path:"/gtfs-realtime/vehicle-position/ktmb", params:null },
+  { key:"prasarana", label:"Rapid KL buses", noun:"buses",
+    path:"/gtfs-realtime/vehicle-position/prasarana", params:{ category:"rapid-bus-kl" } },
+];
+async function loadLive(){
+  const out = {};
+  for (const f of RT){
+    const buf = await request("gtfs-realtime", f.path, f.params, "buffer");
+    const d = decodeVehiclePositions(buf);
+    out[f.key] = { label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
+      vehicles: d.vehicles.filter(v => v.lat != null && v.lon != null)
+                          .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)) };
+  }
+  return out;
+}
+
+/* ════════════════════════════ charts ════════════════════════════ */
+const charts = {};
+const PALETTE = ["#2dd4bf","#22d3ee","#fbbf24","#34d399","#f87171","#a78bfa",
+                 "#f472b6","#60a5fa","#fb923c","#e879f9","#facc15","#4ade80",
+                 "#38bdf8","#fca5a5"];
+function chart(id, cfg){
+  const cv = document.getElementById(id);
+  if (!cv || !window.Chart) return;
+  if (charts[id]) charts[id].destroy();
+  if (reduceMotion()) cfg.options = Object.assign({}, cfg.options, { animation:false });
+  charts[id] = new Chart(cv.getContext("2d"), cfg);
+}
+/** Vertical gradient fill under a line, built from the canvas context. */
+function grad(ctx, area, hex){
+  if (!area) return "transparent";
+  const g = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+  g.addColorStop(0, hex + "44"); g.addColorStop(1, hex + "00");
+  return g;
+}
+function baseOpts(extra){
+  const o = {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{ mode:"index", intersect:false },
+    plugins:{
+      legend:{ labels:{ color:"#9aa4b8", boxWidth:8, boxHeight:8, usePointStyle:true,
+        pointStyle:"circle", font:{ size:11 }, padding:14 } },
+      tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
+        titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10,
+        usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4 },
+    },
+    scales:{
+      x:{ grid:{ display:false }, border:{ color:"#232838" },
+          ticks:{ color:"#616b80", font:{ size:10 }, maxRotation:0, autoSkipPadding:20 } },
+      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
+          ticks:{ color:"#616b80", font:{ size:10 }, padding:8 } },
+    },
+  };
+  return Object.assign(o, extra || {});
+}
+
+/* ════════════════════════════ shell ════════════════════════════ */
+function buildShell(){
+  const nav = $("#navlist"), main = $("#main");
+  for (const s of SECTIONS){
+    const li = el("li");
+    li.innerHTML = `<a href="#${s.id}" id="nav-${s.id}"><span class="dot" id="dot-${s.id}"></span>${s.icon} ${esc(s.label)}</a>`;
+    nav.appendChild(li);
+    const sec = el("section");
+    sec.id = s.id;
+    sec.setAttribute("aria-labelledby", `h-${s.id}`);
+    sec.innerHTML = `<div class="sec-h">
+        <div class="sec-ico" aria-hidden="true">${s.icon}</div>
+        <div><h3 id="h-${s.id}">${esc(META[s.id].title)}</h3>
+          <p>${esc(META[s.id].desc)}</p>
+          <div class="eps">${META[s.id].eps.map(e => `<span class="ep">GET ${esc(e)}</span>`).join("")}</div>
+        </div></div>
+      <div id="body-${s.id}"></div>`;
+    main.appendChild(sec);
+  }
+  // highlight the section currently in view
+  const obs = new IntersectionObserver(entries => {
+    for (const e of entries) if (e.isIntersecting){
+      document.querySelectorAll("nav.sections a").forEach(a => a.removeAttribute("aria-current"));
+      const a = $("#nav-" + e.target.id); if (a) a.setAttribute("aria-current", "true");
+    }
+  }, { rootMargin:"-130px 0px -70% 0px", threshold:0 });
+  SECTIONS.forEach(s => obs.observe(document.getElementById(s.id)));
+}
+const setDot = (id, st) => { const d = $("#dot-" + id); if (d) d.className = "dot " + st; };
+const skeleton = (id, n = 4) => {
+  $("#body-" + id).innerHTML = `<div class="card"><div class="card-b">` +
+    Array.from({ length:n }, (_, i) => `<div class="skel" style="width:${[94,72,86,60][i%4]}%"></div>`).join("") +
+    `</div></div>`;
+};
+function errorBox(id, err, retry){
+  const rate = err && err.kind === "rate";
+  $("#body-" + id).innerHTML = `<div class="card"><div class="state err">
+      <div class="big">${rate ? "⏱" : "⚠"}</div>
+      <strong>${esc(err.message || "Couldn't load this section")}</strong>
+      <div>${rate ? "Cached data is reused for 15 minutes, so this usually clears on its own."
+                  : "The dataset may be temporarily unavailable."}</div>
+      <button class="btn" style="margin-top:16px" id="retry-${id}">Try again</button>
+    </div></div>`;
+  const b = $("#retry-" + id); if (b) b.onclick = retry;
+}
+
+/* ════════════════════════ location awareness ════════════════════════ */
+const geo = { status:"idle", label:null, matchedId:null, candidates:[] };
+
+const norm = s => String(s || "").toLowerCase()
+  .replace(/\b(daerah|district|bandar|kota|wilayah persekutuan|w\.p\.)\b/g, " ")
+  .replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+
+/** Score a forecast location against the names OSM gave us. */
+function scoreLocation(loc, terms){
+  const n = norm(loc.name);
+  if (!n) return 0;
+  let best = 0;
+  for (const t of terms){
+    if (!t) continue;
+    if (n === t) best = Math.max(best, 100);
+    else if (n.startsWith(t) || t.startsWith(n)) best = Math.max(best, 78);
+    else if (n.includes(t) || t.includes(n)) best = Math.max(best, 60);
+  }
+  if (!best) return 0;
+  // Prefer finer granularity: district > town > division > recreation > state.
+  return best - (TYPE_RANK[loc.kind] ?? 5) * 4;
+}
+
+async function locate(){
+  if (!navigator.geolocation){ geo.status = "unsupported"; paintWeather(); return; }
+  geo.status = "asking"; paintWeather();
+  let pos;
+  try {
+    pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej,
+        { timeout:8000, maximumAge:600000, enableHighAccuracy:false }));
+  } catch { geo.status = "denied"; paintWeather(); return; }
+
+  const { latitude:lat, longitude:lon } = pos.coords;
+  let addr = null;
+  try {
+    // Nominatim sends no access-control-allow-origin, so a direct browser call
+    // is blocked. The Worker proxies it (and sets the User-Agent their policy
+    // requires, which browsers refuse to set) — see src/index.js.
+    const r = await fetch(`/api/reverse?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`);
+    if (r.ok) addr = (await r.json()).address || null;
+  } catch { /* proxy unavailable (e.g. plain static host) */ }
+
+  if (!addr){ geo.status = "noproxy"; paintWeather(); return; }
+  const terms = [addr.city, addr.town, addr.village, addr.suburb, addr.county,
+                 addr.state_district, addr.state].filter(Boolean).map(norm);
+  geo.osm = [addr.city || addr.town || addr.village || addr.suburb,
+             addr.state].filter(Boolean).join(", ");
+
+  const data = wx.data;
+  if (!data){ geo.status = "waiting"; return; }
+  const ranked = data.locs.map(l => ({ loc:l, score:scoreLocation(l, terms) }))
+    .filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+
+  if (!ranked.length){ geo.status = "nomatch"; paintWeather(); return; }
+  const top = ranked[0];
+  const ties = ranked.filter(x => x.score >= top.score - 6).slice(0, 3);
+  geo.candidates = ties.map(x => x.loc);
+  geo.status = ties.length > 1 ? "ambiguous" : "matched";
+  geo.matchedId = top.loc.id;
+  geo.label = top.loc.name;
+  wx.pick = top.loc.id;
+  try { localStorage.setItem(LK, JSON.stringify({ id:top.loc.id, label:top.loc.name, osm:geo.osm })); } catch {}
+  paintWeather();
+}
+
+/* ════════════════════════════ weather view ════════════════════════════ */
+const wx = { q:"", pick:null, data:null };
+
+function renderWeather(d){
+  wx.data = d;
+  if (!wx.pick){
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LK) || "null"); } catch {}
+    if (saved && d.locs.some(l => l.id === saved.id)){
+      wx.pick = saved.id; geo.label = saved.label; geo.osm = saved.osm;
+      if (geo.status === "idle") geo.status = "cached";
+    } else {
+      const kl = d.locs.find(l => l.kind === "Ds" && /kuala lumpur/i.test(l.name))
+              || d.locs.find(l => /kuala lumpur/i.test(l.name)) || d.locs[0];
+      wx.pick = kl.id;
+    }
+  }
+  $("#body-weather").innerHTML = `
+    <div id="wx-warn" class="mb"></div>
+    <div class="grid g2 mb">
+      <div class="card">
+        <div class="card-h"><h4>7-day outlook</h4>
+          <span class="sub" id="wx-name"></span>
+          <span class="right" id="wx-loc"></span></div>
+        <div class="card-b"><div class="chart"><canvas id="wx-chart"
+          role="img" aria-label="Seven day minimum and maximum temperature"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>All locations</h4><span class="sub" id="wx-count"></span></div>
+        <div class="card-b" style="padding-bottom:10px">
+          <label class="sr" for="wx-q">Search locations</label>
+          <input class="inp" id="wx-q" placeholder="Search a district, town or state…" autocomplete="off">
+        </div>
+        <div class="tw scroll-y"><table id="wx-table">
+          <thead><tr>
+            <th class="sortable" data-key="name">Location <span class="arrow">↕</span></th>
+            <th class="sortable" data-key="kind">Type <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="min" data-num="1">Min <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="max" data-num="1" data-desc="1">Max <span class="arrow">↕</span></th>
+            <th>Today</th>
+          </tr></thead><tbody id="wx-rows"></tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>Recent earthquakes</h4>
+        <span class="sub">${d.eq.length} events · MET Malaysia</span></div>
+      <div class="tw scroll-y"><table>
+        <thead><tr><th>Local time</th><th class="num">Mag</th><th>Location</th>
+          <th class="num">Depth</th><th>Nearest Malaysian town</th><th></th></tr></thead>
+        <tbody>${d.eq.map(q => { const m = Number(q.mag) || 0;
+          const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
+          return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
+            <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
+            <td>${txt(q.loc || "—")}</td><td class="num dim">${nf(q.dep,0)} km</td>
+            <td class="dim">${txt(q.near || "—")}</td>
+            <td><a class="mono" style="font-size:11.5px" target="_blank" rel="noopener"
+              href="https://www.google.com/maps?q=${q.lat},${q.lon}"
+              aria-label="Open earthquake location in Google Maps">map ↗</a></td></tr>`;
+        }).join("") || `<tr><td colspan="6" class="state">No earthquake records.</td></tr>`}
+      </tbody></table></div>
+    </div>`;
+
+  const w = $("#wx-warn");
+  const active = d.warn.filter(x => !x.info).length;
+  w.innerHTML = !d.warn.length
+    ? `<div class="card"><div class="state"><div class="big">✅</div>
+         <strong>No active weather warnings</strong>MET Malaysia has nothing on issue.</div></div>`
+    : `<div class="card-h" style="border:0;padding:0 2px 10px">
+         <h4>${active ? `${active} active warning${active > 1 ? "s" : ""}` : "No active warnings"}</h4>
+         <span class="sub">MET Malaysia · ${d.warn.length} notices</span></div>
+       <div class="grid g2">${d.warn.map(x => `
+         <div class="alert${x.info ? " info" : ""}">
+           <h5>${x.info ? "✅" : "⚠️"} ${txt(x.head || x.title)}</h5>
+           <p>${txt(x.text || "")}</p>
+           ${x.instr ? `<p style="margin-top:6px">${txt(x.instr)}</p>` : ""}
+           ${x.dated ? `<div class="meta">valid ${esc(ymd(x.from))} → ${esc(ymd(x.to))}</div>` : ""}
+         </div>`).join("")}</div>`;
+
+  const q = $("#wx-q");
+  q.value = wx.q;
+  q.oninput = () => { wx.q = q.value; paintWxRows(); };
+  sortable($("#wx-table"), () => wxTableRows(), rows => paintWxRows(rows));
+  paintWeather();
+}
+
+/** Today's row per location, flattened for the table + sorting. */
+function wxTableRows(){
+  const d = wx.data, first = new Map();
+  for (const r of d.rows){
+    const cur = first.get(r[0]);
+    if (!cur || String(r[1]) < String(cur[1])) first.set(r[0], r);
+  }
+  return d.locs.map((l, i) => {
+    const r = first.get(i);
+    return { id:l.id, name:l.name, kind:LOC_TYPE[l.kind] || l.kind,
+             min:r ? r[2] : null, max:r ? r[3] : null,
+             today:r ? (d.dict[r[7]] || "—") : "—" };
+  });
+}
+function paintWxRows(pre){
+  const term = wx.q.trim().toLowerCase();
+  let rows = pre || wxTableRows();
+  if (term) rows = rows.filter(r => r.name.toLowerCase().includes(term) || r.kind.includes(term));
+  $("#wx-count").textContent = `${rows.length} of ${wx.data.locs.length}`;
+  $("#wx-rows").innerHTML = rows.slice(0, 400).map(r => `
+    <tr data-pick="${esc(r.id)}" class="${r.id === wx.pick ? "sel" : ""}">
+      <td style="font-weight:550">${esc(r.name)}</td>
+      <td><span class="tag">${esc(r.kind)}</span></td>
+      <td class="num dim">${nf(r.min)}°</td>
+      <td class="num" style="font-weight:650">${nf(r.max)}°</td>
+      <td class="wrapcell">${esc(r.today)}</td></tr>`).join("")
+    || `<tr><td colspan="5" class="state">No location matches “${esc(wx.q)}”.</td></tr>`;
+  $("#wx-rows").querySelectorAll("tr[data-pick]").forEach(tr => {
+    tr.onclick = () => { wx.pick = tr.getAttribute("data-pick");
+      try { const l = wx.data.locs.find(x => x.id === wx.pick);
+        localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
+      paintWxRows(); paintWxChart(); };
+  });
+}
+function paintWeather(){
+  if (!wx.data) return;
+  paintWxRows(); paintWxChart(); paintLocChip();
+}
+function paintLocChip(){
+  const host = $("#wx-loc"); if (!host) return;
+  const S = geo.status;
+  const chip = (cls, text) => `<span class="loc-chip ${cls}">${text}</span>`;
+  let html = "";
+  if (S === "asking") html = chip("off", "📍 Locating…");
+  else if (S === "matched" || S === "cached")
+    html = chip("", `📍 Near you: ${esc(geo.label || "")}`) +
+           `<button class="link-btn" id="loc-change">change</button>`;
+  else if (S === "ambiguous")
+    html = chip("", `📍 ${esc(geo.label || "")}`) +
+      `<span class="dim" style="font-size:11.5px">did you mean</span>` +
+      geo.candidates.slice(1).map(c =>
+        `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
+  else if (S === "denied")  html = chip("off", "📍 Location off") +
+      `<button class="link-btn" id="loc-try">use my location</button>`;
+  else if (S === "nomatch") html = chip("off", `📍 ${esc(geo.osm || "Not in the forecast list")}`) +
+      `<span class="dim" style="font-size:11.5px">— search below</span>`;
+  else if (S === "noproxy") html = chip("off", "📍 Location lookup unavailable") +
+      `<span class="dim" style="font-size:11.5px">— search below</span>`;
+  else if (S === "unsupported") html = chip("off", "📍 Not supported");
+  else html = `<button class="link-btn" id="loc-try">📍 Use my location</button>`;
+  host.innerHTML = html;
+  const t = $("#loc-try"); if (t) t.onclick = locate;
+  const c = $("#loc-change"); if (c) c.onclick = locate;
+  host.querySelectorAll("[data-cand]").forEach(b => {
+    b.onclick = () => { wx.pick = b.getAttribute("data-cand");
+      const l = wx.data.locs.find(x => x.id === wx.pick);
+      geo.label = l.name; geo.status = "matched";
+      try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
+      paintWeather(); };
+  });
+}
+function paintWxChart(){
+  const d = wx.data;
+  const i = d.locs.findIndex(l => l.id === wx.pick);
+  const loc = d.locs[i];
+  const rows = d.rows.filter(r => r[0] === i)
+    .sort((a,b) => String(a[1]).localeCompare(String(b[1])));
+  const nameEl = $("#wx-name");
+  if (nameEl) nameEl.textContent = loc ? `${loc.name} · ${LOC_TYPE[loc.kind] || ""}` : "";
+  chart("wx-chart", {
+    type:"bar",
+    data:{ labels: rows.map(r => `${dow(r[1])} ${md(r[1])}`),
+      datasets:[
+        { label:"Max °C", data:rows.map(r => r[3]), backgroundColor:"rgba(251,191,36,.8)",
+          borderRadius:6, borderSkipped:false, order:2 },
+        { label:"Min °C", data:rows.map(r => r[2]), backgroundColor:"rgba(34,211,238,.55)",
+          borderRadius:6, borderSkipped:false, order:3 },
+      ] },
+    options: baseOpts({
+      scales:{
+        x:{ grid:{ display:false }, border:{ color:"#232838" },
+            ticks:{ color:"#616b80", font:{ size:10 } } },
+        y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
+            ticks:{ color:"#616b80", font:{ size:10 }, padding:8, callback:v => v + "°" },
+            suggestedMin: Math.min(...rows.map(r => r[2] ?? 20)) - 3,
+            suggestedMax: Math.max(...rows.map(r => r[3] ?? 34)) + 3 },
+      },
+      plugins:{
+        legend:{ labels:{ color:"#9aa4b8", boxWidth:8, boxHeight:8, usePointStyle:true,
+          pointStyle:"circle", font:{ size:11 }, padding:14 }, onClick:() => {} },
+        tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
+          titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10,
+          usePointStyle:true, boxWidth:8, boxHeight:8,
+          callbacks:{ afterBody: items => { const r = rows[items[0].dataIndex]; if (!r) return "";
+            return ["", "Morning:   " + (d.dict[r[4]] || "—"),
+                        "Afternoon: " + (d.dict[r[5]] || "—"),
+                        "Night:     " + (d.dict[r[6]] || "—")]; } } },
+      },
+    }),
+  });
+}
+
+/* ════════════════════════════ fuel view ════════════════════════════ */
+let fuelRange = "1y";
+const RANGES = { "6m":0.5, "1y":1, "2y":2, all:99 };
+function cutoff(years){
+  const d = new Date(); d.setFullYear(d.getFullYear() - Math.floor(years));
+  if (years % 1) d.setMonth(d.getMonth() - Math.round((years % 1) * 12));
+  return d.toISOString().slice(0, 10);
+}
+
+function renderFuel(d){
+  const L = d.latest, P = d.prev;
+  const delta = (a, b) => (a == null || b == null) ? null : a - b;
+  const badge = v => v == null ? "" :
+    `<span class="${v > 0 ? "up" : v < 0 ? "down" : "neutral"}">${v > 0 ? "▲" : v < 0 ? "▼" : "—"} ${nf(Math.abs(v),2)}</span>`;
+  $("#body-fuel").innerHTML = `
+    <div class="grid g4 mb">
+      ${[["RON 95","ron95"],["RON 97","ron97"],["Diesel","diesel"]].map(([lab,k]) => `
+        <div class="kpi"><div class="lab">${lab}</div>
+          <div class="val">RM ${nf(L && L[k], 2)}</div>
+          <div class="sub">${badge(delta(L && L[k], P && P[k]))} vs last week</div></div>`).join("")}
+      <div class="kpi"><div class="lab">Price week of</div>
+        <div class="val" style="font-size:18px">${esc(ymd(L && L.date))}</div>
+        <div class="sub">${d.rows.length} weeks on record</div></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>Retail fuel prices</h4>
+        <span class="sub">RM per litre · weekly ceiling</span>
+        <span class="right"><span class="seg" role="group" aria-label="Date range">
+          ${Object.keys(RANGES).map(r => `<button data-range="${r}" aria-pressed="${r === fuelRange}">${r.toUpperCase()}</button>`).join("")}
+        </span></span></div>
+      <div class="card-b"><div class="chart tall"><canvas id="fuel-chart"
+        role="img" aria-label="Fuel prices over time"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>Household income</h4><span class="sub">RM per month · mean vs median</span></div>
+      <div class="card-b"><div class="chart"><canvas id="hh-chart"
+        role="img" aria-label="Household income over time"></canvas></div></div>
+    </div>`;
+  $("#body-fuel").querySelectorAll("[data-range]").forEach(b => {
+    b.onclick = () => { fuelRange = b.dataset.range;
+      $("#body-fuel").querySelectorAll("[data-range]")
+        .forEach(o => o.setAttribute("aria-pressed", String(o.dataset.range === fuelRange)));
+      paintFuel(d); };
+  });
+  paintFuel(d);
+  chart("hh-chart", {
+    type:"line",
+    data:{ labels:d.hh.map(r => String(r[0]).slice(0,4)),
+      datasets:[
+        { label:"Mean", data:d.hh.map(r => r[1]), borderColor:"#2dd4bf", borderWidth:2,
+          pointRadius:2, tension:.32, fill:true,
+          backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf") },
+        { label:"Median", data:d.hh.map(r => r[2]), borderColor:"#22d3ee", borderWidth:2,
+          pointRadius:2, tension:.32 },
+      ] },
+    options: baseOpts({ scales:{
+      x:{ grid:{ display:false }, border:{ color:"#232838" }, ticks:{ color:"#616b80", font:{size:10} } },
+      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
+          ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => "RM " + nf(v) } } } }),
+  });
+}
+function paintFuel(d){
+  const from = cutoff(RANGES[fuelRange]);
+  const rows = d.rows.filter(r => String(r[0]) >= from);
+  chart("fuel-chart", {
+    type:"line",
+    data:{ labels:rows.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
+      datasets:[
+        { label:"RON 95", data:rows.map(r => r[1]), borderColor:"#34d399", borderWidth:2,
+          pointRadius:0, tension:.25, fill:true,
+          backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#34d399") },
+        { label:"RON 97", data:rows.map(r => r[2]), borderColor:"#fbbf24", borderWidth:2,
+          pointRadius:0, tension:.25 },
+        { label:"Diesel", data:rows.map(r => r[3]), borderColor:"#2dd4bf", borderWidth:2,
+          pointRadius:0, tension:.25 },
+      ] },
+    options: baseOpts({ scales:{
+      x:{ grid:{ display:false }, border:{ color:"#232838" },
+          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:12, maxRotation:0 } },
+      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
+          ticks:{ color:"#616b80", font:{size:10}, padding:8,
+                  callback:v => "RM " + Number(v).toFixed(2) } } } }),
+  });
+}
+
+/* ════════════════════════════ economy view ════════════════════════════ */
+const COICOP = { overall:"Overall", "01":"Food & beverages", "02":"Alcohol & tobacco",
+  "03":"Clothing & footwear", "04":"Housing & utilities", "05":"Household equipment",
+  "06":"Health", "07":"Transport", "08":"Information & communication",
+  "09":"Recreation & culture", "10":"Education", "11":"Restaurants & accommodation",
+  "12":"Insurance & finance", "13":"Personal care & misc." };
+const divLabel = k => k === "overall" ? "Overall" : (COICOP[k] ? `${k} · ${COICOP[k]}` : k);
+let cpiPick = new Set(["overall"]), cpiRange = "all";
+
+function renderEconomy(d){
+  const lfsL = d.lfs[d.lfs.length - 1] || [];
+  const gdpL = d.gdp[d.gdp.length - 1] || [], gdpP = d.gdp[d.gdp.length - 5];
+  const yoy = gdpP && gdpL[1] ? (gdpL[1] / gdpP[1] - 1) * 100 : null;
+  const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
+  const cL = ov[ov.length - 1] || [];
+  const cYoy = ov.length > 12 ? (cL[1] / ov[ov.length - 13][1] - 1) * 100 : null;
+
+  $("#body-economy").innerHTML = `
+    <div class="grid g4 mb">
+      <div class="kpi"><div class="lab">Core CPI</div><div class="val">${nf(cL[1],1)}</div>
+        <div class="sub">${cYoy == null ? "" :
+          `<span class="${cYoy>0?"up":"down"}">${cYoy>0?"▲":"▼"} ${nf(Math.abs(cYoy),1)}%</span> y/y`} · ${esc(ymd(cL[0]))}</div></div>
+      <div class="kpi"><div class="lab">Unemployment</div><div class="val">${nf(lfsL[1],1)}%</div>
+        <div class="sub">${esc(ymd(lfsL[0]))}</div></div>
+      <div class="kpi"><div class="lab">Participation rate</div><div class="val">${nf(lfsL[2],1)}%</div>
+        <div class="sub">${nf(lfsL[3],0)}k employed</div></div>
+      <div class="kpi"><div class="lab">Real GDP · quarter</div>
+        <div class="val" style="font-size:20px">RM ${nf(gdpL[1],0)}m</div>
+        <div class="sub">${yoy == null ? "" :
+          `<span class="${yoy>0?"down":"up"}">${yoy>0?"▲":"▼"} ${nf(Math.abs(yoy),1)}%</span> y/y`}</div></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>Consumer Price Index — core</h4><span class="sub">by expenditure division</span>
+        <span class="right"><span class="seg" role="group" aria-label="CPI range">
+          ${["1y","2y","all"].map(r => `<button data-crange="${r}" aria-pressed="${r === cpiRange}">${r.toUpperCase()}</button>`).join("")}
+        </span></span></div>
+      <div class="card-b" style="padding-bottom:8px"><div class="chips" id="cpi-chips"></div></div>
+      <div class="card-b" style="padding-top:8px">
+        <div class="chart tall"><canvas id="cpi-chart" role="img" aria-label="CPI by division"></canvas></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h"><h4>Unemployment rate</h4><span class="sub">monthly</span></div>
+        <div class="card-b"><div class="chart"><canvas id="lfs-chart" role="img" aria-label="Unemployment rate"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><h4>Real GDP</h4><span class="sub">quarterly · RM million</span></div>
+        <div class="card-b"><div class="chart"><canvas id="gdp-chart" role="img" aria-label="Real GDP"></canvas></div></div></div>
+    </div>`;
+
+  const chips = $("#cpi-chips");
+  d.cpi.forEach((s, i) => {
+    const c = el("button", "chip",
+      `<span class="swatch" style="background:${PALETTE[i % PALETTE.length]}"></span>${esc(divLabel(s.name))}`);
+    c.setAttribute("aria-pressed", String(cpiPick.has(s.name)));
+    c.onclick = () => { cpiPick.has(s.name) ? cpiPick.delete(s.name) : cpiPick.add(s.name);
+      if (!cpiPick.size) cpiPick.add("overall"); renderEconomy(d); };
+    chips.appendChild(c);
+  });
+  $("#body-economy").querySelectorAll("[data-crange]").forEach(b => {
+    b.onclick = () => { cpiRange = b.dataset.crange; renderEconomy(d); };
+  });
+
+  const from = cpiRange === "all" ? "0000" : cutoff(cpiRange === "1y" ? 1 : 2);
+  const labels = ov.map(p => p[0]).filter(x => String(x) >= from);
+  chart("cpi-chart", {
+    type:"line",
+    data:{ labels: labels.map(x => md(x) + " '" + String(x).slice(2,4)),
+      datasets: d.cpi.filter(s => cpiPick.has(s.name)).map(s => {
+        const i = d.cpi.findIndex(x => x.name === s.name), m = new Map(s.pts);
+        return { label:divLabel(s.name), data:labels.map(l => m.get(l) ?? null),
+                 borderColor:PALETTE[i % PALETTE.length], borderWidth:2, pointRadius:0,
+                 tension:.25, spanGaps:true }; }) },
+    options: baseOpts({ scales:{
+      x:{ grid:{ display:false }, border:{ color:"#232838" },
+          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:12, maxRotation:0 } },
+      y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
+          ticks:{ color:"#616b80", font:{size:10}, padding:8 } } } }),
+  });
+  chart("lfs-chart", {
+    type:"line",
+    data:{ labels:d.lfs.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
+      datasets:[{ label:"Unemployment %", data:d.lfs.map(r => r[1]), borderColor:"#f87171",
+        borderWidth:2, pointRadius:0, tension:.3, fill:true,
+        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#f87171") }] },
+    options: baseOpts({ plugins:{ legend:{ display:false },
+        tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
+          titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10 } },
+      scales:{ x:{ grid:{ display:false }, border:{ color:"#232838" },
+          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:8, maxRotation:0 } },
+        y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
+          ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => v + "%" } } } }),
+  });
+  chart("gdp-chart", {
+    type:"bar",
+    data:{ labels:d.gdp.map(r => { const t = new Date(r[0]);
+        return isNaN(t) ? r[0] : `Q${Math.floor(t.getMonth()/3)+1} '${String(t.getFullYear()).slice(2)}`; }),
+      datasets:[{ label:"RM million", data:d.gdp.map(r => r[1]),
+        backgroundColor:"rgba(34,211,238,.6)", borderRadius:5, borderSkipped:false }] },
+    options: baseOpts({ plugins:{ legend:{ display:false },
+        tooltip:{ backgroundColor:"#171b25", borderColor:"#232838", borderWidth:1,
+          titleColor:"#e8ecf4", bodyColor:"#9aa4b8", padding:11, cornerRadius:10 } },
+      scales:{ x:{ grid:{ display:false }, border:{ color:"#232838" },
+          ticks:{ color:"#616b80", font:{size:10}, maxTicksLimit:10, maxRotation:0 } },
+        y:{ grid:{ color:"rgba(255,255,255,.045)", drawTicks:false }, border:{ display:false },
+          ticks:{ color:"#616b80", font:{size:10}, padding:8, callback:v => nf(v) } } } }),
+  });
+}
+
+/* ════════════════════════════ transport view ════════════════════════════ */
+let topN = 10;
+function renderTransport(d){
+  $("#body-transport").innerHTML = Object.values(d).map((f, n) => `
+    <div class="${n ? "" : "mb"}" style="margin-bottom:var(--s6)">
+      <div class="grid g4 mb">
+        <div class="kpi"><div class="lab">${esc(f.label)} · routes</div>
+          <div class="val" data-count="${f.routes}">0</div><div class="sub">${esc(f.agency)}</div></div>
+        <div class="kpi"><div class="lab">Stops</div>
+          <div class="val" data-count="${f.stops}">0</div><div class="sub">stations & stops</div></div>
+        <div class="kpi"><div class="lab">Trips</div>
+          <div class="val" data-count="${f.trips}">0</div><div class="sub">per service pattern</div></div>
+        <div class="kpi"><div class="lab">Avg trips / route</div>
+          <div class="val" data-count="${(f.routes ? f.trips / f.routes : 0).toFixed(1)}" data-dec="1">0</div>
+          <div class="sub">${esc(f.desc)}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>Busiest routes — ${esc(f.label)}</h4>
+          <span class="sub">by scheduled trips</span>
+          <span class="right"><span class="seg" role="group" aria-label="Rows to show">
+            ${[10,25,"all"].map(v => `<button data-top="${v}" data-feed="${f.label}" aria-pressed="${String(v) === String(topN)}">${v === "all" ? "ALL" : "TOP " + v}</button>`).join("")}
+          </span></span></div>
+        <div class="tw scroll-y"><table>
+          <thead><tr><th>Route</th><th>Name</th><th class="num">Trips</th><th style="width:30%">Share</th></tr></thead>
+          <tbody>${f.top.slice(0, topN === "all" ? f.top.length : topN).map(r => {
+            const pct = f.top[0].trips ? (r.trips / f.top[0].trips) * 100 : 0;
+            return `<tr>
+              <td><span class="pill" style="background:${esc(r.color)}22;color:${esc(r.color)};border:1px solid ${esc(r.color)}55">${esc(r.short)}</span></td>
+              <td class="wrapcell">${esc(r.long || "—")}</td>
+              <td class="num" style="font-weight:650">${nf(r.trips)}</td>
+              <td><div style="background:var(--surface-3);border-radius:99px;height:6px;overflow:hidden">
+                <div style="width:${pct.toFixed(1)}%;height:100%;background:${esc(r.color)};border-radius:99px"></div></div></td>
+            </tr>`; }).join("")}
+        </tbody></table></div>
+      </div>
+    </div>`).join("");
+  $("#body-transport").querySelectorAll("[data-top]").forEach(b => {
+    b.onclick = () => { topN = b.dataset.top === "all" ? "all" : Number(b.dataset.top);
+      renderTransport(d); };
+  });
+  animateCounters($("#body-transport"));
+}
+function animateCounters(root){
+  root.querySelectorAll("[data-count]").forEach(n => {
+    countTo(n, Number(n.dataset.count), Number(n.dataset.dec || 0));
+  });
+}
+
+/* ════════════════════════════ live view ════════════════════════════ */
+function renderLive(d){
+  $("#body-live").innerHTML = Object.values(d).map(f => {
+    const n = f.vehicles.length;
+    const ts = f.feedTimestamp ? hms(f.feedTimestamp * 1000) : "—";
+    return `<div style="margin-bottom:var(--s6)">
+      <div class="grid g3 mb">
+        <div class="kpi"><div class="lab">${esc(f.label)} live now</div>
+          <div class="val" style="color:${n ? "var(--ok)" : "var(--fg-3)"}" data-count="${n}">0</div>
+          <div class="sub">${n ? "broadcasting a position" : "none reporting"}</div></div>
+        <div class="kpi"><div class="lab">Feed timestamp</div>
+          <div class="val" style="font-size:19px">${esc(ts)}</div>
+          <div class="sub">GTFS-realtime v${esc(f.version || "?")}</div></div>
+        <div class="kpi"><div class="lab">Distinct routes</div>
+          <div class="val" data-count="${new Set(f.vehicles.map(v => v.routeId).filter(Boolean)).size}">0</div>
+          <div class="sub">among live ${esc(f.noun)}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>Active ${esc(f.noun)}</h4>
+          <span class="sub">protobuf decoded in-browser</span></div>
+        ${n ? `<div class="tw scroll-y"><table>
+          <thead><tr><th>Vehicle</th><th>Route</th><th>Trip</th><th class="num">Lat</th>
+            <th class="num">Lon</th><th class="num">Speed</th><th>Updated</th><th></th></tr></thead>
+          <tbody>${f.vehicles.map(v => `<tr>
+            <td class="mono" style="font-weight:650">${esc(v.vehicleId || v.entityId || "—")}</td>
+            <td>${v.routeId ? `<span class="pill" style="background:var(--accent-dim);color:#a5f3ea">${esc(v.routeId)}</span>` : '<span class="dim">—</span>'}</td>
+            <td class="mono dim">${esc(v.tripId || "—")}</td>
+            <td class="num">${v.lat == null ? "—" : v.lat.toFixed(5)}</td>
+            <td class="num">${v.lon == null ? "—" : v.lon.toFixed(5)}</td>
+            <td class="num dim">${v.speed == null ? "—" : nf(v.speed,1)}</td>
+            <td class="mono dim">${v.timestamp ? hhmm(v.timestamp * 1000) : "—"}</td>
+            <td><a class="mono" style="font-size:11.5px" target="_blank" rel="noopener"
+              href="https://www.google.com/maps?q=${v.lat},${v.lon}"
+              aria-label="Open vehicle position in Google Maps">map ↗</a></td></tr>`).join("")}
+          </tbody></table></div>`
+        : `<div class="state"><div class="big">🌙</div>
+             <strong>No ${esc(f.noun)} are broadcasting right now</strong>
+             <div>The feed responded normally (v${esc(f.version || "?")}, timestamp ${esc(ts)}) but
+             carried zero vehicles — normal outside service hours, or when the operator's
+             tracking feed is paused.</div></div>`}
+      </div></div>`;
+  }).join("");
+  animateCounters($("#body-live"));
+}
+
+/* ════════════════════════════ KPI summary ════════════════════════════ */
+const kpiState = {};
+function renderKpis(){
+  const host = $("#kpis");
+  const cards = [
+    { k:"hot",   lab:"Hottest today",   ico:"🌡" },
+    { k:"ron95", lab:"RON 95",          ico:"⛽" },
+    { k:"cpi",   lab:"Inflation y/y",   ico:"📈" },
+    { k:"warn",  lab:"Active warnings", ico:"⚠️" },
+    { k:"live",  lab:"Vehicles live",   ico:"🚍" },
+  ];
+  host.innerHTML = cards.map(c => {
+    const s = kpiState[c.k];
+    return `<div class="kpi${s ? " fade" : ""}">
+      <div class="lab">${c.ico} ${esc(c.lab)}</div>
+      <div class="val" id="kpi-${c.k}">${s ? "" : "—"}</div>
+      <div class="sub">${s ? esc(s.sub) : "loading…"}</div></div>`;
+  }).join("");
+  for (const c of cards){
+    const s = kpiState[c.k]; if (!s) continue;
+    const node = $("#kpi-" + c.k);
+    if (s.text != null) node.textContent = s.text;
+    else countTo(node, s.value, s.dec || 0, s.prefix, s.suffix);
+  }
+}
+
+/* ════════════════════════════ orchestration ════════════════════════════ */
+const META = {
+  weather:{ title:"Weather & Warnings",
+    desc:"Seven-day forecasts for every MET Malaysia location — 360 of them, from states down to individual towns and highland resorts — plus severe-weather warnings and recent regional earthquakes.",
+    eps:["/weather/forecast","/weather/warning","/weather/warning/earthquake"] },
+  fuel:{ title:"Fuel & Households",
+    desc:"The weekly retail ceiling price set by the Ministry of Finance, alongside long-run household income. Fuel is filtered server-side to the price level series.",
+    eps:["/data-catalogue?id=fuelprice","/data-catalogue?id=hh_income"] },
+  economy:{ title:"Economy",
+    desc:"Department of Statistics Malaysia: consumer price index by expenditure division, the monthly labour force survey, and quarterly real GDP.",
+    eps:["/opendosm?id=cpi_core","/opendosm?id=lfs_month","/opendosm?id=gdp_qtr_real"] },
+  transport:{ title:"Public Transport",
+    desc:"GTFS Static schedules delivered as ZIP archives, unzipped and parsed in your browser. Only routes, trips and stops are inflated — the 5.6 MB stop_times.txt is skipped on purpose.",
+    eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl"] },
+  live:{ title:"Live Vehicles",
+    desc:"GTFS-Realtime protobuf feeds, decoded in the browser by a hand-written wire-format reader — no protobuf library. Shows every train or bus currently broadcasting a GPS position.",
+    eps:["/gtfs-realtime/vehicle-position/ktmb","/gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl"] },
+};
+const LOADERS = {
+  weather:  { load:loadWeather,   render:renderWeather,   after:d => {
+      let hot = null;
+      const first = new Map();
+      for (const r of d.rows){ const c = first.get(r[0]);
+        if (!c || String(r[1]) < String(c[1])) first.set(r[0], r); }
+      for (const [i, r] of first) if (r[3] != null && (!hot || r[3] > hot.t)) hot = { t:r[3], i };
+      if (hot) kpiState.hot = { value:hot.t, dec:0, suffix:"°C", sub:d.locs[hot.i].name };
+      const active = d.warn.filter(w => !w.info).length;
+      kpiState.warn = { value:active, dec:0, sub:active ? "issued by MET" : "all clear" };
+      if (geo.status === "waiting") locate();
+    } },
+  fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
+      if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
+        sub:"week of " + ymd(d.latest.date) }; } },
+  economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
+      const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
+      if (ov.length > 12){
+        const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
+        kpiState.cpi = { value:v, dec:1, suffix:"%", sub:"core CPI, " + ymd(ov[ov.length-1][0]) };
+      } } },
+  transport:{ load:loadTransport, render:renderTransport },
+  live:     { load:loadLive,      render:renderLive,      after:d => {
+      const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
+      kpiState.live = { value:n, dec:0, sub:n ? "trains + buses" : "none reporting now" }; } },
+};
+
+let stamps = {};
+async function loadSection(id, force){
+  const cfg = LOADERS[id];
+  setDot(id, "load");
+  const cached = force ? null : cacheGet(id);
+  if (cached){
+    try {
+      cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
+      setDot(id, "ok"); stamps[id] = cached.t; tick(); renderKpis(); return;
+    } catch { /* shape drift — refetch */ }
+  }
+  skeleton(id);
+  try {
+    const data = await cfg.load();
+    const rec = cacheSet(id, data);
+    cfg.render(data); if (cfg.after) cfg.after(data);
+    setDot(id, "ok"); stamps[id] = rec.t;
+  } catch (err){
+    setDot(id, "err");
+    errorBox(id, err, () => loadSection(id, true));
+  }
+  tick(); renderKpis();
+}
+function tick(){
+  const ts = Object.values(stamps), bar = $("#bar i");
+  bar.style.width = (ts.length / SECTIONS.length * 100) + "%";
+  if (ts.length === SECTIONS.length) setTimeout(() => { bar.style.width = "0%"; }, 800);
+  $("#stamp-t").textContent = ts.length
+    ? `Updated ${hms(Math.max(...ts))} · ${ts.length}/${SECTIONS.length}`
+    : "Loading…";
+}
+let busy = false;
+async function loadAll(force){
+  if (busy) return;
+  busy = true;
+  const btn = $("#refresh");
+  btn.disabled = true; $("#ref-ico").className = "spin"; $("#ref-t").textContent = "Refreshing…";
+  if (force){ cacheClear(); stamps = {}; }
+  for (const s of SECTIONS) await loadSection(s.id, force);   // sequential, never parallel
+  busy = false;
+  btn.disabled = false; $("#ref-ico").className = ""; $("#ref-t").textContent = "Refresh";
+}
+
+/* ════════════════════════════ PWA plumbing ════════════════════════════ */
+function pwa(){
+  if ("serviceWorker" in navigator)
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  let deferred = null;
+  const btn = $("#install");
+  addEventListener("beforeinstallprompt", e => {
+    e.preventDefault(); deferred = e; btn.hidden = false;
+  });
+  btn.onclick = async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred = null; btn.hidden = true;
+  };
+  addEventListener("appinstalled", () => { btn.hidden = true; });
+
+  const net = $("#net"), netT = $("#net-t");
+  const sync = () => {
+    const off = !navigator.onLine;
+    net.hidden = !off;
+    if (off){ net.className = "badge off"; netT.textContent = "Offline — showing cached data"; }
+  };
+  addEventListener("online", sync);
+  addEventListener("offline", sync);
+  // A tab restored from the background can miss the online/offline events.
+  addEventListener("visibilitychange", () => { if (!document.hidden) sync(); });
+  sync();
+}
+
+/* ════════════════════════════ boot ════════════════════════════ */
+function boot(){
+  buildShell();
+  renderKpis();
+  pwa();
+  $("#refresh").onclick = () => loadAll(true);
+  geo.status = "waiting";     // resolved once weather data lands
+  loadAll(false);
+  setInterval(tick, 30000);
+}
+/* Chart.js is deferred, so it exists only after parsing; wait for both. */
+(function ready(fn){
+  const go = () => {
+    if (window.Chart) return fn();
+    let waited = 0;
+    const t = setInterval(() => {
+      if (window.Chart || (waited += 50) > 8000){ clearInterval(t); fn(); }
+    }, 50);
+  };
+  if (document.readyState === "loading") addEventListener("DOMContentLoaded", go); else go();
+})(boot);
+</script>
+</body>
+</html>
