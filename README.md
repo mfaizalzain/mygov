@@ -66,6 +66,27 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
 
 ---
 
+## KKM health data (daily collector)
+
+The Health section (blood donations, organ pledges, PeKa B40) updates daily,
+and every visitor used to spend **3 of the 4-per-minute `data-catalogue`
+budget** fetching it. It is now pre-collected by a GitHub Action, mirroring
+the Trend Radar pipeline:
+
+- **Collector:** `tools/collect_health.py` — fetches the three MoH catalogue
+  series (`blood_donations` windowed to 3 years, `organ_pledges`,
+  `pekab40_screenings`) and writes `public/health.json` in the same compact
+  `{t0, n, keys, series}` shape the app's `denseDaily()` builds in the
+  browser (82 KB instead of ~700 KB of raw rows).
+- **Workflow:** `.github/workflows/collect_health.yml` — daily 00:30 UTC
+  (8:30 AM MYT) + manual `workflow_dispatch`, syntax-guarded, commits as
+  `github-actions[bot]` with `contents: write`.
+- The dashboard fetches `health.json` (same-origin) and only falls back to
+  the live API when the file is missing or more than ~6 days old (e.g. on
+  plain static hosting without the Action).
+
+---
+
 ## Architecture
 
 ```
@@ -166,11 +187,11 @@ no request wastes a redirect hop against the rate limit.
 - caches results in memory + `localStorage` for 15 minutes;
 - never polls. Refresh is manual.
 
-Total cold load: **16 requests** — weather 3, catalogue 5, opendosm 4,
-gtfs-static 2, gtfs-realtime 2 — plus 5 straight to GitHub for the MoH health
-files. GitHub is a different host with no such limit, so those are fetched in
-parallel and outside the token bucket. Only weather + fuel (5 requests) are
-fetched on first paint; economy, finance, population, health, postcodes,
+Total cold load: **11 requests** — weather 3, catalogue 2, opendosm 4,
+gtfs-static 2, gtfs-realtime 2 — plus the health section's static
+`health.json` (same-origin, produced by the daily KKM collector, no API
+budget spent). GitHub is not called at all. Only weather + fuel (5 requests)
+are fetched on first paint; economy, finance, population, health, postcodes,
 transport and live are lazy-loaded as their sections scroll into view, so the
 first screen renders before the slowest datasets arrive.
 
@@ -179,7 +200,9 @@ first screen renders before the slowest datasets arrive.
 
 - `data-catalogue`: `fuelprice`, `hh_income`, `exchangerates`,
   `interestrates`, `poskod` — plus `arrivals`, `passports`, `births` and
-  `mnha`, which exist but are frozen (see *Data freshness* below)
+  `mnha`, which exist but are frozen (see *Data freshness* below), and
+  `blood_donations`, `organ_pledges`, `pekab40_screenings`, which the KKM
+  collector uses (see above)
 - `opendosm`: `cpi_core`, `cpi_headline`, `lfs_month`, `gdp_qtr_real`,
   `population_malaysia`
 - Not found: `electrictariff`, `watertariff`, `interestrate`, `unemployment`,
@@ -379,7 +402,8 @@ keeps showing the fetch time.
 **Into an existing section** — add one request to the relevant loader in
 `index.html`, reduce it to a compact array, and render it. Mind the 4/min cap:
 `opendosm` is at 4 of 4 (economy 3 + population 1), so a new OpenDOSM series
-must share an existing call or wait out a minute. `data-catalogue` has 5 in use.
+must share an existing call or wait out a minute. `data-catalogue` has 2 in use
+(fuel + finance); health moved off the API to a daily static file.
 
 ```js
 const x = await request("data-catalogue", "/data-catalogue", { id: "YOUR_ID" });

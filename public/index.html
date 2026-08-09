@@ -1535,6 +1535,19 @@ const BLOOD_TYPES = [["a","A","#f87171"], ["b","B","#60a5fa"],
                      ["ab","AB","#a78bfa"], ["o","O","#34d399"]];
 
 async function loadHealth(){
+  /* Prefer the daily collector's static file (same-origin, no rate-limit
+     cost, served from the Cloudflare edge). Fall back to the live API when
+     the file is absent or more than a few days stale — e.g. the Action
+     hasn't run, or a visitor is on the repo's plain static hosting. */
+  try {
+    const r = await fetch("health.json", { cache:"no-store" });
+    if (r.ok){
+      const j = await r.json();
+      const fresh = j.updated &&
+        (Date.now() - Date.parse(j.updated + "T00:00:00Z")) < 6 * DAY_MS;
+      if (fresh) return j;
+    }
+  } catch {}
   const don = await request("data-catalogue", "/data-catalogue",
     { id:"blood_donations", date_start:cutoff(3) + "@date", sort:"date" });
   const organ = await request("data-catalogue", "/data-catalogue",
