@@ -1074,10 +1074,21 @@ const PALETTE = ["#2dd4bf","#22d3ee","#fbbf24","#34d399","#f87171","#a78bfa",
                  "#f472b6","#60a5fa","#fb923c","#e879f9","#facc15","#4ade80",
                  "#38bdf8","#fca5a5"];
 function chart(id, cfg){
-  const cv = document.getElementById(id);
+  let cv = document.getElementById(id);
   if (!cv || !window.Chart) return;
   if (charts[id]) charts[id].destroy();
+  /* Chart.js v4 leaves a canvas that has hosted a chart in a state where a
+     brand-new chart on the SAME element never paints its first frame (the
+     instance exists and `update()` works, but nothing is drawn). Swap in a
+     fresh canvas (same id/attributes) so every re-render starts clean. */
+  if (cv.dataset.charted){
+    const fresh = cv.cloneNode(false);
+    fresh.removeAttribute("width"); fresh.removeAttribute("height");
+    cv.replaceWith(fresh);
+    cv = fresh;
+  }
   if (reduceMotion()) cfg.options = Object.assign({}, cfg.options, { animation:false });
+  cv.dataset.charted = "1";
   charts[id] = new Chart(cv.getContext("2d"), cfg);
 }
 /** Vertical gradient fill under a line, built from the canvas context. */
