@@ -21,6 +21,7 @@ const NOMINATIM = "https://nominatim.openstreetmap.org/reverse";
 const UA = "mygov-dashboard/1.0 (+https://mygov.faizalmzain.com)";
 const CACHE_TTL = 86400;   // a coordinate's town doesn't change; cache a day
 
+
 const json = (body, status = 200, extra = {}) =>
   new Response(JSON.stringify(body), {
     status,
@@ -48,6 +49,12 @@ export default {
 
       // Round to ~1 km so nearby visitors share one cache entry and we send
       // far fewer requests upstream. Also avoids storing precise locations.
+      // Only same-origin callers. This route exists for our own page; without
+      // this it is a free, cached geocoding endpoint for anyone who finds it.
+      const origin = request.headers.get("origin");
+      if (origin && new URL(request.url).origin !== origin)
+        return json({ error: "forbidden" }, 403);
+
       const rlat = lat.toFixed(2), rlon = lon.toFixed(2);
       const cacheKey = new Request(
         `${url.origin}/api/reverse?lat=${rlat}&lon=${rlon}`, { method: "GET" });
@@ -88,7 +95,55 @@ export default {
       return response;
     }
 
-    // Everything else is a static asset.
+    /* GTFS static ZIP proxy.
+     *
+     * /gtfs-static/* on the upstream API answers 302 to an S3 bucket. A
+     * browser then has to pass CORS on the *redirect target*, which is
+     * fragile — any network layer that intercepts that hop surfaces it as an
+     * opaque "CORS error" with no way for the page to distinguish it from
+     * being offline. Fetching it server-side removes the cross-origin hop
+     * entirely, and edge-caching means the government API sees a handful of
+     * requests per day instead of one 8 MB download per visitor. */
+    if (url.pathname === "/api/gtfs") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      const agency = url.searchParams.get("agency") || "";
+      const category = url.searchParams.get("category") || "";
+      // Strict allowlist — never interpolate user input into the upstream URL.
+      if (!/^[a-z0-9-]{1,32}$/.test(agency) || (category && !/^[a-z0-9-]{1,32}$/.test(category)))
+        return json({ error: "bad_agency" }, 400);
+
+      const upstream = new URL(`https://api.data.gov.my/gtfs-static/${agency}/`);
+      if (category) upstream.searchParams.set("category", category);
+
+      const cacheKey = new Request(`${url.origin}/api/gtfs?agency=${agency}&category=${category}`);
+      const cache = caches.default;
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+
+      let res;
+      try { res = await fetch(upstream, { redirect: "follow" }); }
+      catch { return json({ error: "upstream_unreachable" }, 502); }
+      if (!res.ok)
+        return json({ error: "upstream_error", status: res.status }, res.status === 429 ? 429 : 502);
+
+      const out = new Response(res.body, {
+        status: 200,
+        headers: {
+          "content-type": "application/zip",
+          "access-control-allow-origin": url.origin,
+          // Schedules are republished daily at most.
+          "cache-control": "public, max-age=21600",
+        },
+      });
+      ctx.waitUntil(cache.put(cacheKey, out.clone()));
+      return out;
+    }
+
+    // Everything else is a static asset. Security headers for those come from
+    // public/_headers — the asset router serves them without running this
+    // Worker, so setting headers here would have no effect.
     return env.ASSETS.fetch(request);
   },
 };

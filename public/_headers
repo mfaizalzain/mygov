@@ -1,0 +1,27 @@
+# Cloudflare static-asset headers.
+#
+# Static assets are served by the asset router without invoking the Worker, so
+# these cannot be set in src/index.js — that code only runs for non-asset
+# routes like /api/reverse.
+#
+# The CSP is tight: the app has one inline <script> and one inline <style>
+# (both authored in index.html), one CDN script pinned with subresource
+# integrity, and it talks to exactly two external hosts. 'unsafe-inline' for
+# script-src is unavoidable for a deliberately single-file app; it is paired
+# with a strict allowlist so an injected *external* script still cannot load.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.data.gov.my https://*.s3.ap-southeast-1.amazonaws.com; upgrade-insecure-requests
+
+# The service worker must not be cached, or a stale one pins an old app shell.
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable

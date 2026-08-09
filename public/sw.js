@@ -79,11 +79,13 @@ self.addEventListener("fetch", event => {
       const cache = await caches.open(API_CACHE);
       try {
         const fresh = await fetch(request);
-        // Only cache successes, and never buffer the large GTFS ZIPs — an
-        // 8 MB archive per agency would blow through the Cache Storage quota
-        // for data the page re-derives into a small summary anyway.
-        if (fresh.ok && !url.pathname.startsWith("/gtfs-static"))
-          cache.put(request, fresh.clone());
+        // Only cache successes, and never buffer the large GTFS ZIPs (either
+        // upstream or via our proxy) — an 8 MB archive per agency would blow
+        // through the Cache Storage quota for data the page immediately
+        // reduces to a small summary anyway.
+        const isZip = url.pathname.startsWith("/gtfs-static") ||
+                      url.pathname.startsWith("/api/gtfs");
+        if (fresh.ok && !isZip) cache.put(request, fresh.clone());
         return fresh;
       } catch (err) {
         const hit = await cache.match(request);

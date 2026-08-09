@@ -13,7 +13,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="mygov">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<!-- Pinned + subresource-integrity checked: if the CDN ever served altered
+     bytes the browser refuses to execute them rather than running them. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
+        integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt"
+        crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 <style>
 /* ═══════════════════════════ design system ═══════════════════════════ */
 :root{
@@ -221,6 +225,13 @@ tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 
 footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0;
   color:var(--fg-3);font-size:12px}
+.foot{display:flex;gap:var(--s6);align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.foot > div{max-width:74ch}
+.bmc{display:inline-flex;align-items:center;gap:var(--s2);padding:9px var(--s4);flex:none;
+  border-radius:var(--r-sm);background:#fbbf24;color:#1a1400;font-weight:700;font-size:13px;
+  border:1px solid #fbbf24;transition:var(--t);white-space:nowrap;box-shadow:var(--shadow)}
+.bmc:hover{background:#fcd34d;border-color:#fcd34d;transform:translateY(-1px);text-decoration:none}
+@media (max-width:620px){ .foot{flex-direction:column-reverse;gap:var(--s4)} .bmc{width:100%;justify-content:center} }
 
 @media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
@@ -280,11 +291,20 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   <main id="main"></main>
 
   <footer>
-    Data: <a href="https://developer.data.gov.my" target="_blank" rel="noopener">Malaysian Government Open API</a>
-    (MET Malaysia · MOF · DOSM · KTMB · Prasarana). Reverse geocoding by
-    <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
-    Data is fetched directly by your browser and cached locally for 15 minutes to respect the
-    API's 4-requests-per-minute limit. No analytics, no tracking.
+    <div class="foot">
+      <div>
+        Data: <a href="https://developer.data.gov.my" target="_blank" rel="noopener">Malaysian Government Open API</a>
+        (MET Malaysia · MOF · DOSM · KTMB · Prasarana). Reverse geocoding by
+        <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
+        Data is fetched directly by your browser and cached locally for 15 minutes to respect the
+        API's 4-requests-per-minute limit. No analytics, no tracking.
+        <br><a href="https://github.com/mfaizalzain/mygov" target="_blank" rel="noopener">Source on GitHub</a>
+      </div>
+      <a class="bmc" href="https://buymeacoffee.com/faizalmzain" target="_blank"
+         rel="noopener noreferrer" aria-label="Support this project on Buy Me a Coffee">
+        <span aria-hidden="true">☕</span> Buy me a coffee
+      </a>
+    </div>
   </footer>
 </div>
 
@@ -692,14 +712,32 @@ async function loadEconomy(){
 
 const FEEDS = [
   { key:"ktmb", label:"KTMB", desc:"Keretapi Tanah Melayu — Komuter, ETS & intercity",
-    path:"/gtfs-static/ktmb", params:null },
+    agency:"ktmb", category:null, path:"/gtfs-static/ktmb", params:null },
   { key:"prasarana", label:"Rapid KL", desc:"Prasarana Rapid Bus — Klang Valley network",
+    agency:"prasarana", category:"rapid-bus-kl",
     path:"/gtfs-static/prasarana", params:{ category:"rapid-bus-kl" } },
 ];
+/* The upstream /gtfs-static/* redirects to an S3 bucket, so a browser has to
+   pass CORS on the redirect target. Prefer the Worker proxy, which does that
+   hop server-side and edge-caches the ZIP; fall back to fetching directly so
+   the page still works on plain static hosting without the Worker. */
+async function fetchGtfsZip(f){
+  try {
+    const r = await schedule("gtfs-static", () => fetch(
+      `/api/gtfs?agency=${encodeURIComponent(f.agency)}` +
+      (f.category ? `&category=${encodeURIComponent(f.category)}` : "")));
+    if (r.ok) return r.arrayBuffer();
+    if (r.status === 429) throw new ApiError("Rate limited by the API. It allows 4 requests per minute.", "rate");
+  } catch (e) {
+    if (e instanceof ApiError) throw e;      // a real 429 should surface
+  }
+  return request("gtfs-static", f.path, f.params, "buffer");
+}
+
 async function loadTransport(){
   const out = {};
   for (const f of FEEDS){
-    const buf = await request("gtfs-static", f.path, f.params, "buffer");
+    const buf = await fetchGtfsZip(f);
     const files = await unzipSelected(buf, ["routes.txt","trips.txt","stops.txt","agency.txt"]);
     const routes = parseCSV(files["routes.txt"]), trips = parseCSV(files["trips.txt"]);
     const stops = parseCSV(files["stops.txt"]), agency = parseCSV(files["agency.txt"])[0] || {};

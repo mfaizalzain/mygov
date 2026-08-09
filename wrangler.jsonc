@@ -3,6 +3,14 @@
   "name": "mygov",
   "main": "src/index.js",
   "compatibility_date": "2026-08-01",
+  // Attaching the custom domain here makes wrangler create/maintain the DNS
+  // record and certificate on deploy, so it is reproducible from the repo.
+  "routes": [
+    { "pattern": "mygov.faizalmzain.com", "custom_domain": true }
+  ],
+  // Declaring routes turns workers.dev off by default; keep it as a fallback
+  // URL for testing so a DNS or certificate issue never leaves the app dark.
+  "workers_dev": true,
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",

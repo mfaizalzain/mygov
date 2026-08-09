@@ -38,8 +38,12 @@ tools/
 wrangler.jsonc
 ```
 
-The Worker serves `public/` through the `ASSETS` binding and owns exactly one
-route, `/api/reverse`. Everything else is static.
+The Worker serves `public/` through the `ASSETS` binding and owns two routes,
+`/api/reverse` and `/api/gtfs`. Everything else is static.
+
+> Static assets are served by Cloudflare's asset router **without invoking the
+> Worker**, so response headers for them come from `public/_headers`, not from
+> `src/index.js`.
 
 ### Why there is a Worker at all
 
@@ -57,6 +61,33 @@ coordinates to ~1 km before forwarding (so nearby visitors share a cache entry
 and precise locations are never stored), and caches results at the edge for a
 day. If the proxy is unavailable the UI degrades to a manual location search
 rather than breaking.
+
+The second route, `/api/gtfs`, exists for a different reason. Upstream
+`/gtfs-static/*` answers **302 to an S3 bucket**, so the browser has to pass
+CORS on the *redirect target*. That is fragile — any network layer that
+intercepts that hop surfaces it as an opaque CORS failure the page cannot
+distinguish from being offline. Doing the hop server-side removes the
+cross-origin redirect entirely and lets the ZIP be edge-cached for 6 hours, so
+the government API sees a handful of requests a day rather than one 8 MB
+download per visitor. The client still falls back to fetching the API directly
+if the proxy is absent, so the page works on plain static hosting too.
+
+### Security
+
+- **CSP** with no `'unsafe-eval'`, `object-src 'none'`, `frame-ancestors
+  'none'`, and a `connect-src` allowlist, plus HSTS, `nosniff`,
+  `X-Frame-Options`, a restrictive `Permissions-Policy` (only `geolocation`,
+  same-origin) and `strict-origin-when-cross-origin` referrer policy. All in
+  `public/_headers`.
+- **Chart.js is pinned and SRI-checked** (`integrity="sha384-…"`), so altered
+  CDN bytes are refused rather than executed.
+- Both API routes **validate input against a strict allowlist** and never
+  interpolate user input into an upstream URL, and they reject cross-origin
+  callers — they exist for this page, not as a public proxy.
+- No secrets, tokens or account identifiers are in the repo; the app needs
+  none. `.dev.vars` and `.wrangler/` are gitignored.
+- No analytics, no third-party requests beyond the pinned Chart.js. The
+  "Buy me a coffee" button is a plain link, not their tracking widget.
 
 ---
 
