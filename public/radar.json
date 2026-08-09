@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-08-09T14:17:41.157299+00:00",
+ "generated_at": "2026-08-09T14:23:03.386431+00:00",
  "language": "bm-primary",
  "top_issues": [
   {
    "rank": 1,
-   "title_bm": "Jerebu Teruk di Sarawak, Bacaan IPU Capai Tahap Tidak Sihat",
-   "title_en": "Severe Haze in Sarawak as Air Quality Reaches Unhealthy Levels",
+   "title_bm": "Keadaan Jerebu di Sarawak Kian Memburuk dengan IPU Tidak Sihat",
+   "title_en": "Sarawak Haze Worsens as API Readings Hit Unhealthy Levels",
    "category": "bencana",
    "source_count": 2,
    "sources": [
@@ -38,8 +38,8 @@
   },
   {
    "rank": 2,
-   "title_bm": "Kemelut Dalaman Perikatan Nasional dan Isu Agihan Kerusi PRN Melaka",
-   "title_en": "Perikatan Nasional Internal Disputes and Melaka/GE16 Seat Negotiations",
+   "title_bm": "Kemelut Keahlian Bersatu dan Pertikaian Status dalam Perikatan Nasional",
+   "title_en": "Dispute Over Bersatu's Membership Status in Perikatan Nasional",
    "category": "politik",
    "source_count": 2,
    "sources": [
@@ -47,11 +47,6 @@
      "name": "malaymail",
      "title": "Samsuri says Bersatu remains in Perikatan despite Hadi’s claim",
      "url": "https://www.malaymail.com/news/malaysia/2026/08/09/samsuri-says-bersatu-remains-in-perikatan-despite-hadis-claim/230711"
-    },
-    {
-     "name": "malaymail",
-     "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-seat-swaps-on-the-table-for-perikatan-samsuri-tells-bn/230717"
     },
     {
      "name": "freemalaysiatoday",
@@ -65,8 +60,37 @@
     },
     {
      "name": "freemalaysiatoday",
-     "title": "PN open to seat swaps with BN, says Samsuri",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/pn-open-to-seat-swaps-with-bn-says-samsuri"
+     "title": "Now Terengganu Bersatu No 2 quits post",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/now-terengganu-bersatu-no-2-quits-post"
+    }
+   ],
+   "fact_check": {
+    "status": "no_check_found",
+    "sebenarnya_title": null,
+    "sebenarnya_url": null
+   }
+  },
+  {
+   "rank": 3,
+   "title_bm": "Perundingan Kerusi Menjelang Pilihan Raya Negeri Melaka",
+   "title_en": "Seat Allocation Negotiations Ahead of Melaka State Election",
+   "category": "politik",
+   "source_count": 2,
+   "sources": [
+    {
+     "name": "malaymail",
+     "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-seat-swaps-on-the-table-for-perikatan-samsuri-tells-bn/230717"
+    },
+    {
+     "name": "malaymail",
+     "title": "Melaka Pakatan open to talks, coalition welcomes negotiations ahead state election",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-pakatan-open-to-talks-coalition-welcomes-negotiations-ahead-state-election/230716"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "PH in touch with BN on seat talks for Melaka polls",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-in-touch-with-bn-on-seat-talks-for-melaka-polls"
     },
     {
      "name": "freemalaysiatoday",
@@ -81,34 +105,10 @@
    }
   },
   {
-   "rank": 3,
-   "title_bm": "Kemalangan Kereta Rempuh Balai Pelepasan Lapangan Terbang Antarabangsa Kota Kinabalu",
-   "title_en": "Car Crashes into Kota Kinabalu International Airport Departure Hall",
-   "category": "jenayah",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "malaymail",
-     "title": "Driver forgot to put SUV in park before crashing into KKIA departure hall, police say",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/driver-forgot-to-put-suv-in-park-before-crashing-at-kkia-police-say/230715"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Failure to engage ‘P’ gear led to car crash at KKIA departure hall",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/failure-to-engage-p-gear-led-to-car-crash-at-kkia-departure-hall"
-    }
-   ],
-   "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
-   }
-  },
-  {
    "rank": 4,
-   "title_bm": "Pokok Tumbang Hempap Kereta di George Town Akibat Reput Akar",
-   "title_en": "Falling Tree Crushes Car in George Town Due to Root Rot",
-   "category": "lain",
+   "title_bm": "Insiden Pokok Angsana Tumbang di George Town Akibat Akar Reput",
+   "title_en": "90-Year-Old Angsana Tree Collapses in George Town Due to Root Rot",
+   "category": "bencana",
    "source_count": 2,
    "sources": [
     {
@@ -135,8 +135,8 @@
   },
   {
    "rank": 5,
-   "title_bm": "Pasangan Beregu Tee Kai Wun - Yap Roy King Juara Korea Masters",
-   "title_en": "Tee Kai Wun and Yap Roy King Crowned Korea Masters Champions",
+   "title_bm": "Pasangan Beregu Tee Kai Wun dan Yap Roy King Juara Korea Masters",
+   "title_en": "Doubles Pair Tee Kai Wun and Yap Roy King Win Korea Masters",
    "category": "lain",
    "source_count": 2,
    "sources": [
@@ -159,8 +159,56 @@
   },
   {
    "rank": 6,
-   "title_bm": "Tiga Warga Asing Ditahan Susulan Kes Amang Seksual Wanita OKU di Terengganu",
-   "title_en": "Three Foreigners Arrested Over Sexual Offence Against Disabled Woman in Terengganu",
+   "title_bm": "Penjelasan Penggunaan Logo Jabatan Imigresen pada Kenderaan Syarikat",
+   "title_en": "Clarification on Immigration Department Logo Used on Company Vehicle",
+   "category": "lain",
+   "source_count": 2,
+   "sources": [
+    {
+     "name": "utusan",
+     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
+     "url": "https://www.utusan.com.my/nasional/2026/08/kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport/?utm_source=rss&utm_medium=rss&utm_campaign=kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport"
+    },
+    {
+     "name": "sebenarnya",
+     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+     "url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
+    }
+   ],
+   "fact_check": {
+    "status": "no_check_found",
+    "sebenarnya_title": null,
+    "sebenarnya_url": null
+   }
+  },
+  {
+   "rank": 7,
+   "title_bm": "Kereta Rempuk Balai Pelepasan KKIA Akibat Pemandu Lupa Masuk Gear 'P'",
+   "title_en": "Car Crashes into KKIA Departure Hall After Driver Forgot to Engage Park Gear",
+   "category": "lain",
+   "source_count": 2,
+   "sources": [
+    {
+     "name": "malaymail",
+     "title": "Driver forgot to put SUV in park before crashing into KKIA departure hall, police say",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/driver-forgot-to-put-suv-in-park-before-crashing-at-kkia-police-say/230715"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Failure to engage ‘P’ gear led to car crash at KKIA departure hall",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/failure-to-engage-p-gear-led-to-car-crash-at-kkia-departure-hall"
+    }
+   ],
+   "fact_check": {
+    "status": "no_check_found",
+    "sebenarnya_title": null,
+    "sebenarnya_url": null
+   }
+  },
+  {
+   "rank": 8,
+   "title_bm": "Tiga Pelarian Ditahan Disyaki Lakukan Kesalahan Seksual Terhadap Wanita OKU di Terengganu",
+   "title_en": "Three Refugees Arrested Over Alleged Sexual Offence Against Disabled Woman in Terengganu",
    "category": "jenayah",
    "source_count": 2,
    "sources": [
@@ -182,9 +230,38 @@
    }
   },
   {
-   "rank": 7,
-   "title_bm": "Kongres DAP dan Agenda Reformasi Pakatan Harapan",
-   "title_en": "DAP National Congress and Pakatan Harapan Reform Agenda",
+   "rank": 9,
+   "title_bm": "Dinamik Kerjasama Politik Sabah Jelang PRU16 Fokus Hak Autonomi",
+   "title_en": "Sabah Political Alliances Ahead of GE16 Focus on Autonomy Rights",
+   "category": "politik",
+   "source_count": 2,
+   "sources": [
+    {
+     "name": "malaymail",
+     "title": "Umno‑PAS pact not for Sabah, Salleh Keruak says politics driven by autonomy rights",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/umnopas-pact-not-for-sabah-salleh-keruak-says-politics-driven-by-autonomy-rights/230707"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Sabah Umno’s priority must be GRS, not PAS, says Salleh",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/sabah-umno-s-priority-must-be-grs-not-pas-says-salleh"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Warisan in talks with STAR, KDM on GE16 pact",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/warisan-in-talks-with-star-kdm-on-ge16-pact"
+    }
+   ],
+   "fact_check": {
+    "status": "no_check_found",
+    "sebenarnya_title": null,
+    "sebenarnya_url": null
+   }
+  },
+  {
+   "rank": 10,
+   "title_bm": "Kongres DAP Menanti Macet Reformasi dan Pergerakan Tokoh Politik",
+   "title_en": "DAP Congress Approached Amid Reform Frustrations and Political Shifts",
    "category": "politik",
    "source_count": 2,
    "sources": [
@@ -194,81 +271,19 @@
      "url": "https://www.malaymail.com/news/malaysia/2026/08/09/dap-congress-set-for-aug-16-showdown-stalled-reforms-and-grassroots-frustration-to-dominate-agenda/230705"
     },
     {
-     "name": "freemalaysiatoday",
-     "title": "PH must make reforms to stave off becoming opposition again, says analyst",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-must-make-reforms-to-stave-off-becoming-opposition-again-says-analyst"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Criticise DAP but labelling it ‘enemy of Islam’ is dangerous, says Marzuki",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/criticise-dap-but-labelling-it-enemy-of-islam-is-dangerous-says-marzuki"
+     "name": "malaymail",
+     "title": "Malay-Muslim unity cannot be built on fear of DAP — Phar Kim Beng",
+     "url": "https://www.malaymail.com/news/what-you-think/2026/08/09/malay-muslim-unity-cannot-be-built-on-fear-of-dap-phar-kim-beng/230655"
     },
     {
      "name": "freemalaysiatoday",
      "title": "Ex-DAP veteran Ronnie Liu joins PBM",
      "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ex-dap-veteran-ronnie-liu-joins-pbm"
-    }
-   ],
-   "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
-   }
-  },
-  {
-   "rank": 8,
-   "title_bm": "Isu Tular Kenderaan Menggunakan Logo Jabatan Imigresen Malaysia (JIM)",
-   "title_en": "Viral Vehicle Displaying Immigration Department Logo Clarified by Authorities",
-   "category": "jenayah",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "utusan",
-     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
-     "url": "https://www.utusan.com.my/nasional/2026/08/kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport/?utm_source=rss&utm_medium=rss&utm_campaign=kenderaan-guna-logo-imigresen-milik-syarikat-import-eksport"
     },
     {
-     "name": "sebenarnya",
-     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-     "url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
-    }
-   ],
-   "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
-   }
-  },
-  {
-   "rank": 9,
-   "title_bm": "Palsu: Dakwaan Bantuan Sumbangan Asas Rahmah (SARA) RM100 One-Off Bagi Semua Rakyat 18 Tahun Ke Atas",
-   "title_en": "Fake News: Claims of One-Off RM100 SARA Assistance for All Citizens Aged 18 and Above",
-   "category": "ekonomi",
-   "source_count": 1,
-   "sources": [
-    {
-     "name": "sebenarnya",
-     "title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off",
-     "url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Adalah Tidak Benar",
-    "sebenarnya_url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
-   }
-  },
-  {
-   "rank": 10,
-   "title_bm": "PM Anwar Ibrahim Melawat Fadillah Yusof dan Ismail Sabri di IJN",
-   "title_en": "PM Anwar Ibrahim Visits Fadillah Yusof and Ismail Sabri at IJN",
-   "category": "politik",
-   "source_count": 1,
-   "sources": [
-    {
      "name": "freemalaysiatoday",
-     "title": "Anwar visits Fadillah, Ismail Sabri at IJN",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/anwar-visits-fadillah-ismail-sabri-at-ijn"
+     "title": "Criticise DAP but labelling it ‘enemy of Islam’ is dangerous, says Marzuki",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/criticise-dap-but-labelling-it-enemy-of-islam-is-dangerous-says-marzuki"
     }
    ],
    "fact_check": {
