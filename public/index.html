@@ -340,6 +340,14 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .metro-wrap{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s6)}
 .metro-head{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;padding:var(--s2) 2px 0}
 .metro-head h4{margin:0}
+.metro-legend{display:flex;align-items:center;gap:var(--s4);padding:0 2px;
+  font-size:11px;color:var(--fg-2)}
+.ml-item{display:inline-flex;align-items:center;gap:7px}
+.ml-dot{width:9px;height:9px;border-radius:99px;background:var(--fg-2);flex:none;
+  border:1.5px solid var(--bg);box-shadow:0 0 0 1px var(--fg-2)}
+.ml-ring{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+  border-radius:99px;border:1.5px solid var(--fg-2);flex:none}
+.ml-ring .ml-dot{width:6px;height:6px;border:none;box-shadow:none}
 .metro-scroll{display:flex;gap:var(--s4);overflow-x:auto;padding:var(--s2) 2px var(--s4);
   scroll-snap-type:x proximity}
 .metro-col{flex:none;scroll-snap-align:start;border:1px solid var(--line-soft);
@@ -779,6 +787,7 @@ const I18N = {
   "LRT & MRT network":"Rangkaian LRT & MRT",
   "Rapid KL rail — click a station to open it on the map":"Rel Rapid KL — klik stesen untuk buka pada peta",
   "stns":"stesen",
+  "Station":"Stesen", "Interchange":"Pertukaran",
   "Location permission denied — search by name instead.":"Kebenaran lokasi dinafikan — cari mengikut nama sebaliknya.",
   "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
   "All networks":"Semua rangkaian", "Busiest routes — ":"Laluan paling sibuk — ",
@@ -3565,6 +3574,10 @@ function paintRailDiagram(){
   host.innerHTML = `<div class="metro-wrap"><div class="metro-head">
       <h4>${T("LRT & MRT network")}</h4>
       <span class="sub">${T("Rapid KL rail — click a station to open it on the map")}</span></div>
+    <div class="metro-legend" aria-hidden="true">
+      <span class="ml-item"><span class="ml-dot"></span>${T("Station")}</span>
+      <span class="ml-item"><span class="ml-ring"><span class="ml-dot"></span></span>${T("Interchange")}</span>
+    </div>
     <div class="metro-scroll">` +
     rail.lines.map(l => {
       const n = l.stations.length;
