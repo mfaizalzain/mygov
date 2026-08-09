@@ -50,8 +50,7 @@ def parse_rss(text, source, lang, limit=30):
             if len(items) >= limit:
                 break
     except Exception as e:
-        sys.stderr.write(f"  rss parse err {source}: {e}
-")
+        sys.stderr.write(f"  rss parse err {source}: {e}\n")
     return items
 
 
@@ -74,8 +73,7 @@ def parse_trends_rss(text, limit=15):
             if len(items) >= limit:
                 break
     except Exception as e:
-        sys.stderr.write(f"  trends parse err: {e}
-")
+        sys.stderr.write(f"  trends parse err: {e}\n")
     return items
 
 
@@ -148,6 +146,7 @@ Return STRICT JSON only (no markdown fence), exactly this shape:
 Rules:
 - FOCUS EXCLUSIVELY ON VIRAL CLAIMS, RUMORS, CONTROVERSIES, AND STATEMENTS THAT REQUIRE FACT-CHECKING.
 - FILTER OUT standard breaking news, routine accidents, sports scores, daily road/weather updates, and routine political speeches.
+- PERSISTENCE BEATS ONE-DAY SPIKES: topics that appear on MULTIPLE DAYS or in MULTIPLE sources rank ABOVE single-day viral spikes — this is about what Malaysia is COLLECTIVELY discussing, not today's headlines.
 - Dedupe across sources: same claim/issue = one issue; source_count = distinct sources.
 - sebenarnya signals are official fact-check posts: if one addresses the issue, status=debunked (if false) or verified_claim; else no_check_found.
 - URLs: fill from the signal urls you were given (match by source+title); if you cannot match, use "" for url.
@@ -293,8 +292,7 @@ If it is a verified true claim, verdict TRUE. If it is a false/fake claim or rum
         return {"status": status, "verdict": verdict,
                 "reason": parsed.get("reason"), "sources": parsed.get("sources", [])}
     except Exception as e:
-        sys.stderr.write(f"  factcheck err: {e}
-")
+        sys.stderr.write(f"  factcheck err: {e}\n")
         return {"status": "no_check_found", "verdict": None, "reason": None, "sources": []}
 
 
@@ -307,8 +305,7 @@ def main():
             print(f"  {source}: {len(items)} items")
             signals.extend(items)
         except Exception as e:
-            sys.stderr.write(f"  fetch err {source}: {e}
-")
+            sys.stderr.write(f"  fetch err {source}: {e}\n")
 
     # Google Trends MY RSS — catches topics before they hit the news
     try:
@@ -316,8 +313,7 @@ def main():
         print(f"  trends: {len(trends)} items")
         signals.extend(trends)
     except Exception as e:
-        sys.stderr.write(f"  trends err: {e}
-")
+        sys.stderr.write(f"  trends err: {e}\n")
 
     # Persistence: merge into rolling 7-day history so Gemini ranks
     # multi-day topics above one-day spikes (collective trends, not news flashes)
@@ -328,8 +324,7 @@ def main():
     try:
         issues = cluster_with_gemini(merged)
     except Exception as e:
-        sys.stderr.write(f"  gemini err: {e}
-")
+        sys.stderr.write(f"  gemini err: {e}\n")
     if issues:
         print(f"  gemini: {len(issues)} issues")
     else:

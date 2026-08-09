@@ -1,186 +1,59 @@
 {
- "generated_at": "2026-08-09T14:35:14.258244+00:00",
+ "generated_at": "2026-08-09T14:41:15.944072+00:00",
  "language": "bm-primary",
  "top_issues": [
   {
    "rank": 1,
-   "title_bm": "Krisis Jerebu dan Cuaca Panas Lampau Melanda Sarawak",
-   "title_en": "Haze Crisis and Extreme Hot Weather Grip Sarawak",
-   "category": "bencana",
+   "title_bm": "Dakwaan Palsu Bantuan SARA RM100 One-Off dan Penipuan Menyamar Pegawai STR",
+   "title_en": "Fake Claims on SARA RM100 One-Off Aid and STR Officer Scams",
+   "category": "ekonomi",
    "source_count": 2,
    "sources": [
     {
-     "name": "malaymail",
-     "title": "Sarawak chokes under haze blanket as hot weather grips state until Aug 14",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/sarawak-chokes-under-haze-blanket-as-hot-weather-grips-state-until-aug-14/230730"
+     "name": "sebenarnya",
+     "title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off",
+     "url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
     },
     {
-     "name": "malaymail",
-     "title": "Sarawak haze thickens, Serian tops API at 170 as Kuching, Bintulu readings hit 155",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/sarawak-haze-thickens-serian-tops-api-at-170-as-kuching-bintulu-readings-hit-155/230703"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Unhealthy air spreads to more areas of Sarawak",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/unhealthy-air-spreads-to-more-areas-of-sarawak"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "5 areas in Sarawak record unhealthy API readings",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/5-areas-in-sarawak-record-unhealthy-api-readings"
+     "name": "sebenarnya",
+     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan A...",
+     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
     }
    ],
    "fact_check": {
     "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "confirmed by multiple reports",
-    "sources": [
-     "Astro Awani",
-     "Bernama",
-     "Buletin TV3"
-    ]
+    "sebenarnya_title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan Asas Rahmah (SARA)",
+    "sebenarnya_url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
    }
   },
   {
    "rank": 2,
-   "title_bm": "Dinamika Politik PRN Melaka, Kerjasama Perikatan Nasional-BN & Persiapan PRU16",
-   "title_en": "Political Developments for Melaka State Elections, PN-BN Seat Talks, and GE16 Preparations",
-   "category": "politik",
-   "source_count": 2,
+   "title_bm": "Penyebaran Kenyataan Palsu Dikaitkan Dengan Timbalan Ketua Polis Negara di Facebook",
+   "title_en": "Fake Statement Linked to Deputy IGP Circulates on Facebook",
+   "category": "jenayah",
+   "source_count": 1,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Melaka seat swaps on the table for Perikatan, Samsuri tells BN",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-seat-swaps-on-the-table-for-perikatan-samsuri-tells-bn/230717"
-    },
-    {
-     "name": "malaymail",
-     "title": "Melaka Pakatan open to talks, coalition welcomes negotiations ahead state election",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/melaka-pakatan-open-to-talks-coalition-welcomes-negotiations-ahead-state-election/230716"
-    },
-    {
-     "name": "malaymail",
-     "title": "Samsuri says Bersatu remains in Perikatan despite Hadi’s claim",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/samsuri-says-bersatu-remains-in-perikatan-despite-hadis-claim/230711"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "PH in touch with BN on seat talks for Melaka polls",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-in-touch-with-bn-on-seat-talks-for-melaka-polls"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Bersatu to take PN membership dispute to RoS",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/bersatu-to-take-pn-membership-dispute-to-ros"
+     "title": "Police lodge report after fake statement linked to deputy IGP spreads on Facebook",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/police-lodge-report-after-fake-statement-linked-to-deputy-igp-spreads-on-facebook/230724"
     }
    ],
    "fact_check": {
     "status": "verified_claim",
     "verdict": "TRUE",
-    "reason": "confirmed by multiple reports",
+    "reason": "The Royal Malaysia Police (PDRM) confirmed that a viral Facebook post alleging that the Acting Deputy Inspector-General of Police held a special press conference regarding an operation is false.",
     "sources": [
+     "BERNAMA",
      "Sinar Harian",
-     "Bernama",
-     "Astro Awani"
+     "Malay Mail"
     ]
    }
   },
   {
    "rank": 3,
-   "title_bm": "Insiden Pokok Tumbang Hempas Kereta di Jalan Macalister, Pulau Pinang",
-   "title_en": "Tree Collapse Crushes Car on Macalister Road, Penang Due to Root Rot",
-   "category": "bencana",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "malaymail",
-     "title": "MBPP blames root rot and trunk cavity for Angsana collapse in George Town",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/root-rot-and-trunk-cavity-blamed-for-angsana-tree-collapse-in-george-town/230731"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Root rot, cavity contributed to 90-year-old tree collapse, says MBPP",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/root-rot-cavity-contributed-to-90-year-old-tree-collapse-says-mbpp"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "3 cheat death after falling tree crushes car on Macalister Road",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/3-cheat-death-after-falling-tree-crushes-car-on-macalister-road"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "confirmed by multiple reports",
-    "sources": [
-     "Sinar Harian",
-     "Utusan Malaysia",
-     "The Star"
-    ]
-   }
-  },
-  {
-   "rank": 4,
-   "title_bm": "Kereta Rempuh Balai Pelepasan Lapangan Terbang Antarabangsa Kota Kinabalu",
-   "title_en": "Car Crashes into Departure Hall at Kota Kinabalu International Airport",
-   "category": "lain",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "malaymail",
-     "title": "Driver forgot to put SUV in park before crashing into KKIA departure hall, police say",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/driver-forgot-to-put-suv-in-park-before-crashing-at-kkia-police-say/230715"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "Failure to engage ‘P’ gear led to car crash at KKIA departure hall",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/failure-to-engage-p-gear-led-to-car-crash-at-kkia-departure-hall"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "confirmed by multiple reports",
-    "sources": [
-     "Bernama",
-     "Astro Awani",
-     "FMT"
-    ]
-   }
-  },
-  {
-   "rank": 5,
-   "title_bm": "Tangkapan Tiga Pelarian Myanmar Berhubung Kes Jenayah Seksual Terhadap Wanita OKU",
-   "title_en": "Three Myanmar Refugees Arrested Over Sexual Assault Against Disabled Woman",
-   "category": "jenayah",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "malaymail",
-     "title": "Terengganu police arrest three Myanmar men over sexual offence against disabled woman",
-     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/terengganu-police-arrest-three-myanmar-men-over-sexual-offence-against-disabled-woman/230727"
-    },
-    {
-     "name": "freemalaysiatoday",
-     "title": "3 refugees held after report of sexual offence against disabled woman",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/3-refugees-held-after-report-of-sexual-offence-against-disabled-woman"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "confirmed by multiple reports",
-    "sources": [
-     "Astro Awani",
-     "FMT",
-     "Sinar Harian"
-    ]
-   }
-  },
-  {
-   "rank": 6,
-   "title_bm": "Isu Penggunaan Logo Jabatan Imigresen Malaysia (JIM) pada Kenderaan Dipandu Warga Asing",
-   "title_en": "Immigration Department Clarifies Vehicle with JIM Logo Driven by Foreigner",
+   "title_bm": "Isu Kenderaan Menggunakan Logo Jabatan Imigresen Dipandu Warga Asing",
+   "title_en": "Viral Video of Foreigner Driving Commercial Vehicle Bearing Immigration Logo",
    "category": "lain",
    "source_count": 2,
    "sources": [
@@ -191,8 +64,8 @@
     },
     {
      "name": "sebenarnya",
-     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-     "url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
+     "title": "Penjelasan Berkenaan Penggunaan Logo JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+     "url": ""
     }
    ],
    "fact_check": {
@@ -202,21 +75,64 @@
    }
   },
   {
-   "rank": 7,
-   "title_bm": "Beregu Lelaki Negara Tee Kai Wun - Yap Roy King Juara Kejohanan Korea Masters",
-   "title_en": "Malaysian Men's Doubles Tee Kai Wun and Yap Roy King Crowned Korea Masters Champions",
-   "category": "lain",
+   "rank": 4,
+   "title_bm": "Penyebaran Senarai Palsu 10 Universiti Awam di Media Sosial",
+   "title_en": "Fake List of 10 Public Universities Circulating Online",
+   "category": "pendidikan",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Senarai 10 Universiti Awam yang Tersebar adalah Tidak Benar",
+     "url": "https://sebenarnya.my/senarai-10-universiti-awam-yang-tersebar-adalah-tidak-benar/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Senarai 10 Universiti Awam yang Tersebar adalah Tidak Benar",
+    "sebenarnya_url": "https://sebenarnya.my/senarai-10-universiti-awam-yang-tersebar-adalah-tidak-benar/"
+   }
+  },
+  {
+   "rank": 5,
+   "title_bm": "Kekeliruan Pengurusan Zakat Tabung Haji Bagi Tempoh 2016–2019",
+   "title_en": "Clarification on Tabung Haji Zakat Payments for 2016–2019",
+   "category": "agama",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Penjelasan Mengenai Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
+     "url": "https://sebenarnya.my/penjelasan-mengenai-isu-zakat-tabung-haji-bagi-tempoh-2016-2019/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Penjelasan Mengenai Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
+    "sebenarnya_url": "https://sebenarnya.my/penjelasan-mengenai-isu-zakat-tabung-haji-bagi-tempoh-2016-2019/"
+   }
+  },
+  {
+   "rank": 6,
+   "title_bm": "Percanggahan Kenyataan Hadi Awang dan Samsuri Berkenaan Kedudukan Bersatu dalam PN",
+   "title_en": "Dispute Between Hadi Awang and Samsuri Over Bersatu's Status in Perikatan Nasional",
+   "category": "politik",
    "source_count": 2,
    "sources": [
     {
      "name": "malaymail",
-     "title": "Tee Kai Wun and Yap Roy King click fast as BAM’s doubles shuffle pays off with Korea Masters triumph",
-     "url": "https://www.malaymail.com/news/sports/2026/08/09/tee-kai-wun-and-yap-roy-king-click-fast-as-bams-doubles-shuffle-pays-off-with-korea-masters-triumph/230718"
+     "title": "Samsuri says Bersatu remains in Perikatan despite Hadi’s claim",
+     "url": "https://www.malaymail.com/news/malaysia/2026/08/09/samsuri-says-bersatu-remains-in-perikatan-despite-hadis-claim/230711"
     },
     {
      "name": "freemalaysiatoday",
-     "title": "Kai Wun-Roy King crowned Korea Masters champs",
-     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/kai-wun-roy-king-crowned-korea-masters-champs"
+     "title": "Samsuri contradicts Hadi, says Bersatu still in PN",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/samsuri-contradicts-hadi-says-bersatu-still-in-pn"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Bersatu to take PN membership dispute to RoS",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/bersatu-to-take-pn-membership-dispute-to-ros"
     }
    ],
    "fact_check": {
@@ -226,10 +142,48 @@
    }
   },
   {
-   "rank": 8,
-   "title_bm": "Ahmad Shabery Cheek Penjelasan Tiada Cadangan Penjualan Hotel Felda Semasa Penggal Beliau",
-   "title_en": "Ahmad Shabery Cheek Denies Proposal to Sell Felda Hotels During His Tenure",
+   "rank": 7,
+   "title_bm": "Sindiket Penipuan Pesanan Tempahan Makanan dan Cenderahati Menyamar Pegawai Kerajaan",
+   "title_en": "Scam Involving Fake Government Catering and Souvenir Purchase Orders",
    "category": "ekonomi",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Waspada Penipuan Pesanan Kerajaan Bagi Tempahan Makanan Dan Cenderahati",
+     "url": "https://sebenarnya.my/waspada-penipuan-pesanan-kerajaan-bagi-tempahan-makanan-dan-cenderahati/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Waspada Penipuan Pesanan Kerajaan Bagi Tempahan Makanan Dan Cenderahati",
+    "sebenarnya_url": "https://sebenarnya.my/waspada-penipuan-pesanan-kerajaan-bagi-tempahan-makanan-dan-cenderahati/"
+   }
+  },
+  {
+   "rank": 8,
+   "title_bm": "Dakwa Kerjasama Promosi Antara Bank Rakyat Dan Kedai Emas Seri Semantan",
+   "title_en": "False Claims of Partnership Between Bank Rakyat and Kedai Emas Seri Semantan",
+   "category": "ekonomi",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Kerjasama Antara Bank Rakyat Dan Kedai Emas Seri Semantan Adalah Tidak Benar",
+     "url": "https://sebenarnya.my/kerjasama-antara-bank-rakyat-dan-kedai-emas-seri-semantan-adalah-tidak-benar/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Kerjasama Antara Bank Rakyat Dan Kedai Emas Seri Semantan Adalah Tidak Benar",
+    "sebenarnya_url": "https://sebenarnya.my/kerjasama-antara-bank-rakyat-dan-kedai-emas-seri-semantan-adalah-tidak-benar/"
+   }
+  },
+  {
+   "rank": 9,
+   "title_bm": "Penafian Shabery Cheek Berhubung Cadangan Penjualan Hotel Felda",
+   "title_en": "Shabery Cheek Denies Proposal to Sell Felda Hotels During Tenure",
+   "category": "politik",
    "source_count": 2,
    "sources": [
     {
@@ -250,55 +204,26 @@
    }
   },
   {
-   "rank": 9,
-   "title_bm": "Amaran Penipuan Pesanan Mesej Kerajaan Berkenaan Sumbangan Tunai Rahmah (STR) & SARA RM100",
-   "title_en": "Warnings Over Fake Messages and Scams Impersonating Government Aid (SARA & STR)",
-   "category": "jenayah",
-   "source_count": 1,
-   "sources": [
-    {
-     "name": "sebenarnya",
-     "title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off",
-     "url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
-    },
-    {
-     "name": "sebenarnya",
-     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan A",
-     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan Asas Rahmah (SARA)",
-    "sebenarnya_url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
-   }
-  },
-  {
    "rank": 10,
-   "title_bm": "Penyelarasan Harga Petroleum Tanpa Subsidi Susulan Pergolakan Geopolitik Asia Barat",
-   "title_en": "Unsubsidised Fuel Price Adjustments Due to Middle East Geopolitical Conflicts",
-   "category": "ekonomi",
+   "title_bm": "Penjelasan Dakwaan Berhubung Status Pemberhentian Bekas Anggota Tentera Darat",
+   "title_en": "Clarification on Claims Regarding Discharge Status of Former Army Personnel",
+   "category": "lain",
    "source_count": 1,
    "sources": [
     {
      "name": "sebenarnya",
-     "title": "Makluman : Harga Runcit RON95 Dan Diesel Tanpa Subsidi Meningkat Susulan Peningkatan Risiko Geopolitik Di Asia",
-     "url": "https://sebenarnya.my/makluman-harga-runcit-ron95-dan-diesel-tanpa-subsidi-meningkat-susulan-peningkatan-risiko-geopolitik-di-asia-barat/"
-    },
-    {
-     "name": "sebenarnya",
-     "title": "Penjelasan Mengenai Situasi Pasaran Tenaga dan Jaminan Bekalan Negara",
-     "url": "https://sebenarnya.my/penjelasan-mengenai-situasi-pasaran-tenaga-dan-jaminan-bekalan-negara/"
+     "title": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat Malaysia",
+     "url": "https://sebenarnya.my/penjelasan-berhubung-dakwaan-status-pemberhentian-bekas-anggota-tentera-darat-malaysia/"
     }
    ],
    "fact_check": {
     "status": "verified_claim",
-    "sebenarnya_title": "Makluman : Harga Runcit RON95 Dan Diesel Tanpa Subsidi Meningkat Susulan Peningkatan Risiko Geopolitik Di Asia Barat",
-    "sebenarnya_url": "https://sebenarnya.my/makluman-harga-runcit-ron95-dan-diesel-tanpa-subsidi-meningkat-susulan-peningkatan-risiko-geopolitik-di-asia-barat/"
+    "sebenarnya_title": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat Malaysia",
+    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berhubung-dakwaan-status-pemberhentian-bekas-anggota-tentera-darat-malaysia/"
    }
   }
  ],
  "total_signals": 110,
- "history_window_signals": 110,
+ "history_window_signals": 220,
  "history_days": 7
 }
