@@ -123,6 +123,25 @@ development, not just for final wiring:
 
 ---
 
+## Data freshness policy (hard rule)
+- Applies to the dataset's LAST-UPDATED date, NOT historical depth. Long
+  history is fine; a series nobody updates is not.
+- EXCLUDE any dataset whose latest date is more than 2 years old (audit done
+  2026-08-09 — re-verify at build time with a sort=-date call).
+- STALE — do NOT build sections for these:
+  - births (last update 2023-07-31 — 3.0 yr frozen)
+  - mnha (2022-01), marriages (2022-01), population_state (2023-01),
+    deaths (2024-01), fertility (2024-01)
+  - arrivals (tourism, last update 2024-10-01) and passports (2024-10-01) —
+    22 months frozen, effectively abandoned. Skip the tourism section.
+- FRESH — keep: fuelprice (3d), cpi_core/ppi (69d), iowrt (100d), ipi (130d),
+  exchangerates (161d), population_malaysia (220d), interestrates (251d),
+  MoH health (daily).
+- Every section header shows a "data as of <date>" line — if the data is
+  older than 6 months, add a muted "⚠️ may be delayed" note.
+
+---
+
 ## Finance & tourism (all VERIFIED working datasets)
 Verify each with a live mygov_data_catalogue call before wiring its UI; only
 build sections for datasets that return data. All time-series → default
@@ -130,19 +149,13 @@ sort=-date (they come oldest-first otherwise).
 - Exchange rates (exchangerates): line chart of MYR vs 4-6 key currencies —
   USD, GBP, EUR, SGD, IDR — with "6 months / 1 year / all" toggle and a
   currency picker. Tabular-nums; tooltip shows rate + date.
-- Tourist arrivals (arrivals): KPI card for total arrivals (latest month) +
-  grouped bar chart of top 10 countries. Note: 2020-21 COVID collapse to ~zero
-  is real data, not an error.
 - Interest rates (interestrates): line chart of OPR (bank=commercial,
   rate=opr) over time + small table of latest rates per bank type.
-- Passports (passports): KPI (latest month total) + bar chart by state for the
-  selected month.
-- Births (births): trend line of daily births for Malaysia (state=Malaysia)
-  with a state selector.
 - Postcode lookup (poskod): searchable reference table (postcode → city →
-  state), not a chart — small utility card with inline search.
-- Health expenditure (mnha): filterable table of national health accounts
-  expenditure by sector/variable, with a sector-totals bar chart.
+  state), not a chart — small utility card with inline search. (Static
+  reference data — freshness rule does not apply; it's a lookup table.)
+- Tourism (arrivals/passports) is EXCLUDED per the freshness policy — last
+  updated 2024-10-01. Do not build it even though the data exists.
 
 ---
 
