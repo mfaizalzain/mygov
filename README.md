@@ -7,7 +7,7 @@ statistics and public transport, in one page.
 
 No build step, no framework, no npm dependencies at runtime. The whole app is a
 single HTML file plus a service worker, served by a Cloudflare Worker that also
-proxies one geocoding call.
+proxies the reverse-geocoding and GTFS archive calls.
 
 ---
 
@@ -79,14 +79,15 @@ if the proxy is absent, so the page works on plain static hosting too.
   `X-Frame-Options`, a restrictive `Permissions-Policy` (only `geolocation`,
   same-origin) and `strict-origin-when-cross-origin` referrer policy. All in
   `public/_headers`.
-- **Chart.js is pinned and SRI-checked** (`integrity="sha384-…"`), so altered
-  CDN bytes are refused rather than executed.
+- **Chart.js and Leaflet are pinned and SRI-checked** (`integrity="sha384-…"`),
+  so altered CDN bytes are refused rather than executed.
 - Both API routes **validate input against a strict allowlist** and never
   interpolate user input into an upstream URL, and they reject cross-origin
   callers — they exist for this page, not as a public proxy.
 - No secrets, tokens or account identifiers are in the repo; the app needs
   none. `.dev.vars` and `.wrangler/` are gitignored.
-- No analytics, no third-party requests beyond the pinned Chart.js. The
+- No analytics, no third-party requests beyond the pinned Chart.js and
+  Leaflet from the CDN and map tiles from `tile.openstreetmap.org`. The
   "Buy me a coffee" button is a plain link, not their tracking widget.
 
 ---
@@ -188,9 +189,9 @@ Two layers, deliberately different:
 
 - **App (`localStorage`, 15 min TTL)** — drives freshness. Holds compacted view
   models, not raw responses: forecast strings are dictionary-compressed, and
-  GTFS is reduced to counts before storage. A full cold load is ~200 KB, well
-  under quota, and `cacheSet` degrades to memory-only if the quota is hit
-  anyway.
+  GTFS is reduced to counts plus stop coordinates before storage. A full cold
+  load is a few hundred KB, well under quota, and `cacheSet` degrades to
+  memory-only if the quota is hit anyway.
 - **Service worker** — drives offline. Cache-first for the shell;
   API responses are cached on success and served only when the network fails.
 
@@ -250,12 +251,13 @@ const x = await request("data-catalogue", "/data-catalogue", { id: "YOUR_ID" });
 
 ```js
 SECTIONS.push({ id:"myid", label:"My Data", icon:"🧭", family:"data-catalogue" })
-META.myid    = { title, desc, eps:[...] }
+META.myid    = { title, desc, how, eps:[...] }
 LOADERS.myid = { load, render, after }   // after() feeds the top KPI row
 ```
 
 Nav entry, scroll-spy, skeleton, error/retry, caching and throttling are all
-wired from those. Browse available ids at
+wired from those (new sections load eagerly; `LAZY` in `index.html` marks the
+scroll-triggered ones). Browse available ids at
 [developer.data.gov.my](https://developer.data.gov.my).
 
 ---
