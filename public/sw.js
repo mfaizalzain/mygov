@@ -9,7 +9,7 @@
  *   Freshness is driven by the app's own 15-minute TTL in index.html, which is
  *   the "revalidate" half of SWR moved into a rate-limit-aware layer.
  */
-const VERSION    = "mygov-v7";
+const VERSION    = "mygov-v8";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -118,6 +118,17 @@ self.addEventListener("fetch", event => {
    * blank basemap on every visit. Nothing here wants to cache them anyway:
    * the branch below only stores same-origin responses. */
   if (url.origin !== self.location.origin) return;
+
+  /* Data bundles (slow/health/radar/feed) are NEVER intercepted. The app
+   * fetches them with cache:"no-store", and KV serves them with a 10-min
+   * edge TTL, so they are already fresh. A SW-cached copy would go stale:
+   * this exact bug regressed the FX card to Friday's rates on 2026-08-10
+   * because the cache-first branch below served a slow.json cached during
+   * an earlier visit, ignoring the no-store hint (caches.match ignores
+   * cache mode). Offline fallback for these is the app's live-API chain,
+   * not the SW. */
+  if (url.pathname === "/slow.json" || url.pathname === "/health.json" ||
+      url.pathname === "/radar.json" || url.pathname === "/feed.xml") return;
 
   // Everything else (icons, vendor scripts): cache first.
   event.respondWith((async () => {
