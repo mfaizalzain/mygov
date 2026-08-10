@@ -4,18 +4,14 @@ on:
   # Runs daily at 01:00 UTC (9:00 AM MYT)
   schedule:
     - cron: '0 1 * * *'
-  # Catch-up: also refresh on any push, so a delayed/skipped cron never
-  # leaves the static files stale for a day. The collector's own commit uses
-  # [skip ci], so this cannot loop.
-  push:
-    branches: [main]
+  # Manual trigger so a delayed/skipped cron can be caught up instantly
   workflow_dispatch:
 
 jobs:
   collect-radar:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,22 +26,31 @@ jobs:
           python3 -m py_compile tools/collect_radar.py
           echo "syntax OK"
 
+      # Pull the 7-day rolling history from KV first so trend persistence
+      # survives the switch away from git commits.
+      - name: Pull radar history from KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py pull radar_history tools/radar_history.json || echo "no history yet - starting fresh"
+
       - name: Run collector (Gemini clustering)
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
           python3 tools/collect_radar.py
 
-      - name: Commit and push changes
+      # Data goes to KV, NOT git. radar.json feeds the dashboard; the merged
+      # history goes back to KV for next run.
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/radar.json tools/radar_history.json
-          git diff --quiet && git diff --staged --quiet || (
-            git commit -m "chore: update radar.json [skip ci]"
-            # Another collector may commit between our commit and push; rebase
-            # and retry so concurrent runs never fail on a stale ref.
-            for i in 1 2 3; do
-              if git push; then break; fi
-              git pull --rebase --autostash && git push && break
-            done)
+          python3 tools/kv_upload.py push
+          python3 - <<'EOF'
+          import os, sys
+          sys.path.insert(0, "tools")
+          import kv_upload
+          kv_upload.put("radar_history", open("tools/radar_history.json", encoding="utf-8").read())
+          EOF

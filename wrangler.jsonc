@@ -21,6 +21,13 @@
   "observability": {
     "enabled": true
   },
+  // Collector data (slow/health/radar JSON + SEO snapshot + feed) lives in KV
+  // so GitHub Action collectors write data without committing to git - no more
+  // bot-commit races with manual pushes. Static copies remain in public/ as a
+  // cold-start fallback; the Worker prefers KV and falls back to ASSETS.
+  "kv_namespaces": [
+    { "binding": "MYGOV_DATA", "id": "40812fc5fedb4e1fb66d70f75e707f90" }
+  ],
   // Public API key embedded in malaysiaairports.com.my's JS bundle; declared
   // as a var (not a secret) so `wrangler deploy` pushes it — set at:
   // https://dash.cloudflare.com/.../workers/services/mygov/settings/variables

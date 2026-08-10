@@ -339,6 +339,71 @@ export default {
       return json(out, 200, { "cache-control": "public, max-age=3600" });
     }
 
+    /* Collector data from KV.
+     *
+     * slow.json / health.json / radar.json / feed.xml are written by the
+     * GitHub Action collectors. They used to be committed to git (causing
+     * constant push races with manual edits); now they live in KV and the
+     * Worker prefers KV, falling back to the static file in public/ (which
+     * stays as a cold-start copy). The SEO snapshot (seo_snap) is spliced
+     * into index.html's <noscript> block at request time, so crawlers still
+     * see fresh headline values without any bot commits. */
+    const KV_FILES = {
+      "/slow.json":   { key: "slow",  type: "json" },
+      "/health.json": { key: "health", type: "json" },
+      "/radar.json":  { key: "radar",  type: "json" },
+      "/feed.xml":    { key: "feed",   type: "text" },
+    };
+    if (KV_FILES[url.pathname]) {
+      const { key, type } = KV_FILES[url.pathname];
+      const v = await env.MYGOV_DATA.get(key);
+      if (v != null) {
+        const body = type === "json" ? v : v; // KV.get returns the raw string
+        const headers = {
+          "access-control-allow-origin": "*",
+          "cache-control": "public, max-age=600",
+        };
+        headers["content-type"] =
+          type === "json" ? "application/json; charset=utf-8"
+                          : "application/rss+xml; charset=utf-8";
+        return new Response(body, { status: 200, headers });
+      }
+      // Fall back to the static copy committed in public/ (cold start or KV
+      // cleared). Asset router serves it with its own headers.
+      return env.ASSETS.fetch(request);
+    }
+
+    /* index.html SEO snapshot splice.
+     *
+     * The <noscript> block between <!-- SEO:SNAP --> markers used to be
+     * rewritten + committed by the collector (another race source). Now the
+     * collector writes the snapshot to KV (`seo_snap`); the Worker splices
+     * it into the served HTML so crawlers see fresh values while git stays
+     * human-only. Falls back to whatever is in the committed file. */
+    if (url.pathname === "/" || url.pathname === "/index.html") {
+      const snap = await env.MYGOV_DATA.get("seo_snap");
+      if (snap != null) {
+        const res = await env.ASSETS.fetch(request);
+        if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
+          const html = await res.text();
+          const out = html.includes("<!-- SEO:SNAP -->")
+            ? html.replace(
+                /<!-- SEO:SNAP -->[\s\S]*?<!-- \/SEO:SNAP -->/,
+                `<!-- SEO:SNAP -->\n${snap}\n<!-- /SEO:SNAP -->`)
+            : html;
+          return new Response(out, {
+            status: 200,
+            headers: {
+              "content-type": "text/html; charset=utf-8",
+              // Same caching posture as the committed file (see _headers).
+              "cache-control": res.headers.get("cache-control") || "public, max-age=300",
+            },
+          });
+        }
+        return res;
+      }
+    }
+
     // Everything else is a static asset. Security headers for those come from
     // public/_headers — the asset router serves them without running this
     // Worker, so setting headers here would have no effect.
