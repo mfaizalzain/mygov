@@ -256,6 +256,23 @@ a.kpi:hover{text-decoration:none}
 .kpi .go{font-size:13px;color:var(--fg-3);opacity:0;transform:translateX(-3px);transition:var(--t)}
 .kpi:hover .go,.kpi:focus-visible .go{opacity:1;transform:none;color:var(--accent)}
 .up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
+/* ── latest exchange rates card ── */
+.fx-pick{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.fx-pick select{font:inherit;font-size:13px;padding:5px 10px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:var(--bg-2);color:var(--fg);cursor:pointer}
+.fx-hero{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s2)}
+.fx-hero .val{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.fx-hero .chg{font-size:14px;font-weight:650}
+.fx-hero .sub{font-size:12px;color:var(--fg-3)}
+.fx-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--s2);margin-top:var(--s4)}
+.fx-tile{border:1px solid var(--line);background:var(--bg-2);border-radius:var(--r-sm);
+  padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:border-color var(--t)}
+.fx-tile:hover{border-color:var(--line-soft)}
+.fx-tile.on{border-color:var(--accent);background:var(--accent-dim)}
+.fx-tile .lab{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--fg-3)}
+.fx-tile .lab .swatch{width:7px;height:7px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.fx-tile .rate{font-size:17px;font-weight:700;margin-top:3px;letter-spacing:-.01em}
+.fx-tile .delta{font-size:11.5px;margin-top:2px}
 
 /* ═══════════════════════════ sections ═══════════════════════════ */
 section{padding-top:var(--s8)}
@@ -919,6 +936,11 @@ const I18N = {
   "The national postcode reference list — look up any postcode, city or state.":"Senarai rujukan poskod kebangsaan — cari sebarang poskod, bandar atau negeri.",
   "Pos Malaysia's national postcode reference list, kept as a static lookup table.":"Senarai rujukan poskod kebangsaan Pos Malaysia, dikekalkan sebagai jadual rujukan statik.",
   "Exchange rates":"Kadar pertukaran",
+  "Latest exchange rates":"Kadar pertukaran terkini",
+  "Select currency":"Pilih mata wang",
+  "vs previous day":"berbanding hari sebelumnya",
+  "Currencies tracked":"Mata wang dipantau",
+  "Bank Negara daily reference rates":"Kadar rujukan harian Bank Negara",
   "RM per unit · daily reference rates":"RM seunit · kadar rujukan harian",
   "Daily Bank Negara reference rates — monthly average values.":"Kadar rujukan harian Bank Negara — nilai purata bulanan.",
   "Interest rates":"Kadar faedah",
@@ -2895,11 +2917,27 @@ function renderFinance(d){
       <div class="kpi"><div class="lab">${T("FPX transactions")}</div>
         <div class="val" data-count="${(fL[2] || 0) / 1e6}" data-dec="2">0</div>
         <div class="sub">${T("millions")} · ${fL[0] ? esc(ymd(fL[0])) : ""}</div></div>
-      <div class="kpi"><div class="lab">USD / MYR</div>
-        <div class="val">${(() => { const s = d.fxd && d.fxd.length ? d.fxd : d.fx;
-          const r = s && s[s.length - 1]; return r ? "RM " + nf(r[1], 4) : "—"; })()}</div>
-        <div class="sub">${(() => { const s = d.fxd && d.fxd.length ? d.fxd : d.fx;
-          const r = s && s[s.length - 1]; return r ? esc(ymd(r[0])) : ""; })()}</div></div>
+      <div class="kpi"><div class="lab">${T("Currencies tracked")}</div>
+        <div class="val">${FX_ORDER.length}</div>
+        <div class="sub">${esc(T("Bank Negara daily reference rates"))}</div></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Latest exchange rates")}</h4>
+        <span class="sub">${esc(T("RM per unit · daily reference rates"))}</span>
+        <span class="right">
+          <label class="sr" for="fx-pick">${esc(T("Select currency"))}</label>
+          <select id="fx-pick" class="fx-select">
+            ${FX_ORDER.map(k => `<option value="${k}">${CURR[k].label}</option>`).join("")}
+          </select>
+        </span></div>
+      <div class="card-b">
+        <div class="fx-hero">
+          <div class="val" id="fx-hero-val">—</div>
+          <div class="chg" id="fx-hero-chg"></div>
+          <div class="sub" id="fx-hero-sub"></div>
+        </div>
+        <div class="fx-tiles" id="fx-tiles"></div>
+      </div>
     </div>
     <div class="card mb">
       <div class="card-h"><h4>${T("Exchange rates")}</h4>
@@ -2967,10 +3005,75 @@ function renderFinance(d){
   seg("fxrange", v => { fxRange = v; paintFx(d); });
   seg("fxgran",  v => { fxGran = v;  paintFx(d); });
   seg("fpxrange", v => { fpxRange = v; paintFpx(d); });
+  paintLatestFx(d);
   paintFx(d);
   paintFpx(d);
   paintIr(d);
   animateCounters($("#body-finance"));
+}
+
+/* Latest rate for every tracked currency: a hero figure for the selected
+   currency (dropdown, USD by default) plus one tile per currency with the
+   day-over-day change. Tiles and dropdown stay in sync; clicking a tile is
+   the same as choosing it in the select. */
+let fxPick = "usd";
+function paintLatestFx(d){
+  const src = d.fxd && d.fxd.length ? d.fxd : d.fx;
+  const col = { usd:1, gbp:2, eur:3, sgd:4, idr:5 };
+  const rows = src || [];
+  const last = rows[rows.length - 1];
+  const prev = rows[rows.length - 2];
+  const fmt = (v, k) => {
+    if (v == null || !isFinite(v)) return "—";
+    /* IDR trades around 0.0002 RM/unit; showing "RM 0.0002" is unreadable.
+       Display it per 1,000 rupiah (0.228) like FX boards do, with a marker. */
+    if (k === "idr") return "RM " + nf(v * 1000, 3) + " /k";
+    return "RM " + nf(v, 4);
+  };
+  const delta = (k) => {
+    if (!last || !prev) return null;
+    const a = last[col[k]], b = prev[col[k]];
+    if (a == null || b == null || !b) return null;
+    const chg = a - b, pct = chg / b * 100;
+    return { chg, pct, dir: chg > 0 ? "up" : chg < 0 ? "down" : "neutral" };
+  };
+  // hero: selected currency
+  const pick = fxPick in CURR ? fxPick : "usd";
+  const heroD = delta(pick);
+  const heroVal = $("#fx-hero-val"), heroChg = $("#fx-hero-chg"), heroSub = $("#fx-hero-sub");
+  if (heroVal) heroVal.textContent = last ? fmt(last[col[pick]], pick) : "—";
+  if (heroChg) heroChg.textContent = heroD
+    ? `${heroD.dir === "up" ? "▲" : heroD.dir === "down" ? "▼" : "•"} ${heroD.chg >= 0 ? "+" : ""}${nf(heroD.chg, 4)} (${heroD.pct >= 0 ? "+" : ""}${nf(heroD.pct, 2)}%)`
+    : "";
+  if (heroChg) heroChg.className = "chg " + (heroD ? heroD.dir : "neutral");
+  if (heroSub) heroSub.textContent = (last ? CURR[pick].label + " · " + esc(ymd(last[0])) : "") + " · " + esc(T("vs previous day"));
+  // tiles: every currency
+  const tiles = $("#fx-tiles");
+  if (tiles){
+    tiles.innerHTML = FX_ORDER.map(k => {
+      const dlt = delta(k);
+      const dirCls = dlt ? dlt.dir : "neutral";
+      const dirSym = dlt ? (dlt.dir === "up" ? "▲" : dlt.dir === "down" ? "▼" : "•") : "";
+      const chgTxt = dlt ? `${dirSym} ${dlt.chg >= 0 ? "+" : ""}${nf(dlt.chg, 4)} · ${dlt.pct >= 0 ? "+" : ""}${nf(dlt.pct, 2)}%` : "—";
+      return `<button type="button" class="fx-tile${k === pick ? " on" : ""}" data-fxpick="${k}" role="radio" aria-checked="${k === pick}">
+        <div class="lab"><span class="swatch" style="background:${CURR[k].color}"></span>${CURR[k].label} / MYR</div>
+        <div class="rate">${last ? fmt(last[col[k]], k) : "—"}</div>
+        <div class="delta ${dirCls}">${chgTxt}</div>
+      </button>`;
+    }).join("");
+    tiles.querySelectorAll(".fx-tile").forEach(t => {
+      t.onclick = () => {
+        fxPick = t.dataset.fxpick;
+        const sel = $("#fx-pick"); if (sel) sel.value = fxPick;
+        paintLatestFx(d);
+      };
+    });
+  }
+  const sel = $("#fx-pick");
+  if (sel){
+    sel.value = pick;
+    sel.onchange = () => { fxPick = sel.value; paintLatestFx(d); };
+  }
 }
 
 function paintFx(d){
