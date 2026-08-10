@@ -9,6 +9,14 @@ No build step, no framework, no npm dependencies at runtime. The whole app is a
 single HTML file plus a service worker, served by a Cloudflare Worker that also
 proxies the reverse-geocoding and GTFS archive calls.
 
+## AI agents: MCP connector
+
+The same data is available to AI coding agents through an official MCP plugin -
+**[mfaizalzain/mygov-mcp](https://github.com/mfaizalzain/mygov-mcp)** - exposing
+weather, fuel prices, CPI/OpenDOSM and GTFS transit as six read-only tools.
+Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
+(universal plugin directory). No API key, same rate-limit rules as the app.
+
 ---
 
 ## What it shows
