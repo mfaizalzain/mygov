@@ -4304,8 +4304,6 @@ function paintReg(d){
    Ramadan. Drawn as a Chart.js plugin so it re-renders with the chart and
    costs nothing when no holiday falls in the visible range. */
 function holidayMarkers(hit, labIdx){
-  const majors = hit.filter(h => h.major);
-  const step = Math.max(1, Math.ceil(majors.length / 14));   // cap labels at ~14
   return {
     id:"holidayMarkers",
     afterDatasetsDraw(chart){
@@ -4314,13 +4312,24 @@ function holidayMarkers(hit, labIdx){
       ctx.save();
       ctx.lineWidth = 1;
       ctx.font = "600 9.5px ui-monospace, SFMono-Regular, Menlo, monospace";
+      /* Thin labels by PIXEL distance, not by index.
+         A "every Nth major" rule thins the set globally but says nothing
+         about where the survivors land, so clustered holidays still collided
+         - Chinese New Year and the first day of Ramadan are two days apart in
+         2026 and drew on top of each other, as did Merdeka and Malaysia Day.
+         Keeping the last drawn x and skipping anything within LABEL_GAP makes
+         collisions impossible at any range or canvas width. Rules are always
+         drawn; only the text is thinned. */
+      const LABEL_GAP = 13;
+      let lastLabelX = -Infinity;
       for (const h of hit){
         const px = x.getPixelForValue(labIdx.get(h.lab));
         ctx.strokeStyle = h.major ? "rgba(251,191,36,.4)" : "rgba(148,163,184,.18)";
         ctx.setLineDash([2, 3]);
         ctx.beginPath(); ctx.moveTo(px, chartArea.top); ctx.lineTo(px, chartArea.bottom); ctx.stroke();
         ctx.setLineDash([]);
-        if (h.major && majors.indexOf(h) % step === 0){
+        if (h.major && px - lastLabelX >= LABEL_GAP){
+          lastLabelX = px;
           ctx.fillStyle = "rgba(251,191,36,.9)";
           ctx.save();
           ctx.translate(px + 4, chartArea.top + 6);
