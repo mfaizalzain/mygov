@@ -84,7 +84,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Collector | Workflow | Writes | Contents |
 | --- | --- | --- | --- |
 | KKM health | `collect_health.yml`, daily 00:30 UTC | `public/health.json` | blood donations (3y), organ pledges, PeKa B40 |
-| Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance, mobility, economy, population, public holidays |
+| Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance (incl. payment instruments), mobility, economy (incl. FDI flows), population, public holidays |
 | PriceCatcher | `collect_prices.yml`, daily 13:30 UTC | `public/prices.json` | grocery basket index, per-item prices, 166 districts |
 | Places | `collect_geo.yml`, weekly Mon 14:00 UTC | `public/geo.json` | state/district population + composition, 222 parliament + 600 DUN seats with income, poverty, gini, unemployment per seat |
 
@@ -379,7 +379,7 @@ slowest datasets arrive.
   `population_dun`. These live on `storage.data.gov.my` and must be read as
   Parquet - see the PriceCatcher and Places sections above
 - `opendosm`: `cpi_core`, `cpi_headline`, `lfs_month`, `gdp_qtr_real`,
-  `population_malaysia`
+  `fdi_flows`, `population_malaysia`
 - Not found: `electrictariff`, `watertariff`, `interestrate`, `unemployment`,
   `cpi_2d`, `opr`
 

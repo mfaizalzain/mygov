@@ -957,11 +957,11 @@ html[data-text="large"] table{font-size:14px}
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg></div>
         <div><h3 id="h-economy">Economy</h3>
-          <p>Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.</p>
+          <p>Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, quarterly real GDP, and foreign direct investment.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.</p>
-            <ul><li><code>GET /opendosm?id=cpi_core</code></li><li><code>GET /opendosm?id=cpi_headline&amp;filter=overall@division</code></li><li><code>GET /opendosm?id=cpi_state&amp;filter=overall@division</code></li><li><code>GET /opendosm?id=lfs_month</code></li><li><code>GET /opendosm?id=gdp_qtr_real</code></li><li><code>GET /data-catalogue?id=epf_dividend</code></li></ul>
+            <p>Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly, real GDP and FDI flows are quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.</p>
+            <ul><li><code>GET /opendosm?id=cpi_core</code></li><li><code>GET /opendosm?id=cpi_headline&amp;filter=overall@division</code></li><li><code>GET /opendosm?id=cpi_state&amp;filter=overall@division</code></li><li><code>GET /opendosm?id=lfs_month</code></li><li><code>GET /opendosm?id=gdp_qtr_real</code></li><li><code>GET /opendosm?id=fdi_flows</code></li><li><code>GET /data-catalogue?id=epf_dividend</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-economy"></span>
@@ -973,11 +973,11 @@ html[data-text="large"] table{font-size:14px}
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg></div>
         <div><h3 id="h-finance">Finance</h3>
-          <p>Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.</p>
+          <p>Exchange rates and interest rates from Bank Negara Malaysia, plus the pulse of online payments from PayNet - the daily FPX totals and monthly value by payment instrument.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.</p>
-            <ul><li><code>GET /data-catalogue?id=exchangerates</code></li><li><code>GET /data-catalogue?id=exchangerates_daily_1200&amp;filter=middle@rate_type</code></li><li><code>GET /data-catalogue?id=interestrates</code></li><li><code>GET /data-catalogue?id=trnsc_daily_fpx&amp;filter=both@model</code></li></ul>
+            <p>Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.</p>
+            <ul><li><code>GET /data-catalogue?id=exchangerates</code></li><li><code>GET /data-catalogue?id=exchangerates_daily_1200&amp;filter=middle@rate_type</code></li><li><code>GET /data-catalogue?id=interestrates</code></li><li><code>GET /data-catalogue?id=trnsc_daily_fpx&amp;filter=both@model</code></li><li><code>GET /data-catalogue?id=payment_instruments</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-finance"></span>
@@ -1391,23 +1391,29 @@ const I18N = {
   "Green diesel":"Diesel hijau", "Other":"Lain-lain",
   "Service":"Perkhidmatan", "Daily":"Harian", "Monthly":"Bulanan",
   /* ── finance additions ── */
-  "Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia, serta nadi harian pembayaran dalam talian FPX daripada PayNet.",
-  "Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.":"Kadar pertukaran ialah kadar rujukan Bank Negara - sama ada kadar tengah harian jam 12:00 atau purata bulanan yang diterbitkan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya. Angka FPX ialah nilai dan jumlah transaksi harian PayNet.",
+  "Exchange rates and interest rates from Bank Negara Malaysia, plus the pulse of online payments from PayNet - the daily FPX totals and monthly value by payment instrument.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia, serta nadi pembayaran dalam talian daripada PayNet - jumlah harian FPX dan nilai bulanan mengikut instrumen pembayaran.",
+  "Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.":"Kadar pertukaran ialah kadar rujukan Bank Negara - sama ada kadar tengah harian jam 12:00 atau purata bulanan yang diterbitkan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya. Angka FPX ialah nilai dan jumlah transaksi harian PayNet; instrumen pembayaran ialah nilai dan kiraan bulanan yang dipecahkan mengikut debit, kredit, cas, cek dan wang elektronik.",
   "FPX e-payments":"Pembayaran elektronik FPX",
   "daily transaction value & volume":"nilai & jumlah transaksi harian",
   "FPX value":"Nilai FPX", "FPX transactions":"Transaksi FPX",
   "Value":"Nilai", "Volume":"Jumlah", "transactions":"transaksi", "millions":"juta",
+  "Payment instruments":"Instrumen pembayaran",
+  "monthly transaction value by instrument":"nilai transaksi bulanan mengikut instrumen",
+  "E-money":"Wang elektronik", "Cheque":"Cek",
   "RM per unit · Bank Negara reference rates":"RM seunit · kadar rujukan Bank Negara",
   "Daily 12:00 middle rates from Bank Negara.":"Kadar tengah harian jam 12:00 daripada Bank Negara.",
   /* ── economy additions ── */
-  "Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia - inflasi utama dan teras, inflasi mengikut negeri, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
-  "Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.":"CPI utama dan teras ialah indeks kebangsaan bulanan; siri negeri ialah indeks keseluruhan bagi setiap negeri, dipaparkan di sini sebagai inflasi tahun ke tahun. Angka tenaga buruh adalah bulanan dan KDNK benar suku tahunan - kesemuanya daripada OpenDOSM. Kad dividen KWSP daripada katalog data am.",
+  "Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, quarterly real GDP, and foreign direct investment.":"Jabatan Perangkaan Malaysia - inflasi utama dan teras, inflasi mengikut negeri, kadar pengangguran bulanan, KDNK benar suku tahunan, dan pelaburan langsung asing.",
+  "Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly, real GDP and FDI flows are quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.":"CPI utama dan teras ialah indeks kebangsaan bulanan; siri negeri ialah indeks keseluruhan bagi setiap negeri, dipaparkan di sini sebagai inflasi tahun ke tahun. Angka tenaga buruh adalah bulanan, KDNK benar dan aliran FDI adalah suku tahunan - kesemuanya daripada OpenDOSM. Kad dividen KWSP daripada katalog data am.",
   "Consumer Price Index":"Indeks Harga Pengguna",
   "headline vs core · by expenditure division":"utama berbanding teras · mengikut bahagian perbelanjaan",
   "Headline - all items":"Utama - semua item", "Core - all items":"Teras - semua item",
   "Inflation by state":"Inflasi mengikut negeri",
   "year-on-year · overall index":"tahun ke tahun · indeks keseluruhan",
   "EPF dividend":"Dividen KWSP", "conventional":"konvensional", "shariah":"patuh syariah",
+  "Foreign direct investment":"Pelaburan langsung asing",
+  "quarterly · RM billion":"suku tahunan · RM bilion",
+  "Inflow":"Aliran masuk", "Outflow":"Aliran keluar", "Net":"Bersih",
 
   /* ── places view ── */
   "Places":"Tempat",
@@ -1966,6 +1972,7 @@ async function loadEconomy(){
     { id:"cpi_headline", filter:"overall@division" });
   const lfs  = await request("opendosm", "/opendosm", { id:"lfs_month" });
   const gdp  = await request("opendosm", "/opendosm", { id:"gdp_qtr_real" });
+  const fdi  = await request("opendosm", "/opendosm", { id:"fdi_flows" });
   /* Three years is the shortest window that still yields a year-on-year figure
      for every month the state chart can land on. */
   const st   = await request("opendosm", "/opendosm",
@@ -2001,6 +2008,8 @@ async function loadEconomy(){
     epf,
     lfs: (lfs || []).map(r => [r.date, r.u_rate, r.p_rate, r.lf_employed]),
     gdp: (gdp || []).filter(r => r.series === "abs" || r.series == null).map(r => [r.date, r.value]),
+    fdi: (fdi || []).map(r => [r.date, r.inflow, r.outflow, r.net])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
   };
 }
 
@@ -2021,11 +2030,24 @@ async function loadFinance(){
      double-count, since all three are published side by side. */
   const fpx = await request("data-catalogue", "/data-catalogue",
     { id:"trnsc_daily_fpx", filter:"both@model", sort:"date" });
+  const pinst = await request("data-catalogue", "/data-catalogue",
+    { id:"payment_instruments", sort:"date" });
   /* Each month has five rows (start/low/high/avg/end); chart the monthly
      average of Bank Negara's daily reference rates. */
   const avg = (fx || []).filter(r => r.indicator === "avg")
     .map(r => [r.date, r.usd, r.gbp, r.eur, r.sgd, r.idr])
     .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  /* PayNet's monthly instruments, compacted to per-instrument columns. */
+  const pay = { months: [], value: {}, volume: {} };
+  const pIdx = new Map();
+  for (const r of pinst || []){
+    if (!pIdx.has(r.date)){ pIdx.set(r.date, pay.months.length); pay.months.push(r.date); }
+    const i = pIdx.get(r.date);
+    if (!pay.value[r.instrument]) pay.value[r.instrument] = new Array(pay.months.length).fill(null);
+    if (!pay.volume[r.instrument]) pay.volume[r.instrument] = new Array(pay.months.length).fill(null);
+    pay.value[r.instrument][i] = r.value;
+    pay.volume[r.instrument][i] = r.volume;
+  }
   return {
     fx: avg,
     /* Same column order as the monthly rows, so one painter serves both. */
@@ -2033,6 +2055,7 @@ async function loadFinance(){
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
     fpx: (fpx || []).map(r => [r.date, r.value, r.volume])
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+    pay,
     ir: (ir || []).map(r => [r.bank, r.date, r.rate, Number(r.value)]),
   };
 }
@@ -3488,7 +3511,7 @@ function renderEconomy(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="cpist-dt"></div></details></div>
     </div>
-    <div class="grid g2">
+    <div class="grid g2 mb">
       <div class="card"><div class="card-h"><h4>${T("Unemployment rate")}</h4><span class="sub">${T("monthly")}</span></div>
         <div class="card-b"><div class="chart"><canvas id="lfs-chart" role="img" aria-label="Unemployment rate"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
@@ -3497,6 +3520,14 @@ function renderEconomy(d){
         <div class="card-b"><div class="chart"><canvas id="gdp-chart" role="img" aria-label="Real GDP"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="gdp-dt"></div></details></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>${T("Foreign direct investment")}</h4>
+        <span class="sub">${T("quarterly · RM billion")}</span></div>
+      <div class="card-b"><div class="chart tall"><canvas id="fdi-chart" role="img"
+        aria-label="Foreign direct investment inflow, outflow and net by quarter"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="fdi-dt"></div></details></div>
     </div>`;
 
   const chips = $("#cpi-chips");
@@ -3600,6 +3631,48 @@ function renderEconomy(d){
   if (gdt) gdt.innerHTML = dataTableHTML([T("Quarter"),T("RM million")],
     d.gdp.map(r => { const t = new Date(r[0]);
       return [isNaN(t) ? r[0] : `Q${Math.floor(t.getMonth()/3)+1} ${t.getFullYear()}`, r[1]]; }), [1]);
+  paintFdi(d);
+}
+
+/** FDI inflows, outflows and net by quarter. The net is the gap between the
+ *  two bars, so it is drawn as a line on top rather than a third bar. */
+function paintFdi(d){
+  const rows = d.fdi || [];
+  const qlab = r0 => { const t = new Date(r0);
+    return isNaN(t) ? r0 : `Q${Math.floor(t.getMonth()/3)+1} '${String(t.getFullYear()).slice(2)}`; };
+  chart("fdi-chart", {
+    type:"bar",
+    data:{ labels: rows.map(r => qlab(r[0])),
+      datasets:[
+        { label:T("Inflow"), data: rows.map(r => r[1]),
+          backgroundColor:"rgba(45,212,191,.75)", borderRadius:4, borderSkipped:false },
+        { label:T("Outflow"), data: rows.map(r => r[2]),
+          backgroundColor:"rgba(248,113,113,.65)", borderRadius:4, borderSkipped:false },
+        { label:T("Net"), data: rows.map(r => r[3]), type:"line",
+          borderColor:"#fbbf24", borderWidth:2, pointRadius:0, tension:.25, spanGaps:true },
+      ] },
+    options: baseOpts({ plugins:{
+        legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
+          pointStyle:"circle", font:{ size:11 }, padding:14 } },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
+          callbacks:{
+            title: items => items.length ? qlab(rows[items[0].dataIndex][0]) : "",
+            label: it => ` ${it.dataset.label}: RM ${nf(it.parsed.y, 2)}b` } } },
+      scales:{
+        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
+        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
+                    callback:v => "RM " + nf(v, 0) + "b" } } } }),
+  });
+  const dt = $("#fdi-dt");
+  if (dt) dt.innerHTML = dataTableHTML(
+    [T("Quarter"), T("Inflow") + " (RM b)", T("Outflow") + " (RM b)", T("Net") + " (RM b)"],
+    rows.map(r => { const t = new Date(r[0]);
+      return [isNaN(t) ? r[0] : `Q${Math.floor(t.getMonth()/3)+1} ${t.getFullYear()}`,
+        nf(r[1], 2), nf(r[2], 2), nf(r[3], 2)]; }), [1, 2, 3]);
 }
 
 /** Year-on-year inflation per state for the newest month every state carries.
@@ -3706,7 +3779,16 @@ function paintCpiState(d){
 let fxRange = "1y";
 let fxGran = "monthly";   // monthly averages (since 2005) | daily 12:00 middle rate
 let fpxRange = "1y";
+let payMeas = "value";    // PayNet instruments: value (RM) | volume (transactions)
+let payRange = "1y";
 const fxCurr = new Set(["usd","gbp","eur","sgd","cny","jpy","thb","aud"]);   // IDR is toggleable; see below
+/* PayNet's eight instruments, short labels for the legend and table. */
+const PAY_LABEL = {
+  "debit_f2f":"Debit F2F", "debit_online":"Debit online",
+  "credit_f2f":"Credit F2F", "credit_online":"Credit online",
+  "charge_f2f":"Charge F2F", "charge_online":"Charge online",
+  "cheque":"Cheque", "emoney":"E-money",
+};
 
 function renderFinance(d){
   const fp = d.fpx || [];
@@ -3771,6 +3853,23 @@ function renderFinance(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="fpx-dt"></div></details></div>
     </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Payment instruments")}</h4>
+        <span class="sub">${T("monthly transaction value by instrument")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="Measure">
+            ${[["value", T("Value")], ["volume", T("Volume")]].map(([k, lab]) =>
+              `<button data-paymeas="${k}" aria-pressed="${k === payMeas}">${esc(lab)}</button>`).join("")}
+          </span>
+          <span class="seg" role="group" aria-label="Date range" style="margin-left:var(--s2)">
+            ${FX_RANGES.map(r => `<button data-payrange="${r}" aria-pressed="${r === payRange}">${r.toUpperCase()}</button>`).join("")}
+          </span>
+        </span></div>
+      <div class="card-b"><div class="chart tall"><canvas id="pay-chart" role="img"
+        aria-label="Monthly payment transaction value by instrument"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="pay-dt"></div></details></div>
+    </div>
     <div class="card">
       <div class="card-h"><h4>${T("Interest rates")}</h4>
         <span class="sub">${T("Commercial base rate - tracks the OPR")}</span></div>
@@ -3807,9 +3906,12 @@ function renderFinance(d){
   seg("fxrange", v => { fxRange = v; paintFx(d); });
   seg("fxgran",  v => { fxGran = v;  paintFx(d); });
   seg("fpxrange", v => { fpxRange = v; paintFpx(d); });
+  seg("paymeas",  v => { payMeas = v; paintPay(d); });
+  seg("payrange", v => { payRange = v; paintPay(d); });
   paintLatestFx(d);
   paintFx(d);
   paintFpx(d);
+  paintPay(d);
   paintIr(d);
   animateCounters($("#body-finance"));
 }
@@ -3946,6 +4048,54 @@ function paintFpx(d){
   const dt = $("#fpx-dt");
   if (dt) dt.innerHTML = dataTableHTML([T("Date"), T("Value") + " (RM)", T("Volume")],
     rows.slice().reverse().slice(0, 400).map(r => [ymd(r[0]), nf(r[1]), nf(r[2])]), [1, 2]);
+}
+
+/** PayNet's payment instruments, stacked monthly. Eight instruments over
+ *  seven years - value in ringgit or transaction counts, via the toggle. */
+function paintPay(d){
+  const P = d.pay || { months: [], value: {}, volume: {} };
+  const months = P.months || [];
+  const from = payRange === "all" ? "0000" : cutoff(RANGES[payRange]);
+  const keep = months.map((m, i) => [m, i]).filter(([m]) => String(m) >= from);
+  const labels = keep.map(([m]) => md(m) + " '" + String(m).slice(2, 4));
+  const src = payMeas === "volume" ? P.volume : P.value;
+  /* Stack order = latest month's size, so the biggest instrument sits at the
+     base of the stack and the history reads as one solid total. */
+  const last = keep.length ? keep[keep.length - 1][1] : 0;
+  const insts = Object.keys(src).sort((a, b) =>
+    ((src[b] || [])[last] || 0) - ((src[a] || [])[last] || 0) || a.localeCompare(b));
+  const fmt = v => payMeas === "value" ? "RM " + nf(v / 1e9, 2) + "b" : nf(v / 1e6, 1) + "m";
+  chart("pay-chart", {
+    type:"bar",
+    data:{ labels,
+      datasets: insts.map((k, i) => ({
+        label: PAY_LABEL[k] || k,
+        data: keep.map(([, j]) => (src[k] || [])[j]),
+        backgroundColor: PALETTE[i % PALETTE.length] + "cc",
+        borderRadius: 3, borderSkipped: false, stack: "pay" })) },
+    options: baseOpts({ plugins:{
+        legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
+          pointStyle:"circle", font:{ size:11 }, padding:14 } },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
+          callbacks:{
+            title: items => items.length ? ymd(months[keep[items[0].dataIndex][1]]) : "",
+            label: it => ` ${it.dataset.label}: ${fmt(it.parsed.y)}` } } },
+      scales:{
+        x:{ stacked:true, grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
+        y:{ stacked:true, beginAtZero:true,
+            grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
+                    callback:v => fmt(v) } } } }),
+  });
+  const dt = $("#pay-dt");
+  if (dt) dt.innerHTML = dataTableHTML(
+    [T("Month"), ...insts.map(k => PAY_LABEL[k] || k)],
+    keep.slice().reverse().map(([m, j]) => [md(m) + " '" + String(m).slice(2, 4),
+      ...insts.map(k => { const v = (src[k] || [])[j]; return v == null ? null : nf(v); })]),
+    insts.map((_, i) => i + 1));
 }
 
 function paintIr(d){
@@ -5964,18 +6114,20 @@ const META = {
          "storage.data.gov.my/pricecatcher/lookup_item.parquet",
          "storage.data.gov.my/pricecatcher/lookup_premise.parquet"] },
   economy:{ title:"Economy",
-    desc:"Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.",
-    how:"Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.",
+    desc:"Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, quarterly real GDP, and foreign direct investment.",
+    how:"Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly, real GDP and FDI flows are quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.",
     eps:["/opendosm?id=cpi_core","/opendosm?id=cpi_headline&filter=overall@division",
          "/opendosm?id=cpi_state&filter=overall@division","/opendosm?id=lfs_month",
-         "/opendosm?id=gdp_qtr_real","/data-catalogue?id=epf_dividend"] },
+         "/opendosm?id=gdp_qtr_real","/opendosm?id=fdi_flows",
+         "/data-catalogue?id=epf_dividend"] },
   finance:{ title:"Finance",
-    desc:"Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.",
-    how:"Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.",
+    desc:"Exchange rates and interest rates from Bank Negara Malaysia, plus the pulse of online payments from PayNet - the daily FPX totals and monthly value by payment instrument.",
+    how:"Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.",
     eps:["/data-catalogue?id=exchangerates",
          "/data-catalogue?id=exchangerates_daily_1200&filter=middle@rate_type",
          "/data-catalogue?id=interestrates",
-         "/data-catalogue?id=trnsc_daily_fpx&filter=both@model"] },
+         "/data-catalogue?id=trnsc_daily_fpx&filter=both@model",
+         "/data-catalogue?id=payment_instruments"] },
   mobility:{ title:"Vehicles & Ridership",
     desc:"New vehicle registrations split by fuel type - the EV adoption curve - and daily passenger numbers on every KTMB rail service.",
     how:"Registrations are counted by the Road Transport Department (JPJ) at first registration and published monthly by fuel type; only all-vehicle totals are charted here. Ridership is KTMB's own daily passenger count per service, published to the previous day.",

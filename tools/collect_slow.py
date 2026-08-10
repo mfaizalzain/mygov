@@ -7,10 +7,10 @@ spend zero API budget on data that changes at most daily:
 
   fuel      : fuelprice (weekly), hh_income (yearly)
   finance   : exchangerates monthly avg, exchangerates_daily_1200 (business-daily),
-              trnsc_daily_fpx (daily), interestrates (monthly)
+              trnsc_daily_fpx (daily), payment_instruments (monthly), interestrates (monthly)
   mobility  : registrations_type_fuel (monthly), ridership_ktmb_daily (daily)
   economy   : cpi_core, cpi_headline, lfs_month, gdp_qtr_real, cpi_state
-              (monthly/qtr), epf_dividend
+              (monthly/qtr), epf_dividend, fdi_flows (quarterly)
   population: population_malaysia (annual)
 
 Run:  python3 tools/collect_slow.py
@@ -170,6 +170,8 @@ def main():
             "date_start": days_back(3 * 365) + "@date", "sort": "date"})
         fpx = fetch("catalogue", "data-catalogue/", {
             "id": "trnsc_daily_fpx", "filter": "both@model", "sort": "date"})
+        pinst = fetch("catalogue", "data-catalogue/", {
+            "id": "payment_instruments", "sort": "date"})
         ir = fetch("catalogue", "data-catalogue/", {"id": "interestrates", "sort": "-date"})
 
         # Currencies tracked by the dashboard (order = column order in the
@@ -182,6 +184,22 @@ def main():
 
         avg = fxrows([r for r in (fx or []) if r.get("indicator") == "avg"])
         dly = fxrows(fxd)
+
+        # PayNet's monthly payment instruments: eight instruments x ~86 months,
+        # compacted to per-instrument columns (the same shape the mobility
+        # section uses for fuel) so the payload stays flat.
+        pmonths, p_idx, p_pairs = [], {}, []
+        for r in pinst or []:
+            if r["date"] not in p_idx:
+                p_idx[r["date"]] = len(pmonths)
+                pmonths.append(r["date"])
+            p_pairs.append((r["instrument"], p_idx[r["date"]],
+                            num(r.get("value")), num(r.get("volume"))))
+        pval, pvol = {}, {}
+        for inst, i, v, vol in p_pairs:
+            pval.setdefault(inst, [None] * len(pmonths))[i] = v
+            pvol.setdefault(inst, [None] * len(pmonths))[i] = vol
+        pay = {"months": pmonths, "value": pval, "volume": pvol}
 
         # ── mobility (data-catalogue) ──────────────────────────────────
         reg = fetch("catalogue", "data-catalogue/", {
@@ -216,6 +234,9 @@ def main():
         if epf_rows:
             epf = {"date": epf_rows[0]["date"], "shariah": epf_rows[0].get("shariah"),
                    "conventional": epf_rows[0].get("conventional")}
+        fdi = fetch("opendosm", "opendosm/", {"id": "fdi_flows"})
+        fdi_rows = sorted([[r["date"], num(r.get("inflow")), num(r.get("outflow")),
+                            num(r.get("net"))] for r in (fdi or [])], key=lambda x: x[0])
 
         def by_div(rows):
             m = {}
@@ -266,6 +287,7 @@ def main():
         "finance": {
             "fx": avg, "fxd": dly,
             "fpx": [[r["date"], num(r.get("value")), num(r.get("volume"))] for r in (fpx or [])],
+            "pay": pay,
             "ir": [[r.get("bank"), r["date"], r.get("rate"), num(r.get("value"))] for r in (ir or [])],
         },
         "mobility": {
@@ -275,6 +297,7 @@ def main():
         "economy": {
             "cpi": cpi, "states": [{"name": k, "pts": v} for k, v in states.items()],
             "epf": epf,
+            "fdi": fdi_rows,
             "lfs": [[r["date"], num(r.get("u_rate")), num(r.get("p_rate")), num(r.get("lf_employed"))] for r in (lfs or [])],
             "gdp": [[r["date"], num(r.get("value"))] for r in (gdp or [])
                     if r.get("series") == "abs" or r.get("series") is None],
