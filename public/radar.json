@@ -1,42 +1,11 @@
 {
- "generated_at": "2026-08-10T09:44:13.501085+00:00",
+ "generated_at": "2026-08-10T10:29:57.502057+00:00",
  "language": "bm-primary",
  "top_issues": [
   {
    "rank": 1,
-   "title_bm": "Isu Kenderaan Menggunakan Logo Jabatan Imigresen Dipandu Warga Asing",
-   "title_en": "Controversy Over Foreigner Driving Vehicle Bearing Immigration Department Logo",
-   "category": "lain",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "utusan",
-     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
-     "url": ""
-    },
-    {
-     "name": "sebenarnya",
-     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-     "url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "The Malaysian Immigration Department confirmed a viral video showed a non-official vehicle illegally using the department's logo driven by a foreigner, leading to the arrest of a Pakistani national.",
-    "sources": [
-     "BERNAMA",
-     "SEBENARNYA.MY",
-     "Astro Awani"
-    ],
-    "sebenarnya_title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
-   }
-  },
-  {
-   "rank": 2,
-   "title_bm": "Pertikaian Status Keahlian Bersatu dan Keretakan Perikatan Nasional",
-   "title_en": "Dispute Over Bersatu's Membership Status and Perikatan Nasional Coalition Rift",
+   "title_bm": "Pertikaian Status Keahlian Bersatu dalam Perikatan Nasional Antara Samsuri dan Hadi Awang",
+   "title_en": "Dispute Over Bersatu's PN Membership Status Between Samsuri and Hadi Awang",
    "category": "politik",
    "source_count": 2,
    "sources": [
@@ -59,49 +28,49 @@
    "fact_check": {
     "status": "verified_claim",
     "verdict": "TRUE",
-    "reason": "Malaysian media outlets reported on disputes regarding Bersatu's membership status in Perikatan Nasional and the resulting rifts within the coalition, which Bersatu plans to refer to the Registrar of Societies.",
+    "reason": "Perikatan Nasional chairman Ahmad Samsuri Mokhtar confirmed that Bersatu remains a member party, contradicting PAS president Abdul Hadi Awang's claim that Bersatu's membership was automatically terminated.",
     "sources": [
      "Free Malaysia Today",
-     "Utusan Malaysia",
-     "Harian Metro"
+     "Malaysiakini",
+     "Astro Awani"
     ]
    }
   },
   {
-   "rank": 3,
-   "title_bm": "Penipuan Dakwaan Bantuan One-Off SARA RM100 dan Penyamar Pegawai STR",
-   "title_en": "Fake One-off SARA RM100 Aid Claim and STR Impersonation Scams",
-   "category": "ekonomi",
-   "source_count": 1,
+   "rank": 2,
+   "title_bm": "Isu Kenderaan Dipandu Warga Asing Menggunakan Logo Jabatan Imigresen Malaysia (JIM)",
+   "title_en": "Controversy Over Foreigner Driving Vehicle Displaying Immigration Department Logo",
+   "category": "lain",
+   "source_count": 2,
    "sources": [
     {
      "name": "sebenarnya",
-     "title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off",
-     "url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
+     "title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+     "url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
     },
     {
-     "name": "sebenarnya",
-     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan A",
-     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+     "name": "utusan",
+     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
+     "url": ""
     }
    ],
    "fact_check": {
     "status": "verified_claim",
     "verdict": "TRUE",
-    "reason": "The Malaysian Ministry of Finance and relevant authorities have confirmed that messages requiring registration for the one-off RM100 SARA aid and individuals impersonating STR officers are indeed scams.",
+    "reason": "The Malaysian Immigration Department confirmed and investigated viral reports of a foreign national driving a vehicle bearing an unauthorized JIM logo, which subsequently led to the suspect's arrest.",
     "sources": [
-     "Bernama",
-     "Malay Mail",
-     "The Star"
+     "BERNAMA",
+     "Astro Awani",
+     "SEBENARNYA.MY"
     ],
-    "sebenarnya_title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Adalah Tidak Benar",
-    "sebenarnya_url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
+    "sebenarnya_title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
    }
   },
   {
-   "rank": 4,
-   "title_bm": "Penyebaran Kenyataan Palsu Dikaitkan Dengan Timbalan KPN di Facebook",
-   "title_en": "Fake Statement Linked to Deputy IGP Circulates on Facebook",
+   "rank": 3,
+   "title_bm": "Kenyataan Palsu Dikaitkan dengan Timbalan Ketua Polis Negara Tersebar di Facebook",
+   "title_en": "Fake Statement Attributed to Deputy IGP Spreads on Facebook",
    "category": "jenayah",
    "source_count": 1,
    "sources": [
@@ -112,20 +81,68 @@
     }
    ],
    "fact_check": {
+    "status": "no_check_found",
+    "sebenarnya_title": null,
+    "sebenarnya_url": null
+   }
+  },
+  {
+   "rank": 4,
+   "title_bm": "Dakwaan Palsu Bantuan SARA RM100 One-Off kepada Semua Rakyat Malaysia 18 Tahun ke Atas",
+   "title_en": "Fake Claim of One-Off RM100 SARA Cash Assistance for All Adult Malaysians",
+   "category": "ekonomi",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off",
+     "url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
+    },
+    {
+     "name": "sebenarnya",
+     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan A...",
+     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+    }
+   ],
+   "fact_check": {
     "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "The Royal Malaysia Police confirmed that viral Facebook posts attributing a special press conference and statement on a police operation to the acting Deputy Inspector-General of Police were fake.",
-    "sources": [
-     "BERNAMA",
-     "Sinar Harian",
-     "Free Malaysia Today"
-    ]
+    "sebenarnya_title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Adalah Tidak Benar",
+    "sebenarnya_url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
    }
   },
   {
    "rank": 5,
-   "title_bm": "Senarai Palsu 10 Universiti Awam yang Tular di Media Sosial",
-   "title_en": "Fake Viral List of 10 Public Universities",
+   "title_bm": "Penafian Ahmad Shabery Cheek Berhubung Cadangan Penjualan Hotel Felda",
+   "title_en": "Ahmad Shabery Cheek Denies Proposal to Sell Felda Hotels During Tenure",
+   "category": "politik",
+   "source_count": 2,
+   "sources": [
+    {
+     "name": "freemalaysiatoday",
+     "title": "No Felda hotel sale proposal when I was chairman, says Shabery",
+     "url": ""
+    },
+    {
+     "name": "trends",
+     "title": "ahmad shabery cheek",
+     "url": ""
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "Former Felda chairman Ahmad Shabery Cheek denied that any proposal to sell Felda's hotel properties in London was submitted during his tenure.",
+    "sources": [
+     "FMT",
+     "Astro Awani",
+     "Sinar Harian"
+    ]
+   }
+  },
+  {
+   "rank": 6,
+   "title_bm": "Penyebaran Senarai Palsu 10 Universiti Awam di Media Sosial",
+   "title_en": "Viral Circulation of Fake List of 10 Public Universities",
    "category": "pendidikan",
    "source_count": 1,
    "sources": [
@@ -142,28 +159,9 @@
    }
   },
   {
-   "rank": 6,
-   "title_bm": "Penjelasan Penularan Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
-   "title_en": "Clarification on Tabung Haji Zakat Issue Regarding 2016–2019 Period",
-   "category": "agama",
-   "source_count": 1,
-   "sources": [
-    {
-     "name": "sebenarnya",
-     "title": "Penjelasan Mengenai Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
-     "url": "https://sebenarnya.my/penjelasan-mengenai-isu-zakat-tabung-haji-bagi-tempoh-2016-2019/"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Penjelasan Mengenai Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
-    "sebenarnya_url": "https://sebenarnya.my/penjelasan-mengenai-isu-zakat-tabung-haji-bagi-tempoh-2016-2019/"
-   }
-  },
-  {
    "rank": 7,
-   "title_bm": "Dakwaan Palsu Kerjasama Antara Bank Rakyat dan Kedai Emas Seri Semantan",
-   "title_en": "False Partnership Claim Between Bank Rakyat and Kedai Emas Seri Semantan",
+   "title_bm": "Dakwaan Kerjasama Palsu Antara Bank Rakyat dan Kedai Emas Seri Semantan",
+   "title_en": "Fake Partnership Claim Between Bank Rakyat and Kedai Emas Seri Semantan",
    "category": "ekonomi",
    "source_count": 1,
    "sources": [
@@ -181,27 +179,8 @@
   },
   {
    "rank": 8,
-   "title_bm": "Penafian Cadangan Penjualan Hotel Felda Era Shabery Cheek",
-   "title_en": "Shabery Cheek Denies Felda Hotel Sale Proposal During Tenure",
-   "category": "ekonomi",
-   "source_count": 1,
-   "sources": [
-    {
-     "name": "freemalaysiatoday",
-     "title": "No Felda hotel sale proposal when I was chairman, says Shabery",
-     "url": ""
-    }
-   ],
-   "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
-   }
-  },
-  {
-   "rank": 9,
-   "title_bm": "Sindiket Penipuan Pesanan Kerajaan Bagi Tempahan Makanan dan Cenderahati",
-   "title_en": "Scam Involving Fake Government Procurement Orders for Catering and Gifts",
+   "title_bm": "Taktik Penipuan Pesanan Kerajaan Bagi Tempahan Makanan dan Cenderahati",
+   "title_en": "Fraudulent Government Order Scam for Catering and Souvenirs",
    "category": "ekonomi",
    "source_count": 1,
    "sources": [
@@ -218,9 +197,28 @@
    }
   },
   {
+   "rank": 9,
+   "title_bm": "Penjelasan Pengurusan Zakat Tabung Haji Bagi Tempoh 2016–2019",
+   "title_en": "Clarification on Tabung Haji Zakat Management Between 2016 and 2019",
+   "category": "agama",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Penjelasan Mengenai Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
+     "url": "https://sebenarnya.my/penjelasan-mengenai-isu-zakat-tabung-haji-bagi-tempoh-2016-2019/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Penjelasan Mengenai Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
+    "sebenarnya_url": "https://sebenarnya.my/penjelasan-mengenai-isu-zakat-tabung-haji-bagi-tempoh-2016-2019/"
+   }
+  },
+  {
    "rank": 10,
-   "title_bm": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat",
-   "title_en": "Clarification Regarding Discharge Status Claims of Former Army Personnel",
+   "title_bm": "Penjelasan Isu Pemberhentian Bekas Anggota Tentera Darat Malaysia",
+   "title_en": "Clarification Regarding Discharge Claims of Former Malaysian Army Personnel",
    "category": "lain",
    "source_count": 1,
    "sources": [
@@ -238,6 +236,6 @@
   }
  ],
  "total_signals": 110,
- "history_window_signals": 1950,
+ "history_window_signals": 2060,
  "history_days": 7
 }
