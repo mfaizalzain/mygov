@@ -78,7 +78,7 @@ html[data-theme="light"]{
   /* the teal that reads fine on a dark page is only ~3.5:1 on white, so the
      light theme uses a darker shade for links, chips and accented text */
   --accent:#0f766e; --accent-2:#0284c7; --accent-dim:rgba(15,118,110,.1);
-  --ok:#047857; --warn:#b45309; --danger:#c81e1e; --info:#2563eb;
+  --ok:#047857; --warn:#a45307; --danger:#c81e1e; --info:#2563eb;
   /* a shade darker again than --accent: chip text sits on accent-dim, which
      lightens it, and chips appear on --bg-2 and --surface-3 as well as white */
   --chip-fg:#0d6a62;
@@ -139,6 +139,18 @@ header{position:sticky; top:0; z-index:40; background:rgba(10,12,16,.86);
   backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line-soft)}
 .hd{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6);
     display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}
+/* the control row wraps to a second line on narrow screens once the install
+   button appears (the hd-r gets ~40px wider); reserving the wrapped height
+   and the button's slot from first paint keeps the header from shifting the
+   page below it (CLS). Note [hidden] can't be overridden - the UA sheet uses
+   display:none !important - so the button toggles a .show class instead. */
+#install{display:none}
+#install.show{display:inline-flex}
+@media (max-width:620px){
+  .hd{min-height:110px}
+  #install{display:inline-flex;visibility:hidden}
+  #install.show{visibility:visible}
+}
 .brand{display:flex;align-items:center;gap:var(--s3);min-width:0}
 .mark{width:36px;height:36px;border-radius:11px;flex:none;box-shadow:var(--shadow)}
 .brand h1{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
@@ -246,8 +258,9 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 /* the value/sub shimmer while a KPI is still pending - sized to the type it
    replaces so cards do not resize when the number lands */
 .kpi-load{pointer-events:none}
-.skel-val{display:block;height:25px;width:62%;margin:6px 0 0;border-radius:7px}
-.skel-sub{display:block;height:11px;width:82%;margin:5px 0 0}
+.skel-val{display:block;height:28px;width:62%;margin:6px 0 0;border-radius:7px}
+.skel-sub{display:block;height:17px;width:82%;margin:5px 0 0}
+.kpi-load{min-height:123px}
 .kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
 .kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
 .kpi-t{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
@@ -286,8 +299,8 @@ details.meta summary{cursor:pointer;font-size:12px;color:var(--fg-2);display:inl
   align-items:center;gap:4px;user-select:none}
 details.meta summary:hover{color:var(--fg)}
 details.meta ul{margin:var(--s2) 0 0;padding-left:18px;color:var(--fg-3);font-size:12px}
-details.meta code{font-family:var(--mono);font-size:10.5px;color:var(--fg-2)}
-details.meta p{margin:var(--s2) 0 0;color:var(--fg-3);font-size:11.5px;max-width:76ch}
+details.meta code{font-family:var(--mono);font-size:12px;color:var(--fg-2)}
+details.meta p{margin:var(--s2) 0 0;color:var(--fg-3);font-size:12px;max-width:76ch}
 
 .card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
   box-shadow:var(--shadow);overflow:hidden;transition:var(--t)}
@@ -581,6 +594,16 @@ tr.sel .pick{color:var(--chip-fg)}
 .state.err strong{color:#fca5a5}
 .skel{background:linear-gradient(90deg,var(--surface) 25%,var(--surface-3) 50%,var(--surface) 75%);
   background-size:200% 100%;animation:sh 1.5s infinite;border-radius:6px;height:12px;margin:11px 0}
+/* chart-height placeholder: most section bodies lead with a 250-300px chart,
+   so the loading state reserves that space to avoid a layout shift when the
+   real chart swaps in. Height tracks the real .chart breakpoint. */
+.skel-chart{height:300px;margin-top:18px}
+/* table-height placeholder: the tall tables (scroll-y) cap at 430px */
+.skel-table{height:430px}
+/* details-row placeholder: cards show a 'View data table' disclosure
+   under the chart; reserving it keeps the card height stable */
+.skel-details{width:30%;height:14px;margin-top:16px}
+@media (max-width:620px){ .skel-chart{height:250px} }
 @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .fade{opacity:0;transform:translateY(8px);animation:fade 420ms var(--t) forwards}
 @keyframes fade{to{opacity:1;transform:none}}
@@ -608,6 +631,12 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 @media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
 @media (max-width:620px){
   .wrap{padding:0 var(--s4) 64px} .hd{padding:var(--s3) var(--s4)}
+  /* the hero location line wraps once the selected-area chip and the search
+     field sit side by side; reserving the wrapped height avoids a CLS when
+     the location status fills in. Hero-loc takes its own line at this width
+     so the search field never re-wraps when the chip swaps to a button. */
+  .hero-loc-row{min-height:85px}
+  .hero-loc{flex:1 1 100%}
   nav.sections ul{padding:var(--s2) var(--s4)}
   .kpis{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:1fr}
   .g5{grid-template-columns:repeat(2,1fr)}
@@ -692,10 +721,10 @@ html[data-text="large"] table{font-size:14px}
     <div class="hd-r">
       <span class="badge" id="net" hidden><span class="pulse"></span><span id="net-t">Online</span></span>
       <span class="badge" id="stamp"><span class="pulse"></span><span id="stamp-t">Loading…</span></span>
-      <button class="btn" id="lang" aria-label="Bahasa Melayu">BM</button>
-      <button class="btn" id="textsize" aria-label="Larger text">A⁺</button>
+      <button class="btn" id="lang" aria-label="BM - Bahasa Melayu">BM</button>
+      <button class="btn" id="textsize" aria-label="A⁺ - Larger text">A⁺</button>
       <button class="btn" id="theme" aria-label="Theme">🌓</button>
-      <button class="btn" id="install" hidden aria-label="Install mygov as an app">⬇ <span data-i18n="Install app">Install app</span></button>
+      <button class="btn" id="install" aria-label="Install mygov as an app">⬇ <span data-i18n="Install app">Install app</span></button>
       <button class="btn btn-a btn-ico" id="refresh" aria-label="Refresh all data" title="Refresh all data">
         <span id="ref-ico">↻</span>
       </button>
@@ -705,7 +734,18 @@ html[data-text="large"] table{font-size:14px}
 </header>
 
 <nav class="sections" aria-label="Sections">
-  <ul id="navlist"></ul>
+  <ul id="navlist">
+    <li hidden><a href="#radar-band" id="nav-radar-band"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> Trending</a></li>
+    <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
+    <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Fuel</a></li>
+    <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> Population</a></li>
+    <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
+    <li><a href="#finance" id="nav-finance"><span class="dot" id="dot-finance"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg> Finance</a></li>
+    <li><a href="#health" id="nav-health"><span class="dot" id="dot-health"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-health"/></svg> Health</a></li>
+    <li><a href="#mobility" id="nav-mobility"><span class="dot" id="dot-mobility"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mobility"/></svg> Vehicles</a></li>
+    <li><a href="#transport" id="nav-transport"><span class="dot" id="dot-transport"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-transport"/></svg> Transport</a></li>
+    <li><a href="#live" id="nav-live"><span class="dot" id="dot-live"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-live"/></svg> Live</a></li>
+  </ul>
 </nav>
 
 <div class="wrap">
@@ -714,19 +754,53 @@ html[data-text="large"] table{font-size:14px}
     <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area - fetched live
        from the Malaysian Government Open API.</p>
     <div class="hero-loc-row">
-      <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
+      <div class="hero-loc" id="hero-loc" role="status" aria-label="Your selected location">
+        <button class="btn btn-a" id="hero-loc-try"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-live"/></svg> <span data-i18n="use my location">use my location</span></button>
+      </div>
       <div class="pos-util">
         <label class="sr" for="pos-q" data-i18n="Postcode lookup">Postcode lookup</label>
         <span class="pos-ico" aria-hidden="true"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-search"/></svg></span>
-        <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off" aria-expanded="false">
+        <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off"
+               role="combobox" aria-haspopup="listbox" aria-controls="pos-panel" aria-expanded="false">
         <span class="pos-count" id="pos-count"></span>
         <div class="pos-panel" id="pos-panel" hidden></div>
       </div>
     </div>
-    <div class="kpis" id="kpis"></div>
+    <div class="kpis" id="kpis">
+      <a class="kpi kpi-load" href="#weather" aria-label="Hottest today - go to the weather section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-temp"/></svg> Hottest today</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-hot"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#fuel" aria-label="RON 95 - go to the fuel section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> RON 95</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-ron95"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#economy" aria-label="Inflation y/y - go to the economy section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Inflation y/y</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-cpi"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#mobility" aria-label="New EVs - go to the mobility section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-ev"/></svg> New EVs</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-ev"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#weather" aria-label="Active warnings - go to the weather section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Active warnings</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-warn"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#live" aria-label="Vehicles live - go to the live section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bus"/></svg> Vehicles live</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-live"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+    </div>
   </div>
 
-  <section class="radar-band" id="radar-band" hidden aria-labelledby="radar-h">
+  <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
       <div class="radar-band-t">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg></div>
@@ -741,10 +815,151 @@ html[data-text="large"] table{font-size:14px}
         <button class="btn" id="radar-next" aria-label="Next issues">›</button>
       </div>
     </div>
-    <div class="radar-track" id="radar-track" tabindex="0" aria-label="Trending issues carousel"></div>
+    <div class="radar-track" id="radar-track" tabindex="0" aria-label="Trending issues carousel">
+      <div class="card" style="flex:0 0 320px;min-height:200px"><div class="card-b">
+        <div class="skel" style="width:86%"></div><div class="skel" style="width:64%"></div>
+        <div class="skel" style="width:72%"></div>
+      </div></div>
+    </div>
   </section>
 
   <main id="main">
+    <section id="weather" aria-labelledby="h-weather">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg></div>
+        <div><h3 id="h-weather">Weather &amp; Warnings</h3>
+          <p>Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.</p>
+            <ul><li><code>GET /weather/forecast</code></li><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-weather"></span>
+      </div>
+      <div id="body-weather"><div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div>
+    </section>
+    <section id="fuel" aria-labelledby="h-fuel">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg></div>
+        <div><h3 id="h-fuel">Fuel &amp; Households</h3>
+          <p>The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.</p>
+            <ul><li><code>GET /data-catalogue?id=fuelprice</code></li><li><code>GET /data-catalogue?id=hh_income</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-fuel"></span>
+      </div>
+      <div id="body-fuel"><div class="grid g4 mb"><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div></div><div class="card mb"><div class="card-h"><div class="skel" style="width:34%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+    <section id="population" aria-labelledby="h-population">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-population"/></svg></div>
+        <div><h3 id="h-population">Population</h3>
+          <p>How many people live in Malaysia, every year since 1970, and how the population is made up today.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown - the state-level dataset has not been updated since 2023.</p>
+            <ul><li><code>GET /opendosm?id=population_malaysia&amp;filter=overall@age</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-population"></span>
+      </div>
+      <div id="body-population"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+    <section id="economy" aria-labelledby="h-economy">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg></div>
+        <div><h3 id="h-economy">Economy</h3>
+          <p>Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.</p>
+            <ul><li><code>GET /opendosm?id=cpi_core</code></li><li><code>GET /opendosm?id=cpi_headline&amp;filter=overall@division</code></li><li><code>GET /opendosm?id=cpi_state&amp;filter=overall@division</code></li><li><code>GET /opendosm?id=lfs_month</code></li><li><code>GET /opendosm?id=gdp_qtr_real</code></li><li><code>GET /data-catalogue?id=epf_dividend</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-economy"></span>
+      </div>
+      <div id="body-economy"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+    <section id="finance" aria-labelledby="h-finance">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg></div>
+        <div><h3 id="h-finance">Finance</h3>
+          <p>Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.</p>
+            <ul><li><code>GET /data-catalogue?id=exchangerates</code></li><li><code>GET /data-catalogue?id=exchangerates_daily_1200&amp;filter=middle@rate_type</code></li><li><code>GET /data-catalogue?id=interestrates</code></li><li><code>GET /data-catalogue?id=trnsc_daily_fpx&amp;filter=both@model</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-finance"></span>
+      </div>
+      <div id="body-finance"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+    <section id="health" aria-labelledby="h-health">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-health"/></svg></div>
+        <div><h3 id="h-health">Health &amp; Donations</h3>
+          <p>Blood donations by blood type, organ pledges and PeKa B40 health screenings - published daily by the Ministry of Health.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.</p>
+            <ul><li><code>GET /data-catalogue?id=blood_donations</code></li><li><code>GET /data-catalogue?id=organ_pledges</code></li><li><code>GET /data-catalogue?id=pekab40_screenings</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-health"></span>
+      </div>
+      <div id="body-health"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+    <section id="mobility" aria-labelledby="h-mobility">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-mobility"/></svg></div>
+        <div><h3 id="h-mobility">Vehicles &amp; Ridership</h3>
+          <p>New vehicle registrations split by fuel type - the EV adoption curve - and daily passenger numbers on every KTMB rail service.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Registrations are counted by the Road Transport Department (JPJ) at first registration and published monthly by fuel type; only all-vehicle totals are charted here. Ridership is KTMB's own daily passenger count per service, published to the previous day.</p>
+            <ul><li><code>GET /data-catalogue?id=registrations_type_fuel&amp;filter=all_types@type</code></li><li><code>GET /data-catalogue?id=ridership_ktmb_daily</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-mobility"></span>
+      </div>
+      <div id="body-mobility"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+    <section id="transport" aria-labelledby="h-transport">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-transport"/></svg></div>
+        <div><h3 id="h-transport">Public Transport</h3>
+          <p>Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips and stops are read, never the largest file.</p>
+            <ul><li><code>GET /gtfs-static/ktmb</code></li><li><code>GET /gtfs-static/prasarana?category=rapid-bus-kl</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-transport"></span>
+      </div>
+      <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+    <section id="live" aria-labelledby="h-live">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
+        <div><h3 id="h-live">Live Vehicles</h3>
+          <p>Trains and buses currently reporting their position, straight from the operators' live feeds.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.</p>
+            <ul><li><code>GET /gtfs-realtime/vehicle-position/ktmb</code></li><li><code>GET /gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-live"></span>
+      </div>
+      <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+    </section>
+
     <!-- Static fallback: rendered before the app script runs, and visible to
          browsers/crawlers without JavaScript. buildShell() replaces #main's
          contents when the script executes, so JS users never see this. -->
@@ -764,7 +979,7 @@ html[data-text="large"] table{font-size:14px}
 <li><strong>Finance</strong> - USD/MYR 4.09 (business-day rate, 2026-08-10).</li>
 <li><strong>Economy</strong> - CPI 137.1 points (2026-06-01).</li>
 <li><strong>Health</strong> - blood donations 1,094 units (2026-08-08).</li>
-<li><strong>Trending now</strong> - Penyebaran Kenyataan Palsu Mengaitkan Timbalan Ketua Polis Negara di Facebook · Isu Kenderaan Dipandu Warga Asing Menggunakan Logo Jabatan Imigresen Malaysia · Penyebaran Mesej Palsu Bantuan Sumbangan Asas Rahmah (SARA) RM100 One-Off.</li>
+<li><strong>Trending now</strong> - Penggunaan Logo Jabatan Imigresen (JIM) Pada Kenderaan Dipandu Warga Asing · Percanggahan Kenyataan Status Keahlian Bersatu dalam Perikatan Nasional · Penyebaran Kenyataan Palsu Dikaitkan Dengan Timbalan Ketua Polis Negara.</li>
 <!-- /SEO:SNAP -->
             <h3>Sections</h3>
             <ul>
@@ -1097,7 +1312,10 @@ function applyLang(){
   document.querySelectorAll("[data-i18n]").forEach(n => { n.textContent = T(n.dataset.i18n); });
   document.querySelectorAll("[data-i18n-aria]").forEach(n =>
     n.setAttribute("aria-label", T(n.dataset.i18nAria)));
-  const b = $("#lang"); if (b) b.textContent = LANG === "ms" ? "EN" : "BM";
+  const b = $("#lang"); if (b){
+    b.textContent = LANG === "ms" ? "EN" : "BM";
+    b.setAttribute("aria-label", (LANG === "ms" ? "EN" : "BM") + " - " + (LANG === "ms" ? "English" : "Bahasa Melayu"));
+  }
   const ra = $("#nav-radar-band");
   if (ra) ra.innerHTML = ico("flame") + " " + esc(T("Trending"));
   SECTIONS.forEach(s => {
@@ -2023,11 +2241,18 @@ function buildShell(){
   const radarLi = el("li");
   radarLi.hidden = true;
   radarLi.innerHTML = `<a href="#radar-band" id="nav-radar-band">${ico("flame")} ${esc(T("Trending"))}</a>`;
-  nav.appendChild(radarLi);
+  if (!$("#nav-radar-band")) nav.appendChild(radarLi);
   for (const s of SECTIONS){
+    /* Nav entries are pre-rendered in the static HTML (first paint has the
+       full nav height - no CLS when it fills in); only build missing ones. */
+    if ($("#nav-" + s.id)) continue;
     const li = el("li");
     li.innerHTML = `<a href="#${s.id}" id="nav-${s.id}"><span class="dot" id="dot-${s.id}"></span>${ico(s.icon)} ${esc(T(s.label))}</a>`;
     nav.appendChild(li);
+    /* The section shells are pre-rendered in the static HTML (first paint
+       has the full page height - no CLS when data lands); only build them
+       here if a partial/bare shell somehow survives (e.g. embed scripts). */
+    if (document.getElementById(s.id) && document.getElementById("body-" + s.id)) continue;
     const sec = el("section");
     sec.id = s.id;
     sec.setAttribute("aria-labelledby", `h-${s.id}`);
@@ -2059,9 +2284,39 @@ function buildShell(){
 }
 const setDot = (id, st) => { const d = $("#dot-" + id); if (d) d.className = "dot " + st; };
 const skeleton = (id, n = 4) => {
-  $("#body-" + id).innerHTML = `<div class="card"><div class="card-b">` +
-    Array.from({ length:n }, (_, i) => `<div class="skel" style="width:${[94,72,86,60][i%4]}%"></div>`).join("") +
-    `</div></div>`;
+  /* Most section bodies lead with a 250-300px chart, and the two eager
+     sections (weather, fuel) have a tall multi-card layout. The skeleton
+     mirrors that structure - same cards, same classes, same breakpoints -
+     so the skeleton->content swap happens inside roughly the same footprint
+     and never shifts the page (CLS). Block heights live in CSS
+     (.skel-chart/.skel-table) and respond to the same media queries as the
+     real content they stand in for. */
+  const bars = (k) => Array.from({ length:k },
+    (_, i) => `<div class="skel" style="width:${[94,72,86,60][i%4]}%"></div>`).join("");
+  let inner;
+  if (id === "weather"){
+    inner = `<div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div>
+        <div class="card-b">${bars(4)}</div></div></div>
+      <div class="grid g2 mb">
+        <div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div>
+          <div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div>
+        <div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div>
+          <div class="card-b">${bars(2)}<div class="skel skel-table"></div></div></div>
+      </div>
+      <div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div>
+        <div class="card-b">${bars(2)}<div class="skel skel-table"></div></div></div>`;
+  }
+  else if (id === "fuel"){
+    inner = `<div class="grid g4 mb"><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div></div>
+      <div class="card mb"><div class="card-h"><div class="skel" style="width:34%"></div></div>
+        <div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div>
+      <div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div>
+        <div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div>`;
+  }
+  else {
+    inner = `<div class="card"><div class="card-b">${bars(n)}<div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div>`;
+  }
+  $("#body-" + id).innerHTML = inner;
 };
 function errorBox(id, err, retry){
   const rate = err && err.kind === "rate";
@@ -4321,7 +4576,7 @@ function radarSlide(i, idx){
   const fc = i.fact_check || {};
   const verdict = fc.verdict ? `<span class="fc-verdict">${esc(fc.verdict.replace("_"," "))}</span>` : "";
   const debunk = fc.status === "debunked" ? " radar-debunk" : "";
-  return `<button class="radar-slide${debunk}" data-idx="${idx}" aria-label="${esc(i.title_bm)}">
+  return `<button class="radar-slide${debunk}" data-idx="${idx}">
     <span class="rank">${i.rank}</span>
     <div class="rs-body">
       <h4>${esc(i.title_bm)}</h4>
@@ -4378,10 +4633,20 @@ function radarDetail(i){
 async function initRadarCarousel(){
   const band = $("#radar-band"); if (!band) return;
   let d;
-  try { d = await loadRadar(); } catch { return; }
+  try { d = await loadRadar(); } catch {
+    /* radar.json unavailable - collapse the band so the skeleton doesn't
+       linger; the nav entry stays hidden and nothing points at it. */
+    band.hidden = true;
+    const navItem = $("nav .nav-radar-wrap");
+    if (navItem) navItem.hidden = true;
+    return;
+  }
   radarIssues = d.top_issues || [];
   const track = $("#radar-track");
-  if (!radarIssues.length || !track) return;
+  if (!radarIssues.length || !track){
+    band.hidden = true;
+    return;
+  }
   band.hidden = false;
   /* the nav entry ships hidden and only appears once the band has content,
      so it never points at an empty destination */
@@ -4835,15 +5100,15 @@ function pwa(){
   let deferred = null;
   const btn = $("#install");
   addEventListener("beforeinstallprompt", e => {
-    e.preventDefault(); deferred = e; btn.hidden = false;
+    e.preventDefault(); deferred = e; btn.classList.add("show");
   });
   btn.onclick = async () => {
     if (!deferred) return;
     deferred.prompt();
     await deferred.userChoice;
-    deferred = null; btn.hidden = true;
+    deferred = null; btn.classList.remove("show");
   };
-  addEventListener("appinstalled", () => { btn.hidden = true; });
+  addEventListener("appinstalled", () => { btn.classList.remove("show"); });
 
   const net = $("#net"), netT = $("#net-t");
   syncNet = () => {

@@ -1,0 +1,23 @@
+# mygov
+
+> Malaysia government open-data dashboard: weather, fuel prices, economic statistics, public transport, flights and the trend radar - all sourced live from api.data.gov.my and displayed in a single-page app.
+
+## mygov
+
+- [mygov dashboard](https://mygov.faizalmzain.com/): Live weather and warnings by location, weekly retail fuel prices, consumer price index and GDP, public transport (KTMB trains, LRT/MRT), flight boards for 13 Malaysian airports, and the Trend Radar - the hottest issues and viral claims in Malaysia right now, each verified against real sources.
+
+## Sections
+
+- [Weather & Warnings](https://mygov.faizalmzain.com/#weather): Seven-day forecast, severe weather warnings, air temperature and rainfall for Malaysian districts.
+- [Fuel Prices](https://mygov.faizalmzain.com/#fuel): Weekly retail fuel prices (RON95, RON97, diesel) and price history.
+- [Economy](https://mygov.faizalmzain.com/#economy): Consumer Price Index, inflation, unemployment and real GDP.
+- [Public Transport](https://mygov.faizalmzain.com/#transport): KTMB live train positions, LRT/MRT network diagrams and station data.
+- [Flights](https://mygov.faizalmzain.com/#flights): Live flight boards for 13 Malaysian airports.
+- [Trend Radar](https://mygov.faizalmzain.com/#radar-band): Trending issues and fact-checked claims in Malaysia.
+
+## Data files
+
+- [Trend radar JSON](https://mygov.faizalmzain.com/radar.json): Top issues with fact-check status, titles in Bahasa Melayu and English, and source links.
+- [Site feed](https://mygov.faizalmzain.com/feed.xml): RSS feed of the latest data updates.
+
+All data is from the Malaysian Government Open Data portal (api.data.gov.my) unless otherwise noted on the page.
