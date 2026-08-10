@@ -1,61 +1,11 @@
 {
- "generated_at": "2026-08-10T03:07:33.335228+00:00",
+ "generated_at": "2026-08-10T04:02:58.120531+00:00",
  "language": "bm-primary",
  "top_issues": [
   {
    "rank": 1,
-   "title_bm": "Kenyataan Palsu Dikaitkan Dengan Timbalan KPN Tular di Facebook",
-   "title_en": "Fake statement linked to Deputy IGP viral on Facebook",
-   "category": "jenayah",
-   "source_count": 1,
-   "sources": [
-    {
-     "name": "malaymail",
-     "title": "Police lodge report after fake statement linked to deputy IGP spreads on Facebook",
-     "url": ""
-    }
-   ],
-   "fact_check": {
-    "status": "no_check_found",
-    "sebenarnya_title": null,
-    "sebenarnya_url": null
-   }
-  },
-  {
-   "rank": 2,
-   "title_bm": "Isu Penggunaan Logo Jabatan Imigresen Malaysia (JIM) Pada Kenderaan Dipandu Warga Asing",
-   "title_en": "Controversy over Immigration logo used on vehicle driven by foreigner",
-   "category": "lain",
-   "source_count": 2,
-   "sources": [
-    {
-     "name": "utusan",
-     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
-     "url": ""
-    },
-    {
-     "name": "sebenarnya",
-     "title": "Penjelasan Berkenaan Penggunaan Logo JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-     "url": ""
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "The Malaysian Immigration Department (JIM) confirmed that a viral vehicle displaying its logo and driven by a foreigner is not an official department asset, and an investigation into the misuse of the logo is underway.",
-    "sources": [
-     "Bernama",
-     "SEBENARNYA.MY",
-     "Astro Awani"
-    ],
-    "sebenarnya_title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
-    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
-   }
-  },
-  {
-   "rank": 3,
-   "title_bm": "Dakwaan Rakyat Malaysia 18 Tahun Ke Atas Menerima SARA RM100 One-Off Adalah Palsu",
-   "title_en": "Claim of RM100 one-off SARA payment for Malaysians aged 18+ is false",
+   "title_bm": "Dakwaan Palsu Bantuan RM100 SARA Secara One-Off Untuk Rakyat 18 Tahun Ke Atas",
+   "title_en": "Fake Claim of RM100 One-Off SARA Cash Aid for All Malaysians Aged 18 and Above",
    "category": "ekonomi",
    "source_count": 1,
    "sources": [
@@ -67,21 +17,14 @@
    ],
    "fact_check": {
     "status": "verified_claim",
-    "verdict": "TRUE",
-    "reason": "Malaysia's Ministry of Finance confirmed that viral reports claiming all citizens aged 18 and above would receive a one-off RM100 Sumbangan Asas Rahmah (SARA) payment for National Day are fake.",
-    "sources": [
-     "SEBENARNYA.MY",
-     "Malay Mail",
-     "The Star"
-    ],
     "sebenarnya_title": "Dakwa Rakyat Malaysia Berusia 18 Tahun Ke Atas Akan Menerima Sumbangan Asas Rahmah (SARA) RM100 Secara One-Off Adalah Tidak Benar",
     "sebenarnya_url": "https://sebenarnya.my/dakwa-rakyat-malaysia-berusia-18-tahun-ke-atas-akan-menerima-sumbangan-asas-rahmah-sara-rm100-secara-one-off-adalah-tidak-benar/"
    }
   },
   {
-   "rank": 4,
-   "title_bm": "Pertikaian Status Keahlian Bersatu Dalam Perikatan Nasional Selepas Kenyataan Hadi Awang",
-   "title_en": "Dispute over Bersatu's status in Perikatan Nasional following Hadi Awang's claim",
+   "rank": 2,
+   "title_bm": "Pertikaian Status Keahlian Bersatu dalam Perikatan Nasional Susulan Kenyataan Hadi Awang",
+   "title_en": "Dispute Over Bersatu's Membership Status in Perikatan Nasional Following Hadi Awang's Claim",
    "category": "politik",
    "source_count": 2,
    "sources": [
@@ -94,49 +37,83 @@
      "name": "freemalaysiatoday",
      "title": "Samsuri contradicts Hadi, says Bersatu still in PN",
      "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/samsuri-contradicts-hadi-says-bersatu-still-in-pn"
+    },
+    {
+     "name": "freemalaysiatoday",
+     "title": "Bersatu to take PN membership dispute to RoS",
+     "url": ""
     }
    ],
    "fact_check": {
     "status": "verified_claim",
     "verdict": "TRUE",
-    "reason": "PAS President Abdul Hadi Awang claimed Bersatu was automatically removed from Perikatan Nasional after announcing plans for a new coalition, prompting a dispute as Bersatu leaders rejected the claim based on PN's constitution.",
+    "reason": "PAS president Abdul Hadi Awang claimed Bersatu automatically lost its Perikatan Nasional membership after stating plans for a new coalition, prompting strong pushback and a legal dispute from Bersatu leaders.",
     "sources": [
      "Astro Awani",
-     "Free Malaysia Today",
+     "FMT",
+     "Sinar Harian"
+    ]
+   }
+  },
+  {
+   "rank": 3,
+   "title_bm": "Penyebaran Kenyataan Palsu Mengaitkan Timbalan Ketua Polis Negara di Facebook",
+   "title_en": "Spread of Fake Statement Attributed to Deputy IGP on Facebook",
+   "category": "jenayah",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "malaymail",
+     "title": "Police lodge report after fake statement linked to deputy IGP spreads on Facebook",
+     "url": ""
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "The Royal Malaysia Police confirmed that fake posts falsely attributing a special press conference to the Acting Deputy Inspector-General of Police were circulating on Facebook.",
+    "sources": [
+     "BERNAMA",
+     "Harian Metro",
      "Malay Mail"
     ]
    }
   },
   {
-   "rank": 5,
-   "title_bm": "Sindiket Penipuan Menyamar Sebagai Pegawai STR dan SARA",
-   "title_en": "Scam syndicate impersonating STR and SARA officers",
-   "category": "jenayah",
-   "source_count": 1,
+   "rank": 4,
+   "title_bm": "Penjelasan Penggunaan Logo Jabatan Imigresen pada Kenderaan Dipandu Warga Asing",
+   "title_en": "Clarification on Immigration Department Logo Usage on Foreigner-Driven Vehicle",
+   "category": "lain",
+   "source_count": 2,
    "sources": [
     {
      "name": "sebenarnya",
-     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan A...",
-     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+     "title": "Penjelasan Berkenaan Penggunaan Logo JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+     "url": ""
+    },
+    {
+     "name": "utusan",
+     "title": "Kenderaan guna logo Imigresen milik syarikat import, eksport",
+     "url": ""
     }
    ],
    "fact_check": {
     "status": "verified_claim",
     "verdict": "TRUE",
-    "reason": "Official warnings from Malaysia's Ministry of Finance, LHDN, and the Royal Malaysia Police confirm the existence of scam syndicates impersonating STR and SARA officers to steal personal and financial details.",
+    "reason": "The Malaysian Immigration Department issued an official clarification confirming that the vehicle displaying its logo driven by a foreigner was not an official asset of the department and launched an investigation into the misuse.",
     "sources": [
      "SEBENARNYA.MY",
-     "Ministry of Finance Malaysia",
-     "Sinar Harian"
+     "BERNAMA",
+     "Astro Awani"
     ],
-    "sebenarnya_title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan Asas Rahmah (SARA)",
-    "sebenarnya_url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+    "sebenarnya_title": "Penjelasan Berkenaan Penggunaan Logo  JIM Pada Kenderaan Dipandu Oleh Seorang Individu Warga Asing",
+    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berkenaan-penggunaan-logo-jim-pada-kenderaan-dipandu-oleh-seorang-individu-warga-asing/"
    }
   },
   {
-   "rank": 6,
-   "title_bm": "Penyebaran Senarai 10 Universiti Awam Yang Tidak Benar",
-   "title_en": "Fake list of 10 Public Universities circulating on social media",
+   "rank": 5,
+   "title_bm": "Penularan Senarai Palsu 10 Universiti Awam Malaysia",
+   "title_en": "Viral Fake List of 10 Malaysian Public Universities",
    "category": "pendidikan",
    "source_count": 1,
    "sources": [
@@ -148,52 +125,40 @@
    ],
    "fact_check": {
     "status": "verified_claim",
+    "verdict": "TRUE",
+    "reason": "Malaysia's Ministry of Higher Education clarified that an infographic circulating on social media listing the top 10 public universities was fake and unauthorized.",
+    "sources": [
+     "SEBENARNYA.MY",
+     "SAYS",
+     "Sirap Limau"
+    ],
     "sebenarnya_title": "Senarai 10 Universiti Awam yang Tersebar adalah Tidak Benar",
     "sebenarnya_url": "https://sebenarnya.my/senarai-10-universiti-awam-yang-tersebar-adalah-tidak-benar/"
    }
   },
   {
+   "rank": 6,
+   "title_bm": "Penafian Cadangan Penjualan Hotel Felda Oleh Ahmad Shabery Cheek",
+   "title_en": "Denial of Felda Hotel Sale Proposal by Ahmad Shabery Cheek",
+   "category": "ekonomi",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "freemalaysiatoday",
+     "title": "No Felda hotel sale proposal when I was chairman, says Shabery",
+     "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/no-felda-hotel-sale-proposal-when-i-was-chairman-says-shabery"
+    }
+   ],
+   "fact_check": {
+    "status": "no_check_found",
+    "sebenarnya_title": null,
+    "sebenarnya_url": null
+   }
+  },
+  {
    "rank": 7,
-   "title_bm": "Penipuan Pesanan Kerajaan Bagi Tempahan Makanan Dan Cenderahati",
-   "title_en": "Fake government order scam for food catering and souvenirs",
-   "category": "jenayah",
-   "source_count": 1,
-   "sources": [
-    {
-     "name": "sebenarnya",
-     "title": "Waspada Penipuan Pesanan Kerajaan Bagi Tempahan Makanan Dan Cenderahati",
-     "url": "https://sebenarnya.my/waspada-penipuan-pesanan-kerajaan-bagi-tempahan-makanan-dan-cenderahati/"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Waspada Penipuan Pesanan Kerajaan Bagi Tempahan Makanan Dan Cenderahati",
-    "sebenarnya_url": "https://sebenarnya.my/waspada-penipuan-pesanan-kerajaan-bagi-tempahan-makanan-dan-cenderahati/"
-   }
-  },
-  {
-   "rank": 8,
-   "title_bm": "Dakwaan Berkaitan Status Pemberhentian Bekas Anggota Tentera Darat Malaysia",
-   "title_en": "Claims regarding discharge status of former Malaysian Army personnel",
-   "category": "lain",
-   "source_count": 1,
-   "sources": [
-    {
-     "name": "sebenarnya",
-     "title": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat Malaysia",
-     "url": "https://sebenarnya.my/penjelasan-berhubung-dakwaan-status-pemberhentian-bekas-anggota-tentera-darat-malaysia/"
-    }
-   ],
-   "fact_check": {
-    "status": "verified_claim",
-    "sebenarnya_title": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat Malaysia",
-    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berhubung-dakwaan-status-pemberhentian-bekas-anggota-tentera-darat-malaysia/"
-   }
-  },
-  {
-   "rank": 9,
-   "title_bm": "Penyebaran Kerjasama Palsu Antara Bank Rakyat Dan Kedai Emas Seri Semantan",
-   "title_en": "Fake partnership claims between Bank Rakyat and Kedai Emas Seri Semantan",
+   "title_bm": "Dakwaan Palsu Kerjasama Antara Bank Rakyat dan Kedai Emas Seri Semantan",
+   "title_en": "Fake Claim of Partnership Between Bank Rakyat and Kedai Emas Seri Semantan",
    "category": "ekonomi",
    "source_count": 1,
    "sources": [
@@ -210,9 +175,28 @@
    }
   },
   {
-   "rank": 10,
-   "title_bm": "Penjelasan Berkenaan Isu Zakat Tabung Haji Tempoh 2016–2019",
-   "title_en": "Clarification on Tabung Haji zakat issue for 2016–2019",
+   "rank": 8,
+   "title_bm": "AMARAN: Sindiket Penipuan Menyamar Pegawai STR dan SARA",
+   "title_en": "WARNING: Scam Syndicate Impersonating STR and SARA Officers",
+   "category": "jenayah",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan A",
+     "url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Waspada Terhadap Sindiket Penipuan Yang Menyamar Sebagai Pegawai Sumbangan Tunai Rahmah (STR) atau Sumbangan Asas Rahmah (SARA)",
+    "sebenarnya_url": "https://sebenarnya.my/waspada-terhadap-sindiket-penipuan-yang-menyamar-sebagai-pegawai-sumbangan-tunai-rahmah-str-atau-sumbangan-asas-rahmah-sara/"
+   }
+  },
+  {
+   "rank": 9,
+   "title_bm": "Penjelasan Isu Pembayaran Zakat Tabung Haji bagi Tempoh 2016–2019",
+   "title_en": "Clarification on Tabung Haji Zakat Payments for 2016–2019",
    "category": "agama",
    "source_count": 1,
    "sources": [
@@ -227,9 +211,28 @@
     "sebenarnya_title": "Penjelasan Mengenai Isu Zakat Tabung Haji bagi Tempoh 2016–2019",
     "sebenarnya_url": "https://sebenarnya.my/penjelasan-mengenai-isu-zakat-tabung-haji-bagi-tempoh-2016-2019/"
    }
+  },
+  {
+   "rank": 10,
+   "title_bm": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat",
+   "title_en": "Clarification Regarding Discharge Status Claim of Former Malaysian Army Personnel",
+   "category": "lain",
+   "source_count": 1,
+   "sources": [
+    {
+     "name": "sebenarnya",
+     "title": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat Malaysia",
+     "url": "https://sebenarnya.my/penjelasan-berhubung-dakwaan-status-pemberhentian-bekas-anggota-tentera-darat-malaysia/"
+    }
+   ],
+   "fact_check": {
+    "status": "verified_claim",
+    "sebenarnya_title": "Penjelasan Berhubung Dakwaan Status Pemberhentian Bekas Anggota Tentera Darat Malaysia",
+    "sebenarnya_url": "https://sebenarnya.my/penjelasan-berhubung-dakwaan-status-pemberhentian-bekas-anggota-tentera-darat-malaysia/"
+   }
   }
  ],
  "total_signals": 110,
- "history_window_signals": 1180,
+ "history_window_signals": 1290,
  "history_days": 7
 }
