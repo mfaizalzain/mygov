@@ -105,9 +105,12 @@ def main():
             "id": "trnsc_daily_fpx", "filter": "both@model", "sort": "date"})
         ir = fetch("catalogue", "data-catalogue/", {"id": "interestrates", "sort": "-date"})
 
+        # Currencies tracked by the dashboard (order = column order in the
+        # compact rows; the API returns ~27, these are the ones shown).
+        FX_KEYS = ["usd", "gbp", "eur", "sgd", "idr", "cny", "jpy", "thb", "aud"]
+
         def fxrows(rows):
-            return [[r["date"], num(r.get("usd")), num(r.get("gbp")), num(r.get("eur")),
-                     num(r.get("sgd")), num(r.get("idr"))]
+            return [[r["date"]] + [num(r.get(k)) for k in FX_KEYS]
                     for r in (rows or []) if r.get("usd") is not None]
 
         avg = fxrows([r for r in (fx or []) if r.get("indicator") == "avg"])

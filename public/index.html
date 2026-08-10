@@ -754,8 +754,8 @@ html[data-text="large"] table{font-size:14px}
 <li><strong>Fuel</strong> — RON95 RM3.77, RON97 RM4.35, diesel RM4.57 (2026-08-06).</li>
 <li><strong>Finance</strong> — USD/MYR 4.09 (business-day rate, 2026-08-07).</li>
 <li><strong>Economy</strong> — CPI 137.1 points (2026-06-01).</li>
-<li><strong>Health</strong> — blood donations 1,094 units (2026-08-08).</li>
-<li><strong>Trending now</strong> — Tular Dakwaan Palsu Bantuan SARA RM100 One-Off Bagi Rakyat 18 Tahun Ke Atas · Isu Kenderaan Berlogo Jabatan Imigresen Dipandu Warga Asing · Penyebaran Kenyataan Palsu Dikaitkan Dengan Timbalan KPN Di Facebook.</li>
+<li><strong>Health</strong> — blood donations 1,095 units (2026-08-08).</li>
+<li><strong>Trending now</strong> — Penyebaran Penipuan Bantuan SARA RM100 One-Off dan Pegawai Palsu STR · Kenyataan Palsu Dikaitkan Timbalan KPN Tular Di Facebook · Kontroversi Penggunaan Logo Imigresen Pada Kenderaan Dipandu Warga Asing.</li>
 <!-- /SEO:SNAP -->
             <h3>Sections</h3>
             <ul>
@@ -2604,8 +2604,15 @@ const CURR = {
   eur:{ label:"EUR", color:"#60a5fa" },
   sgd:{ label:"SGD", color:"#2dd4bf" },
   idr:{ label:"IDR", color:"#a78bfa" },
+  cny:{ label:"CNY", color:"#f87171" },
+  jpy:{ label:"JPY", color:"#f472b6" },
+  thb:{ label:"THB", color:"#fb923c" },
+  aud:{ label:"AUD", color:"#22d3ee" },
 };
-const FX_ORDER = ["usd","gbp","eur","sgd","idr"];
+const FX_ORDER = ["usd","gbp","eur","sgd","idr","cny","jpy","thb","aud"];
+/* Column of each currency inside compact fxd/fx rows ([date, …]) — derived
+   from FX_ORDER so the collector and the dashboard can never disagree. */
+const FX_COL = Object.fromEntries(FX_ORDER.map((k, i) => [k, i + 1]));
 const FX_RANGES = ["6m","1y","all"];
 /* interestrates rate-code → display label (translated via T()) */
 const RATE_LABEL = { br:"Base rate", alr:"Average lending rate", blr:"Base lending rate",
@@ -2904,7 +2911,7 @@ function paintCpiState(d){
 let fxRange = "1y";
 let fxGran = "monthly";   // monthly averages (since 2005) | daily 12:00 middle rate
 let fpxRange = "1y";
-const fxCurr = new Set(["usd","gbp","eur","sgd"]);   // IDR is toggleable; see below
+const fxCurr = new Set(["usd","gbp","eur","sgd","cny","jpy","thb","aud"]);   // IDR is toggleable; see below
 
 function renderFinance(d){
   const fp = d.fpx || [];
@@ -3019,7 +3026,7 @@ function renderFinance(d){
 let fxPick = "usd";
 function paintLatestFx(d){
   const src = d.fxd && d.fxd.length ? d.fxd : d.fx;
-  const col = { usd:1, gbp:2, eur:3, sgd:4, idr:5 };
+  const col = FX_COL;
   const rows = src || [];
   const last = rows[rows.length - 1];
   const prev = rows[rows.length - 2];
@@ -3088,7 +3095,7 @@ function paintFx(d){
   const from = fxRange === "all" ? "0000" : cutoff(RANGES[fxRange]);
   const rows = src.filter(r => String(r[0]) >= from);
   const sel = FX_ORDER.filter(k => fxCurr.has(k));
-  const col = { usd:1, gbp:2, eur:3, sgd:4, idr:5 };
+  const col = FX_COL;
   chart("fx-chart", {
     type:"line",
     data:{ labels: rows.map(r => md(r[0]) + " '" + String(r[0]).slice(2,4)),
@@ -3115,9 +3122,10 @@ function paintFx(d){
   });
   const dt = $("#fx-dt");
   if (dt) dt.innerHTML = dataTableHTML(
-    [T("Date"),"USD","GBP","EUR","SGD","IDR"],
-    rows.map(r => [ymd(r[0]), r[1], r[2], r[3], r[4], r[5]]
-      .map((v, i) => i ? Number(v).toFixed(4) : v)), [1,2,3,4,5]);
+    [T("Date"), ...FX_ORDER.map(k => CURR[k].label)],
+    rows.map(r => [ymd(r[0]), ...FX_ORDER.map((k, i) => r[i + 1])]
+      .map((v, i) => i ? Number(v).toFixed(4) : v)),
+    FX_ORDER.map((_, i) => i + 1));
 }
 
 /** FPX value and volume share an x-axis but not a unit, so volume gets its own
