@@ -6278,5 +6278,580 @@
     "traffic": "200+"
    }
   ]
+ },
+ {
+  "day": "2026-08-10",
+  "signals": [
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Digne makes emotional PSG return 11 years after leaving — and could face Villa immediately",
+    "url": "https://www.malaymail.com/news/sports/2026/08/10/digne-makes-emotional-psg-return-11-years-after-leaving-and-could-face-villa-immediately/230770",
+    "pub": "Mon, 10 Aug 2026 10:24:00 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Ringgit could find its footing by end-August, Kenanga IB says",
+    "url": "https://www.malaymail.com/news/money/2026/08/10/ringgit-could-find-its-footing-by-end-august-kenanga-ib-says/230768",
+    "pub": "Mon, 10 Aug 2026 10:19:30 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Arteta backs £75m Guimaraes to ‘ignite something different’ at champions Arsenal",
+    "url": "https://www.malaymail.com/news/sports/2026/08/10/arteta-backs-75m-guimaraes-to-ignite-something-different-at-champions-arsenal/230767",
+    "pub": "Mon, 10 Aug 2026 10:14:02 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "UK PM Burnham takes aim at ‘rip-off’ discounts with crackdown on fake bargains, hard-to-cancel subscriptions",
+    "url": "https://www.malaymail.com/news/world/2026/08/10/uk-pm-burnham-takes-aim-at-rip-off-discounts-with-crackdown-on-fake-bargains-hard-to-cancel-subscriptions/230766",
+    "pub": "Mon, 10 Aug 2026 10:10:07 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Bursa rides Wall Street’s coattails to a firmer open",
+    "url": "https://www.malaymail.com/news/money/2026/08/10/bursa-rides-wall-streets-coattails-to-a-firmer-open/230765",
+    "pub": "Mon, 10 Aug 2026 10:03:44 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "When Hadi says Bersatu is out but Samsuri says it is in: Wawasan’s balancing act gets harder by the day — Phar Kim Beng",
+    "url": "https://www.malaymail.com/news/what-you-think/2026/08/10/when-hadi-says-bersatu-is-out-but-samsuri-says-it-is-in-wawasans-balancing-act-gets-harder-by-the-day-phar-kim-beng/230756",
+    "pub": "Mon, 10 Aug 2026 10:00:00 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Mourinho reveals he signed to replace Ferguson at Man United before tearfully backing out",
+    "url": "https://www.malaymail.com/news/sports/2026/08/10/mourinho-reveals-he-signed-to-replace-ferguson-at-man-united-before-tearfully-backing-out/230764",
+    "pub": "Mon, 10 Aug 2026 09:58:59 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Four Spaniards held after US$300,000 watch snatch in millionaire playground Saint-Tropez",
+    "url": "https://www.malaymail.com/news/world/2026/08/10/four-spaniards-held-after-us300000-watch-snatch-in-millionaire-playground-saint-tropez/230763",
+    "pub": "Mon, 10 Aug 2026 09:53:42 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Bodies of five climbers finally recovered nine months after Nepal avalanche",
+    "url": "https://www.malaymail.com/news/world/2026/08/10/bodies-of-five-climbers-finally-recovered-nine-months-after-nepal-avalanche/230762",
+    "pub": "Mon, 10 Aug 2026 09:48:08 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "‘Taking too long’: Man arrested after allegedly brandishing meat cleaver at delivery rider at Terengganu petrol station",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/taking-too-long-man-arrested-after-allegedly-brandishing-meat-cleaver-at-delivery-rider-at-terengganu-petrol-station/230761",
+    "pub": "Mon, 10 Aug 2026 10:19:41 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Terengganu police call for restraint as residents vent fury after foreigner crime case fuels tensions",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/terengganu-police-call-for-restraint-as-residents-vent-fury-after-foreigner-crime-case-fuels-tensions/230760",
+    "pub": "Mon, 10 Aug 2026 10:23:20 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Alleged cartel boss Daniel Kinahan charged in Dublin after extradition from Dubai",
+    "url": "https://www.malaymail.com/news/world/2026/08/10/alleged-cartel-boss-daniel-kinahan-charged-in-dublin-after-extradition-from-dubai/230759",
+    "pub": "Mon, 10 Aug 2026 09:42:23 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Maintenance worker drowns after suspected fall into water tank at Kuala Langat power plant",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/maintenance-worker-drowns-after-suspected-fall-into-water-tank-at-kuala-langat-power-plant/230758",
+    "pub": "Mon, 10 Aug 2026 09:43:40 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Monaco spoil Iraola’s Anfield bow, Liverpool surrender two-goal lead for second game running",
+    "url": "https://www.malaymail.com/news/sports/2026/08/10/monaco-spoil-iraolas-anfield-bow-liverpool-surrender-two-goal-lead-for-second-game-running/230757",
+    "pub": "Mon, 10 Aug 2026 09:36:53 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Model Lisa Ch’ng and HK actor Mat Yeung share ‘botched’ proposal and new life together",
+    "url": "https://www.malaymail.com/news/showbiz/2026/08/10/model-lisa-chng-and-hk-actor-mat-yeung-share-botched-proposal-and-new-life-together/230755",
+    "pub": "Mon, 10 Aug 2026 09:39:35 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Three-hundred-foot plunge, 17 injured: Air India pilot now faces confirmatory drug test",
+    "url": "https://www.malaymail.com/news/world/2026/08/10/three-hundred-foot-plunge-17-injured-air-india-pilot-now-faces-confirmatory-drug-test/230754",
+    "pub": "Mon, 10 Aug 2026 09:31:33 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Anwar undergoing medical checks, PMO confirms two‑day specialist observation period",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/anwar-undergoing-medical-checks-pmo-confirms-twoday-specialist-observation-period/230753",
+    "pub": "Mon, 10 Aug 2026 09:30:46 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "La Liga boss Tebas says Infantino must go — and warns replacing him alone will not fix Fifa",
+    "url": "https://www.malaymail.com/news/sports/2026/08/10/la-liga-boss-tebas-says-infantino-must-go-and-warns-replacing-him-alone-will-not-fix-fifa/230752",
+    "pub": "Mon, 10 Aug 2026 09:24:32 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Who shot ya? Tupac Shakur murder trial begins in Las Vegas after 30 years",
+    "url": "https://www.malaymail.com/news/showbiz/2026/08/10/who-shot-ya-tupac-shakur-murder-trial-begins-in-las-vegas-after-30-years/230751",
+    "pub": "Mon, 10 Aug 2026 09:24:10 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "The dark side of going viral — Dong Lefan and Mohd Istajib Mokhtar",
+    "url": "https://www.malaymail.com/news/what-you-think/2026/08/10/the-dark-side-of-going-viral-dong-lefan-and-mohd-istajib-mokhtar/230746",
+    "pub": "Mon, 10 Aug 2026 09:16:44 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "US jobs shock gives ringgit a lift, but Hormuz remains the wildcard",
+    "url": "https://www.malaymail.com/news/money/2026/08/10/us-jobs-shock-gives-ringgit-a-lift-but-hormuz-remains-the-wildcard/230750",
+    "pub": "Mon, 10 Aug 2026 09:15:37 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Nadi offers cheaper school uniforms for families, says education minister",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/nadi-offers-cheaper-school-uniforms-for-families-says-education-minister/230749",
+    "pub": "Mon, 10 Aug 2026 09:37:58 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Hajiji: Sabah will use RM1.5b federal special grant for infrastructure and welfare",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/hajiji-sabah-will-use-rm15b-federal-special-grant-for-infrastructure-and-welfare/230748",
+    "pub": "Mon, 10 Aug 2026 09:13:49 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Iran says Khamenei met Pezeshkian — but still offers no glimpse of supreme leader",
+    "url": "https://www.malaymail.com/news/world/2026/08/10/iran-says-khamenei-met-pezeshkian-but-still-offers-no-glimpse-of-supreme-leader/230747",
+    "pub": "Mon, 10 Aug 2026 09:10:56 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "The man behind Messi: Football icon says final goodbye to father Jorge, his first coach and lifelong agent",
+    "url": "https://www.malaymail.com/news/sports/2026/08/10/the-man-behind-messi-football-icon-says-final-goodbye-to-father-jorge-his-first-coach-and-lifelong-agent/230745",
+    "pub": "Mon, 10 Aug 2026 09:05:17 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Police: Four masked suspects break into Sungai Buloh home, make off with RM35,000 worth of valuables",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/police-four-masked-men-break-into-sungai-buloh-home-make-off-with-rm35000-worth-of-valuables/230744",
+    "pub": "Mon, 10 Aug 2026 09:10:02 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Sabah to acquire 30pc stake in two new oil and gas fields, says Hajiji",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/sabah-to-acquire-30pc-stake-in-two-new-oil-and-gas-fields-says-hajiji/230743",
+    "pub": "Mon, 10 Aug 2026 08:59:48 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "‘Low-keying it’: Trump bets economic pain will force Iran to buckle over Hormuz",
+    "url": "https://www.malaymail.com/news/world/2026/08/10/low-keying-it-trump-bets-economic-pain-will-force-iran-to-buckle-over-hormuz/230742",
+    "pub": "Mon, 10 Aug 2026 08:55:33 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Lim Lip Eng posts RM5,000 bounty after woman set alight in brutal Kepong petrol attack",
+    "url": "https://www.malaymail.com/news/malaysia/2026/08/10/lim-lip-eng-posts-rm5000-bounty-after-woman-set-alight-in-brutal-kepong-petrol-attack/230741",
+    "pub": "Mon, 10 Aug 2026 09:06:18 +0800"
+   },
+   {
+    "source": "malaymail",
+    "lang": "en",
+    "title": "Japan’s highly-rated Homemade Ramen Muginae debuts its famed ‘shoyu ramen’ on Jalan Sin Chew Kee",
+    "url": "https://www.malaymail.com/news/eat-drink/2026/08/10/japans-highly-rated-homemade-ramen-muginae-debuts-its-famed-shoyu-ramen-on-jalan-sin-chew-kee/230740",
+    "pub": "Mon, 10 Aug 2026 08:57:22 +0800"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "PN-BN talks on Melaka polls will exclude Bersatu, says Takiyuddin",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/10/pn-bn-talks-on-melaka-polls-will-exclude-bersatu-says-takiyuddin",
+    "pub": "Mon, 10 Aug 2026 00:54:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Common cause will give BN-PN reason to keep going, says analyst",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/10/common-cause-will-give-bn-pn-reason-to-keep-going-says-analyst",
+    "pub": "Mon, 10 Aug 2026 00:30:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Kepong MP offers RM5,000 to ID person who set elderly woman on fire",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/10/kepong-mp-offers-rm5-000-to-id-person-who-set-elderly-woman-on-fire",
+    "pub": "Mon, 10 Aug 2026 00:27:58 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Is Malaysia ready for the next digital decade?",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/10/is-malaysia-ready-for-the-next-digital-decade",
+    "pub": "Mon, 10 Aug 2026 00:00:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Malay unity means little without good governance, says analyst",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/10/malay-unity-means-little-without-good-governance-says-analyst",
+    "pub": "Sun, 09 Aug 2026 23:30:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "No room to hide for those who undermined Tabung Haji, says PKR Youth",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/no-room-to-hide-for-those-who-undermined-tabung-haji-says-pkr-youth",
+    "pub": "Sun, 09 Aug 2026 15:49:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "All federal funds will go directly to the people, says Hajiji",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/all-federal-funds-will-go-directly-to-the-people-says-hajiji",
+    "pub": "Sun, 09 Aug 2026 15:38:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Santiago calls for more teeth in UN tax treaty",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/santiago-calls-for-more-teeth-in-un-tax-treaty",
+    "pub": "Sun, 09 Aug 2026 15:27:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "JDT trade blows with Chelsea in six-goal thriller",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/jdt-trade-blows-with-chelsea-in-six-goal-thriller",
+    "pub": "Sun, 09 Aug 2026 14:55:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Elderly woman set on fire outside KL lottery shop",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/elderly-woman-set-on-fire-outside-kl-lottery-shop",
+    "pub": "Sun, 09 Aug 2026 13:36:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "PH must make reforms to stave off becoming opposition again, says analyst",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/ph-must-make-reforms-to-stave-off-becoming-opposition-again-says-analyst",
+    "pub": "Sun, 09 Aug 2026 13:29:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Unhealthy air spreads to more areas of Sarawak",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/unhealthy-air-spreads-to-more-areas-of-sarawak",
+    "pub": "Sun, 09 Aug 2026 13:08:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Too costly to raise a family? Sarawak’s young couples face quandary",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/too-costly-to-raise-a-family-sarawak-s-young-couples-face-quandary",
+    "pub": "Sun, 09 Aug 2026 12:01:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "3 refugees held after report of sexual offence against disabled woman",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/3-refugees-held-after-report-of-sexual-offence-against-disabled-woman",
+    "pub": "Sun, 09 Aug 2026 11:44:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "209 foreign hostesses nabbed in raids on Johor entertainment joints",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/209-foreign-hostesses-nabbed-in-raids-on-johor-entertainment-joints",
+    "pub": "Sun, 09 Aug 2026 11:32:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "No Felda hotel sale proposal when I was chairman, says Shabery",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/no-felda-hotel-sale-proposal-when-i-was-chairman-says-shabery",
+    "pub": "Sun, 09 Aug 2026 11:28:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Root rot, cavity contributed to 90-year-old tree collapse, says MBPP",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/root-rot-cavity-contributed-to-90-year-old-tree-collapse-says-mbpp",
+    "pub": "Sun, 09 Aug 2026 11:25:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Govt support for Tamil schools will continue, says Gobind",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/govt-support-for-tamil-schools-will-continue-says-gobind",
+    "pub": "Sun, 09 Aug 2026 10:57:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Get doctors’ views on insurance plans, says MMA",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/get-doctors-views-on-insurance-plans-says-mma",
+    "pub": "Sun, 09 Aug 2026 10:15:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Warisan in talks with STAR, KDM on GE16 pact",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/warisan-in-talks-with-star-kdm-on-ge16-pact",
+    "pub": "Sun, 09 Aug 2026 09:39:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Criticise DAP but labelling it ‘enemy of Islam’ is dangerous, says Marzuki",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/criticise-dap-but-labelling-it-enemy-of-islam-is-dangerous-says-marzuki",
+    "pub": "Sun, 09 Aug 2026 09:00:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Failure to engage ‘P’ gear led to car crash at KKIA departure hall",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/failure-to-engage-p-gear-led-to-car-crash-at-kkia-departure-hall",
+    "pub": "Sun, 09 Aug 2026 08:47:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "PN open to seat swaps with BN, says Samsuri",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/pn-open-to-seat-swaps-with-bn-says-samsuri",
+    "pub": "Sun, 09 Aug 2026 07:53:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Now Terengganu Bersatu No 2 quits post",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/now-terengganu-bersatu-no-2-quits-post",
+    "pub": "Sun, 09 Aug 2026 07:21:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Samsuri contradicts Hadi, says Bersatu still in PN",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/samsuri-contradicts-hadi-says-bersatu-still-in-pn",
+    "pub": "Sun, 09 Aug 2026 06:42:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Make all crew report early for pre-flight checks, urges Tiong",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/make-all-crew-report-early-for-pre-flight-checks-urges-tiong",
+    "pub": "Sun, 09 Aug 2026 06:29:55 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Kai Wun-Roy King crowned Korea Masters champs",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/kai-wun-roy-king-crowned-korea-masters-champs",
+    "pub": "Sun, 09 Aug 2026 06:07:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Liu foresees BN-PN pact falling apart, GE16 ‘free for all’",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/liu-foresees-bn-pn-pact-falling-apart-ge16-free-for-all",
+    "pub": "Sun, 09 Aug 2026 05:48:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "Kuching to host this year’s Malaysia Day celebrations",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/kuching-to-host-this-year-s-malaysia-day-celebrations",
+    "pub": "Sun, 09 Aug 2026 05:13:00 +0000"
+   },
+   {
+    "source": "freemalaysiatoday",
+    "lang": "en",
+    "title": "3 cheat death after falling tree crushes car on Macalister Road",
+    "url": "https://www.freemalaysiatoday.com/category/nation/2026/08/09/3-cheat-death-after-falling-tree-crushes-car-on-macalister-road",
+    "pub": "Sun, 09 Aug 2026 04:52:11 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Kita terima pandangan netizen – Aisha Retno dikritik, baju Gusti Putri dikatakan seksi",
+    "url": "https://www.utusan.com.my/nasional/2026/08/kita-terima-pandangan-netizen-aisha-retno-dikritik-menggayakan-busana-pgl/?utm_source=rss&utm_medium=rss&utm_campaign=kita-terima-pandangan-netizen-aisha-retno-dikritik-menggayakan-busana-pgl",
+    "pub": "Mon, 10 Aug 2026 02:01:54 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Sarawak, Selangor catat IPU tidak sihat",
+    "url": "https://www.utusan.com.my/nasional/2026/08/sarawak-selangor-catat-ipu-tidak-sihat/?utm_source=rss&utm_medium=rss&utm_campaign=sarawak-selangor-catat-ipu-tidak-sihat",
+    "pub": "Mon, 10 Aug 2026 01:45:53 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Pas tidak terima risikan, tawaran sertai Kerajaan Perpaduan jika DAP keluar",
+    "url": "https://www.utusan.com.my/nasional/2026/08/pas-tidak-terima-risikan-tawaran-sertai-kerajaan-perpaduan-jika-dap-keluar/?utm_source=rss&utm_medium=rss&utm_campaign=pas-tidak-terima-risikan-tawaran-sertai-kerajaan-perpaduan-jika-dap-keluar",
+    "pub": "Mon, 10 Aug 2026 01:34:51 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Israel ‘mengganas’ selatan Syria selepas kejatuhan Bashar",
+    "url": "https://www.utusan.com.my/luar-negara/2026/08/israel-mengganas-selatan-syria-selepas-kejatuhan-bashar/?utm_source=rss&utm_medium=rss&utm_campaign=israel-mengganas-selatan-syria-selepas-kejatuhan-bashar",
+    "pub": "Mon, 10 Aug 2026 01:30:19 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Jangan tunggu guru bersuara di media sosial",
+    "url": "https://www.utusan.com.my/rencana/forum/2026/08/jangan-tunggu-guru-bersuara-di-media-sosial/?utm_source=rss&utm_medium=rss&utm_campaign=jangan-tunggu-guru-bersuara-di-media-sosial",
+    "pub": "Mon, 10 Aug 2026 01:21:13 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "PM jalani pemeriksaan, prosedur kesihatan selama dua hari",
+    "url": "https://www.utusan.com.my/nasional/2026/08/pm-jalani-pemeriksaan-prosedur-kesihatan-selama-dua-hari/?utm_source=rss&utm_medium=rss&utm_campaign=pm-jalani-pemeriksaan-prosedur-kesihatan-selama-dua-hari",
+    "pub": "Mon, 10 Aug 2026 01:20:39 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Eksperimen Herry mula berhasil",
+    "url": "https://www.utusan.com.my/sukan/2026/08/eksperimen-herry-mula-berhasil/?utm_source=rss&utm_medium=rss&utm_campaign=eksperimen-herry-mula-berhasil",
+    "pub": "Mon, 10 Aug 2026 01:10:45 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Kelebihan bahasa Melayu pada pelajar asing",
+    "url": "https://www.utusan.com.my/rencana/forum/2026/08/kelebihan-bahasa-melayu-pada-pelajar-asing/?utm_source=rss&utm_medium=rss&utm_campaign=kelebihan-bahasa-melayu-pada-pelajar-asing",
+    "pub": "Mon, 10 Aug 2026 01:00:58 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Sejahterakah guru kita?",
+    "url": "https://www.utusan.com.my/rencana/forum/2026/08/sejahterakah-guru-kita/?utm_source=rss&utm_medium=rss&utm_campaign=sejahterakah-guru-kita",
+    "pub": "Mon, 10 Aug 2026 01:00:44 +0000"
+   },
+   {
+    "source": "utusan",
+    "lang": "ms",
+    "title": "Kini masa untuk BN-PN laksana janji pilihan raya",
+    "url": "https://www.utusan.com.my/rencana/forum/2026/08/kini-masa-untuk-bn-pn-laksana-janji-pilihan-raya/?utm_source=rss&utm_medium=rss&utm_campaign=kini-masa-untuk-bn-pn-laksana-janji-pilihan-raya",
+    "pub": "Mon, 10 Aug 2026 01:00:23 +0000"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "chicago vs santos laguna",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "100+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "alexandra eala",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "500+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "petrol",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "100+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "naomi osaka",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "200+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "sukma selangor 2026",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "200+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "malaysia ev july 2026 sales",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "200+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "stadium",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "200+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "api kuching",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "500+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "politik",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "100+"
+   },
+   {
+    "source": "trends",
+    "lang": "mixed",
+    "title": "marseille vs athletic",
+    "url": "https://trends.google.com/trending?geo=MY",
+    "pub": "",
+    "traffic": "200+"
+   }
+  ]
  }
 ]
