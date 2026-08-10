@@ -1220,7 +1220,15 @@ const I18N = {
   "refresh failed - showing last data":"gagal dimuat semula - memaparkan data terakhir",
   "Hottest today":"Paling panas hari ini", "Inflation y/y":"Inflasi t/t",
   "Active warnings":"Amaran aktif", "Vehicles live":"Kenderaan langsung",
-  "Stations at risk":"Stesen berisiko",
+  /* CPI rate/index toggle + inflation-by-state reference line */
+  "CPI measure":"Ukuran IHP", "Rate":"Kadar", "Index":"Indeks",
+  "year-on-year % · by expenditure division":"% tahun ke tahun · mengikut bahagian perbelanjaan",
+  "index level · by expenditure division":"aras indeks · mengikut bahagian perbelanjaan",
+  "above":"melebihi", "below":"kurang daripada", "national":"kebangsaan",
+  "vs national":"berbanding kebangsaan",
+  /* Vehicle registrations count/share toggle */
+  "Units":"Unit", "Count":"Bilangan", "Share":"Bahagian",
+  "share of the month · by fuel type":"bahagian bulan itu · mengikut jenis bahan api",
   "issued by MET":"dikeluarkan oleh MET", "all clear":"tiada amaran", "week of ":"minggu ",
   "core CPI, ":"CPI teras, ", "trains + buses":"kereta api + bas", "none reporting now":"tiada laporan kini",
   "Stations at risk":"Stesen berisiko", "reported within 24h":"dilaporkan dalam 24 jam",
@@ -3357,6 +3365,23 @@ const divLabel = k => k === "headline" ? T("Headline - all items")
 /* Headline vs core is the comparison people come for, so both are on by
    default; the expenditure divisions below them are opt-in. */
 let cpiPick = new Set(["headline", "overall"]), cpiRange = "all";
+/* "rate" by default: the published series is an index, and an index level
+   (136.2) answers nothing on its own - the year-on-year rate is the number
+   people actually mean by "inflation". The index stays one click away. */
+let cpiMode = "rate";
+/** A division's series as a Map(date -> value), either the raw index or the
+ *  year-on-year rate derived from the point twelve months earlier. Derived
+ *  here rather than fetched: cpi_*_inflation exist as separate datasets, but
+ *  the index is already loaded and the arithmetic is exact. */
+function cpiSeries(s){
+  if (cpiMode === "index") return new Map(s.pts);
+  const out = new Map();
+  for (let i = 12; i < s.pts.length; i++){
+    const cur = s.pts[i][1], prev = s.pts[i - 12][1];
+    if (cur != null && prev) out.set(s.pts[i][0], (cur / prev - 1) * 100);
+  }
+  return out;
+}
 
 function renderEconomy(d){
   const lfsL = d.lfs[d.lfs.length - 1] || [];
@@ -3384,8 +3409,15 @@ function renderEconomy(d){
         <div class="sub">${d.epf ? `${nf(d.epf.shariah, 2)}% ${T("shariah")} · ${esc(String(d.epf.date).slice(0,4))}` : ""}</div></div>
     </div>
     <div class="card mb">
-      <div class="card-h"><h4>${T("Consumer Price Index")}</h4><span class="sub">${T("headline vs core · by expenditure division")}</span>
-        <span class="right"><span class="seg" role="group" aria-label="CPI range">
+      <div class="card-h"><h4>${T("Consumer Price Index")}</h4><span class="sub">${
+        cpiMode === "rate" ? T("year-on-year % · by expenditure division")
+                           : T("index level · by expenditure division")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="${T("CPI measure")}">
+            ${[["rate", T("Rate")], ["index", T("Index")]].map(([k, lab]) =>
+              `<button data-cmode="${k}" aria-pressed="${k === cpiMode}">${esc(lab)}</button>`).join("")}
+          </span>
+          <span class="seg" role="group" aria-label="CPI range" style="margin-left:var(--s2)">
           ${["1y","2y","all"].map(r => `<button data-crange="${r}" aria-pressed="${r === cpiRange}">${r.toUpperCase()}</button>`).join("")}
         </span></span></div>
       <div class="card-b" style="padding-bottom:8px"><div class="chips" id="cpi-chips"></div></div>
@@ -3426,22 +3458,42 @@ function renderEconomy(d){
   $("#body-economy").querySelectorAll("[data-crange]").forEach(b => {
     b.onclick = () => { cpiRange = b.dataset.crange; renderEconomy(d); };
   });
+  $("#body-economy").querySelectorAll("[data-cmode]").forEach(b => {
+    b.onclick = () => { cpiMode = b.dataset.cmode; renderEconomy(d); };
+  });
 
   const from = cpiRange === "all" ? "0000" : cutoff(cpiRange === "1y" ? 1 : 2);
   const labels = ov.map(p => p[0]).filter(x => String(x) >= from);
+  const rate = cpiMode === "rate";
+  const cpiFmt = v => rate ? nf(v, 1) + "%" : nf(v, 1);
   chart("cpi-chart", {
     type:"line",
     data:{ labels: labels.map(x => md(x) + " '" + String(x).slice(2,4)),
       datasets: d.cpi.filter(s => cpiPick.has(s.name)).map(s => {
-        const i = d.cpi.findIndex(x => x.name === s.name), m = new Map(s.pts);
+        const i = d.cpi.findIndex(x => x.name === s.name), m = cpiSeries(s);
         return { label:divLabel(s.name), data:labels.map(l => m.get(l) ?? null),
                  borderColor:PALETTE[i % PALETTE.length], borderWidth:2, pointRadius:0,
                  tension:.25, spanGaps:true }; }) },
-    options: baseOpts({ scales:{
+    options: baseOpts({
+      plugins:{ tooltip:{ callbacks:{ label: it => ` ${it.dataset.label}: ${cpiFmt(it.parsed.y)}` } } },
+      scales:{
       x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
           ticks:{ color:cssVar("--fg-3"), font:{size:10}, maxTicksLimit:12, maxRotation:0 } },
       y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8 } } } }),
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8,
+                  callback:v => cpiFmt(v) } } } }),
+    /* In rate mode zero is a real boundary - prices falling vs rising - so
+       mark it. Chart.js has no annotation support without the plugin. */
+    plugins: rate ? [{
+      id:"cpiZero",
+      afterDatasetsDraw(c){
+        const y = c.scales.y; if (!y || y.min > 0 || y.max < 0) return;
+        const py = y.getPixelForValue(0), a = c.chartArea, x = c.ctx;
+        x.save(); x.strokeStyle = cssVar("--fg-3"); x.globalAlpha = .5;
+        x.lineWidth = 1; x.setLineDash([4, 4]);
+        x.beginPath(); x.moveTo(a.left, py); x.lineTo(a.right, py); x.stroke(); x.restore();
+      },
+    }] : [],
   });
   paintCpiState(d);
   chart("lfs-chart", {
@@ -3475,12 +3527,15 @@ function renderEconomy(d){
   const cdt = $("#cpi-dt");
   if (cdt){
     const cols = d.cpi.filter(s => cpiPick.has(s.name));
-    const maps = cols.map(s => new Map(s.pts));
+    const maps = cols.map(s => cpiSeries(s));
     cdt.innerHTML = dataTableHTML(
-      [T("Date")].concat(cols.map(s => divLabel(s.name))),
+      [T("Date")].concat(cols.map(s => divLabel(s.name) + (rate ? " %" : ""))),
       labels.map(x => {
         const row = [md(x) + " '" + String(x).slice(2,4)];
-        for (const m of maps) row.push(m.get(x) ?? null);
+        for (const m of maps){
+          const v = m.get(x);
+          row.push(v == null ? null : nf(v, rate ? 2 : 1));
+        }
         return row;
       }),
       cols.map((_, i) => i + 1));
@@ -3511,27 +3566,87 @@ function paintCpiState(d){
   rows.sort((a, b) => b.rate - a.rate);
   const stamp = $("#cpi-st-date");
   if (stamp) stamp.textContent = when ? T("data as of ") + md(when) : "";
-  /* One hue, not a rainbow: the ranking is the message, and colouring 16 bars
-     differently would imply a categorical difference that isn't there. */
+
+  /* The national rate is the reference every bar should be read against -
+     without it a sorted list says who is highest, but not who is above or
+     below average. Derived the same way as the state rates. */
+  const natSeries = d.cpi.find(s => s.name === "headline") || d.cpi.find(s => s.name === "overall");
+  let national = null;
+  if (natSeries && natSeries.pts.length > 12){
+    const p = natSeries.pts, last = p[p.length - 1], year = p[p.length - 13];
+    if (last[1] && year[1]) national = (last[1] / year[1] - 1) * 100;
+  }
+  /* Highlight the reader's own state, matched with the weather section's
+     normaliser so "W.P. Kuala Lumpur" still lands on "Kuala Lumpur". */
+  let mine = null;
+  if (geo.osm){
+    const terms = String(geo.osm).split(",").map(norm).filter(Boolean);
+    let best = 0;
+    for (const r of rows){
+      const n = norm(r.name);
+      for (const t of terms){ const q = matchQuality(n, t); if (q > best){ best = q; mine = r.name; } }
+    }
+    if (best < 60) mine = null;
+  }
+  /* Diverging around the national rate rather than one flat hue: above
+     average reads warm, below reads cool, so position and colour carry the
+     same message and the reader does not have to compare bar lengths. */
+  const hot = "#f87171", cool = "#2dd4bf";
+  const fill = r => (national != null && r.rate > national ? hot : cool) +
+    (mine && r.name === mine ? "" : "9e");
+
   chart("cpist-chart", {
     type:"bar",
     data:{ labels: rows.map(r => r.name),
       datasets:[{ label:"% y/y", data: rows.map(r => Math.round(r.rate * 100) / 100),
-        backgroundColor:"rgba(45,212,191,.62)", borderRadius:5, borderSkipped:false }] },
+        backgroundColor: rows.map(fill), borderRadius:5, borderSkipped:false,
+        borderColor: rows.map(r => mine && r.name === mine ? cssVar("--fg") : "transparent"),
+        borderWidth: rows.map(r => mine && r.name === mine ? 1.5 : 0) }] },
     options: baseOpts({ indexAxis:"y",
       plugins:{ legend:{ display:false },
         tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
           titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
-          callbacks:{ label: it => ` ${nf(it.parsed.x, 2)}% y/y · ${T("Core CPI")} ${nf(rows[it.dataIndex].index, 1)}` } } },
+          callbacks:{ label: it => {
+            const r = rows[it.dataIndex];
+            const vs = national == null ? ""
+              : ` · ${nf(Math.abs(r.rate - national), 2)}pp ${r.rate >= national ? T("above") : T("below")} ${T("national")}`;
+            return ` ${nf(it.parsed.x, 2)}% y/y${vs}`;
+          } } } },
       scales:{
         x:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
             ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, callback:v => nf(v, 1) + "%" } },
         y:{ grid:{ display:false }, border:{ color:cssVar("--line") },
             ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } } } }),
+    plugins: national == null ? [] : [{
+      id:"cpiStateRef",
+      afterDatasetsDraw(c){
+        const x = c.scales.x; if (!x) return;
+        const px = x.getPixelForValue(national), a = c.chartArea, g = c.ctx;
+        if (px < a.left || px > a.right) return;
+        g.save();
+        g.strokeStyle = cssVar("--fg-2"); g.lineWidth = 1; g.setLineDash([5, 4]);
+        g.beginPath(); g.moveTo(px, a.top); g.lineTo(px, a.bottom); g.stroke();
+        g.setLineDash([]);
+        const label = `${T("Malaysia")} ${nf(national, 1)}%`;
+        g.font = "10px " + (cssVar("--mono") || "monospace");
+        const w = g.measureText(label).width + 10;
+        /* Flip the label inside the plot when the line sits near the right
+           edge, so it is never clipped. */
+        const lx = (px + w > a.right) ? px - w - 2 : px + 4;
+        g.fillStyle = cssVar("--surface-2"); g.globalAlpha = .9;
+        g.fillRect(lx, a.top + 2, w, 15);
+        g.globalAlpha = 1; g.fillStyle = cssVar("--fg-2");
+        g.fillText(label, lx + 5, a.top + 13);
+        g.restore();
+      },
+    }],
   });
   const dt = $("#cpist-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("State"), "% y/y", T("Core CPI")],
-    rows.map(r => [r.name, nf(r.rate, 2) + "%", nf(r.index, 1)]), [1, 2]);
+  if (dt) dt.innerHTML = dataTableHTML(
+    [T("State"), "% y/y", national == null ? T("Core CPI") : T("vs national")],
+    rows.map(r => [r.name + (mine && r.name === mine ? " ←" : ""), nf(r.rate, 2) + "%",
+      national == null ? nf(r.index, 1)
+        : (r.rate - national >= 0 ? "+" : "") + nf(r.rate - national, 2) + "pp"]), [1, 2]);
 }
 
 /* ════════════════════════════ finance view ════════════════════════════ */
@@ -3835,6 +3950,10 @@ function paintIr(d){
    of the stack has been growing, which only reads against the full total. */
 let regFuels = new Set(FUELS.map(f => f[0]));
 let regRange = "5y", ridRange = "1y";
+/* Absolute counts are ~90% petrol, which squeezes the EV curve this section
+   is named after into an invisible sliver at the base of every bar. "Share"
+   normalises each month to 100% so the transition is actually legible. */
+let regUnit = "count";
 let ridSvc = new Set(KTMB_SERVICES.map(s => s[0]));
 const REG_RANGES = { "2y":2, "5y":5, all:99 };
 
@@ -3878,8 +3997,15 @@ function renderMobility(d){
     </div>
     <div class="card mb">
       <div class="card-h"><h4>${T("New vehicle registrations")}</h4>
-        <span class="sub">${T("by fuel type · monthly")}</span>
-        <span class="right">${seg("regrange", Object.keys(REG_RANGES), regRange)}</span></div>
+        <span class="sub">${regUnit === "share" ? T("share of the month · by fuel type")
+                                                : T("by fuel type · monthly")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="${T("Units")}">
+            ${[["count", T("Count")], ["share", T("Share")]].map(([k, lab]) =>
+              `<button data-regunit="${k}" aria-pressed="${k === regUnit}">${esc(lab)}</button>`).join("")}
+          </span>
+          <span style="margin-left:var(--s2)">${seg("regrange", Object.keys(REG_RANGES), regRange)}</span>
+        </span></div>
       <div class="card-b" style="padding-bottom:8px">
         <div class="chips" id="reg-chips">${chips("fuel", FUELS, regFuels)}</div></div>
       <div class="card-b" style="padding-top:8px">
@@ -3920,6 +4046,7 @@ function renderMobility(d){
     }; });
   toggle("fuel", regFuels, "electric", () => paintReg(d));
   toggle("svc",  ridSvc,   "ets",      () => paintRid(d));
+  seg2("regunit",  v => { regUnit = v; renderMobility(d); });
   seg2("regrange", v => { regRange = v; paintReg(d); });
   seg2("ridrange", v => { ridRange = v; paintRid(d); });
   paintReg(d); paintRid(d);
@@ -3931,10 +4058,21 @@ function paintReg(d){
   const keep = d.months.map((m, i) => [m, i]).filter(([m]) => String(m) >= from);
   const labels = keep.map(([m]) => md(m) + " '" + String(m).slice(2, 4));
   const sel = FUELS.filter(f => regFuels.has(f[0]));
+  const share = regUnit === "share";
+  /* Normalised against the month's all-fuel total, not the sum of the
+     selected series - so deselecting petrol shrinks the stack honestly
+     instead of silently rescaling the rest to 100%. */
+  const val = (k, i) => {
+    const v = (d.byFuel[k] || [])[i];
+    if (!share) return v;
+    const tot = d.total[i];
+    return (v == null || !tot) ? null : (v / tot) * 100;
+  };
+  const fmt = v => v == null ? "-" : share ? nf(v, 2) + "%" : nf(v);
   chart("reg-chart", {
     type:"bar",
     data:{ labels, datasets: sel.map(([k, label, color]) => ({
-      label: T(label), data: keep.map(([, i]) => (d.byFuel[k] || [])[i]),
+      label: T(label), data: keep.map(([, i]) => val(k, i)),
       backgroundColor: color + "cc", borderRadius:3, borderSkipped:false,
       stack:"fuel" })) },
     options: baseOpts({
@@ -3944,19 +4082,21 @@ function paintReg(d){
         tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
           titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
           usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
-          callbacks:{ label: it => ` ${it.dataset.label}: ${nf(it.parsed.y)}` } } },
+          callbacks:{ label: it => ` ${it.dataset.label}: ${fmt(it.parsed.y)}` } } },
       scales:{
         x:{ stacked:true, grid:{ display:false }, border:{ color:cssVar("--line") },
             ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:12, maxRotation:0 } },
-        y:{ stacked:true, beginAtZero:true,
+        y:{ stacked:true, beginAtZero:true, max: share ? 100 : undefined,
             grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } } } }),
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
+                    callback:v => share ? nf(v) + "%" : nf(v) } } } }),
   });
   const dt = $("#reg-dt");
   if (dt) dt.innerHTML = dataTableHTML(
-    [T("Month"), ...sel.map(f => T(f[1]))],
+    [T("Month"), ...sel.map(f => T(f[1]) + (share ? " %" : ""))],
     keep.slice().reverse().map(([m, i]) =>
-      [md(m) + " '" + String(m).slice(2, 4), ...sel.map(f => (d.byFuel[f[0]] || [])[i])]),
+      [md(m) + " '" + String(m).slice(2, 4),
+       ...sel.map(f => { const v = val(f[0], i); return v == null ? null : share ? nf(v, 2) : v; })]),
     sel.map((_, i) => i + 1));
 }
 
