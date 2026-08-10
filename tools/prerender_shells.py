@@ -89,6 +89,36 @@ FLOOD_SUB = '''      <!-- Flood risk: a warning-type feed, so it sits under Weat
         </div>
         <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       </div>'''
+
+
+def sub_block(sid, icon):
+    """A merged sub-block, the same pattern as FLOOD_SUB: groceries rides in
+    the Household section and the Places explorer rides in Population. The
+    parent loader's after-hook fires loadSection(sid); the block keeps its
+    own header, time pill and body so caching/KPI/error handling work.
+    data-i18n keys translate it (the main section headers are handled by the
+    SECTIONS loop in applyLang instead)."""
+    m = meta.get(sid, {})
+    title = m.get("title", sid)
+    desc = m.get("desc", "")
+    how = m.get("how", "")
+    eps = "".join(f'<li><code>GET {esc(e)}</code></li>' for e in m.get("eps", []))
+    return f'''      <!-- {title}: a merged sub-block of its parent section. -->
+      <div class="sec-sub" id="{sid}-sub" aria-labelledby="h-{sid}">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-{icon}"/></svg></div>
+          <div><h3 id="h-{sid}" style="font-size:17px" data-i18n="{title}">{esc(title)}</h3>
+            <p data-i18n="{desc}">{esc(desc)}</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="{how}">{esc(how)}</p>
+              <ul>{eps}</ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-{sid}"></span>
+        </div>
+        <div id="body-{sid}"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      </div>'''
 shells = []
 for s in sections:
     meta_s = meta.get(s["id"], {})
@@ -107,7 +137,9 @@ for s in sections:
         <span class="sec-time" id="time-{s["id"]}"></span>
       </div>
       <div id="body-{s["id"]}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
-      {FLOOD_SUB if s["id"] == "weather" else ""}
+      {FLOOD_SUB if s["id"] == "weather" else
+       sub_block("prices", "basket") if s["id"] == "fuel" else
+       sub_block("places", "map") if s["id"] == "population" else ""}
     </section>''')
 
 shell_html = "\n".join(shells)
@@ -116,7 +148,7 @@ shell_html = "\n".join(shells)
 KPIS = [
     ("hot", "Hottest today", "temp", "#weather"),
     ("ron95", "RON 95", "fuel", "#fuel"),
-    ("basket", "Groceries y/y", "basket", "#prices"),
+    ("basket", "Groceries y/y", "basket", "#groceries-sub", "groceries block"),
     ("cpi", "Inflation y/y", "economy", "#economy"),
     ("ev", "New EVs", "ev", "#mobility"),
     ("warn", "Active warnings", "warn", "#weather"),

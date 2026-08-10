@@ -25,11 +25,11 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Section | Source | Contents |
 | --- | --- | --- |
 | Weather | MET Malaysia, JPS | 7-day forecast for all 360 locations, severe-weather warnings, recent earthquakes - plus a **flood risk sub-block** with live water-level stations at danger / warning / alert from JPS telemetry (status-coloured map, per-state counts, station chips) |
-| Fuel & Households | Ministry of Finance | Weekly RON95 / RON97 / diesel ceiling prices, household income |
+| Household | Ministry of Finance, KPDN | Weekly RON95 / RON97 / diesel ceiling prices, household income, and the PriceCatcher groceries basket (a merged **Groceries sub-block** with per-district price levels) |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
 | Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
 | Vehicles & Ridership | JPJ, KTMB | Monthly new-vehicle registrations stacked by fuel type (the EV adoption curve), daily KTMB ridership per service |
-| Population | DOSM (OpenDOSM) | National population 1970-present, ethnic composition |
+| Population | DOSM (OpenDOSM + storage) | National population 1970-present and ethnic composition, then the same estimates by state, district and constituency with per-seat income, poverty, inequality and unemployment (a merged **Places sub-block**) |
 | Health | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
@@ -173,9 +173,10 @@ payload flags it as `partial` so the UI can mark that point.
 
 ## Places: sub-national population + constituency socioeconomics
 
-The Population section only ever showed the national total, because that is
-the only level the OpenAPI serves. Everything below it is Parquet-only on
-`storage.dosm.gov.my` (note the *dosm* host, not `storage.data.gov.my`):
+The national population overview is the only level the OpenAPI serves.
+Everything below it - which the dashboard's Population section shows in its
+Places sub-block - is Parquet-only on `storage.dosm.gov.my` (note the *dosm*
+host, not `storage.data.gov.my`):
 
 - `population_state` - every state, back to 1970, with ethnicity, age-band
   and sex breakdowns at the latest year. The OpenAPI's copy froze at 2023;

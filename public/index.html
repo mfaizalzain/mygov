@@ -758,10 +758,8 @@ html[data-text="large"] table{font-size:14px}
   <ul id="navlist">
     <li hidden><a href="#radar-band" id="nav-radar-band"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> Trending</a></li>
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
-    <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Fuel</a></li>
-    <li><a href="#prices" id="nav-prices"><span class="dot" id="dot-prices"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries</a></li>
+    <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Household</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> Population</a></li>
-    <li><a href="#places" id="nav-places"><span class="dot" id="dot-places"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-map"/></svg> Places</a></li>
     <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
     <li><a href="#finance" id="nav-finance"><span class="dot" id="dot-finance"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg> Finance</a></li>
     <li><a href="#health" id="nav-health"><span class="dot" id="dot-health"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-health"/></svg> Health</a></li>
@@ -800,7 +798,7 @@ html[data-text="large"] table{font-size:14px}
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-ron95"><span class="skel skel-val"></span></div>
         <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#prices" aria-label="Groceries y/y - go to the prices section">
+      <a class="kpi kpi-load" href="#groceries-sub" aria-label="Groceries y/y - go to the groceries block">
         <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries y/y</span>
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-basket"><span class="skel skel-val"></span></div>
@@ -892,66 +890,64 @@ html[data-text="large"] table{font-size:14px}
     <section id="fuel" aria-labelledby="h-fuel">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg></div>
-        <div><h3 id="h-fuel">Fuel &amp; Households</h3>
-          <p>The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.</p>
+        <div><h3 id="h-fuel">Household</h3>
+          <p>What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.</p>
+            <p>Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.</p>
             <ul><li><code>GET /data-catalogue?id=fuelprice</code></li><li><code>GET /data-catalogue?id=hh_income</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-fuel"></span>
       </div>
       <div id="body-fuel"><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:40%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:34%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:28%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div>
-      
-    </section>
-    <section id="prices" aria-labelledby="h-prices">
-      <div class="sec-h">
-        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg></div>
-        <div><h3 id="h-prices">Groceries</h3>
-          <p>What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.</p>
-          <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.</p>
-            <ul><li><code>GET storage.data.gov.my/pricecatcher/pricecatcher_YYYY-MM.parquet</code></li><li><code>GET storage.data.gov.my/pricecatcher/lookup_item.parquet</code></li><li><code>GET storage.data.gov.my/pricecatcher/lookup_premise.parquet</code></li></ul>
-          </details>
+            <!-- Groceries: a merged sub-block of its parent section. -->
+      <div class="sec-sub" id="prices-sub" aria-labelledby="h-prices">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg></div>
+          <div><h3 id="h-prices" style="font-size:17px" data-i18n="Groceries">Groceries</h3>
+            <p data-i18n="What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.">What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.">PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.</p>
+              <ul><li><code>GET storage.data.gov.my/pricecatcher/pricecatcher_YYYY-MM.parquet</code></li><li><code>GET storage.data.gov.my/pricecatcher/lookup_item.parquet</code></li><li><code>GET storage.data.gov.my/pricecatcher/lookup_premise.parquet</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-prices"></span>
         </div>
-        <span class="sec-time" id="time-prices"></span>
+        <div id="body-prices"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       </div>
-      <div id="body-prices"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
     </section>
     <section id="population" aria-labelledby="h-population">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-population"/></svg></div>
         <div><h3 id="h-population">Population</h3>
-          <p>How many people live in Malaysia, every year since 1970, and how the population is made up today - national totals; the Places section breaks the same figures down by state, district and constituency.</p>
+          <p>How many people live in Malaysia - the national total every year since 1970, then the same DOSM estimates broken down by state, district and constituency, with per-seat income, poverty, inequality and unemployment.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>DOSM's annual national population estimates, published to 1 January each year in thousands of people. State, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json - see the Places section.</p>
-            <ul><li><code>GET /opendosm?id=population_malaysia&amp;filter=overall@age</code></li></ul>
+            <p>DOSM's annual population estimates, published to 1 January each year in thousands of people. The national series comes over OpenDOSM; state, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json, which a weekly GitHub Action regenerates. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.</p>
+            <ul><li><code>GET /opendosm?id=population_malaysia&amp;filter=overall@age</code></li><li><code>GET storage.dosm.gov.my/population/population_state.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_district.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_parlimen.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_dun.parquet</code></li><li><code>GET /data-catalogue?id=hh_income_parlimen</code></li><li><code>GET /data-catalogue?id=hh_income_dun</code></li><li><code>GET /data-catalogue?id=hh_poverty_parlimen</code></li><li><code>GET /data-catalogue?id=hh_poverty_dun</code></li><li><code>GET /data-catalogue?id=hh_inequality_parlimen</code></li><li><code>GET /data-catalogue?id=hh_inequality_dun</code></li><li><code>GET /data-catalogue?id=lfs_parlimen</code></li><li><code>GET /data-catalogue?id=lfs_dun</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-population"></span>
       </div>
       <div id="body-population"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
-    </section>
-    <section id="places" aria-labelledby="h-places">
-      <div class="sec-h">
-        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-map"/></svg></div>
-        <div><h3 id="h-places">Places</h3>
-          <p>Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.</p>
-          <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.</p>
-            <ul><li><code>GET storage.dosm.gov.my/population/population_state.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_district.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_parlimen.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_dun.parquet</code></li><li><code>GET /data-catalogue?id=hh_income_parlimen</code></li><li><code>GET /data-catalogue?id=hh_income_dun</code></li><li><code>GET /data-catalogue?id=hh_poverty_parlimen</code></li><li><code>GET /data-catalogue?id=hh_poverty_dun</code></li><li><code>GET /data-catalogue?id=hh_inequality_parlimen</code></li><li><code>GET /data-catalogue?id=hh_inequality_dun</code></li><li><code>GET /data-catalogue?id=lfs_parlimen</code></li><li><code>GET /data-catalogue?id=lfs_dun</code></li></ul>
-          </details>
+            <!-- Places: a merged sub-block of its parent section. -->
+      <div class="sec-sub" id="places-sub" aria-labelledby="h-places">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-map"/></svg></div>
+          <div><h3 id="h-places" style="font-size:17px" data-i18n="Places">Places</h3>
+            <p data-i18n="Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.">Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.">State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.</p>
+              <ul><li><code>GET storage.dosm.gov.my/population/population_state.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_district.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_parlimen.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_dun.parquet</code></li><li><code>GET /data-catalogue?id=hh_income_parlimen</code></li><li><code>GET /data-catalogue?id=hh_income_dun</code></li><li><code>GET /data-catalogue?id=hh_poverty_parlimen</code></li><li><code>GET /data-catalogue?id=hh_poverty_dun</code></li><li><code>GET /data-catalogue?id=hh_inequality_parlimen</code></li><li><code>GET /data-catalogue?id=hh_inequality_dun</code></li><li><code>GET /data-catalogue?id=lfs_parlimen</code></li><li><code>GET /data-catalogue?id=lfs_dun</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-places"></span>
         </div>
-        <span class="sec-time" id="time-places"></span>
+        <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       </div>
-      <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
     </section>
     <section id="economy" aria-labelledby="h-economy">
       <div class="sec-h">
@@ -1073,9 +1069,8 @@ html[data-text="large"] table{font-size:14px}
             <h3>Sections</h3>
             <ul>
               <li><strong>Weather</strong> - seven-day forecast for every state, district and town in Malaysia, plus severe-weather warnings and recent earthquakes.</li>
-              <li><strong>Fuel</strong> - weekly RON95/RON97/diesel pump prices and household income statistics.</li>
-              <li><strong>Population</strong> - national population totals by year and composition.</li>
-              <li><strong>Places</strong> - population and living standards by state, district and constituency.</li>
+              <li><strong>Household</strong> - weekly RON95/RON97/diesel pump prices, the PriceCatcher groceries basket and household income statistics.</li>
+              <li><strong>Population</strong> - national totals by year and composition, plus state, district and constituency population and living standards.</li>
               <li><strong>Economy</strong> - CPI inflation, unemployment, GDP and EPF contributions.</li>
               <li><strong>Finance</strong> - exchange rates, FPX payments and interest rates.</li>
               <li><strong>Health</strong> - blood donations, organ pledges and PeKa B40 (KKM).</li>
@@ -1195,14 +1190,16 @@ const I18N = {
   "footerA":"Data: ", "footerB":" (MET Malaysia · MOF · DOSM · BNM · MoH · Imigresen · KTMB · Prasarana). Geokodan songsang oleh ",
   "footerC":" penyumbang. Data diambil terus oleh pelayar anda dan dicache setempat selama 15 minit bagi menghormati had 4-permintaan-seminit API. Tiada analitik, tiada penjejakan.",
   "bmc":"Sokong projek ini di Buy Me a Coffee",
-  "Weather":"Cuaca", "Fuel":"Minyak", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
+  "Weather":"Cuaca", "Household":"Isi Rumah", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
   "Trending":"Trend",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
   "Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.":"Ramalan tujuh hari untuk setiap negeri, daerah dan bandar di Malaysia - serta amaran cuaca buruk dan gempa bumi terkini.",
   "Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.":"Ramalan, amaran dan maklumat gempa bumi daripada MET Malaysia. Ramalan meliputi 360 lokasi, daripada negeri hingga bandar dan resort tanah tinggi.",
-  "The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.":"Harga siling runcit mingguan untuk RON 95, RON 97 dan diesel, serta pertumbuhan pendapatan isi rumah Malaysia.",
-  "Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.":"Harga ditetapkan mingguan oleh Kementerian Kewangan dan diambil dengan penapisan sisi pelayan ke siri paras harga. Pendapatan isi rumah daripada Kajian Pendapatan Isi Rumah.",
+  "What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.":"Apa yang dibayar oleh sesebuah isi rumah - harga runcit minyak mingguan, bakul barangan runcit PriceCatcher, dan pertumbuhan pendapatan isi rumah Malaysia.",
+  "Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.":"Harga minyak ditetapkan mingguan oleh Kementerian Kewangan dan diambil dengan penapisan sisi pelayan ke siri paras harga. Barangan runcit ialah bakul tetap item seharian yang dipetik harga setiap hari oleh juruukur KPDN - blok Barangan Runcit di bawah membawa metodologi penuh. Pendapatan isi rumah daripada Kajian Pendapatan Isi Rumah.",
+  "What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.":"Kos sebenar makanan di rak - bakul tetap item seharian yang dipetik harga setiap hari oleh juruukur KPDN di pasar raya, pasar mini dan pasar basah di setiap daerah.",
+  "PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.":"PriceCatcher merekod harga rak ~340 item di ~2,100 premis di seluruh negara. Ia tiada pada OpenAPI (id=pricecatcher memulangkan 404) - diterbitkan hanya sebagai Parquet bulanan, maka GitHub Action harian menggabungkan 13 bulan daripadanya ke dalam prices.json. Trend ialah indeks Jevons (min geometri nisbah harga) ke atas item yang berharga setiap bulan, jadi bakul tidak boleh hanyut. Ia wajaran sama, bukan CPI: DOSM tidak menerbitkan wajaran perbelanjaan per-item pada butiran ini. Angka daerah ialah tahap harga ruang - median tempatan setiap item berbanding median nasional - jadi daerah tidak dihukum kerana menyimpan bahagian bakul yang berbeza.",
   "Department of Statistics Malaysia - inflation by spending category, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia - inflasi mengikut kategori perbelanjaan, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
   "Core CPI is broken down by expenditure division, labour-force figures are monthly, and real GDP is quarterly. All three come from OpenDOSM.":"CPI teras dipecahkan mengikut bahagian perbelanjaan, angka buruh bulanan, dan KDNK benar suku tahunan. Kesemuanya daripada OpenDOSM.",
   "Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.":"Laluan bas dan kereta api berjadual untuk KTMB dan Rapid KL - laluan paling sibuk, serta bilangan perhentian dan perjalanan setiap rangkaian.",
@@ -1212,8 +1209,8 @@ const I18N = {
   "Data source & methodology":"Sumber data & kaedah",
   "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
   "Population":"Penduduk", "Population growth":"Pertumbuhan penduduk",
-  "How many people live in Malaysia, every year since 1970, and how the population is made up today - national totals; the Places section breaks the same figures down by state, district and constituency.":"Berapa ramai penduduk Malaysia, setiap tahun sejak 1970, dan komposisi penduduk hari ini - jumlah kebangsaan; bahagian Tempat memecahkan angka yang sama mengikut negeri, daerah dan kawasan pilihan raya.",
-  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. State, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json - see the Places section.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Anggaran peringkat negeri, daerah dan kawasan pilihan raya hanya wujud sebagai Parquet di hos storan DOSM dan tiba melalui geo.json - lihat bahagian Tempat.",
+  "How many people live in Malaysia - the national total every year since 1970, then the same DOSM estimates broken down by state, district and constituency, with per-seat income, poverty, inequality and unemployment.":"Berapa ramai penduduk Malaysia - jumlah kebangsaan setiap tahun sejak 1970, kemudian anggaran DOSM yang sama dipecahkan mengikut negeri, daerah dan kawasan pilihan raya, dengan pendapatan, kemiskinan, ketaksamaan dan pengangguran bagi setiap kerusi.",
+  "DOSM's annual population estimates, published to 1 January each year in thousands of people. The national series comes over OpenDOSM; state, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json, which a weekly GitHub Action regenerates. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.":"Anggaran penduduk tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Siri kebangsaan datang melalui OpenDOSM; anggaran peringkat negeri, daerah dan kawasan pilihan raya hanya wujud sebagai Parquet di hos storan DOSM dan tiba melalui geo.json, yang dijana semula oleh GitHub Action mingguan. Jadual kawasan pilihan raya tidak mengandungi kumpulan umur, jadi bilangan warganegara ialah proksi untuk pengundi, bukan populasi umur mengundi. Angka pendapatan, kemiskinan, ketaksamaan dan tenaga buruh bagi setiap kerusi datang daripada Survei Pendapatan Isi Rumah dan Survei Tenaga Buruh melalui OpenAPI.",
   "Composition":"Komposisi", "Largest group":"Kumpulan terbesar",
   "Year-on-year":"Tahun ke tahun", "Years on record":"Tahun direkod",
   "millions · annual":"juta · tahunan", "people":"orang", "vs ":"berbanding ",
@@ -1534,10 +1531,8 @@ const ico = (name, size) =>
   `<svg class="ico" aria-hidden="true" focusable="false"${size ? ` style="width:${size};height:${size}"` : ""}><use href="#i-${name}"/></svg>`;
 const SECTIONS = [
   { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
-  { id:"fuel",      label:"Fuel",       icon:"fuel",       family:"data-catalogue" },
-  { id:"prices",    label:"Groceries",  icon:"basket",     family:"data-catalogue" },
+  { id:"fuel",      label:"Household",  icon:"fuel",       family:"data-catalogue" },
   { id:"population",label:"Population", icon:"population", family:"opendosm" },
-  { id:"places",    label:"Places",     icon:"map",        family:"dosm" },
   { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
   { id:"health",    label:"Health",     icon:"health",     family:"data-catalogue" },
@@ -1548,7 +1543,7 @@ const SECTIONS = [
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["prices","economy","finance","mobility","population","places","health",
+const LAZY = new Set(["economy","finance","mobility","population","health",
                      "transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
@@ -6062,7 +6057,8 @@ function renderKpis(){
   const cards = [
     { k:"hot",   lab:"Hottest today",   ico:"temp",     href:"#weather" },
     { k:"ron95", lab:"RON 95",          ico:"fuel",     href:"#fuel" },
-    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#prices" },
+    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#groceries-sub",
+      where:"groceries block" },
     { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
     { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
     { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#weather" },
@@ -6103,9 +6099,9 @@ const META = {
     desc:"Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.",
     how:"Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.",
     eps:["/weather/forecast","/weather/warning","/weather/warning/earthquake"] },
-  fuel:{ title:"Fuel & Households",
-    desc:"The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.",
-    how:"Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.",
+  fuel:{ title:"Household",
+    desc:"What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.",
+    how:"Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.",
     eps:["/data-catalogue?id=fuelprice","/data-catalogue?id=hh_income"] },
   prices:{ title:"Groceries",
     desc:"What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.",
@@ -6134,9 +6130,17 @@ const META = {
     eps:["/data-catalogue?id=registrations_type_fuel&filter=all_types@type",
          "/data-catalogue?id=ridership_ktmb_daily"] },
   population:{ title:"Population",
-    desc:"How many people live in Malaysia, every year since 1970, and how the population is made up today - national totals; the Places section breaks the same figures down by state, district and constituency.",
-    how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. State, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json - see the Places section.",
-    eps:["/opendosm?id=population_malaysia&filter=overall@age"] },
+    desc:"How many people live in Malaysia - the national total every year since 1970, then the same DOSM estimates broken down by state, district and constituency, with per-seat income, poverty, inequality and unemployment.",
+    how:"DOSM's annual population estimates, published to 1 January each year in thousands of people. The national series comes over OpenDOSM; state, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json, which a weekly GitHub Action regenerates. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.",
+    eps:["/opendosm?id=population_malaysia&filter=overall@age",
+         "storage.dosm.gov.my/population/population_state.parquet",
+         "storage.dosm.gov.my/population/population_district.parquet",
+         "storage.dosm.gov.my/population/population_parlimen.parquet",
+         "storage.dosm.gov.my/population/population_dun.parquet",
+         "/data-catalogue?id=hh_income_parlimen","/data-catalogue?id=hh_income_dun",
+         "/data-catalogue?id=hh_poverty_parlimen","/data-catalogue?id=hh_poverty_dun",
+         "/data-catalogue?id=hh_inequality_parlimen","/data-catalogue?id=hh_inequality_dun",
+         "/data-catalogue?id=lfs_parlimen","/data-catalogue?id=lfs_dun"] },
   places:{ title:"Places",
     desc:"Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.",
     how:"State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.",
@@ -6186,7 +6190,10 @@ const LOADERS = {
     } },
   fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
       if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
-        sub:T("week of ") + ymd(d.latest.date) }; }, asOf:d => d.latest ? d.latest.date : null },
+        sub:T("week of ") + ymd(d.latest.date) };
+      /* Groceries is a sub-block of this section - load it with the fuel
+         (it keeps its own LOADERS entry so caching/KPI/error handling work). */
+      if (!loaded.has("prices")) loadSection("prices", false); }, asOf:d => d.latest ? d.latest.date : null },
   prices:   { load:loadPrices,    render:renderPrices,    after:d => {
       /* The index level (101.3) means nothing on its own in a hero tile, so
          the KPI leads with the 12-month change - the same shape as the CPI
@@ -6231,7 +6238,11 @@ const LOADERS = {
       return [reg, rid].filter(Boolean).sort().pop() || null;
     } },
   population:{ load:loadPopulation, render:renderPopulation,
-    asOf:d => d.latest },
+    after:d => {
+      /* The Places explorer is a sub-block of this section, loaded with it
+         the same way flood rides along with the weather. */
+      if (!loaded.has("places")) loadSection("places", false);
+    }, asOf:d => d.latest },
   places:   { load:loadPlaces,    render:renderPlaces,    asOf:d => d.asOf },
   health:   { load:loadHealth,    render:renderHealth,    asOf:d => d.updated },
   transport:{ load:loadTransport, render:renderTransport },
@@ -6348,8 +6359,10 @@ async function loadAll(force){
   if (force) for (const s of SECTIONS) if (LAZY.has(s.id)) await loadSection(s.id, force);
   /* Flood is a sub-block of weather (not in SECTIONS): on a full refresh it
      is normally re-fetched by weather's after-hook, but that hook only fires
-     when flood is NOT yet loaded - so force it here too. */
+     when it is NOT yet loaded - so force the sub-blocks here too. */
   if (force) await loadSection("flood", true);
+  if (force) await loadSection("prices", true);
+  if (force) await loadSection("places", true);
   busy = false;
   btn.disabled = false; $("#ref-ico").className = ""; $("#ref-ico").removeAttribute("aria-label");
 }
