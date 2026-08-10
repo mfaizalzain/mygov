@@ -861,6 +861,23 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-weather"></span>
       </div>
       <div id="body-weather"><div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div></div></div></div><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div>
+            <!-- Flood risk: a warning-type feed, so it sits under Weather & Warnings.
+           Rendered by loadSection("flood") which the weather loader fires. -->
+      <div class="sec-sub" id="flood-sub" aria-labelledby="h-flood">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg></div>
+          <div><h3 id="h-flood" style="font-size:17px" data-i18n="Flood Risk">Flood Risk</h3>
+            <p data-i18n="flood-desc">Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="flood-how">JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.</p>
+              <ul><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-flood"></span>
+        </div>
+        <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      </div>
     </section>
     <section id="fuel" aria-labelledby="h-fuel">
       <div class="sec-h">
@@ -876,6 +893,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-fuel"></span>
       </div>
       <div id="body-fuel"><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:40%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:34%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:28%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div>
+      
     </section>
     <section id="prices" aria-labelledby="h-prices">
       <div class="sec-h">
@@ -891,6 +909,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-prices"></span>
       </div>
       <div id="body-prices"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="population" aria-labelledby="h-population">
       <div class="sec-h">
@@ -906,6 +925,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-population"></span>
       </div>
       <div id="body-population"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="economy" aria-labelledby="h-economy">
       <div class="sec-h">
@@ -921,6 +941,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-economy"></span>
       </div>
       <div id="body-economy"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="finance" aria-labelledby="h-finance">
       <div class="sec-h">
@@ -936,6 +957,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-finance"></span>
       </div>
       <div id="body-finance"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="health" aria-labelledby="h-health">
       <div class="sec-h">
@@ -951,6 +973,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-health"></span>
       </div>
       <div id="body-health"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="mobility" aria-labelledby="h-mobility">
       <div class="sec-h">
@@ -966,6 +989,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-mobility"></span>
       </div>
       <div id="body-mobility"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="transport" aria-labelledby="h-transport">
       <div class="sec-h">
@@ -981,6 +1005,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-transport"></span>
       </div>
       <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="live" aria-labelledby="h-live">
       <div class="sec-h">
@@ -996,21 +1021,7 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-live"></span>
       </div>
       <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-    </section>
-    <section id="flood" aria-labelledby="h-flood">
-      <div class="sec-h">
-        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg></div>
-        <div><h3 id="h-flood">Flood Risk</h3>
-          <p>Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.</p>
-          <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.</p>
-            <ul><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
-          </details>
-        </div>
-        <span class="sec-time" id="time-flood"></span>
-      </div>
-      <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <!-- Static fallback: rendered before the app script runs, and visible to
          browsers/crawlers without JavaScript. buildShell() replaces #main's
@@ -1206,6 +1217,8 @@ const I18N = {
   "Station":"Stesen", "River":"Sungai", "Water level":"Aras air", "Trend":"Trend",
   "Last reading":"Bacaan terakhir", "stations at risk":"stesen berisiko",
   "Flood":"Banjir", "Flood Risk":"Risiko Banjir",
+  "flood-desc":"Stesen aras air yang kini berada pada tahap bahaya, amaran atau waspada - telemetri langsung daripada Jabatan Pengairan dan Saliran.",
+  "flood-how":"JPS menerbitkan telemetri tolok langsungnya sebagai suapan JSON statik di laman info banjir awam. Hanya stesen yang toloknya melaporkan dalam 24 jam terakhir dianggap semasa - suapan itu juga membawa tolok mati dengan bacaan berbulan lamanya, dan ia dikecualikan supaya peta menunjukkan risiko hari ini sahaja. Status setiap stesen ialah aras airnya berbanding ambang bahaya/amaran/waspada sendiri.",
   "Storm":"Ribut", "Rain":"Hujan", "Wind":"Angin", "Heat":"Panas", "Advisory":"Nasihat",
   "Search locations":"Cari lokasi", "Local time":"Masa tempatan", "Depth":"Kedalaman",
   "Nearest Malaysian town":"Bandar Malaysia terdekat",
@@ -1451,13 +1464,12 @@ const SECTIONS = [
   { id:"mobility",  label:"Vehicles",   icon:"mobility",   family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"transport",  family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"live",       family:"gtfs-realtime" },
-  { id:"flood",     label:"Flood",      icon:"flood",      family:"flood" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
 const LAZY = new Set(["prices","economy","finance","mobility","population","health",
-                     "transport","live","flood"]);
+                     "transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -5483,6 +5495,9 @@ const LOADERS = {
       const active = d.warn.filter(w => !w.info).length;
       kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
       if (geo.status === "waiting") locate();
+      /* Flood risk is a sub-block of this section - load it with the weather
+         (it keeps its own LOADERS entry so caching/KPI/error handling work). */
+      if (!loaded.has("flood")) loadSection("flood", false);
     }, asOf:d => {   /* the forecast starts today */
       let m = null; for (const r of d.rows){ const x = String(r[1]); if (x && (m === null || x < m)) m = x; }
       return m;
@@ -5608,12 +5623,17 @@ async function loadSection(id, force){
 }
 function tick(){
   syncTrackFades();   // a section that just rendered may contain a new track
-  const ts = Object.values(stamps), bar = $("#bar i");
-  bar.style.width = (ts.length / SECTIONS.length * 100) + "%";
-  if (ts.length === SECTIONS.length) setTimeout(() => { bar.style.width = "0%"; }, 800);
+  const bar = $("#bar i");
+  /* Count only stamps belonging to real sections: flood is a sub-block of
+     weather (loaded via LOADERS.weather.after) so it has a stamp but no
+     SECTIONS slot - counting it would push the bar past 100%. */
+  const done = SECTIONS.filter(s => stamps[s.id] != null).length;
+  bar.style.width = (done / SECTIONS.length * 100) + "%";
+  if (done === SECTIONS.length) setTimeout(() => { bar.style.width = "0%"; }, 800);
   /* the clock is wrapped so the narrow-screen rule can drop it and leave the
      progress count - at full width it is the widest thing in the header and
      forces the whole control row to wrap */
+  const ts = SECTIONS.map(s => stamps[s.id]).filter(Boolean);
   $("#stamp-t").innerHTML = ts.length
     ? `<span class="stamp-time">${esc(T("Updated"))} ${esc(hms(Math.max(...ts)))} · </span>${ts.length}/${SECTIONS.length}`
     : esc(T("Loading…"));
@@ -5629,6 +5649,10 @@ async function loadAll(force){
      still covers every section so the button means "update everything". */
   for (const s of SECTIONS) if (!LAZY.has(s.id)) await loadSection(s.id, force);
   if (force) for (const s of SECTIONS) if (LAZY.has(s.id)) await loadSection(s.id, force);
+  /* Flood is a sub-block of weather (not in SECTIONS): on a full refresh it
+     is normally re-fetched by weather's after-hook, but that hook only fires
+     when flood is NOT yet loaded - so force it here too. */
+  if (force) await loadSection("flood", true);
   busy = false;
   btn.disabled = false; $("#ref-ico").className = ""; $("#ref-ico").removeAttribute("aria-label");
 }

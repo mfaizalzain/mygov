@@ -24,7 +24,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 
 | Section | Source | Contents |
 | --- | --- | --- |
-| Weather | MET Malaysia | 7-day forecast for all 360 locations, severe-weather warnings, recent earthquakes |
+| Weather | MET Malaysia, JPS | 7-day forecast for all 360 locations, severe-weather warnings, recent earthquakes - plus a **flood risk sub-block** with live water-level stations at danger / warning / alert from JPS telemetry (status-coloured map, per-state counts, station chips) |
 | Fuel & Households | Ministry of Finance | Weekly RON95 / RON97 / diesel ceiling prices, household income |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
 | Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
@@ -34,7 +34,6 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
 | Live | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
-| Flood | JPS (DID) | Live water-level stations at danger / warning / alert, from JPS's public info banjir telemetry - status-coloured map, per-state counts, station chips with level, trend and last-reading |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 
 ---
@@ -249,7 +248,8 @@ upstream poll. The page aggregates those buses into route chips and grid
 clusters on the map (dissolving into individual markers as you zoom), so 800+
 points never freeze the browser.
 
-The fifth route, `/api/flood`, backs the Flood section. JPS's public info
+The fifth route, `/api/flood`, backs the flood risk sub-block in the Weather
+section. JPS's public info
 banjir site publishes its live gauge telemetry as a ~1.3 MB static JSON file
 (`latestreadingstrendabc.json`) on the WordPress theme path - the old
 `/waterlevel/` endpoints are gone. The Worker fetches it server-side, keeps

@@ -69,6 +69,26 @@ SKEL_FUEL = ('<div class="grid g2 mb">'
       '<div class="card"><div class="card-h"><div class="skel" style="width:28%"></div></div>'
       '<div class="card-b">' + bars(3) + '<div class="skel skel-table"></div></div></div>')
 SHELL_SKELS = {"weather": SKEL_WEATHER, "fuel": SKEL_FUEL}
+# Flood risk is a warning-type feed, so it renders inside the Weather section
+# (loaded by LOADERS.weather.after -> loadSection("flood")). It must be emitted
+# here too or the idempotent shell regeneration would wipe the sub-block.
+FLOOD_SUB = '''      <!-- Flood risk: a warning-type feed, so it sits under Weather & Warnings.
+           Rendered by loadSection("flood") which the weather loader fires. -->
+      <div class="sec-sub" id="flood-sub" aria-labelledby="h-flood">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg></div>
+          <div><h3 id="h-flood" style="font-size:17px" data-i18n="Flood Risk">Flood Risk</h3>
+            <p data-i18n="flood-desc">Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="flood-how">JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.</p>
+              <ul><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-flood"></span>
+        </div>
+        <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      </div>'''
 shells = []
 for s in sections:
     meta_s = meta.get(s["id"], {})
@@ -87,6 +107,7 @@ for s in sections:
         <span class="sec-time" id="time-{s["id"]}"></span>
       </div>
       <div id="body-{s["id"]}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
+      {FLOOD_SUB if s["id"] == "weather" else ""}
     </section>''')
 
 shell_html = "\n".join(shells)
