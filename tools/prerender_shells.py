@@ -157,6 +157,9 @@ src = re.sub(r'<div class="hero-loc" id="hero-loc" role="status" aria-label="You
              HERO_LOC, src, count=1)
 
 # 1. main gets shells before the noscript block
+#    (idempotent: remove any shells spliced by an earlier run first)
+src = re.sub(r'(<main id="main">)\s*(?:    <section id="[^"]+"[^>]*>.*?</section>\n)+',
+             r'\1\n', src, count=1, flags=re.S)
 main_m = re.search(r'(<main id="main">)(\s*)(<!-- Static fallback)', src)
 if not main_m:
     sys.exit("main marker not found")

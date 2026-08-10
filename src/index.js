@@ -141,6 +141,98 @@ export default {
       return out;
     }
 
+    /* Rapid KL / Penang / Kuantan live bus positions (myrapidbus kiosk feed).
+     *
+     * The api.data.gov.my GTFS-RT feed for prasarana is frequently empty even
+     * mid-service, but the official kiosk (myrapidbus.prasarana.com.my/kiosk)
+     * shows 800+ live buses from a socket.io server. socket.io's engine.io
+     * POLLING transport is plain HTTP, so a Worker can consume it without a
+     * websocket client: GET open -> POST connect -> POST emit -> GET poll,
+     * then the 42["onFts-client",...] frame carries base64(gzip(JSON)).
+     * Proxying server-side keeps the kiosk's shared sid private-ish and edge
+     * caches for ~25 s so every visitor shares one upstream poll. */
+    if (url.pathname === "/api/rapid") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      const provider = /^[A-Za-z]{3}$/.test(url.searchParams.get("provider") || "")
+        ? url.searchParams.get("provider").toUpperCase() : "RKL";
+      const route = /^[A-Za-z0-9-]{1,16}$/.test(url.searchParams.get("route") || "")
+        ? url.searchParams.get("route") : "";
+      if (!["RKL", "RPG", "RKN"].includes(provider))
+        return json({ error: "bad_provider" }, 400);
+
+      const cacheKey = new Request(`${url.origin}/api/rapid?provider=${provider}&route=${route}`);
+      const cache = caches.default;
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+
+      const KIOSK_SID = "m0ckulfr515l5s79sgd2hhva9iqm3cr2";
+      const KIOSK = "https://rapidbus-socketio-avl.prasarana.com.my/socket.io/";
+      const base64decode = s => {
+        const bin = atob(s);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      };
+      let data;
+      try {
+        const openRes = await fetch(`${KIOSK}?EIO=4&transport=polling&t=${Date.now()}`,
+          { headers: { "user-agent": UA } });
+        const openText = await openRes.text();
+        const m = openText.match(/^0\{"sid":"([^"]+)"/);
+        if (!m) throw new Error("handshake");
+        const sid = m[1];
+        const post = async payload => {
+          await fetch(`${KIOSK}?EIO=4&transport=polling&sid=${sid}&t=${Date.now()}`, {
+            method: "POST",
+            headers: { "content-type": "text/plain;charset=UTF-8", "user-agent": UA },
+            body: payload,
+          });
+        };
+        await post(`40{"sid":"${KIOSK_SID}","uid":""}`);
+        await post(`42["onFts-reload",{"sid":"${KIOSK_SID}","uid":"",` +
+          `"provider":"${provider}","route":"${route}"}]`);
+        await new Promise(r => setTimeout(r, 1500));
+        const pollRes = await fetch(`${KIOSK}?EIO=4&transport=polling&sid=${sid}&t=${Date.now()}`,
+          { headers: { "user-agent": UA } });
+        const pollText = await pollRes.text();
+        let payload = null;
+        for (const frame of pollText.split("\x1e")) {
+          const fm = frame.match(/^42\["onFts-client","(.*)"\]$/s);
+          if (fm) { payload = fm[1]; break; }
+        }
+        if (!payload) throw new Error("no frame");
+        const ds = new DecompressionStream("gzip");
+        const stream = new Blob([base64decode(payload)]).stream().pipeThrough(ds);
+        const text = new TextDecoder().decode(await new Response(stream).arrayBuffer());
+        data = JSON.parse(text);
+      } catch (e) {
+        return json({ error: "kiosk_unreachable", detail: String(e && e.message) }, 502);
+      }
+
+      const buses = Array.isArray(data) ? data : [];
+      /* Slim to what the dashboard renders; dt_gps is MYT wall-clock (UTC+8,
+         no DST), so convert to an epoch timestamp for the client. */
+      const slim = buses.map(b => ({
+        bus_no: b.bus_no,
+        latitude: b.latitude,
+        longitude: b.longitude,
+        route: b.route,
+        speed: b.speed,
+        dir: b.dir,
+        ts: b.dt_gps ? Math.floor(Date.parse(String(b.dt_gps).replace(" ", "T") + "+08:00") / 1000) : null,
+      }));
+      const out = json({
+        provider, route: route || "all",
+        live_buses: buses.length,
+        updated: new Date().toISOString(),
+        buses: slim,
+      }, 200, { "cache-control": "public, max-age=25" });
+      ctx.waitUntil(cache.put(cacheKey, out.clone()));
+      return out;
+    }
+
     /* Malaysia Airports FIDS (flight information display) proxy.
      *
      * The official live arrivals/departures board on malaysiaairports.com.my

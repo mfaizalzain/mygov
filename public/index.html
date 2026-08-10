@@ -497,6 +497,12 @@ html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(18
   border-radius:99px;border:1px solid var(--line);background:var(--bg-2);
   font-size:12px;color:var(--fg-2);cursor:help;transition:var(--t);outline:none}
 .vchip:hover,.vchip:focus-visible{border-color:var(--accent);color:var(--fg)}
+/* route chips: count badge + active (filtered) state - the Live section's
+   Rapid feed aggregates 800+ buses into one chip per route */
+.vchip .cnt{min-width:18px;padding:0 5px;border-radius:99px;background:var(--accent-dim);
+  color:var(--chip-fg);font-size:10.5px;font-weight:700;line-height:16px;text-align:center}
+.vchip.on{border-color:var(--accent);background:var(--accent-dim);color:var(--fg)}
+.vchip.on .cnt{background:var(--accent);color:#06121a}
 .vchip .tip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(4px);
   width:max-content;max-width:min(280px,calc(100vw - 24px));padding:10px 12px;z-index:40;
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow);
@@ -837,7 +843,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-weather"></span>
       </div>
-      <div id="body-weather"><div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div>
+      <div id="body-weather"><div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div></div></div></div><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div>
     </section>
     <section id="fuel" aria-labelledby="h-fuel">
       <div class="sec-h">
@@ -852,7 +858,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-fuel"></span>
       </div>
-      <div id="body-fuel"><div class="grid g4 mb"><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div><div class="kpi kpi-load"><div class="kpi-t"><span class="lab"><span class="skel" style="width:52px;height:10px;margin:0"></span></span></div><div class="val"><span class="skel skel-val"></span></div><div class="sub"><span class="skel skel-sub"></span></div></div></div><div class="card mb"><div class="card-h"><div class="skel" style="width:34%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-fuel"><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:40%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:34%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:28%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div>
     </section>
     <section id="population" aria-labelledby="h-population">
       <div class="sec-h">
@@ -867,7 +873,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-population"></span>
       </div>
-      <div id="body-population"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-population"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
     <section id="economy" aria-labelledby="h-economy">
       <div class="sec-h">
@@ -882,7 +888,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-economy"></span>
       </div>
-      <div id="body-economy"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-economy"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
     <section id="finance" aria-labelledby="h-finance">
       <div class="sec-h">
@@ -897,7 +903,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-finance"></span>
       </div>
-      <div id="body-finance"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-finance"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
     <section id="health" aria-labelledby="h-health">
       <div class="sec-h">
@@ -912,7 +918,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-health"></span>
       </div>
-      <div id="body-health"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-health"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
     <section id="mobility" aria-labelledby="h-mobility">
       <div class="sec-h">
@@ -927,7 +933,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-mobility"></span>
       </div>
-      <div id="body-mobility"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-mobility"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
     <section id="transport" aria-labelledby="h-transport">
       <div class="sec-h">
@@ -942,7 +948,7 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-transport"></span>
       </div>
-      <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
     <section id="live" aria-labelledby="h-live">
       <div class="sec-h">
@@ -951,14 +957,17 @@ html[data-text="large"] table{font-size:14px}
           <p>Trains and buses currently reporting their position, straight from the operators' live feeds.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.</p>
-            <ul><li><code>GET /gtfs-realtime/vehicle-position/ktmb</code></li><li><code>GET /gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl</code></li></ul>
+            <p>Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.</p>
+            <ul><li><code>GET /gtfs-realtime/vehicle-position/ktmb</code></li><li><code>GET myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-live"></span>
       </div>
-      <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div></div>
+      <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
+
+
+
 
     <!-- Static fallback: rendered before the app script runs, and visible to
          browsers/crawlers without JavaScript. buildShell() replaces #main's
@@ -979,7 +988,7 @@ html[data-text="large"] table{font-size:14px}
 <li><strong>Finance</strong> - USD/MYR 4.09 (business-day rate, 2026-08-10).</li>
 <li><strong>Economy</strong> - CPI 137.1 points (2026-06-01).</li>
 <li><strong>Health</strong> - blood donations 1,094 units (2026-08-08).</li>
-<li><strong>Trending now</strong> - Kenyataan Palsu Kaitkan Timbalan KPN Tersebar di Facebook · Dakwaan Semua Rakyat 18 Tahun Ke Atas Terima SARA RM100 One-Off · Penggunaan Logo JIM Pada Kenderaan Dipandu Warga Asing.</li>
+<li><strong>Trending now</strong> - Pertikaian Status Keahlian Bersatu dalam Perikatan Nasional (PN) · Kenyataan Palsu Timbalan KPN Tersebar di Facebook · Isu Kenderaan Warga Asing Menggunakan Logo Jabatan Imigresen Malaysia (JIM).</li>
 <!-- /SEO:SNAP -->
             <h3>Sections</h3>
             <ul>
@@ -1040,7 +1049,7 @@ const WINDOW = 60000;
 const FRESH_YEARS = 2;   // datasets whose last update is older than this are hidden
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
-const CK = "mygov.cache.v7.";
+const CK = "mygov.cache.v8.";
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -1224,6 +1233,8 @@ const I18N = {
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
   "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
   "among live ":"antara ", "Live map - ":"Peta langsung - ", "positions as broadcast":"kedudukan seperti disiarkan",
+  "route":"laluan", "buses":"bas", "more buses":"bas lagi", "buses here":"bas di sini",
+  "zoom in to see individual buses":"zum masuk untuk melihat bas individu",
   "Network":"Rangkaian", "Trip":"Perjalanan", "Speed":"Kelajuan", "Last seen":"Dilihat terakhir",
   "Position":"Kedudukan", "No trains are broadcasting right now":"Tiada kereta api melaporkan kedudukan kini",
   "No buses are broadcasting right now":"Tiada bas melaporkan kedudukan kini",
@@ -2118,17 +2129,30 @@ async function loadTransport(){
 
 const RT = [
   { key:"ktmb", label:"KTMB trains", noun:"trains", path:"/gtfs-realtime/vehicle-position/ktmb", params:null },
-  { key:"prasarana", label:"Rapid KL buses", noun:"buses",
-    path:"/gtfs-realtime/vehicle-position/prasarana", params:{ category:"rapid-bus-kl" } },
+  /* Rapid KL buses come from the operator's kiosk feed (via our /api/rapid
+     proxy): the api.data.gov.my GTFS-RT feed for prasarana is frequently
+     empty even mid-service, while the kiosk shows 800+ live buses. */
+  { key:"rapid", label:"Rapid KL buses", noun:"buses", path:"/api/rapid", params:{ provider:"RKL" } },
 ];
 async function loadLive(){
   const out = {};
   for (const f of RT){
-    const buf = await request("gtfs-realtime", f.path, f.params, "buffer");
-    const d = decodeVehiclePositions(buf);
-    out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
-      vehicles: d.vehicles.filter(v => v.lat != null && v.lon != null)
-                          .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)) };
+    if (f.path === "/api/rapid"){
+      const d = await fetch("/api/rapid?provider=" + encodeURIComponent(f.params.provider),
+        { cache:"no-store" }).then(r => { if (!r.ok) throw new ApiError("Rapid KL feed unavailable.", "http"); return r.json(); });
+      out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:"kiosk",
+        feedTimestamp: d.updated ? Math.floor(Date.parse(d.updated) / 1000) : null,
+        vehicles: (d.buses || []).map(b => ({
+          vehicleId: b.bus_no, routeId: b.route, lat: b.latitude, lon: b.longitude,
+          speed: b.speed, dir: b.dir, timestamp: b.ts || null,
+        })).filter(v => v.lat != null && v.lon != null) };
+    } else {
+      const buf = await request("gtfs-realtime", f.path, f.params, "buffer");
+      const d = decodeVehiclePositions(buf);
+      out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
+        vehicles: d.vehicles.filter(v => v.lat != null && v.lon != null)
+                            .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)) };
+    }
   }
   return out;
 }
@@ -4729,6 +4753,7 @@ const ago = ts => {
   return h + "h " + (m % 60) + "m ago";
 };
 let lvdata = null;
+let lvFilter = {};   // feed key -> route id filter (clicking a route chip)
 const lvMaps = {};
 function vcard(f, v){
   return `<div class="card vcard">
@@ -4766,9 +4791,24 @@ function vchip(f, v){
 }
 function renderLive(d){
   lvdata = d;
-  $("#body-live").innerHTML = Object.values(d).map(f => {
+  /* Route filter state per feed: when set, the map + chips show only the
+     vehicles on that route. Clicking the active chip clears the filter. */
+  lvFilter = lvFilter || {};
+  $("body-live") ? $("body-live").innerHTML = "" : null;
+  const host = $("#body-live");
+  host.innerHTML = Object.values(d).map(f => {
     const n = f.vehicles.length;
     const ts = f.feedTimestamp ? ago(f.feedTimestamp) : "-";
+    const veh = lvFilter[f.key] ? f.vehicles.filter(v => String(v.routeId) === lvFilter[f.key]) : f.vehicles;
+    const routes = [];
+    for (const v of f.vehicles){
+      const r = String(v.routeId || "?");
+      const hit = routes.find(x => x.route === r);
+      if (hit) hit.count++; else routes.push({ route:r, count:1 });
+    }
+    routes.sort((a,b) => b.count - a.count);
+    const top = routes.slice(0, 18);
+    const filtered = lvFilter[f.key] ? ` · ${T("route")} <b>${esc(lvFilter[f.key])}</b>` : "";
     return `<div style="margin-bottom:var(--s6)">
       <div class="grid g3 mb">
         <div class="kpi"><div class="lab">${esc(f.label)} ${T("live now")}</div>
@@ -4778,17 +4818,19 @@ function renderLive(d){
           <div class="val" style="font-size:19px">${esc(ts)}</div>
           <div class="sub">${T("feed v")}${esc(f.version || "?")}</div></div>
         <div class="kpi"><div class="lab">${T("Distinct routes")}</div>
-          <div class="val" data-count="${new Set(f.vehicles.map(v => v.routeId).filter(Boolean)).size}">0</div>
+          <div class="val" data-count="${routes.length}">0</div>
           <div class="sub">${T("among live ")}${esc(f.noun)}</div></div>
       </div>
       <div class="card mb">
         <div class="card-h"><h4>${T("Live map - ")}${esc(f.label)}</h4>
-          <span class="sub">${T("positions as broadcast")}</span></div>
+          <span class="sub">${T("positions as broadcast")}${filtered}</span></div>
         <div class="card-b" style="padding:0"><div class="lvmap" id="lvmap-${f.key}"></div></div>
       </div>
       ${n ? (f.key === "ktmb"
-          ? `<div class="vchips">${f.vehicles.map(v => vchip(f, v)).join("")}</div>`
-          : `<div class="vgrid">${f.vehicles.map(v => vcard(f, v)).join("")}</div>`)
+          ? `<div class="vchips">${veh.map(v => vchip(f, v)).join("")}</div>`
+          : `<div class="vchips" data-role="route-chips">
+              ${top.map(rc => rchip(f, rc, veh, routes.length)).join("")}
+            </div>`)
           : `<div class="card"><div class="state"><div class="big">🌙</div>
             <strong>${T(f.noun === "trains" ? "No trains are broadcasting right now" : "No buses are broadcasting right now")}</strong>
             <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles - normal outside service hours, or when the operator's tracking feed is paused.")}</div></div>`}
@@ -4796,6 +4838,45 @@ function renderLive(d){
   }).join("");
   animateCounters($("#body-live"));
   paintMaps();
+}
+
+/* Rapid bus routes render as compact chips: route number + live count, with
+   the vehicles on that route in the tooltip. Clicking a chip filters the map
+   and chips to that route; clicking the active chip clears the filter. With
+   800+ buses a card-per-bus list would freeze the page - aggregation is the
+   only sane rendering. */
+function rchip(f, rc, veh, total){
+  const onRoute = veh.filter(v => String(v.routeId) === rc.route);
+  const active = lvFilter[f.key] === rc.route;
+  const busList = onRoute.slice(0, 8).map(v =>
+    `<div class="vrow"><span class="mono">${esc(v.vehicleId || "-")}</span>` +
+    `<span>${v.speed == null ? "-" : nf(v.speed, 0) + " km/h"} · ${v.timestamp ? ago(v.timestamp) : "-"}</span></div>`).join("")
+    + (onRoute.length > 8 ? `<div class="vrow dim">+${onRoute.length - 8} ${T("more buses")}</div>` : "");
+  return `<span class="vchip mono${active ? " on" : ""}" tabindex="0" role="button"
+    aria-pressed="${active}" aria-label="${esc(rc.route)} · ${rc.count} ${esc(T("buses"))}"
+    data-route="${esc(rc.route)}" data-feed="${f.key}">
+    ${esc(rc.route)}<b class="cnt">${rc.count}</b>
+    <span class="tip">${busList}</span></span>`;
+}
+/* 800+ markers on one Leaflet map is a wall of overlapping dots. Grid-cluster
+   instead: bucket points into a cell that shrinks as the user zooms in, so
+   clusters show as a count-bubble that dissolves into individual markers at
+   street level. Re-cluster on zoomend. */
+function clusterPts(pts, zoom){
+  if (pts.length < 120) return pts.map(p => ({ lat:p.lat, lon:p.lon, count:1, items:[p] }));
+  const cell = 0.03 / Math.pow(2, Math.max(0, zoom - 10));  // ~3km at z10
+  const groups = new Map();
+  for (const p of pts){
+    const kx = Math.floor(p.lat / cell), ky = Math.floor(p.lon / cell);
+    const k = kx + "," + ky;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(p);
+  }
+  return [...groups.values()].map(g => ({
+    lat: g.reduce((a,p) => a + p.lat, 0) / g.length,
+    lon: g.reduce((a,p) => a + p.lon, 0) / g.length,
+    count: g.length, items: g,
+  }));
 }
 function paintMaps(){
   if (!window.L || !lvdata) return;
@@ -4832,7 +4913,21 @@ function paintMaps(){
     });
     tiles.on("tileload", () => { omsFailed = Math.max(0, omsFailed - 1); });
     if (f.vehicles.length){
-      const pts = f.vehicles.map(v => {
+      const veh = lvFilter[f.key] ? f.vehicles.filter(v => String(v.routeId) === lvFilter[f.key]) : f.vehicles;
+      const pts = clusterPts(veh, map.getZoom());
+      for (const c of pts){
+        if (c.count > 1){
+          const r = Math.min(7 + Math.sqrt(c.count) * 2.2, 22);
+          const m = L.circleMarker([c.lat, c.lon], {
+            radius:r, color:"#0a0c10", weight:1.5,
+            fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.85,
+          }).addTo(map);
+          m.bindPopup(`<b>${c.count}</b> ${T("buses here")}<br>` +
+            `<span class="dim">${T("zoom in to see individual buses")}</span>`);
+          m.on("click", () => map.setView([c.lat, c.lon], map.getZoom() + 2));
+          continue;
+        }
+        const v = c.items[0];
         const m = L.circleMarker([v.lat, v.lon], {
           radius: 6, color:"#0a0c10", weight:1.5,
           fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.9,
@@ -4841,11 +4936,37 @@ function paintMaps(){
           (v.routeId ? ` · ${esc(v.routeId)}` : "") +
           (v.tripId ? `<br>${esc(v.tripId)}` : "") +
           (v.timestamp ? `<br>${ago(v.timestamp)}` : ""));
-        return [v.lat, v.lon];
-      });
+      }
       if (pts.length > 1) map.fitBounds(pts, { padding:[30, 30], maxZoom:14 });
-      else map.setView(pts[0], 13);
+      else if (pts.length) map.setView([pts[0].lat, pts[0].lon], 13);
     }
+    map.on("zoomend", () => {
+      /* Re-cluster at the new zoom: redraw markers (removing old ones). */
+      if (!f.vehicles.length) return;
+      const layer = [];
+      map.eachLayer(l => { if (l instanceof L.CircleMarker) map.removeLayer(l); });
+      const veh2 = lvFilter[f.key] ? f.vehicles.filter(v => String(v.routeId) === lvFilter[f.key]) : f.vehicles;
+      for (const c of clusterPts(veh2, map.getZoom())){
+        if (c.count > 1){
+          const m = L.circleMarker([c.lat, c.lon], {
+            radius: Math.min(7 + Math.sqrt(c.count) * 2.2, 22), color:"#0a0c10", weight:1.5,
+            fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.85,
+          }).addTo(map);
+          m.bindPopup(`<b>${c.count}</b> ${T("buses here")}<br><span class="dim">${T("zoom in to see individual buses")}</span>`);
+          m.on("click", () => map.setView([c.lat, c.lon], map.getZoom() + 2));
+        } else {
+          const v = c.items[0];
+          const m = L.circleMarker([v.lat, v.lon], {
+            radius: 6, color:"#0a0c10", weight:1.5,
+            fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.9,
+          }).addTo(map);
+          m.bindPopup(`<b>${esc(v.vehicleId || v.entityId || "-")}</b>` +
+            (v.routeId ? ` · ${esc(v.routeId)}` : "") +
+            (v.tripId ? `<br>${esc(v.tripId)}` : "") +
+            (v.timestamp ? `<br>${ago(v.timestamp)}` : ""));
+        }
+      }
+    });
     lvMaps[f.key] = map;
   }
 }
@@ -4929,8 +5050,8 @@ const META = {
     eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl"] },
   live:{ title:"Live Vehicles",
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
-    how:"Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.",
-    eps:["/gtfs-realtime/vehicle-position/ktmb","/gtfs-realtime/vehicle-position/prasarana?category=rapid-bus-kl"] },
+    how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.",
+    eps:["/gtfs-realtime/vehicle-position/ktmb","myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)"] },
 };
 const LOADERS = {
   weather:  { load:loadWeather,   render:renderWeather,   after:d => {
@@ -5143,6 +5264,15 @@ function boot(){
   geo.status = "waiting";     // resolved once weather data lands
   initPosUtil();
   initRadarCarousel();
+  /* Route chips in the Live section: clicking filters the map + chips to
+     that route; clicking the active chip clears the filter. */
+  document.addEventListener("click", e => {
+    const chip = e.target.closest(".vchip[data-route]");
+    if (!chip) return;
+    const feed = chip.dataset.feed, route = chip.dataset.route;
+    lvFilter[feed] = lvFilter[feed] === route ? "" : route;
+    if (lvdata) renderLive(lvdata);
+  });
   /* back-to-top: appears after scrolling past the hero */
   const topbtn = $("#topbtn");
   const onScroll = () => {
