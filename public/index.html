@@ -3991,6 +3991,8 @@ function paintTransport(){
    name + which lines call there. */
 function paintRailDiagram(){
   const host = $("#rail-diagram"); if (!host) return;
+  /* Rebuilding replaces #rail-map, orphaning any previous Leaflet instance. */
+  railMapInst = null;
   const rail = tdata && tdata.rail;
   if (!rail || !rail.lines || !rail.lines.length){ host.hidden = true; return; }
   /* name → lines that call there (interchange detection) */
@@ -4002,25 +4004,41 @@ function paintRailDiagram(){
       if (!calls.has(k)) calls.set(k, []);
       calls.get(k).push(l.name);
     }
-  const colW = 132;
+  /* measure label widths with a scratch canvas so long station names and
+     interchange descriptions don't clip inside the fixed 132px column */
+  const mctx = document.createElement("canvas").getContext("2d");
+  const tw = (s, f) => { mctx.font = f; return mctx.measureText(s).width; };
+  const labelFont = "600 9px Inter,system-ui,-apple-system,sans-serif";
+  const descFont  = "400 7.5px ui-monospace,SFMono-Regular,Menlo,monospace";
   const railH = 24, dotR = 4.5;
   const padT = 26, padB = 12;
   host.innerHTML = `<div class="metro-wrap"><div class="metro-head">
       <h4>${T("LRT & MRT network")}</h4>
       <span class="sub">${T("Rapid KL rail — click a station to open it on the map")}</span>
       <span class="right"><span class="seg" role="group" aria-label="View">
-        <button data-mv="schematic" aria-pressed="true">${T("Schematic")}</button>
-        <button data-mv="map" aria-pressed="false">${T("Network map")}</button>
+        <button data-mv="schematic" aria-pressed="false">${T("Schematic")}</button>
+        <button data-mv="map" aria-pressed="true">${T("Network map")}</button>
       </span></span></div>
     <div class="metro-legend" aria-hidden="true">
       <span class="ml-item"><span class="ml-dot"></span>${T("Station")}</span>
       <span class="ml-item"><span class="ml-ring"><span class="ml-dot"></span></span>${T("Interchange")}</span>
     </div>
-    <div id="metro-schematic">
+    <div id="metro-schematic" hidden>
     <div class="metro-scroll">` +
     rail.lines.map(l => {
       const n = l.stations.length;
       const h = padT + (n - 1) * railH + padB;
+      /* column width fits the longest name/description on this line:
+         text starts at colW/2 + 12, so colW ≥ 2·(12 + textW) + pad */
+      let needW = 132;
+      for (const s of l.stations){
+        const k = (s.name || "").toUpperCase().trim();
+        const linesHere = calls.has(k) ? calls.get(k).join(", ") : "";
+        needW = Math.max(needW,
+          Math.ceil(2 * (12 + tw(s.name || "", labelFont) + 14)),
+          linesHere ? Math.ceil(2 * (12 + tw(linesHere, descFont) + 14)) : 0);
+      }
+      const colW = Math.max(132, needW);
       const dot = (i) => {
         const y = padT + i * railH;
         const s = l.stations[i];
@@ -4053,7 +4071,7 @@ function paintRailDiagram(){
     }).join("") +
     `</div></div>
     </div>
-    <div id="rail-map" class="lvmap" hidden></div>
+    <div id="rail-map" class="lvmap"></div>
   </div>`;
   /* click/tap a station → open OSM at that station */
   host.querySelectorAll(".metro-stn").forEach(g => {
@@ -4066,16 +4084,18 @@ function paintRailDiagram(){
     };
   });
   host.hidden = false;
-  /* Schematic ⇄ network-map toggle */
+  /* Schematic ⇄ network-map toggle — network map is the default view */
+  const setMv = (mode) => {
+    host.querySelectorAll("[data-mv]").forEach(x =>
+      x.setAttribute("aria-pressed", String(x.dataset.mv === mode)));
+    $("#metro-schematic").hidden = mode !== "schematic";
+    const rm = $("#rail-map"); rm.hidden = mode !== "map";
+    if (mode === "map") paintRailMap(rail, rm);
+  };
   host.querySelectorAll("[data-mv]").forEach(b => {
-    b.onclick = () => {
-      host.querySelectorAll("[data-mv]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-      const mapMode = b.dataset.mv === "map";
-      $("#metro-schematic").hidden = mapMode;
-      const rm = $("#rail-map"); rm.hidden = !mapMode;
-      if (mapMode) paintRailMap(rail, rm);
-    };
+    b.onclick = () => setMv(b.dataset.mv);
   });
+  setMv("map");   // paint the network map right away (default view)
 }
 /* All 8 lines as colored polylines on one Leaflet map — interchanges show
    as ringed dots where the lines physically cross. Lazy-built on first
