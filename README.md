@@ -1,19 +1,20 @@
 # mygov
 
-A dashboard for Malaysia's Government Open API — weather, fuel prices, economic
+A dashboard for Malaysia's Government Open API - weather, fuel prices, economic
 statistics and public transport, in one page.
 
 **Live:** https://mygov.faizalmzain.com
 
 No build step, no framework, no npm dependencies at runtime. The whole app is a
 single HTML file plus a service worker, served by a Cloudflare Worker that also
-proxies the reverse-geocoding and GTFS archive calls.
+proxies the reverse-geocoding, GTFS archive, flight-board and live-bus calls.
 
 ## AI agents: MCP connector
 
 The same data is available to AI coding agents through an official MCP plugin -
 **[mfaizalzain/mygov-mcp](https://github.com/mfaizalzain/mygov-mcp)** - exposing
-weather, fuel prices, CPI/OpenDOSM and GTFS transit as six read-only tools.
+weather, fuel prices, CPI/OpenDOSM, GTFS transit and live Rapid bus positions as
+seven read-only tools.
 Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 (universal plugin directory). No API key, same rate-limit rules as the app.
 
@@ -31,8 +32,8 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Population | DOSM (OpenDOSM) | National population 1970-present, ethnic composition |
 | Health | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
-| Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules — route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
-| Live | KTMB, Prasarana | GTFS-Realtime vehicle positions on a live map, with "last seen" cards |
+| Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
+| Live | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 
 ---
@@ -42,7 +43,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 A daily scoop of Malaysia's hot issues and trends, fed by:
 
 - **News RSS**: MalayMail, Free Malaysia Today, Utusan
-- **Fact-check feed**: Sebenarnya.my (MCMC) — used to verify/debunk circulating claims
+- **Fact-check feed**: Sebenarnya.my (MCMC) - used to verify/debunk circulating claims
 
 The collector clusters ~100 raw signals into a ranked top-10 issue list (BM titles,
 categories, cross-source counts) using the **Gemini API** (`gemini-flash-latest`),
@@ -56,18 +57,18 @@ against Sebenarnya posts, plus clickable source URLs.
 GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
   daily 9 AM MYT (or manual dispatch)      reads live radar.json
   python3 tools/collect_radar.py            sends top-5 to Telegram
-  GOOGLE_API_KEY secret → Gemini cluster    (no collecting — read-only)
+  GOOGLE_API_KEY secret → Gemini cluster    (no collecting - read-only)
   commit + push radar.json
   Cloudflare auto-deploy → mygov.faizalmzain.com/radar.json
 ```
 
-- **Collector:** `tools/collect_radar.py` — RSS fetch, Gemini clustering with
+- **Collector:** `tools/collect_radar.py` - RSS fetch, Gemini clustering with
   JSON-rescue parsing, deterministic Sebenarnya fact-check matching, URL
   backfill. Falls back to keyword clustering if the Gemini call fails (never
   crashes).
-- **Repo secret required:** `GOOGLE_API_KEY` (Gemini API key) — without it the
+- **Repo secret required:** `GOOGLE_API_KEY` (Gemini API key) - without it the
   collector degrades to keyword clustering in CI.
-- **Workflow:** `.github/workflows/collect_radar.yml` — scheduled 01:00 UTC
+- **Workflow:** `.github/workflows/collect_radar.yml` - scheduled 01:00 UTC
   (9 AM MYT) + manual `workflow_dispatch`, commits as `github-actions[bot]`
   with `contents: write`.
 - The dashboard fetches `/radar.json` (same-origin) and renders issue cards.
@@ -90,20 +91,20 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
   issues) into the `<noscript>` fallback of `index.html` between the
   `<!-- SEO:SNAP -->` markers, so crawlers that never run JS still see fresh
   numbers on first pass, and (b) writes `public/feed.xml`, an RSS 2.0 feed of
-  the Trend Radar issues. Both are idempotent — they only rewrite when the
+  the Trend Radar issues. Both are idempotent - they only rewrite when the
   content actually changes, so collector commits stay clean.
 
 - `tools/collect_health.py` and `tools/collect_slow.py` fetch from the
   data.gov.my API with **4 attempts and 5s/10s/15s backoff** (a transient
   failure in unattended CI must not cost a whole day of freshness), then
   write the data in the exact compact shapes the browser loaders build
-  (`{t0, n, keys, series}` etc. — 596 KB for slow.json vs ~5 MB of raw rows).
+  (`{t0, n, keys, series}` etc. - 596 KB for slow.json vs ~5 MB of raw rows).
 - The loaders (`loadHealth`, `loadFuel`, `loadFinance`, `loadMobility`,
   `loadEconomy`, `loadPopulation`) **try the static file first** via
   `readSlow()`, and only fall back to the live API when the file is missing
   or more than ~6 days old (e.g. on plain static hosting without the Action).
 - Net effect: a cold visit costs **3 API requests** (weather) plus the
-  real-time feeds — everything else is static. `interestrates` is the one
+  real-time feeds - everything else is static. `interestrates` is the one
   series currently stale *upstream* (last published 2025-12); the collector
   captures whatever the source publishes.
 
@@ -113,13 +114,13 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
 ```
 public/
-  index.html            entire app — markup, design system, logic
+  index.html            entire app - markup, design system, logic
   sw.js                 service worker (offline shell + API fallback)
   manifest.webmanifest  PWA manifest
   icons/                generated PNGs (192, 512, apple-touch)
   vendor/               self-hosted Chart.js, Leaflet (SRI-pinned)
 src/
-  index.js              Worker: static assets + /api/reverse, /api/gtfs, /api/fids
+  index.js              Worker: static assets + /api/reverse, /api/gtfs, /api/fids, /api/rapid
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
   collect_radar.py      Trend Radar collector (see above)
@@ -129,8 +130,9 @@ tools/
 wrangler.jsonc
 ```
 
-The Worker serves `public/` through the `ASSETS` binding and owns three routes,
-`/api/reverse`, `/api/gtfs` and `/api/fids`. Everything else is static.
+The Worker serves `public/` through the `ASSETS` binding and owns four routes,
+`/api/reverse`, `/api/gtfs`, `/api/fids` and `/api/rapid`. Everything else is
+static.
 
 > Static assets are served by Cloudflare's asset router **without invoking the
 > Worker**, so response headers for them come from `public/_headers`, not from
@@ -138,8 +140,10 @@ The Worker serves `public/` through the `ASSETS` binding and owns three routes,
 
 ### Why there is a Worker at all
 
-The weather section can centre itself on wherever you are, which needs
-reverse geocoding. That call cannot be made from the browser:
+Three of the four routes exist because the upstream API cannot be called from
+the browser; the fourth exists because the browser could not render 800+ live
+markers efficiently. The weather section can centre itself on wherever you are,
+which needs reverse geocoding. That call cannot be made from the browser:
 
 1. `nominatim.openstreetmap.org` returns **no `access-control-allow-origin`
    header**, so a direct browser request is blocked by CORS.
@@ -155,7 +159,7 @@ rather than breaking.
 
 The second route, `/api/gtfs`, exists for a different reason. Upstream
 `/gtfs-static/*` answers **302 to an S3 bucket**, so the browser has to pass
-CORS on the *redirect target*. That is fragile — any network layer that
+CORS on the *redirect target*. That is fragile - any network layer that
 intercepts that hop surfaces it as an opaque CORS failure the page cannot
 distinguish from being offline. Doing the hop server-side removes the
 cross-origin redirect entirely and lets the ZIP be edge-cached for 6 hours, so
@@ -171,6 +175,18 @@ injects the key (from the `FIDS_API_KEY` variable), adds
 renders, and edge-caches it for 60 seconds so the airport API sees one request
 per minute per board, not one per visitor.
 
+The fourth route, `/api/rapid`, backs the Live section's Rapid KL buses. The
+data.gov.my GTFS-RT feed for Prasarana is frequently empty even mid-service,
+but the operator's own kiosk (myrapidbus.prasarana.com.my/kiosk) shows 800+
+live buses, streamed from a socket.io server. socket.io's engine.io POLLING
+transport is plain HTTP, so the Worker consumes it without a websocket client:
+open the session, connect, emit `onFts-reload`, poll - the response frame
+carries base64(gzip(JSON)) which the Worker decompresses, slims to the fields
+the map renders, and edge-caches for ~25 s so every visitor shares one
+upstream poll. The page aggregates those buses into route chips and grid
+clusters on the map (dissolving into individual markers as you zoom), so 800+
+points never freeze the browser.
+
 ### Security
 
 - **CSP** with no `'unsafe-eval'`, `object-src 'none'`, `frame-ancestors
@@ -182,21 +198,21 @@ per minute per board, not one per visitor.
   (`integrity="sha384-…"`), so altered bytes are refused rather than executed.
 - Both API routes **validate input against a strict allowlist** and never
   interpolate user input into an upstream URL, and they reject cross-origin
-  callers — they exist for this page, not as a public proxy.
+  callers - they exist for this page, not as a public proxy.
 - No secrets, tokens or account identifiers are in the repo; the app needs
   none. `.dev.vars` and `.wrangler/` are gitignored.
 - No analytics. The page connects to exactly three hosts: itself (static assets
   and `/api/*`), `api.data.gov.my` (every dataset, health included) and
   `tile.openstreetmap.org` (map tiles in the Live section). Every library is self-hosted. The "Buy me a coffee" button is a
   plain link, not their tracking widget. Earthquake and live-vehicle cards
-  include an outbound Google Maps link — a normal link the reader chooses to
+  include an outbound Google Maps link - a normal link the reader chooses to
   follow, not a request the page makes.
 
 ---
 
 ## Working with the API
 
-Notes that cost time to discover — all verified against live responses.
+Notes that cost time to discover - all verified against live responses.
 
 **A trailing slash is required.** `GET /weather/forecast?limit=1` responds
 `301` to `/weather/forecast/?limit=1`. Every URL the app builds ends in `/`, so
@@ -206,18 +222,18 @@ no request wastes a redirect hop against the rate limit.
 `data-catalogue`, `opendosm`, `gtfs-static`, `gtfs-realtime`). The app:
 
 - fetches each family once per session, strictly sequentially, ~1.2 s apart;
-- never lets two calls to the *same* family land within 3 s — bursts trip the
+- never lets two calls to the *same* family land within 3 s - bursts trip the
   limiter even when the per-minute count is legal;
 - enforces a rolling 4-per-60 s token bucket per family;
 - caches results in memory + `localStorage` for 15 minutes;
 - never polls. Refresh is manual.
 - retries transient failures once (network blips and 5xx get a 1.5 s / 2.5 s
-  pause, then a second attempt); 429 and 404 are not retried — the first is a
+  pause, then a second attempt); 429 and 404 are not retried - the first is a
   quota state a retry won't fix, the second is permanent. A section that
   still fails shows an error box with a manual Retry button, keeping any
   stale content on screen.
 
-Total cold load: **3 requests** — weather 3 — plus the real-time feeds
+Total cold load: **3 requests** - weather 3 - plus the real-time feeds
 (transport GTFS + live vehicles, which must stay live) and the static
 `health.json` / `slow.json` (same-origin, produced by the daily collectors,
 no API budget spent). GitHub is not called at all. Only weather + fuel (fuel
@@ -225,11 +241,11 @@ reads slow.json) are fetched on first paint; everything else is lazy-loaded
 as its section scrolls into view, so the first screen renders before the
 slowest datasets arrive.
 
-**Dataset ids that exist** (many plausible ones do not — an unknown id returns
+**Dataset ids that exist** (many plausible ones do not - an unknown id returns
 `404` with `{"status_code":404,...}`):
 
 - `data-catalogue`: `fuelprice`, `hh_income`, `exchangerates`,
-  `interestrates`, `poskod` — plus `arrivals`, `passports`, `births` and
+  `interestrates`, `poskod` - plus `arrivals`, `passports`, `births` and
   `mnha`, which exist but are frozen (see *Data freshness* below), and
   `blood_donations`, `organ_pledges`, `pekab40_screenings`, which the KKM
   collector uses (see above)
@@ -240,7 +256,7 @@ slowest datasets arrive.
 
 **Gotchas in the catalogue datasets** (all verified against live responses):
 
-- `interestrates` has **no `opr` series** — the rate codes are lending and
+- `interestrates` has **no `opr` series** - the rate codes are lending and
   deposit rates (`br`, `alr`, `sr`, `fdr_*`, `wabr`…). The Finance section
   charts the commercial base rate (`bank=commercial, rate=br`) instead, which
   tracks the OPR, and says so in the UI.
@@ -259,7 +275,7 @@ slowest datasets arrive.
 **Server-side filtering works** and is worth using:
 `?id=fuelprice&filter=level@series_type` returns only the price levels,
 halving the payload. Without it you also get `change_weekly` delta rows
-interleaved on the same dates — charting the raw response draws a sawtooth
+interleaved on the same dates - charting the raw response draws a sawtooth
 through zero.
 
 **Locations are keyed by `location_id`, not name.** The forecast feed has 360
@@ -271,12 +287,12 @@ forecast. Keying by name silently merges them. Prefixes are `St` state,
 **MET free text arrives with HTML entities already encoded** (`&amp;`), so it
 must be decoded before escaping or readers see the raw entity. The warnings
 endpoint also carries "No Advisory" all-clear notices with `null` validity
-dates — `new Date(null)` is the epoch, which renders a bogus
+dates - `new Date(null)` is the epoch, which renders a bogus
 "valid 01 Jan 1970". Both are handled.
 
 **GTFS static** ships as ZIP. `routes.txt` column *order* differs between
 agencies, so CSV is parsed by header name. For the bus feeds only
-`routes`/`trips`/`stops`/`agency` are inflated — Prasarana's `stop_times.txt`
+`routes`/`trips`/`stops`/`agency` are inflated - Prasarana's `stop_times.txt`
 alone is 5.6 MB of the 8.8 MB archive and is never decompressed. The rail feed
 (`gtfs_rapid_rail_kl.zip`) is the exception: its `stop_times.txt` is small
 enough to read, which is how the LRT/MRT metro diagram gets the ordered
@@ -284,12 +300,14 @@ station sequence per line. It also carries the official route colors
 (`route_color`) used to draw each line.
 
 The rail feed is served by the same `/gtfs-static/prasarana` endpoint with
-`category=rapid-rail-kl` — 187 stations across 8 lines (Ampang, Sri Petaling,
+`category=rapid-rail-kl` - 187 stations across 8 lines (Ampang, Sri Petaling,
 Kelana Jaya, Shah Alam, MRT Kajang, MRT Putrajaya, Monorail, BRT Sunway).
 
-**GTFS realtime** legitimately returns zero vehicles outside service hours.
-That is an empty state, not an error — the UI says so and shows the feed's own
-timestamp as proof it responded.
+**GTFS realtime** (KTMB) legitimately returns zero vehicles outside service
+hours. That is an empty state, not an error - the UI says so and shows the
+feed's own timestamp as proof it responded. Rapid KL buses do **not** use the
+GTFS-RT feed (it is frequently empty even mid-service); they come from
+Prasarana's kiosk feed via `/api/rapid` instead - see the Worker section above.
 
 ---
 
@@ -297,12 +315,13 @@ timestamp as proof it responded.
 
 Three things that would normally pull in a library:
 
-- **ZIP reading** — a central-directory reader using the platform's
+- **ZIP reading** - a central-directory reader using the platform's
   `DecompressionStream('deflate-raw')`. No JSZip.
-- **GTFS-Realtime protobuf** — a ~90-line wire-format reader (varint /
-  length-delimited / fixed32) covering just the `VehiclePosition` subset.
-  No protobufjs, no `.proto` file.
-- **Icons** — `tools/make-icons.mjs` renders the PNGs with a hand-written
+- **GTFS-Realtime protobuf** - a ~90-line wire-format reader (varint /
+  length-delimited / fixed32) covering just the `VehiclePosition` subset
+  (used for KTMB trains; Rapid KL buses come through `/api/rapid` as plain
+  JSON). No protobufjs, no `.proto` file.
+- **Icons** - `tools/make-icons.mjs` renders the PNGs with a hand-written
   encoder (`zlib` + CRC32), supersampled 4× for clean edges.
 
 Chart.js and Leaflet are the only runtime dependencies. They live in
@@ -312,7 +331,7 @@ worker.
 
 ### Compacting daily series
 
-Several datasets are one JSON object per category per day — blood donations
+Several datasets are one JSON object per category per day - blood donations
 alone are five keys over three years. `denseDaily()` collapses each key to a
 start day plus a flat array of values, which is roughly a fifth the size and
 keeps these sections inside the localStorage budget the other eight share.
@@ -321,11 +340,11 @@ the same reason.
 
 ## Preferences
 
-All preferences are stored in `localStorage` only — nothing leaves the device:
+All preferences are stored in `localStorage` only - nothing leaves the device:
 
-- **Theme** — dark, light, or follow the system, plus a persisted choice.
-- **Text size** — a large-text mode for readability.
-- **Language** — English or Bahasa Melayu for the interface. Weather warnings
+- **Theme** - dark, light, or follow the system, plus a persisted choice.
+- **Text size** - a large-text mode for readability.
+- **Language** - English or Bahasa Melayu for the interface. Weather warnings
   use the API's native `_bm` fields when available, and Malay forecast phrases
   are mapped to English when the interface language is English.
 
@@ -339,12 +358,12 @@ CSS filter to keep them dark in dark mode. The `img-src` CSP allows
 
 Two layers, deliberately different:
 
-- **App (`localStorage`, 15 min TTL)** — drives freshness. Holds compacted view
+- **App (`localStorage`, 15 min TTL)** - drives freshness. Holds compacted view
   models, not raw responses: forecast strings are dictionary-compressed, and
   GTFS is reduced to counts plus stop coordinates before storage. A full cold
   load is a few hundred KB, well under quota, and `cacheSet` degrades to
   memory-only if the quota is hit anyway.
-- **Service worker** — drives offline. Cache-first for the shell;
+- **Service worker** - drives offline. Cache-first for the shell;
   API responses are cached on success and served only when the network fails.
 
 The service worker deliberately does **not** use stale-while-revalidate for
@@ -367,7 +386,7 @@ npx wrangler dev
 ```
 
 Serves on http://localhost:8788 with `/api/reverse`, `/api/gtfs` and
-`/api/fids` all working locally — `wrangler dev` picks up the `FIDS_API_KEY`
+`/api/fids` all working locally - `wrangler dev` picks up the `FIDS_API_KEY`
 variable declared in `wrangler.jsonc` automatically.
 
 Regenerate icons after changing the palette:
@@ -383,7 +402,7 @@ node tools/make-icons.mjs
 The site deploys automatically: this GitHub repo is connected to the
 `mygov` Worker via Cloudflare's **Workers Git integration** (Workers & Pages →
 mygov → Settings → Builds & Deployments). Every push to `main` triggers a new
-production deploy — no workflow file, secrets, or manual steps required.
+production deploy - no workflow file, secrets, or manual steps required.
 
 For manual deploys (e.g. testing a branch before pushing):
 
@@ -402,12 +421,12 @@ only variable is `FIDS_API_KEY` (a public key, declared as a `var` in
 ## Data freshness
 
 A dataset earns its place by being **current**, not by being long. Deep history
-is welcome — a 1970-2026 population series is more useful than a short one —
+is welcome - a 1970-2026 population series is more useful than a short one -
 but a series whose *last* update is years old has nothing to compare against,
 and charting it invites readers to mistake stale numbers for today's.
 
-So: the pill in each section header shows **"data as of &lt;date&gt;"** — the
-newest row that section actually renders, not when we fetched it — and appends
+So: the pill in each section header shows **"data as of &lt;date&gt;"** - the
+newest row that section actually renders, not when we fetched it - and appends
 **"⚠️ may be delayed"** once that date is more than 183 days old. The date
 comes from `LOADERS[id].asOf(data)`; a section that returns nothing (a static
 lookup, a live feed) keeps the old "updated HH:MM" fetch time instead.
@@ -429,18 +448,18 @@ keeps showing the fetch time.
 
 ## Adding a dataset
 
-**Into an existing section** — add one request to the relevant loader in
+**Into an existing section** - add one request to the relevant loader in
 `index.html`, reduce it to a compact array, and render it. Mind the 4/min cap:
 `weather` is the only family still hit live (3 of 4); the `data-catalogue`
 and `opendosm` families are served by the daily collectors' static files, so a
 new series there should be added to `tools/collect_slow.py` instead of the
-browser loader — that keeps the visitor path static.
+browser loader - that keeps the visitor path static.
 
 ```js
 const x = await request("data-catalogue", "/data-catalogue", { id: "YOUR_ID" });
 ```
 
-**As a new section** — two registrations, and the rest is automatic:
+**As a new section** - two registrations, and the rest is automatic:
 
 ```js
 SECTIONS.push({ id:"myid", label:"My Data", icon:"🧭", family:"data-catalogue" })
@@ -464,7 +483,7 @@ Skip link, `:focus-visible` outlines throughout, `aria-label`s on icon-only
 controls, keyboard-operable sortable table headers (`Enter`/`Space`),
 `aria-current` on the active nav item, `aria-sort` on sorted columns, and
 real `<button>`s for selectable weather rows with an `aria-live` region
-announcing location changes. `prefers-reduced-motion` is honoured — it disables
+announcing location changes. `prefers-reduced-motion` is honoured - it disables
 chart animations, the KPI count-up and smooth scrolling. Every chart has a
 "View data table" alternative for users who can't use tooltips. Body text is
 `#e8ecf4` on `#0a0c10` (~16:1 contrast); the dimmest supporting text stays
@@ -475,5 +494,5 @@ above 4.5:1 in both themes.
 ## Licence & attribution
 
 Code: MIT. Data © Government of Malaysia, via the
-[Open API](https://developer.data.gov.my) — MET Malaysia, MOF, DOSM, KTMB and
+[Open API](https://developer.data.gov.my) - MET Malaysia, MOF, DOSM, KTMB and
 Prasarana. Reverse geocoding © OpenStreetMap contributors (ODbL).
