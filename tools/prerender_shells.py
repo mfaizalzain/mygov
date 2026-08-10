@@ -120,16 +120,21 @@ KPIS = [
     ("cpi", "Inflation y/y", "economy", "#economy"),
     ("ev", "New EVs", "ev", "#mobility"),
     ("warn", "Active warnings", "warn", "#weather"),
-    ("flood", "Stations at risk", "flood", "#flood-sub"),
+    # 5th field is the spoken destination; defaults to the href slug, which
+    # reads badly for anchors that are not section ids ("flood-sub section").
+    ("flood", "Stations at risk", "flood", "#flood-sub", "flood risk block"),
     ("live", "Vehicles live", "bus", "#live"),
 ]
+def kpi_aria(lab, href, rest):
+    where = rest[0] if rest else href.lstrip("#") + " section"
+    return f"{lab} - go to the {where}"
 kpi_cards = "\n".join(
-    f'''      <a class="kpi kpi-load" href="{href}" aria-label="{lab} - go to the {href.lstrip("#")} section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-{ico}"/></svg> {lab}</span>
+    f'''      <a class="kpi kpi-load" href="{k[3]}" aria-label="{kpi_aria(k[1], k[3], k[4:])}">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-{k[2]}"/></svg> {k[1]}</span>
           <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-{k}"><span class="skel skel-val"></span></div>
+        <div class="val" id="kpi-{k[0]}"><span class="skel skel-val"></span></div>
         <div class="sub"><span class="skel skel-sub"></span></div></a>'''
-    for k, lab, ico, href in KPIS)
+    for k in KPIS)
 
 # ── radar band: visible with a skeleton track (no late unhide) ──────────
 radar_new = '''  <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
@@ -173,7 +178,12 @@ HERO_LOC = ('<div class="hero-loc" id="hero-loc" role="status" aria-label="Your 
 
 # ── splice ──────────────────────────────────────────────────────────────
 # 0. navlist gets the pre-rendered entries
-src = src.replace('<ul id="navlist"></ul>', '<ul id="navlist">\n' + NAV_ITEMS + '  </ul>', 1)
+#    Matches a populated <ul> as well as an empty one. Targeting only the
+#    empty form made this a silent no-op on every run after the first, so a
+#    new section's nav entry had to be hand-inserted while the script still
+#    reported success.
+src = re.sub(r'<ul id="navlist">.*?</ul>',
+             '<ul id="navlist">\n' + NAV_ITEMS + '  </ul>', src, count=1, flags=re.S)
 
 # 0b. hero-loc gets the idle button (empty div -> CLS when JS fills it)
 src = re.sub(r'<div class="hero-loc" id="hero-loc" role="status" aria-label="Your selected location"></div>',
@@ -195,8 +205,10 @@ src = (src[:main_m.start()] + '<main id="main">\n' + shell_html + "\n    "
        + src[main_m.start(3):])
 
 # 2. kpis div gets the skeleton cards
-src = re.sub(r'(<div class="kpis" id="kpis"></div>)',
-             '<div class="kpis" id="kpis">\n' + kpi_cards + "\n    </div>", src, count=1)
+#    Same re-entrancy fix as the navlist above: match the populated form too,
+#    otherwise a new KPI's skeleton silently never lands.
+src = re.sub(r'<div class="kpis" id="kpis">.*?\n    </div>',
+             '<div class="kpis" id="kpis">\n' + kpi_cards + "\n    </div>", src, count=1, flags=re.S)
 
 # 3. radar band: replace the hidden section with the visible skeleton version
 src = re.sub(r'  <section class="radar-band" id="radar-band" hidden.*?</section>\n',

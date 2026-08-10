@@ -437,6 +437,7 @@ export default {
       "/health.json": { key: "health", type: "json" },
       "/radar.json":  { key: "radar",  type: "json" },
       "/prices.json": { key: "prices", type: "json" },
+      "/geo.json":    { key: "geo",    type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {

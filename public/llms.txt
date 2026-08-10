@@ -10,6 +10,7 @@
 
 - [Weather & Warnings](https://mygov.faizalmzain.com/#weather): Seven-day forecast, severe weather warnings, air temperature and rainfall for Malaysian districts.
 - [Fuel Prices](https://mygov.faizalmzain.com/#fuel): Weekly retail fuel prices (RON95, RON97, diesel) and price history.
+- [Places](https://mygov.faizalmzain.com/#places): Population and living standards by state, district and constituency - median income, poverty, inequality and unemployment per parliamentary and state seat.
 - [Economy](https://mygov.faizalmzain.com/#economy): Consumer Price Index, inflation, unemployment and real GDP.
 - [Public Transport](https://mygov.faizalmzain.com/#transport): KTMB live train positions, LRT/MRT network diagrams and station data.
 - [Flights](https://mygov.faizalmzain.com/#flights): Live flight boards for 13 Malaysian airports.
@@ -18,6 +19,7 @@
 ## Data files
 
 - [Trend radar JSON](https://mygov.faizalmzain.com/radar.json): Top issues with fact-check status, titles in Bahasa Melayu and English, and source links.
+- [Geography JSON](https://mygov.faizalmzain.com/geo.json): State, district and constituency population and per-seat socioeconomics.
 - [Site feed](https://mygov.faizalmzain.com/feed.xml): RSS feed of the latest data updates.
 
 All data is from the Malaysian Government Open Data portal (api.data.gov.my) unless otherwise noted on the page.

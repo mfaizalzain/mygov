@@ -86,6 +86,73 @@ def days_back(n):
     return (dt.date.today() - dt.timedelta(days=n)).isoformat()
 
 
+# ── public holidays ────────────────────────────────────────────────────
+# Transit ridership is driven by the holiday calendar more than by anything
+# else in this dataset: the Feb 2026 Komuter spike is Chinese New Year (17
+# Feb) and the level shift after it is Ramadan starting two days later. A
+# chart that shows the spike without naming it invites the reader to invent
+# an explanation, so the dates ride along in slow.json and the chart labels
+# them.
+#
+# Source: Google's public Malaysia holiday calendar. data.gov.my publishes no
+# holiday dataset (almanak_astronomi is moon phases and meteor showers), and
+# the purpose-built malaysia-holiday.dydxsoft.my API - which does carry the
+# per-state codes this feed lacks - currently returns data for 2026 only,
+# while the charts go back to 2021. Revisit if its back-catalogue fills in.
+ICS = ("https://calendar.google.com/calendar/ical/"
+       "en.malaysia%23holiday%40group.v.calendar.google.com/public/basic.ics")
+# Observances Google carries that are not Malaysian public holidays.
+NOT_HOLIDAYS = {"Valentine's Day", "Easter Sunday", "Christmas Eve",
+                "New Year's Eve", "Mother's Day", "Father's Day"}
+# The ones that visibly move intercity travel get emphasis in the UI.
+MAJOR = ("Chinese New Year", "Hari Raya", "Deepavali", "Ramadan",
+         "Wesak", "National Day", "Malaysia Day", "Christmas Day")
+HOL_FROM = 2021
+
+
+def holidays():
+    """[[YYYY-MM-DD, name, major], …] - national holidays only, plus the
+    Ramadan start (tagged regional upstream but it opens a month-long change
+    in travel patterns, so the chart needs it)."""
+    try:
+        req = urllib.request.Request(ICS, headers={"Accept": "text/calendar"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            text = r.read().decode("utf-8", "replace")
+    except Exception as e:
+        sys.stderr.write(f"  holidays: {e} - skipped\n")
+        return []
+
+    import re
+    out, seen = [], set()
+    for block in re.findall(r"BEGIN:VEVENT(.*?)END:VEVENT", text, re.S):
+        md = re.search(r"DTSTART;VALUE=DATE:(\d{4})(\d{2})(\d{2})", block)
+        ms = re.search(r"SUMMARY:(.*)", block)
+        if not (md and ms):
+            continue
+        y, m, day = md.groups()
+        if int(y) < HOL_FROM:
+            continue
+        name = ms.group(1).strip()
+        regional = "(regional holiday)" in name
+        name = name.replace("(regional holiday)", "").replace("(tentative)", "").strip()
+        # Regional entries are dropped except the Ramadan marker, which is the
+        # one period boundary that matters nationally for travel.
+        if regional and "Ramadan" not in name:
+            continue
+        if name in NOT_HOLIDAYS:
+            continue
+        date = f"{y}-{m}-{day}"
+        key = (date, name)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append([date, name, 1 if any(k in name for k in MAJOR) else 0])
+    out.sort()
+    sys.stderr.write(f"  holidays: {len(out)} entries "
+                     f"({sum(h[2] for h in out)} major) from {HOL_FROM}\n")
+    return out
+
+
 def main():
     today = dt.date.today().isoformat()
     try:
@@ -181,6 +248,9 @@ def main():
         ethnicity = [[r["ethnicity"], num(r.get("population"))] for r in both
                      if r.get("date") == latest and r.get("ethnicity") != "overall"]
 
+        # ── public holidays (Google calendar ICS; self-contained failure) ─
+        hol = holidays()
+
     except Exception as e:
         sys.stderr.write(f"fetch failed: {e}\n")
         raise SystemExit(1)
@@ -210,6 +280,7 @@ def main():
                     if r.get("series") == "abs" or r.get("series") is None],
         },
         "population": {"trend": trend, "latest": latest, "ethnicity": ethnicity},
+        "holidays": hol,
     }
     with open(OUT, "w") as f:
         json.dump(payload, f, separators=(",", ":"))

@@ -727,6 +727,7 @@ html[data-text="large"] table{font-size:14px}
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="M15.4 15.4 20 20"/></symbol>
   <symbol id="i-bus" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="13" rx="2.5"/><path d="M4 10.2h16"/><path d="M8 13.4h.01M16 13.4h.01"/><path d="M6.8 16.5V19M17.2 16.5V19"/></symbol>
   <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21.8a6.5 6.5 0 0 1-6.5-6.5c0-2.4 1.1-4.4 2.3-5.9.4-.5 1.2-.3 1.3.4.1 1 .5 1.8 1.1 2.3.4-2.6 1.7-5 3.7-7 .4-.4 1.1-.2 1.2.4.5 3.2 3.4 5.3 3.4 9.8a6.5 6.5 0 0 1-6.5 6.5Z"/><path d="M12 21.8a3 3 0 0 1-3-3c0-1.6 1.2-2.6 2.1-4.1.3-.6 1.1-.6 1.4 0 .9 1.5 2.5 2.5 2.5 4.1a3 3 0 0 1-3 3Z"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11Z"/><circle cx="12" cy="10" r="2.7"/></symbol>
 </defs></svg>
 
 <header>
@@ -760,6 +761,7 @@ html[data-text="large"] table{font-size:14px}
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Fuel</a></li>
     <li><a href="#prices" id="nav-prices"><span class="dot" id="dot-prices"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> Population</a></li>
+    <li><a href="#places" id="nav-places"><span class="dot" id="dot-places"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-map"/></svg> Places</a></li>
     <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
     <li><a href="#finance" id="nav-finance"><span class="dot" id="dot-finance"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg> Finance</a></li>
     <li><a href="#health" id="nav-health"><span class="dot" id="dot-health"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-health"/></svg> Health</a></li>
@@ -923,16 +925,32 @@ html[data-text="large"] table{font-size:14px}
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-population"/></svg></div>
         <div><h3 id="h-population">Population</h3>
-          <p>How many people live in Malaysia, every year since 1970, and how the population is made up today.</p>
+          <p>How many people live in Malaysia, every year since 1970, and how the population is made up today - national totals; the Places section breaks the same figures down by state, district and constituency.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown - the state-level dataset has not been updated since 2023.</p>
+            <p>DOSM's annual national population estimates, published to 1 January each year in thousands of people. State, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json - see the Places section.</p>
             <ul><li><code>GET /opendosm?id=population_malaysia&amp;filter=overall@age</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-population"></span>
       </div>
       <div id="body-population"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
+    </section>
+    <section id="places" aria-labelledby="h-places">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-map"/></svg></div>
+        <div><h3 id="h-places">Places</h3>
+          <p>Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.</p>
+            <ul><li><code>GET storage.dosm.gov.my/population/population_state.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_district.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_parlimen.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_dun.parquet</code></li><li><code>GET /data-catalogue?id=hh_income_parlimen</code></li><li><code>GET /data-catalogue?id=hh_income_dun</code></li><li><code>GET /data-catalogue?id=hh_poverty_parlimen</code></li><li><code>GET /data-catalogue?id=hh_poverty_dun</code></li><li><code>GET /data-catalogue?id=hh_inequality_parlimen</code></li><li><code>GET /data-catalogue?id=hh_inequality_dun</code></li><li><code>GET /data-catalogue?id=lfs_parlimen</code></li><li><code>GET /data-catalogue?id=lfs_dun</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-places"></span>
+      </div>
+      <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       
     </section>
     <section id="economy" aria-labelledby="h-economy">
@@ -1050,13 +1068,14 @@ html[data-text="large"] table{font-size:14px}
 <li><strong>Finance</strong> - USD/MYR 4.09 (business-day rate, 2026-08-10).</li>
 <li><strong>Economy</strong> - CPI 137.1 points (2026-06-01).</li>
 <li><strong>Health</strong> - blood donations 1,094 units (2026-08-08).</li>
-<li><strong>Trending now</strong> - Isu Kenderaan Menggunakan Logo Jabatan Imigresen Dipandu Warga Asing · Pertikaian Status Keahlian Bersatu dan Keretakan Perikatan Nasional · Penipuan Dakwaan Bantuan One-Off SARA RM100 dan Penyamar Pegawai STR.</li>
+<li><strong>Trending now</strong> - Pertikaian Status Keahlian Bersatu dalam Perikatan Nasional Antara Samsuri dan Hadi Awang · Isu Kenderaan Dipandu Warga Asing Menggunakan Logo Jabatan Imigresen Malaysia (JIM) · Kenyataan Palsu Dikaitkan dengan Timbalan Ketua Polis Negara Tersebar di Facebook.</li>
 <!-- /SEO:SNAP -->
             <h3>Sections</h3>
             <ul>
               <li><strong>Weather</strong> - seven-day forecast for every state, district and town in Malaysia, plus severe-weather warnings and recent earthquakes.</li>
               <li><strong>Fuel</strong> - weekly RON95/RON97/diesel pump prices and household income statistics.</li>
-              <li><strong>Population</strong> - population by state, sex and ethnicity.</li>
+              <li><strong>Population</strong> - national population totals by year and composition.</li>
+              <li><strong>Places</strong> - population and living standards by state, district and constituency.</li>
               <li><strong>Economy</strong> - CPI inflation, unemployment, GDP and EPF contributions.</li>
               <li><strong>Finance</strong> - exchange rates, FPX payments and interest rates.</li>
               <li><strong>Health</strong> - blood donations, organ pledges and PeKa B40 (KKM).</li>
@@ -1069,6 +1088,7 @@ html[data-text="large"] table{font-size:14px}
               <li><a href="/radar.json">radar.json</a> - today's trending topics and fact-checked claims.</li>
               <li><a href="/health.json">health.json</a> - KKM health statistics.</li>
               <li><a href="/slow.json">slow.json</a> - fuel, finance, mobility, economy and population series.</li>
+              <li><a href="/geo.json">geo.json</a> - state, district and constituency population and socioeconomics.</li>
             </ul>
             <p>Data sources: <a href="https://api.data.gov.my/">Malaysia Government Open API</a>,
                <a href="https://www.met.gov.my/">Malaysian Meteorological Department</a>,
@@ -1192,8 +1212,8 @@ const I18N = {
   "Data source & methodology":"Sumber data & kaedah",
   "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
   "Population":"Penduduk", "Population growth":"Pertumbuhan penduduk",
-  "How many people live in Malaysia, every year since 1970, and how the population is made up today.":"Berapa ramai penduduk Malaysia, setiap tahun sejak 1970, dan komposisi penduduk hari ini.",
-  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown - the state-level dataset has not been updated since 2023.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Hanya siri kebangsaan dipaparkan - set data peringkat negeri tidak dikemas kini sejak 2023.",
+  "How many people live in Malaysia, every year since 1970, and how the population is made up today - national totals; the Places section breaks the same figures down by state, district and constituency.":"Berapa ramai penduduk Malaysia, setiap tahun sejak 1970, dan komposisi penduduk hari ini - jumlah kebangsaan; bahagian Tempat memecahkan angka yang sama mengikut negeri, daerah dan kawasan pilihan raya.",
+  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. State, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json - see the Places section.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Anggaran peringkat negeri, daerah dan kawasan pilihan raya hanya wujud sebagai Parquet di hos storan DOSM dan tiba melalui geo.json - lihat bahagian Tempat.",
   "Composition":"Komposisi", "Largest group":"Kumpulan terbesar",
   "Year-on-year":"Tahun ke tahun", "Years on record":"Tahun direkod",
   "millions · annual":"juta · tahunan", "people":"orang", "vs ":"berbanding ",
@@ -1388,6 +1408,37 @@ const I18N = {
   "Inflation by state":"Inflasi mengikut negeri",
   "year-on-year · overall index":"tahun ke tahun · indeks keseluruhan",
   "EPF dividend":"Dividen KWSP", "conventional":"konvensional", "shariah":"patuh syariah",
+
+  /* ── places view ── */
+  "Places":"Tempat",
+  "Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.":"Penduduk dan taraf hidup bagi setiap negeri, daerah dan kawasan pilihan raya - anggaran subnasional DOSM, sehingga pendapatan median, kemiskinan, ketaksamaan dan pengangguran bagi setiap kerusi Parlimen dan DUN.",
+  "State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.":"Anggaran penduduk peringkat negeri, daerah dan kawasan pilihan raya hanya wujud sebagai Parquet di hos storan DOSM - OpenAPI berhenti di peringkat kebangsaan - maka GitHub Action mingguan membaca jadual Parquet ke dalam geo.json. Jadual kawasan pilihan raya tidak mengandungi kumpulan umur, jadi bilangan warganegara ialah proksi untuk pengundi, bukan populasi umur mengundi. Angka pendapatan, kemiskinan, ketaksamaan dan tenaga buruh bagi setiap kerusi datang daripada Survei Pendapatan Isi Rumah dan Survei Tenaga Buruh melalui OpenAPI.",
+  "estimates":"anggaran",
+  "Constituencies":"Kawasan pilihan raya",
+  "parliament":"Parlimen",
+  "districts":"daerah",
+  "population since 1970":"penduduk sejak 1970",
+  "population by ethnic group":"penduduk mengikut kumpulan etnik",
+  "population by age band":"penduduk mengikut kumpulan umur",
+  "Parliament":"Parlimen",
+  "State seats":"Kerusi negeri",
+  "citizens = electorate proxy":"warganegara = proksi pengundi",
+  "Seat level":"Peringkat kerusi",
+  "Seat":"Kerusi",
+  "Citizens":"Warganegara",
+  "Median income":"Pendapatan median",
+  "Poverty":"Kemiskinan",
+  "Gini":"Gini",
+  "Participation":"Penyertaan",
+  "District":"Daerah",
+  "Search districts":"Cari daerah",
+  "Search districts…":"Cari daerah…",
+  "Search seats":"Cari kerusi",
+  "Search seats…":"Cari kerusi…",
+  "No districts match.":"Tiada daerah sepadan.",
+  "No seats match.":"Tiada kerusi sepadan.",
+  "The constituency tables carry no age bands, so citizen count is a proxy for the electorate - it still includes everyone under 18. Income, poverty and inequality come from the Household Income Survey; unemployment and participation from the Labour Force Survey.":"Jadual kawasan pilihan raya tidak mengandungi kumpulan umur, jadi bilangan warganegara ialah proksi untuk pengundi - ia masih termasuk semua yang berumur bawah 18 tahun. Pendapatan, kemiskinan dan ketaksamaan daripada Survei Pendapatan Isi Rumah; pengangguran dan penyertaan daripada Survei Tenaga Buruh.",
+  "public holidays marked":"cuti umum ditanda",
 } };
 const T = s => (I18N[LANG] && I18N[LANG][s]) || s;
 /* Forecasts arrive only in Bahasa Melayu; map the common phrases to English
@@ -1480,6 +1531,7 @@ const SECTIONS = [
   { id:"fuel",      label:"Fuel",       icon:"fuel",       family:"data-catalogue" },
   { id:"prices",    label:"Groceries",  icon:"basket",     family:"data-catalogue" },
   { id:"population",label:"Population", icon:"population", family:"opendosm" },
+  { id:"places",    label:"Places",     icon:"map",        family:"dosm" },
   { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
   { id:"health",    label:"Health",     icon:"health",     family:"data-catalogue" },
@@ -1490,7 +1542,7 @@ const SECTIONS = [
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["prices","economy","finance","mobility","population","health",
+const LAZY = new Set(["prices","economy","finance","mobility","population","places","health",
                      "transport","live"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
@@ -2004,7 +2056,8 @@ const KTMB_SERVICES = [
 
 async function loadMobility(){
   const slow = await readSlow();
-  if (slow && slow.mobility) return slow.mobility;
+  if (slow && slow.mobility)
+    return Object.assign({}, slow.mobility, { holidays: slow.holidays || [] });
   /* One server-side filter is allowed; "all_types" collapses the per-body-type
      rows (car/bus/lorry/…) that this section does not chart. */
   const reg = await request("data-catalogue", "/data-catalogue",
@@ -2025,7 +2078,7 @@ async function loadMobility(){
   for (const [fuel] of FUELS) byFuel[fuel] = new Array(months.length).fill(null);
   for (const [fuel, i, v] of pairs) if (byFuel[fuel]) byFuel[fuel][i] = v;
   total.length = months.length;
-  return { months, byFuel, total, rid: denseDaily(rid, "service", "ridership") };
+  return { months, byFuel, total, rid: denseDaily(rid, "service", "ridership"), holidays: [] };
 }
 
 async function loadSociety(){
@@ -4016,7 +4069,7 @@ function renderMobility(d){
     </div>
     <div class="card">
       <div class="card-h"><h4>${T("KTMB ridership")}</h4>
-        <span class="sub">${T("passengers per day")} · ${T("7-day average")}</span>
+        <span class="sub">${T("passengers per day")} · ${T("7-day average")}${(d.holidays || []).length ? " · " + T("public holidays marked") : ""}</span>
         <span class="right">${seg("ridrange", Object.keys(H_RANGES), ridRange)}</span></div>
       <div class="card-b" style="padding-bottom:8px">
         <div class="chips" id="rid-chips">${chips("svc", KTMB_SERVICES, ridSvc)}</div></div>
@@ -4100,6 +4153,43 @@ function paintReg(d){
     sel.map((_, i) => i + 1));
 }
 
+/* Public holidays ride along in slow.json (tools/collect_slow.py) so the
+   daily ridership plot can label the days travel patterns break around - the
+   Feb 2026 Komuter spike is Chinese New Year, the level shift after it is
+   Ramadan. Drawn as a Chart.js plugin so it re-renders with the chart and
+   costs nothing when no holiday falls in the visible range. */
+function holidayMarkers(hit, labIdx){
+  const majors = hit.filter(h => h.major);
+  const step = Math.max(1, Math.ceil(majors.length / 14));   // cap labels at ~14
+  return {
+    id:"holidayMarkers",
+    afterDatasetsDraw(chart){
+      const { ctx, chartArea, scales } = chart;
+      const x = scales.x;
+      ctx.save();
+      ctx.lineWidth = 1;
+      ctx.font = "600 9.5px ui-monospace, SFMono-Regular, Menlo, monospace";
+      for (const h of hit){
+        const px = x.getPixelForValue(labIdx.get(h.lab));
+        ctx.strokeStyle = h.major ? "rgba(251,191,36,.4)" : "rgba(148,163,184,.18)";
+        ctx.setLineDash([2, 3]);
+        ctx.beginPath(); ctx.moveTo(px, chartArea.top); ctx.lineTo(px, chartArea.bottom); ctx.stroke();
+        ctx.setLineDash([]);
+        if (h.major && majors.indexOf(h) % step === 0){
+          ctx.fillStyle = "rgba(251,191,36,.9)";
+          ctx.save();
+          ctx.translate(px + 4, chartArea.top + 6);
+          ctx.rotate(Math.PI / 2);
+          ctx.textBaseline = "top";
+          ctx.fillText(h.name, 0, 0);
+          ctx.restore();
+        }
+      }
+      ctx.restore();
+    },
+  };
+}
+
 function paintRid(d){
   const R = d.rid;
   const from = hFrom(R.n, ridRange);
@@ -4122,8 +4212,32 @@ function paintRid(d){
       borderColor:color, borderWidth:2.2, pointRadius:0, tension:.3, spanGaps:true });
     cols.push(rounded);
   }
+  const opts = hLineOpts(labels.length);
+  const plugins = [];
+  const hol = (d.holidays || []).filter(h => h && h[0]);
+  if (hol.length){
+    const labIdx = new Map(labels.map((l, i) => [l, i]));
+    const hit = hol.map(h => ({
+        lab: md(h[0]) + " '" + h[0].slice(2, 4),
+        name: String(h[1]), major: h[2] === 1 }))
+      .filter(h => labIdx.has(h.lab));
+    if (hit.length){
+      /* Hovering a holiday appends its name to the tooltip title. */
+      const names = new Map();
+      for (const h of hit)
+        names.set(h.lab, (names.get(h.lab) ? names.get(h.lab) + " · " : "") + h.name);
+      const tt = opts.plugins.tooltip;
+      opts.plugins.tooltip = Object.assign({}, tt, {
+        callbacks: Object.assign({}, tt.callbacks, {
+          title: items => {
+            const lab = items[0] && items[0].label;
+            return names.get(lab) ? lab + " · " + names.get(lab) : lab;
+          } }) });
+      plugins.push(holidayMarkers(hit, labIdx));
+    }
+  }
   chart("rid-chart", { type:"line", data:{ labels, datasets:sets },
-    options: hLineOpts(labels.length) });
+    options: opts, plugins });
   const dt = $("#rid-dt");
   if (dt) dt.innerHTML = hTable([T("Date"), ...sel.map(s => s[1])], labels, cols);
 }
@@ -4287,6 +4401,252 @@ function paintEthnicity(d){
   if (dt) dt.innerHTML = dataTableHTML([T("Group"), T("Population"), T("Share")],
     rows.map(r => [ethnicLabel(r[0]), nf(r[1] * 1000),
       total ? nf(r[1] / total * 100, 1) + "%" : "-"]), [1, 2]);
+}
+
+/* ════════════════════════════ places view (DOSM sub-national) ════════════════════════════
+   geo.json is the weekly collector's output (tools/collect_geo.py): state
+   trends and composition, districts, and parliament/DUN seats with per-seat
+   socioeconomics. Values arrive in thousands of people, as published. */
+let placesState = "";
+let placesLevel = "parlimen";     // parlimen | dun
+let placesDQ = "", placesSQ = ""; // district / seat search terms
+
+async function loadPlaces(){
+  const r = await fetch("geo.json", { cache:"no-store" });
+  if (!r.ok) throw new Error("geo.json unavailable");
+  const g = await r.json();
+  /* The freshest annual release drives the "data as of" pill; the weekly
+     collector keeps this file current. */
+  return Object.assign({ asOf: String(g.state.latest) + "-01-01" }, g);
+}
+
+function renderPlaces(g){
+  const st = g.state;
+  if (!placesState || !st.trend[placesState]) placesState = Object.keys(st.trend).sort()[0];
+  const trend = st.trend[placesState] || [];
+  const yr = st.latest;
+  const cur = trend[trend.length - 1];
+  const prev = trend.length > 1 ? trend[trend.length - 2] : null;
+  const yoy = (cur != null && prev) ? (cur / prev - 1) * 100 : null;
+  const eth = st.eth[placesState] || {};
+  const ethTot = Object.values(eth).reduce((a, v) => a + (v || 0), 0);
+  const top = Object.entries(eth).sort((a, b) => (b[1] || 0) - (a[1] || 0))[0];
+  const dists = g.district.list.filter(x => x.s === placesState);
+  const parl = g.parlimen.list.filter(x => x.s === placesState);
+  const duns = g.dun.list.filter(x => x.s === placesState);
+
+  const chips = Object.keys(st.trend).sort().map(s =>
+    `<button class="chip" data-place="${esc(s)}" aria-pressed="${s === placesState}">${esc(s)}</button>`).join("");
+
+  $("#body-places").innerHTML = `
+    <div class="chips mb" id="places-chips">${chips}</div>
+    <div class="grid g4 mb">
+      <div class="kpi"><div class="lab">${T("Population")}</div>
+        <div class="val" data-count="${cur != null ? cur * 1000 : 0}" data-dec="0">0</div>
+        <div class="sub">${yr} · ${T("estimates")}</div></div>
+      <div class="kpi"><div class="lab">${T("Year-on-year")}</div>
+        <div class="val" style="font-size:22px">${yoy == null ? "-" :
+          `<span class="${yoy > 0 ? "down" : "up"}">${yoy > 0 ? "▲" : "▼"} ${nf(Math.abs(yoy), 2)}%</span>`}</div>
+        <div class="sub">${T("vs ")}${yr - 1}</div></div>
+      <div class="kpi"><div class="lab">${T("Largest group")}</div>
+        <div class="val" style="font-size:20px">${top ? esc(ethnicLabel(top[0])) : "-"}</div>
+        <div class="sub">${top && ethTot ? nf(top[1] / ethTot * 100, 1) + "%" : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("Constituencies")}</div>
+        <div class="val" style="font-size:20px">${nf(parl.length + duns.length)}</div>
+        <div class="sub">${nf(parl.length)} ${T("parliament")} · ${nf(dists.length)} ${T("districts")}</div></div>
+    </div>
+    <div class="grid g2 mb">
+      <div class="card">
+        <div class="card-h"><h4>${T("Population growth")}</h4>
+          <span class="sub">${esc(placesState)} · ${T("millions · annual")}</span></div>
+        <div class="card-b"><div class="chart"><canvas id="places-trend" role="img"
+          aria-label="${esc(placesState)} ${T("population since 1970")}"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="places-trend-dt"></div></details></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>${T("Composition")}</h4>
+          <span class="sub">${yr}</span></div>
+        <div class="card-b"><div class="chart" style="height:170px"><canvas id="places-eth" role="img"
+          aria-label="${esc(placesState)} ${T("population by ethnic group")}"></canvas></div>
+          <div class="chart" style="height:132px;margin-top:var(--s3)"><canvas id="places-age" role="img"
+            aria-label="${esc(placesState)} ${T("population by age band")}"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="places-eth-dt"></div></details></div>
+      </div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Districts")}</h4>
+        <span class="sub">${nf(dists.length)} ${T("of")} ${nf(g.district.known)} ${T("districts")} · ${g.district.year}</span>
+        <span class="right"><label class="sr" for="places-dq">${T("Search districts")}</label>
+          <input class="inp" id="places-dq" placeholder="${T("Search districts…")}" value="${esc(placesDQ)}" autocomplete="off" style="max-width:190px"></span></div>
+      <div class="card-b"><div class="tw"><table id="places-dist-table">
+        <thead><tr>
+          <th class="sortable" data-key="n">${T("District")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="p" data-num="1" data-desc="1">${T("Population")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="g" data-num="1" data-desc="1">${T("YoY")} <span class="arrow">↕</span></th>
+        </tr></thead><tbody></tbody></table></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>${T("Constituencies")}</h4>
+        <span class="sub">${placesLevel === "parlimen" ? T("Parliament") : T("State seats")} · ${g[placesLevel].year} · ${T("citizens = electorate proxy")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="${T("Seat level")}">
+            ${[["parlimen", T("Parliament")], ["dun", T("State seats")]].map(([k, lab]) =>
+              `<button data-places-lvl="${k}" aria-pressed="${k === placesLevel}">${esc(lab)}</button>`).join("")}
+          </span>
+          <label class="sr" for="places-sq">${T("Search seats")}</label>
+          <input class="inp" id="places-sq" placeholder="${T("Search seats…")}" value="${esc(placesSQ)}" autocomplete="off" style="max-width:170px;margin-left:var(--s2)"></span></div>
+      <div class="card-b"><div class="tw"><table id="places-seat-table">
+        <thead><tr>
+          <th class="sortable" data-key="c"># <span class="arrow">↕</span></th>
+          <th class="sortable" data-key="n">${T("Seat")} <span class="arrow">↕</span></th>
+          <th class="sortable" data-key="s">${T("State")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="p" data-num="1" data-desc="1">${T("Population")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="cz" data-num="1" data-desc="1">${T("Citizens")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="inc" data-num="1" data-desc="1">${T("Median income")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="pov" data-num="1" data-desc="1">${T("Poverty")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="gini" data-num="1" data-desc="1">${T("Gini")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="u" data-num="1" data-desc="1">${T("Unemployment")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="pr" data-num="1" data-desc="1">${T("Participation")} <span class="arrow">↕</span></th>
+        </tr></thead><tbody></tbody></table></div>
+        <p class="note">${T("The constituency tables carry no age bands, so citizen count is a proxy for the electorate - it still includes everyone under 18. Income, poverty and inequality come from the Household Income Survey; unemployment and participation from the Labour Force Survey.")}</p></div>
+    </div>`;
+
+  $("#places-chips").querySelectorAll("[data-place]").forEach(b => {
+    b.onclick = () => { placesState = b.dataset.place; renderPlaces(g); };
+  });
+  const dq = $("#places-dq");
+  if (dq) dq.oninput = () => { placesDQ = dq.value; paintPlacesDistricts(g); };
+  const sq = $("#places-sq");
+  if (sq) sq.oninput = () => { placesSQ = sq.value; paintPlacesSeats(g); };
+  document.querySelectorAll("[data-places-lvl]").forEach(b => {
+    b.onclick = () => { placesLevel = b.dataset.placesLvl; renderPlaces(g); };
+  });
+  sortable($("#places-dist-table"), () => placesDistRows(g), rows => paintPlacesDistricts(g, rows));
+  sortable($("#places-seat-table"), () => placesSeatRows(g), rows => paintPlacesSeats(g, rows));
+  paintPlacesDistricts(g); paintPlacesSeats(g);
+  paintPlacesCharts(g);
+  animateCounters($("#body-places"));
+}
+
+function placesDistRows(g){
+  const q = placesDQ.trim().toLowerCase();
+  return g.district.list
+    .filter(x => x.s === placesState && (!q || x.n.toLowerCase().includes(q)))
+    .map(x => ({ n: x.n, p: x.p, g: x.g }));
+}
+
+function paintPlacesDistricts(g, rows){
+  const tb = $("#places-dist-table tbody"); if (!tb) return;
+  rows = rows || placesDistRows(g);
+  tb.innerHTML = rows.map(r => `<tr>
+      <td>${esc(r.n)}</td>
+      <td class="num">${r.p == null ? "-" : nf(r.p * 1000)}</td>
+      <td class="num">${r.g == null ? "-" :
+        `<span class="${r.g > 0 ? "down" : "up"}">${r.g > 0 ? "▲" : "▼"} ${nf(Math.abs(r.g), 2)}%</span>`}</td>
+    </tr>`).join("")
+    || `<tr><td colspan="3" class="state">${T("No districts match.")}</td></tr>`;
+}
+
+function placesSeatRows(g){
+  const q = placesSQ.trim().toLowerCase();
+  const socio = g.socio[placesLevel] || {};
+  return g[placesLevel].list
+    .filter(x => x.s === placesState &&
+      (!q || x.n.toLowerCase().includes(q) || x.c.toLowerCase().includes(q)))
+    .map(x => Object.assign({ c:x.c, n:x.n, s:x.s, p:x.p, cz:x.cz }, socio[x.k] || {}));
+}
+
+function paintPlacesSeats(g, rows){
+  const tb = $("#places-seat-table tbody"); if (!tb) return;
+  rows = rows || placesSeatRows(g);
+  tb.innerHTML = rows.map(r => `<tr>
+      <td class="num">${esc(r.c)}</td>
+      <td>${esc(r.n)}</td>
+      <td>${esc(r.s)}</td>
+      <td class="num">${r.p == null ? "-" : nf(r.p * 1000)}</td>
+      <td class="num">${r.cz == null ? "-" : nf(r.cz * 1000)}</td>
+      <td class="num">${r.inc == null ? "-" : "RM " + nf(r.inc, 0)}</td>
+      <td class="num">${r.pov == null ? "-" : nf(r.pov, 1) + "%"}</td>
+      <td class="num">${r.gini == null ? "-" : nf(r.gini, 3)}</td>
+      <td class="num">${r.u == null ? "-" : nf(r.u, 1) + "%"}</td>
+      <td class="num">${r.pr == null ? "-" : nf(r.pr, 1) + "%"}</td>
+    </tr>`).join("")
+    || `<tr><td colspan="10" class="state">${T("No seats match.")}</td></tr>`;
+}
+
+function paintPlacesCharts(g){
+  const st = g.state;
+  const trend = st.trend[placesState] || [];
+  chart("places-trend", {
+    type:"line",
+    data:{ labels: st.years.map(String),
+      datasets:[{ label:T("Population"), data: trend.map(v => v == null ? null : v / 1000),
+        borderColor:"#2dd4bf", borderWidth:2, pointRadius:0, tension:.25, fill:true,
+        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf") }] },
+    options: baseOpts({ plugins:{ legend:{ display:false },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          callbacks:{ label: it => ` ${nf(it.parsed.y * 1e6)} ${T("people")}` } } },
+      scales:{
+        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:10, maxRotation:0 } },
+        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
+                    callback:v => nf(v, 0) + "M" } } } }),
+  });
+  const dtt = $("#places-trend-dt");
+  if (dtt) dtt.innerHTML = dataTableHTML([T("Year"), T("Population")],
+    st.years.slice().reverse().map((y, i) => [String(y),
+      trend[st.years.length - 1 - i] == null ? null : nf(trend[st.years.length - 1 - i] * 1000)]), [1]);
+
+  const eth = st.eth[placesState] || {};
+  const erows = Object.entries(eth).filter(([k]) => ETHNIC.some(e => e[0] === k));
+  const etot = erows.reduce((a, r) => a + r[1], 0);
+  chart("places-eth", {
+    type:"doughnut",
+    data:{ labels: erows.map(r => ethnicLabel(r[0])),
+      datasets:[{ data: erows.map(r => r[1]),
+        backgroundColor: erows.map(r => (ETHNIC.find(e => e[0] === r[0]) || [,, "#60a5fa"])[2]),
+        borderColor: cssVar("--surface"), borderWidth: 2, hoverOffset: 6 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:"58%",
+      animation: reduceMotion() ? false : undefined,
+      plugins:{
+        legend:{ position:"right", labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8,
+          usePointStyle:true, pointStyle:"circle", font:{ size:11 }, padding:12 } },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
+          callbacks:{ label: it => ` ${nf(it.parsed * 1000)} · ` +
+            (etot ? nf(it.parsed / etot * 100, 1) + "%" : "-") } },
+      },
+    },
+  });
+  const dte = $("#places-eth-dt");
+  if (dte) dte.innerHTML = dataTableHTML([T("Group"), T("Population"), T("Share")],
+    erows.map(r => [ethnicLabel(r[0]), nf(r[1] * 1000),
+      etot ? nf(r[1] / etot * 100, 1) + "%" : "-"]), [1, 2]);
+
+  const age = st.age[placesState] || {};
+  const ab = Object.entries(age);
+  chart("places-age", {
+    type:"bar",
+    data:{ labels: ab.map(([k]) => k),
+      datasets:[{ label:T("Population"), data: ab.map(([,v]) => v),
+        backgroundColor:"#22d3eecc", borderRadius:3 }] },
+    options: baseOpts({ indexAxis:"y",
+      plugins:{ legend:{ display:false },
+        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
+          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
+          callbacks:{ label: it => ` ${nf(it.parsed.x * 1000)} ${T("people")}` } } },
+      scales:{
+        x:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => nf(v) } },
+        y:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, autoSkipPadding:6 } } } }),
+  });
 }
 
 /* ════════════════════════════ health view ════════════════════════════ */
@@ -5556,7 +5916,11 @@ function renderKpis(){
     { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
     { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
     { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#weather" },
-    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#flood-sub" },
+    /* `where` is the spoken destination; without it the slug is used, which
+       reads badly for anchors that are not section ids. Keep in sync with
+       KPIS in tools/prerender_shells.py. */
+    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#flood-sub",
+      where:"flood risk block" },
     { k:"live",  lab:"Vehicles live",   ico:"bus",      href:"#live" },
   ];
   /* Pending cards get the same shimmer the sections use. Six cards each
@@ -5567,7 +5931,7 @@ function renderKpis(){
   host.innerHTML = cards.map(c => {
     const s = kpiState[c.k];
     return `<a class="kpi${s ? " fade" : " kpi-load"}" href="${c.href}"
-      aria-label="${esc(T(c.lab))} - go to the ${esc(c.href.slice(1))} section">
+      aria-label="${esc(T(c.lab))} - go to the ${esc(c.where || c.href.slice(1) + " section")}">
       <div class="kpi-t"><span class="lab">${ico(c.ico)} ${esc(T(c.lab))}</span>
         <span class="go" aria-hidden="true">↗</span></div>
       ${s ? `<div class="val" id="kpi-${c.k}"></div>
@@ -5618,9 +5982,20 @@ const META = {
     eps:["/data-catalogue?id=registrations_type_fuel&filter=all_types@type",
          "/data-catalogue?id=ridership_ktmb_daily"] },
   population:{ title:"Population",
-    desc:"How many people live in Malaysia, every year since 1970, and how the population is made up today.",
-    how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown - the state-level dataset has not been updated since 2023.",
+    desc:"How many people live in Malaysia, every year since 1970, and how the population is made up today - national totals; the Places section breaks the same figures down by state, district and constituency.",
+    how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. State, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json - see the Places section.",
     eps:["/opendosm?id=population_malaysia&filter=overall@age"] },
+  places:{ title:"Places",
+    desc:"Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.",
+    how:"State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.",
+    eps:["storage.dosm.gov.my/population/population_state.parquet",
+         "storage.dosm.gov.my/population/population_district.parquet",
+         "storage.dosm.gov.my/population/population_parlimen.parquet",
+         "storage.dosm.gov.my/population/population_dun.parquet",
+         "/data-catalogue?id=hh_income_parlimen","/data-catalogue?id=hh_income_dun",
+         "/data-catalogue?id=hh_poverty_parlimen","/data-catalogue?id=hh_poverty_dun",
+         "/data-catalogue?id=hh_inequality_parlimen","/data-catalogue?id=hh_inequality_dun",
+         "/data-catalogue?id=lfs_parlimen","/data-catalogue?id=lfs_dun"] },
   health:{ title:"Health & Donations",
     desc:"Blood donations by blood type, organ pledges and PeKa B40 health screenings - published daily by the Ministry of Health.",
     how:"The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.",
@@ -5705,6 +6080,7 @@ const LOADERS = {
     } },
   population:{ load:loadPopulation, render:renderPopulation,
     asOf:d => d.latest },
+  places:   { load:loadPlaces,    render:renderPlaces,    asOf:d => d.asOf },
   health:   { load:loadHealth,    render:renderHealth,    asOf:d => d.updated },
   transport:{ load:loadTransport, render:renderTransport },
   live:     { load:loadLive,      render:renderLive,      after:d => {
@@ -5721,12 +6097,26 @@ const loading = new Set();   // sections mid-fetch (guard against races)
 const dataMap = {};          // last data per section, for theme/lang re-renders
 const secMode = {};          // last freshness state per section ("updated"…)
 const dataDate = {};         // latest data date per section, for the "data as of" pill
+/* How old a section's newest data point may get before the pill warns.
+ *
+ * A flat 183-day rule measured calendar age without knowing how often the
+ * source actually publishes, so it libelled annual series: population is
+ * stamped 01 January and is the current release all year, yet it started
+ * showing "may be delayed" every July. Each figure below is roughly twice
+ * the source's publication interval, so a genuinely missed release still
+ * trips the warning while a normal cadence never does. Sections with no
+ * asOf (transport, live) never reach this - `dd` is undefined for them. */
+const MAX_AGE_DAYS = {
+  flood:1, live:1, weather:3, health:14, fuel:21, transport:30,
+  prices:45, finance:60, mobility:75, economy:120, population:430, places:430,
+};
 function setSecTime(id, mode){
   const n = $("#time-" + id); if (!n) return;
   const at = stamps[id] ? hhmm(stamps[id]) : "";
   const dd = dataDate[id];
-  /* 183 days ≈ 6 months - the freshness policy's "may be delayed" threshold. */
-  const stale = dd ? (Date.now() - new Date(dd).getTime() > 183 * 86400000) : false;
+  const stale = dd
+    ? (Date.now() - new Date(dd).getTime() > (MAX_AGE_DAYS[id] ?? 183) * 86400000)
+    : false;
   let text = "", cls = "";
   if (mode === "loading"){ text = "loading…"; cls = " loading"; }
   else if (mode === "updated" || mode === "cached"){

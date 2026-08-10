@@ -1,0 +1,71 @@
+name: Update Geography (population + constituencies)
+
+on:
+  # The underlying tables are annual, so this only needs to catch a new
+  # release: weekly, Monday 14:00 UTC (10 PM MYT).
+  schedule:
+    - cron: '0 14 * * 1'
+  workflow_dispatch:
+
+jobs:
+  collect-geo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # population_* below national level is Parquet-only; no stdlib reader.
+      - name: Install dependencies
+        run: pip install --disable-pip-version-check 'pandas~=2.2' 'pyarrow~=21.0'
+
+      - name: Syntax check collector
+        run: |
+          python3 -m py_compile tools/collect_geo.py
+          echo "syntax OK"
+
+      - name: Run collector (population + constituency socioeconomics)
+        run: python3 tools/collect_geo.py
+
+      - name: Validate output
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open('public/geo.json'))
+          errs = []
+          if len(d['state']['trend']) != 16:
+              errs.append(f"{len(d['state']['trend'])} states, expected 16")
+          if len(d['parlimen']['list']) != 222:
+              errs.append(f"{len(d['parlimen']['list'])} parliament seats, expected 222")
+          if len(d['dun']['list']) != 600:
+              errs.append(f"{len(d['dun']['list'])} DUN seats, expected 600")
+          if len(d['district']['list']) < 150:
+              errs.append(f"only {len(d['district']['list'])} districts")
+          # The DUN join key was once the bare code, which collides across
+          # states and silently dropped 86% of seats. Guard that it stays fixed.
+          for lvl in ('parlimen', 'dun'):
+              seats = {x['k'] for x in d[lvl]['list']}
+              hit = len(seats & set(d['socio'][lvl]))
+              if hit < 0.95 * len(seats):
+                  errs.append(f"{lvl}: only {hit}/{len(seats)} seats joined to socio")
+          if errs:
+              sys.exit('geo: validation failed -> ' + '; '.join(errs))
+          print(f"ok: 16 states {d['state']['years'][0]}-{d['state']['latest']}, "
+                f"{len(d['district']['list'])}/{d['district']['known']} districts "
+                f"{d['district']['year']}, {len(d['parlimen']['list'])} parliament, "
+                f"{len(d['dun']['list'])} DUN")
+          PY
+
+      # Only the `geo` key - an unfiltered push would clobber fresher KV
+      # values written by the other collectors.
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push geo

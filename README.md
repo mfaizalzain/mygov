@@ -84,8 +84,9 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Collector | Workflow | Writes | Contents |
 | --- | --- | --- | --- |
 | KKM health | `collect_health.yml`, daily 00:30 UTC | `public/health.json` | blood donations (3y), organ pledges, PeKa B40 |
-| Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance, mobility, economy, population |
+| Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance, mobility, economy, population, public holidays |
 | PriceCatcher | `collect_prices.yml`, daily 13:30 UTC | `public/prices.json` | grocery basket index, per-item prices, 166 districts |
+| Places | `collect_geo.yml`, weekly Mon 14:00 UTC | `public/geo.json` | state/district population + composition, 222 parliament + 600 DUN seats with income, poverty, gini, unemployment per seat |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that
@@ -104,7 +105,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
   data.gov.my API with **4 attempts and 5s/10s/15s backoff** (a transient
   failure in unattended CI must not cost a whole day of freshness), then
   write the data in the exact compact shapes the browser loaders build
-  (`{t0, n, keys, series}` etc. - 596 KB for slow.json vs ~5 MB of raw rows).
+  (`{t0, n, keys, series}` etc. - ~630 KB for slow.json vs ~5 MB of raw rows).
 - The loaders (`loadHealth`, `loadFuel`, `loadFinance`, `loadMobility`,
   `loadEconomy`, `loadPopulation`) **try the static file first** via
   `readSlow()`, and only fall back to the live API when the file is missing
@@ -170,6 +171,54 @@ payload flags it as `partial` so the UI can mark that point.
 
 ---
 
+## Places: sub-national population + constituency socioeconomics
+
+The Population section only ever showed the national total, because that is
+the only level the OpenAPI serves. Everything below it is Parquet-only on
+`storage.dosm.gov.my` (note the *dosm* host, not `storage.data.gov.my`):
+
+- `population_state` - every state, back to 1970, with ethnicity, age-band
+  and sex breakdowns at the latest year. The OpenAPI's copy froze at 2023;
+  the Parquet runs to the current year.
+- `population_district` - 160+ districts with year-over-year growth.
+- `population_parlimen` / `population_dun` - all 222 parliament and 600
+  state-assembly seats with population and citizen counts.
+- The constituency socioeconomics (`hh_income_*`, `hh_poverty_*`,
+  `hh_inequality_*`, `lfs_*` at both levels) *are* on the OpenAPI and come
+  over the catalogue API.
+
+`tools/collect_geo.py` reads the Parquet with pandas/pyarrow (same deps as
+`collect_prices.py`) and writes `public/geo.json` (~150 KB) weekly -
+`.github/workflows/collect_geo.yml`, Monday 14:00 UTC. The dashboard's Places
+section is a state-first explorer: pick a state, read its trend and
+composition, then its districts and seats.
+
+Two gotchas the collector has to work around:
+
+- **The constituency tables advertise age and ethnicity but carry neither** -
+  `age` and `ethnicity` only ever hold overall/citizen/noncitizen, so a
+  voting-age population per seat is not derivable. The UI labels citizen
+  count as an electorate *proxy* (it still includes everyone under 18).
+- **Citizenship lives in the `age` column** for the multi-year series
+  (`age='citizen'`); the `ethnicity='citizen'` rows exist for one year only.
+  State and district tables do carry real age bands and ethnicities, so only
+  the constituency tables are affected.
+- **The socio join key is the full seat label** (`P.149 Sri Gading`), not the
+  code - DUN numbers restart in every state, so keying on the bare code would
+  silently collapse 600 seats into 82.
+
+There is no election data on data.gov.my - no results, candidates or voter
+rolls. This is "know your constituency", not results.
+
+Public holidays ride along in `slow.json` (`tools/collect_slow.py` reads
+Google's public Malaysia calendar) so the KTMB ridership chart can label the
+days travel patterns break around - the Feb 2026 Komuter spike is Chinese New
+Year, and the level shift after it is Ramadan. The calendar carries no
+per-state codes and only reaches back to 2021, which matches the ridership
+series.
+
+---
+
 ## Architecture
 
 ```
@@ -187,6 +236,7 @@ tools/
   collect_health.py     KKM health collector → public/health.json
   collect_slow.py       slow-data collector → public/slow.json
   collect_prices.py     PriceCatcher basket index → public/prices.json
+  collect_geo.py        sub-national population + seat socioeconomics → public/geo.json
   embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```
@@ -324,9 +374,10 @@ slowest datasets arrive.
   collector uses (see above)
 - **Parquet-only, not on the OpenAPI at all** (`exclude_openapi: true`, so
   `?id=` returns 404): `pricecatcher`, `lookup_item`, `lookup_premise`,
-  `registration_transactions_car`, `ridership_od_*`. These live on
-  `storage.data.gov.my` and must be read as Parquet - see the PriceCatcher
-  section above
+  `registration_transactions_car`, `ridership_od_*`, and the sub-national
+  `population_state` / `population_district` / `population_parlimen` /
+  `population_dun`. These live on `storage.data.gov.my` and must be read as
+  Parquet - see the PriceCatcher and Places sections above
 - `opendosm`: `cpi_core`, `cpi_headline`, `lfs_month`, `gdp_qtr_real`,
   `population_malaysia`
 - Not found: `electrictariff`, `watertariff`, `interestrate`, `unemployment`,
@@ -505,9 +556,12 @@ and charting it invites readers to mistake stale numbers for today's.
 
 So: the pill in each section header shows **"data as of &lt;date&gt;"** - the
 newest row that section actually renders, not when we fetched it - and appends
-**"⚠️ may be delayed"** once that date is more than 183 days old. The date
-comes from `LOADERS[id].asOf(data)`; a section that returns nothing (a static
-lookup, a live feed) keeps the old "updated HH:MM" fetch time instead.
+**"⚠️ may be delayed"** once that date is older than the section's tolerance
+(`MAX_AGE_DAYS` in `index.html` - roughly twice each source's publication
+interval, so annual series like population get ~14 months while daily feeds
+get 1-3 days). The date comes from `LOADERS[id].asOf(data)`; a section that
+returns nothing (a static lookup, a live feed) keeps the old "updated HH:MM"
+fetch time instead.
 
 Datasets that had stopped updating entirely were removed rather than captioned:
 
@@ -516,7 +570,8 @@ Datasets that had stopped updating entirely were removed rather than captioned:
 | `arrivals`, `passports` (the whole Tourism section) | 2024-10-01 |
 | `births` | 2023-07-31 |
 | `mnha` (national health accounts) | 2022-01-01 |
-| `population_state` | 2023-01-01 |
+| `population_state` (the OpenAPI copy froze at 2023; the full series now
+  returns via `geo.json` - see the Places section) | 2023-01-01 |
 
 `poskod` is exempt: it is a static reference table, not a time series, so it
 has no publication date that can go stale. It defines no `asOf`, so its pill
