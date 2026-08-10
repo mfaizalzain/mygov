@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>mygov — Malaysia Open Data</title>
+<title>mygov - Malaysia Open Data</title>
 <meta name="description" content="Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.">
 <meta name="theme-color" id="tc" content="#0a0c10">
 <meta name="color-scheme" content="dark light">
@@ -16,8 +16,8 @@
 <!-- SEO: canonical + social sharing (OG/Twitter) -->
 <link rel="canonical" href="https://mygov.faizalmzain.com/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="mygov — Malaysia Open Data">
-<meta property="og:title" content="mygov — Malaysia Open Data">
+<meta property="og:site_name" content="mygov - Malaysia Open Data">
+<meta property="og:title" content="mygov - Malaysia Open Data">
 <meta property="og:description" content="Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.">
 <meta property="og:url" content="https://mygov.faizalmzain.com/">
 <meta property="og:image" content="https://mygov.faizalmzain.com/og-image.png">
@@ -26,12 +26,12 @@
 <meta property="og:locale" content="en_MY">
 <meta property="og:locale:alternate" content="ms_MY">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="mygov — Malaysia Open Data">
+<meta name="twitter:title" content="mygov - Malaysia Open Data">
 <meta name="twitter:description" content="Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.">
 <meta name="twitter:image" content="https://mygov.faizalmzain.com/og-image.png">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"mygov — Malaysia Open Data","alternateName":"mygov","url":"https://mygov.faizalmzain.com/","description":"Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.","inLanguage":["en-MY","ms-MY"],"publisher":{"@type":"Organization","name":"mygov","url":"https://mygov.faizalmzain.com/"}}
+{"@context":"https://schema.org","@type":"WebSite","name":"mygov - Malaysia Open Data","alternateName":"mygov","url":"https://mygov.faizalmzain.com/","description":"Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.","inLanguage":["en-MY","ms-MY"],"publisher":{"@type":"Organization","name":"mygov","url":"https://mygov.faizalmzain.com/"}}
 </script>
 <!-- Self-hosted + subresource-integrity checked: if the files were ever
      altered the browser refuses to execute them rather than running them.
@@ -49,7 +49,7 @@
 <style>
 /* ═══════════════════════════ design system ═══════════════════════════ */
 :root{
-  /* surfaces — layered elevation, each step subtly lighter than the page */
+  /* surfaces - layered elevation, each step subtly lighter than the page */
   --bg:#0a0c10; --bg-2:#0d1016; --surface:#12151d; --surface-2:#171b25; --surface-3:#1d2230;
   --line:#232838; --line-soft:#1a1e2a;
   /* text */
@@ -105,7 +105,7 @@ html[data-theme="light"] .btn-a:hover:not(:disabled){background:#0b5f58;border-c
 /* --hdr and --nav are measured from the real elements at runtime (see
    trackStickyHeights). They must not be hardcoded: the header wraps to two or
    three rows on narrow screens, and a fixed offset there parks the section nav
-   underneath it — invisible, since the header sits one z-index higher. */
+   underneath it - invisible, since the header sits one z-index higher. */
 html{scroll-behavior:smooth; scroll-padding-top:calc(var(--hdr,61px) + var(--nav,53px) + 18px)}
 body{
   margin:0; background:var(--bg); color:var(--fg); font-family:var(--sans);
@@ -232,7 +232,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .pos-panel tr:hover td{background:var(--surface-3)}
 .pos-panel .state{text-align:center;color:var(--fg-3);padding:var(--s4)}
 /* auto-fit rather than a fixed 6: at 1240px six tracks give 232px cards, which
-   is too narrow for names like "Pusat Konservasi Gajah Kebangsaan" — they wrap
+   is too narrow for names like "Pusat Konservasi Gajah Kebangsaan" - they wrap
    to a second line and desynchronise the row's heights */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));
   gap:var(--s3);margin-top:var(--s6)}
@@ -243,7 +243,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .kpi .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
   color:var(--fg-3);font-weight:650;display:inline-flex;align-items:center;gap:5px}
 .kpi .lab .ico{width:13px;height:13px;stroke-width:2}
-/* the value/sub shimmer while a KPI is still pending — sized to the type it
+/* the value/sub shimmer while a KPI is still pending - sized to the type it
    replaces so cards do not resize when the number lands */
 .kpi-load{pointer-events:none}
 .skel-val{display:block;height:25px;width:62%;margin:6px 0 0;border-radius:7px}
@@ -360,7 +360,7 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
   scrollbar-width:none;padding-bottom:2px}
 .radar-track::-webkit-scrollbar{display:none}
 /* These tracks hide their scrollbar, so a card clipped at the right edge is
-   the only hint that the row scrolls — and it reads as a layout bug rather
+   the only hint that the row scrolls - and it reads as a layout bug rather
    than an affordance. The mask fades the cut instead. data-end is set by the
    scroll handler so the fade disappears once you reach the end. */
 .radar-track,.wx-track,.metro-scroll,nav.sections ul{
@@ -478,6 +478,20 @@ html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(18
 .vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
 .vcard .card-h h4{margin-right:auto}
 .vcard .vrow{display:flex;justify-content:space-between;gap:var(--s2);font-size:12.5px;padding:3px 0;color:var(--fg-2)}
+/* live trains: compact chips with hover/focus tooltips instead of cards */
+.vchips{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.vchip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;
+  border-radius:99px;border:1px solid var(--line);background:var(--bg-2);
+  font-size:12px;color:var(--fg-2);cursor:help;transition:var(--t);outline:none}
+.vchip:hover,.vchip:focus-visible{border-color:var(--accent);color:var(--fg)}
+.vchip .tip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(4px);
+  width:max-content;max-width:min(280px,calc(100vw - 24px));padding:10px 12px;z-index:40;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow);
+  opacity:0;visibility:hidden;pointer-events:none;transition:var(--t)}
+.vchip:hover .tip,.vchip:focus .tip,.vchip:focus-within .tip{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.vchip .tip .vrow{font-size:12px;padding:2px 0;white-space:nowrap}
+.vchip .tip .link-btn{display:inline-block;margin-top:6px}
+@media (max-width:480px){ .vchip .tip{width:auto;white-space:normal} }
 
 /* controls */
 .seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--line-soft);
@@ -526,7 +540,7 @@ tr.sel .pick{color:var(--chip-fg)}
 .tag{display:inline-block;padding:1px 6px;border-radius:5px;font-size:9.5px;font-weight:700;
   letter-spacing:.05em;text-transform:uppercase;background:var(--surface-3);color:var(--fg-3)}
 
-/* alerts — weather warnings strip */
+/* alerts - weather warnings strip */
 .alert{border:1px solid var(--line-soft);border-left:4px solid var(--warn);
   border-radius:var(--r);background:var(--surface);padding:var(--s4);box-shadow:var(--shadow)}
 .alert h4{margin:0 0 var(--s2);font-size:13.5px;font-weight:650;display:flex;
@@ -600,7 +614,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
   .vgrid{grid-template-columns:1fr} .lvmap{height:260px}
-  /* the header has to stay one short row here — two sticky bars plus a wrapped
+  /* the header has to stay one short row here - two sticky bars plus a wrapped
      header would eat a fifth of a phone screen. The timestamp keeps only its
      progress count, and the display toggles collapse to icons. */
   .hd{gap:var(--s3)}
@@ -697,7 +711,7 @@ html[data-text="large"] table{font-size:14px}
 <div class="wrap">
   <div class="hero">
     <h2 data-i18n="Today in Malaysia">Today in Malaysia</h2>
-    <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area — fetched live
+    <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area - fetched live
        from the Malaysian Government Open API.</p>
     <div class="hero-loc-row">
       <div class="hero-loc" id="hero-loc" aria-label="Your selected location"></div>
@@ -718,7 +732,7 @@ html[data-text="large"] table{font-size:14px}
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg></div>
         <div>
           <h3 id="radar-h" data-i18n="Trend Radar">Trend Radar</h3>
-          <p data-i18n="The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.">The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.</p>
+          <p data-i18n="The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.">The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.</p>
         </div>
       </div>
       <div class="radar-band-ctl">
@@ -738,7 +752,7 @@ html[data-text="large"] table{font-size:14px}
       <div class="shell-seo">
         <section class="sec">
           <div class="card"><div class="card-b">
-            <h2>mygov — Malaysia Open Data</h2>
+            <h2>mygov - Malaysia Open Data</h2>
             <p>A live dashboard of Malaysian government open data, refreshed
                automatically from <a href="https://api.data.gov.my/">api.data.gov.my</a>.
                This page requires JavaScript for the interactive charts, tables
@@ -746,29 +760,29 @@ html[data-text="large"] table{font-size:14px}
                below and is always accessible.</p>
             <h3>Live snapshot</h3>
             <!-- SEO:SNAP -->
-<li><strong>Fuel</strong> — RON95 RM3.77, RON97 RM4.35, diesel RM4.57 (2026-08-06).</li>
-<li><strong>Finance</strong> — USD/MYR 4.09 (business-day rate, 2026-08-07).</li>
-<li><strong>Economy</strong> — CPI 137.1 points (2026-06-01).</li>
-<li><strong>Health</strong> — blood donations 1,094 units (2026-08-08).</li>
-<li><strong>Trending now</strong> — Dakwaan Palsu Bantuan RM100 SARA Secara One-Off Untuk Rakyat 18 Tahun Ke Atas · Pertikaian Status Keahlian Bersatu dalam Perikatan Nasional Susulan Kenyataan Hadi Awang · Penyebaran Kenyataan Palsu Mengaitkan Timbalan Ketua Polis Negara di Facebook.</li>
+<li><strong>Fuel</strong> - RON95 RM3.77, RON97 RM4.35, diesel RM4.57 (2026-08-06).</li>
+<li><strong>Finance</strong> - USD/MYR 4.09 (business-day rate, 2026-08-07).</li>
+<li><strong>Economy</strong> - CPI 137.1 points (2026-06-01).</li>
+<li><strong>Health</strong> - blood donations 1,094 units (2026-08-08).</li>
+<li><strong>Trending now</strong> - Penyebaran Kenyataan Palsu Mengaitkan Timbalan Ketua Polis Negara di Facebook · Pemberian Sumbangan Asas Rahmah (SARA) RM100 One-Off Kepada Semua Rakyat 18 Tahun Ke Atas · Penyebaran Senarai Palsu 10 Universiti Awam Terbaik di Media Sosial.</li>
 <!-- /SEO:SNAP -->
             <h3>Sections</h3>
             <ul>
-              <li><strong>Weather</strong> — seven-day forecast for every state, district and town in Malaysia, plus severe-weather warnings and recent earthquakes.</li>
-              <li><strong>Fuel</strong> — weekly RON95/RON97/diesel pump prices and household income statistics.</li>
-              <li><strong>Population</strong> — population by state, sex and ethnicity.</li>
-              <li><strong>Economy</strong> — CPI inflation, unemployment, GDP and EPF contributions.</li>
-              <li><strong>Finance</strong> — exchange rates, FPX payments and interest rates.</li>
-              <li><strong>Health</strong> — blood donations, organ pledges and PeKa B40 (KKM).</li>
-              <li><strong>Vehicles</strong> — new vehicle registrations and public-transport ridership.</li>
-              <li><strong>Transport</strong> — KTMB and Rapid KL LRT/MRT/Monorail stops, lines and schedules (GTFS).</li>
-              <li><strong>Live</strong> — live vehicle positions and airport flight boards.</li>
+              <li><strong>Weather</strong> - seven-day forecast for every state, district and town in Malaysia, plus severe-weather warnings and recent earthquakes.</li>
+              <li><strong>Fuel</strong> - weekly RON95/RON97/diesel pump prices and household income statistics.</li>
+              <li><strong>Population</strong> - population by state, sex and ethnicity.</li>
+              <li><strong>Economy</strong> - CPI inflation, unemployment, GDP and EPF contributions.</li>
+              <li><strong>Finance</strong> - exchange rates, FPX payments and interest rates.</li>
+              <li><strong>Health</strong> - blood donations, organ pledges and PeKa B40 (KKM).</li>
+              <li><strong>Vehicles</strong> - new vehicle registrations and public-transport ridership.</li>
+              <li><strong>Transport</strong> - KTMB and Rapid KL LRT/MRT/Monorail stops, lines and schedules (GTFS).</li>
+              <li><strong>Live</strong> - live vehicle positions and airport flight boards.</li>
             </ul>
             <h3>Raw data files</h3>
             <ul>
-              <li><a href="/radar.json">radar.json</a> — today's trending topics and fact-checked claims.</li>
-              <li><a href="/health.json">health.json</a> — KKM health statistics.</li>
-              <li><a href="/slow.json">slow.json</a> — fuel, finance, mobility, economy and population series.</li>
+              <li><a href="/radar.json">radar.json</a> - today's trending topics and fact-checked claims.</li>
+              <li><a href="/health.json">health.json</a> - KKM health statistics.</li>
+              <li><a href="/slow.json">slow.json</a> - fuel, finance, mobility, economy and population series.</li>
             </ul>
             <p>Data sources: <a href="https://api.data.gov.my/">Malaysia Government Open API</a>,
                <a href="https://www.met.gov.my/">Malaysian Meteorological Department</a>,
@@ -822,7 +836,7 @@ let LANG = "en", themeMode = "system", textLarge = false;
 const I18N = {
   /* Keys that are not themselves the English text need an explicit source. */
   en: {
-    "hero":"Weather, fuel prices, warnings and transport updates for your area — fetched live from the Malaysian Government Open API.",
+    "hero":"Weather, fuel prices, warnings and transport updates for your area - fetched live from the Malaysian Government Open API.",
     "footerA":"Data: ",
     "footerB":" (MET Malaysia · MOF · DOSM · BNM · MoH · Immigration · KTMB · Prasarana). Reverse geocoding by ",
     "footerC":" contributors. Data is fetched directly by your browser and cached locally for 15 minutes to respect the API's 4-requests-per-minute limit. No analytics, no tracking.",
@@ -830,15 +844,15 @@ const I18N = {
     "verified_claim":"Verified claim",
     "no_check_found":"Not checked yet",
     "LRT & MRT network":"LRT & MRT network",
-    "Rapid KL rail — click a station to open it on the map":"Rapid KL rail — click a station to open it on the map",
+    "Rapid KL rail - click a station to open it on the map":"Rapid KL rail - click a station to open it on the map",
     "stns":"stns",
   },
   ms: {
   "Refresh":"Muat semula", "Refreshing…":"Memuat semula…", "Loading…":"Memuatkan…",
-  "Online":"Dalam talian", "Offline — showing cached data":"Luar talian — memaparkan data cache",
+  "Online":"Dalam talian", "Offline - showing cached data":"Luar talian - memaparkan data cache",
   "Updated":"Dikemas kini", "Skip to content":"Langkau ke kandungan",
   "Install app":"Pasang aplikasi", "Today in Malaysia":"Hari Ini di Malaysia",
-  "hero":"Cuaca, harga minyak, amaran dan pengangkutan untuk kawasan anda — diambil terus daripada API Terbuka Kerajaan Malaysia.",
+  "hero":"Cuaca, harga minyak, amaran dan pengangkutan untuk kawasan anda - diambil terus daripada API Terbuka Kerajaan Malaysia.",
   "footerA":"Data: ", "footerB":" (MET Malaysia · MOF · DOSM · BNM · MoH · Imigresen · KTMB · Prasarana). Geokodan songsang oleh ",
   "footerC":" penyumbang. Data diambil terus oleh pelayar anda dan dicache setempat selama 15 minit bagi menghormati had 4-permintaan-seminit API. Tiada analitik, tiada penjejakan.",
   "bmc":"Sokong projek ini di Buy Me a Coffee",
@@ -846,21 +860,21 @@ const I18N = {
   "Trending":"Trend",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
-  "Seven-day forecast for every state, district and town in Malaysia — plus severe-weather warnings and recent earthquakes.":"Ramalan tujuh hari untuk setiap negeri, daerah dan bandar di Malaysia — serta amaran cuaca buruk dan gempa bumi terkini.",
+  "Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.":"Ramalan tujuh hari untuk setiap negeri, daerah dan bandar di Malaysia - serta amaran cuaca buruk dan gempa bumi terkini.",
   "Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.":"Ramalan, amaran dan maklumat gempa bumi daripada MET Malaysia. Ramalan meliputi 360 lokasi, daripada negeri hingga bandar dan resort tanah tinggi.",
   "The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.":"Harga siling runcit mingguan untuk RON 95, RON 97 dan diesel, serta pertumbuhan pendapatan isi rumah Malaysia.",
   "Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.":"Harga ditetapkan mingguan oleh Kementerian Kewangan dan diambil dengan penapisan sisi pelayan ke siri paras harga. Pendapatan isi rumah daripada Kajian Pendapatan Isi Rumah.",
-  "Department of Statistics Malaysia — inflation by spending category, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia — inflasi mengikut kategori perbelanjaan, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
+  "Department of Statistics Malaysia - inflation by spending category, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia - inflasi mengikut kategori perbelanjaan, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
   "Core CPI is broken down by expenditure division, labour-force figures are monthly, and real GDP is quarterly. All three come from OpenDOSM.":"CPI teras dipecahkan mengikut bahagian perbelanjaan, angka buruh bulanan, dan KDNK benar suku tahunan. Kesemuanya daripada OpenDOSM.",
-  "Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.":"Laluan bas dan kereta api berjadual untuk KTMB dan Rapid KL — laluan paling sibuk, serta bilangan perhentian dan perjalanan setiap rangkaian.",
-  "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda — hanya laluan, perjalanan dan perhentian dibaca, bukan fail terbesar.",
+  "Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.":"Laluan bas dan kereta api berjadual untuk KTMB dan Rapid KL - laluan paling sibuk, serta bilangan perhentian dan perjalanan setiap rangkaian.",
+  "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips and stops are read, never the largest file.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda - hanya laluan, perjalanan dan perhentian dibaca, bukan fail terbesar.",
   "Trains and buses currently reporting their position, straight from the operators' live feeds.":"Kereta api dan bas yang kini melaporkan kedudukan mereka, terus daripada suapan langsung pengendali.",
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
   "Data source & methodology":"Sumber data & kaedah",
   "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
   "Population":"Penduduk", "Population growth":"Pertumbuhan penduduk",
   "How many people live in Malaysia, every year since 1970, and how the population is made up today.":"Berapa ramai penduduk Malaysia, setiap tahun sejak 1970, dan komposisi penduduk hari ini.",
-  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Hanya siri kebangsaan dipaparkan — set data peringkat negeri tidak dikemas kini sejak 2023.",
+  "DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown - the state-level dataset has not been updated since 2023.":"Anggaran penduduk kebangsaan tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Hanya siri kebangsaan dipaparkan - set data peringkat negeri tidak dikemas kini sejak 2023.",
   "Composition":"Komposisi", "Largest group":"Kumpulan terbesar",
   "Year-on-year":"Tahun ke tahun", "Years on record":"Tahun direkod",
   "millions · annual":"juta · tahunan", "people":"orang", "vs ":"berbanding ",
@@ -869,7 +883,7 @@ const I18N = {
   "Chinese":"Cina", "Indian":"India", "Other citizens":"Warganegara lain",
   "Non-citizens":"Bukan warganegara",
   "Health":"Kesihatan", "Health & Donations":"Kesihatan & Derma",
-  "Blood donations by blood type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.":"Pendermaan darah mengikut jenis darah, ikrar derma organ dan saringan kesihatan PeKa B40 — diterbitkan setiap hari oleh Kementerian Kesihatan.",
+  "Blood donations by blood type, organ pledges and PeKa B40 health screenings - published daily by the Ministry of Health.":"Pendermaan darah mengikut jenis darah, ikrar derma organ dan saringan kesihatan PeKa B40 - diterbitkan setiap hari oleh Kementerian Kesihatan.",
   "The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.":"Kementerian Kesihatan menerbitkan tiga siri harian ini melalui katalog data kerajaan. Pendermaan disertakan pecahan jenis darah dan dipaparkan untuk tiga tahun terkini; ikrar organ bermula 2009 dan saringan PeKa B40 bermula 2019, kedua-duanya dipaparkan penuh.",
   "Health data updated":"Data kesihatan dikemas kini", "Date range":"Julat tarikh",
   "Blood donations":"Pendermaan darah", "Donations, last 7 days":"Pendermaan, 7 hari lepas",
@@ -884,7 +898,7 @@ const I18N = {
   "last 30 days":"30 hari lepas",
   "Data: MoH via data.gov.my":"Data: KKM melalui data.gov.my",
   "data as of ":"data sehingga ", "may be delayed":"mungkin tertunda",
-  "refresh failed — showing last data":"gagal dimuat semula — memaparkan data terakhir",
+  "refresh failed - showing last data":"gagal dimuat semula - memaparkan data terakhir",
   "Hottest today":"Paling panas hari ini", "Inflation y/y":"Inflasi t/t",
   "Active warnings":"Amaran aktif", "Vehicles live":"Kenderaan langsung",
   "issued by MET":"dikeluarkan oleh MET", "all clear":"tiada amaran", "week of ":"minggu ",
@@ -901,7 +915,7 @@ const I18N = {
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
   "No warnings in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
   "No marine warnings right now":"Tiada amaran marin buat masa ini",
-  "elsewhere — try “All Malaysia”.":"di tempat lain — cuba “Seluruh Malaysia”.",
+  "elsewhere - try “All Malaysia”.":"di tempat lain - cuba “Seluruh Malaysia”.",
   "Other notices":"Notis lain", "No location matches":"Tiada lokasi sepadan",
   "Locating…":"Mengesan lokasi…", "Location off":"Lokasi dimatikan",
   "use my location":"guna lokasi saya", "try again":"cuba lagi", "change":"tukar",
@@ -920,15 +934,15 @@ const I18N = {
   "Week":"Minggu", "Year":"Tahun", "Mean RM":"Min RM", "Median RM":"Median RM",
   "Core CPI":"CPI teras", "Unemployment":"Pengangguran", "Participation rate":"Kadar penyertaan",
   "Real GDP · quarter":"KDNK benar · suku", "employed":"bekerja",
-  "Consumer Price Index — core":"Indeks Harga Pengguna — teras",
+  "Consumer Price Index - core":"Indeks Harga Pengguna - teras",
   "by expenditure division":"mengikut bahagian perbelanjaan",
   "Unemployment rate":"Kadar pengangguran", "monthly":"bulanan",
   "Real GDP":"KDNK benar", "quarterly · RM million":"suku tahunan · RM juta",
   "Date":"Tarikh", "Month":"Bulan", "Quarter":"Suku", "RM million":"RM juta",
   "Finance":"Kewangan", "Postcodes":"Poskod",
-  "Exchange rates and interest rates from Bank Negara Malaysia — the ringgit against key currencies, and what banks lend and pay.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia — ringgit berbanding mata wang utama, serta kadar pinjaman dan simpanan bank.",
+  "Exchange rates and interest rates from Bank Negara Malaysia - the ringgit against key currencies, and what banks lend and pay.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia - ringgit berbanding mata wang utama, serta kadar pinjaman dan simpanan bank.",
   "Exchange rates are Bank Negara's daily reference rates, published here as monthly averages and month-end values. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it.":"Kadar pertukaran ialah kadar rujukan harian Bank Negara, diterbitkan di sini sebagai purata bulanan dan nilai akhir bulan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya.",
-  "The national postcode reference list — look up any postcode, city or state.":"Senarai rujukan poskod kebangsaan — cari sebarang poskod, bandar atau negeri.",
+  "The national postcode reference list - look up any postcode, city or state.":"Senarai rujukan poskod kebangsaan - cari sebarang poskod, bandar atau negeri.",
   "Pos Malaysia's national postcode reference list, kept as a static lookup table.":"Senarai rujukan poskod kebangsaan Pos Malaysia, dikekalkan sebagai jadual rujukan statik.",
   "Exchange rates":"Kadar pertukaran",
   "Latest exchange rates":"Kadar pertukaran terkini",
@@ -937,10 +951,10 @@ const I18N = {
   "Currencies tracked":"Mata wang dipantau",
   "Bank Negara daily reference rates":"Kadar rujukan harian Bank Negara",
   "RM per unit · daily reference rates":"RM seunit · kadar rujukan harian",
-  "Daily Bank Negara reference rates — monthly average values.":"Kadar rujukan harian Bank Negara — nilai purata bulanan.",
+  "Daily Bank Negara reference rates - monthly average values.":"Kadar rujukan harian Bank Negara - nilai purata bulanan.",
   "Interest rates":"Kadar faedah",
-  "Commercial base rate — tracks the OPR":"Kadar asas komersial — mengikut OPR",
-  "The OPR is not published in this dataset — the commercial base rate (BR) tracks it.":"OPR tidak diterbitkan dalam set data ini — kadar asas komersial (BR) mengikutinya.",
+  "Commercial base rate - tracks the OPR":"Kadar asas komersial - mengikut OPR",
+  "The OPR is not published in this dataset - the commercial base rate (BR) tracks it.":"OPR tidak diterbitkan dalam set data ini - kadar asas komersial (BR) mengikutinya.",
   "Latest rates by bank type":"Kadar terkini mengikut jenis bank",
   "Rate":"Kadar", "Bank":"Bank", "Commercial":"Komersial", "Investment":"Pelaburan",
   "Base rate":"Kadar asas", "Average lending rate":"Kadar pinjaman purata",
@@ -953,8 +967,8 @@ const I18N = {
   "valid":"sah", "No active warnings":"Tiada amaran aktif",
   "Previous warnings":"Amaran sebelumnya", "Next warnings":"Amaran seterusnya",
   "Trend Radar":"Radar Trend",
-  "The hottest issues and viral claims circulating in Malaysia right now, gathered from news feeds, Google Trends and Sebenarnya.my fact-checks — each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang, dikumpul daripada suapan berita, Google Trends dan semakan fakta Sebenarnya.my — setiap satu disahkan terhadap sumber sebenar.",
-  "The hottest issues and viral claims circulating in Malaysia right now — each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang — setiap satu disahkan terhadap sumber sebenar.",
+  "The hottest issues and viral claims circulating in Malaysia right now, gathered from news feeds, Google Trends and Sebenarnya.my fact-checks - each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang, dikumpul daripada suapan berita, Google Trends dan semakan fakta Sebenarnya.my - setiap satu disahkan terhadap sumber sebenar.",
+  "The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang - setiap satu disahkan terhadap sumber sebenar.",
   "Clustered daily by AI from news RSS, Google Trends Malaysia and Sebenarnya.my. Claims are fact-checked with web search; debunked items are flagged.":"Dikluster setiap hari oleh AI daripada RSS berita, Google Trends Malaysia dan Sebenarnya.my. Dakwaan disemak fakta dengan carian web; item palsu ditanda.",
   "Sources":"Sumber", "issues":"isu", "sources":"sumber", "View sources":"Lihat sumber",
   "verified":"disahkan", "debunked":"palsu", "unverified":"tidak disahkan",
@@ -965,16 +979,16 @@ const I18N = {
   "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
-  "No stops found within your area — try widening your search or switching network.":"Tiada perhentian ditemui dalam kawasan anda — cuba luaskan carian atau tukar rangkaian.",
+  "No stops found within your area - try widening your search or switching network.":"Tiada perhentian ditemui dalam kawasan anda - cuba luaskan carian atau tukar rangkaian.",
   "LRT & MRT network":"Rangkaian LRT & MRT",
-  "Rapid KL rail — click a station to open it on the map":"Rel Rapid KL — klik stesen untuk buka pada peta",
+  "Rapid KL rail - click a station to open it on the map":"Rel Rapid KL - klik stesen untuk buka pada peta",
   "stns":"stesen",
   "Station":"Stesen", "Interchange":"Pertukaran",
   "Schematic":"Skematik", "Network map":"Peta rangkaian",
-  "Location permission denied — search by name instead.":"Kebenaran lokasi dinafikan — cari mengikut nama sebaliknya.",
+  "Location permission denied - search by name instead.":"Kebenaran lokasi dinafikan - cari mengikut nama sebaliknya.",
   "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
-  "All networks":"Semua rangkaian", "Busiest routes — ":"Laluan paling sibuk — ",
-  "by scheduled trips":"mengikut perjalanan berjadual", "Stops — ":"Perhentian — ",
+  "All networks":"Semua rangkaian", "Busiest routes - ":"Laluan paling sibuk - ",
+  "by scheduled trips":"mengikut perjalanan berjadual", "Stops - ":"Perhentian - ",
   "with coordinates":"dengan koordinat", "stations & stops":"stesen & perhentian",
   "View on map":"Lihat pada peta", "Map":"Peta",
   "Household income is awaiting the next DOSM release (last updated ":"Pendapatan isi rumah menunggu keluaran DOSM seterusnya (dikemas kini terakhir ",
@@ -986,7 +1000,7 @@ const I18N = {
   "Search flight, city, airline…":"Cari penerbangan, bandar, syarikat…", "Arrivals":"Ketibaan", "Departures":"Berlepas",
   "Flight":"Penerbangan", "From":"Dari", "To":"Ke", "Scheduled":"Dijadualkan", "Status":"Status", "Gate":"Gerbang",
   "Loading flights…":"Memuatkan penerbangan…", "No flights match ":"Tiada penerbangan sepadan ",
-  "All stops — both networks":"Semua perhentian — kedua-dua rangkaian",
+  "All stops - both networks":"Semua perhentian - kedua-dua rangkaian",
   "type to filter or use “Find stops near me”":"taip untuk menapis atau guna “Cari perhentian berdekatan saya”",
   "Search both networks' stops above, or use “Find stops near me” to rank by distance.":"Cari perhentian kedua-dua rangkaian di atas, atau guna “Cari perhentian berdekatan saya” untuk menyusun mengikut jarak.",
   "of":"daripada", "Network":"Rangkaian",
@@ -994,18 +1008,18 @@ const I18N = {
   "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
   "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
-  "among live ":"antara ", "Live map — ":"Peta langsung — ", "positions as broadcast":"kedudukan seperti disiarkan",
+  "among live ":"antara ", "Live map - ":"Peta langsung - ", "positions as broadcast":"kedudukan seperti disiarkan",
   "Network":"Rangkaian", "Trip":"Perjalanan", "Speed":"Kelajuan", "Last seen":"Dilihat terakhir",
   "Position":"Kedudukan", "No trains are broadcasting right now":"Tiada kereta api melaporkan kedudukan kini",
   "No buses are broadcasting right now":"Tiada bas melaporkan kedudukan kini",
   "The feed responded normally":"Suapan bertindak balas seperti biasa",
-  "but carried zero vehicles — normal outside service hours, or when the operator's tracking feed is paused.":"tetapi sifar kenderaan — normal di luar waktu perkhidmatan, atau apabila suapan penjejakan pengendali dijeda.",
-  "Rate limited — cached data is reused for 15 minutes, so this usually clears on its own.":"Had laju — data cache digunakan semula selama 15 minit, jadi ini biasanya selesai sendiri.",
+  "but carried zero vehicles - normal outside service hours, or when the operator's tracking feed is paused.":"tetapi sifar kenderaan - normal di luar waktu perkhidmatan, atau apabila suapan penjejakan pengendali dijeda.",
+  "Rate limited - cached data is reused for 15 minutes, so this usually clears on its own.":"Had laju - data cache digunakan semula selama 15 minit, jadi ini biasanya selesai sendiri.",
   "The dataset may be temporarily unavailable.":"Set data mungkin tidak tersedia buat sementara waktu.",
   "Try again":"Cuba lagi",
   /* ── vehicles & ridership ── */
   "Vehicles":"Kenderaan", "Vehicles & Ridership":"Kenderaan & Penumpang",
-  "New vehicle registrations split by fuel type — the EV adoption curve — and daily passenger numbers on every KTMB rail service.":"Pendaftaran kenderaan baharu mengikut jenis bahan api — lengkung penerimaan EV — serta jumlah penumpang harian bagi setiap perkhidmatan rel KTMB.",
+  "New vehicle registrations split by fuel type - the EV adoption curve - and daily passenger numbers on every KTMB rail service.":"Pendaftaran kenderaan baharu mengikut jenis bahan api - lengkung penerimaan EV - serta jumlah penumpang harian bagi setiap perkhidmatan rel KTMB.",
   "Registrations are counted by the Road Transport Department (JPJ) at first registration and published monthly by fuel type; only all-vehicle totals are charted here. Ridership is KTMB's own daily passenger count per service, published to the previous day.":"Pendaftaran dikira oleh Jabatan Pengangkutan Jalan (JPJ) pada pendaftaran pertama dan diterbitkan bulanan mengikut jenis bahan api; hanya jumlah semua kenderaan dipaparkan di sini. Bilangan penumpang ialah kiraan harian KTMB sendiri bagi setiap perkhidmatan, diterbitkan sehingga hari sebelumnya.",
   "New vehicle registrations":"Pendaftaran kenderaan baharu",
   "by fuel type · monthly":"mengikut jenis bahan api · bulanan",
@@ -1018,7 +1032,7 @@ const I18N = {
   "Service":"Perkhidmatan", "Daily":"Harian", "Monthly":"Bulanan",
   /* ── finance additions ── */
   "Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia, serta nadi harian pembayaran dalam talian FPX daripada PayNet.",
-  "Exchange rates are Bank Negara's reference rates — either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.":"Kadar pertukaran ialah kadar rujukan Bank Negara — sama ada kadar tengah harian jam 12:00 atau purata bulanan yang diterbitkan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya. Angka FPX ialah nilai dan jumlah transaksi harian PayNet.",
+  "Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.":"Kadar pertukaran ialah kadar rujukan Bank Negara - sama ada kadar tengah harian jam 12:00 atau purata bulanan yang diterbitkan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya. Angka FPX ialah nilai dan jumlah transaksi harian PayNet.",
   "FPX e-payments":"Pembayaran elektronik FPX",
   "daily transaction value & volume":"nilai & jumlah transaksi harian",
   "FPX value":"Nilai FPX", "FPX transactions":"Transaksi FPX",
@@ -1026,11 +1040,11 @@ const I18N = {
   "RM per unit · Bank Negara reference rates":"RM seunit · kadar rujukan Bank Negara",
   "Daily 12:00 middle rates from Bank Negara.":"Kadar tengah harian jam 12:00 daripada Bank Negara.",
   /* ── economy additions ── */
-  "Department of Statistics Malaysia — headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia — inflasi utama dan teras, inflasi mengikut negeri, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
-  "Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly — all from OpenDOSM. The EPF dividend card comes from the general data catalogue.":"CPI utama dan teras ialah indeks kebangsaan bulanan; siri negeri ialah indeks keseluruhan bagi setiap negeri, dipaparkan di sini sebagai inflasi tahun ke tahun. Angka tenaga buruh adalah bulanan dan KDNK benar suku tahunan — kesemuanya daripada OpenDOSM. Kad dividen KWSP daripada katalog data am.",
+  "Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia - inflasi utama dan teras, inflasi mengikut negeri, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
+  "Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.":"CPI utama dan teras ialah indeks kebangsaan bulanan; siri negeri ialah indeks keseluruhan bagi setiap negeri, dipaparkan di sini sebagai inflasi tahun ke tahun. Angka tenaga buruh adalah bulanan dan KDNK benar suku tahunan - kesemuanya daripada OpenDOSM. Kad dividen KWSP daripada katalog data am.",
   "Consumer Price Index":"Indeks Harga Pengguna",
   "headline vs core · by expenditure division":"utama berbanding teras · mengikut bahagian perbelanjaan",
-  "Headline — all items":"Utama — semua item", "Core — all items":"Teras — semua item",
+  "Headline - all items":"Utama - semua item", "Core - all items":"Teras - semua item",
   "Inflation by state":"Inflasi mengikut negeri",
   "year-on-year · overall index":"tahun ke tahun · indeks keseluruhan",
   "EPF dividend":"Dividen KWSP", "conventional":"konvensional", "shariah":"patuh syariah",
@@ -1114,7 +1128,7 @@ function rerenderAll(){
   renderKpis();
 }
 
-/** An <svg> referencing a sprite symbol. Decorative by default — every call
+/** An <svg> referencing a sprite symbol. Decorative by default - every call
  *  site here pairs the icon with a visible text label. */
 const ico = (name, size) =>
   `<svg class="ico" aria-hidden="true" focusable="false"${size ? ` style="width:${size};height:${size}"` : ""}><use href="#i-${name}"/></svg>`;
@@ -1163,7 +1177,7 @@ function schedule(family, run){
 class ApiError extends Error {
   constructor(msg, kind){ super(msg); this.kind = kind; }
 }
-/* The API 301-redirects paths without a trailing slash — always send one so no
+/* The API 301-redirects paths without a trailing slash - always send one so no
    request wastes a redirect hop against the rate limit. */
 function url(path, params){
   const u = new URL(API + (path.endsWith("/") ? path : path + "/"));
@@ -1173,7 +1187,7 @@ function url(path, params){
 async function request(family, path, params, as){
   return schedule(family, async () => {
     /* One automatic retry for transient failures (offline blip, 5xx). 429
-       and 404 are skipped — the first is a quota state the retry won't fix
+       and 404 are skipped - the first is a quota state the retry won't fix
        and the second is permanent. The caller still gets a manual Retry
        button when even this fails. */
     for (let attempt = 0; attempt < 2; attempt++){
@@ -1181,7 +1195,7 @@ async function request(family, path, params, as){
       try { res = await fetch(url(path, params)); }
       catch {
         if (!attempt){ await sleep(1500); continue; }
-        throw new ApiError("Can't reach the API — you may be offline.", "network");
+        throw new ApiError("Can't reach the API - you may be offline.", "network");
       }
       if (res.status === 429) throw new ApiError("Rate limited by the API. It allows 4 requests per minute.", "rate");
       if (res.status === 404) throw new ApiError("That dataset no longer exists.", "missing");
@@ -1237,6 +1251,9 @@ const el = (t, c, h) => { const n = document.createElement(t);
   if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+/* Normalise en/em dashes to a plain hyphen - data titles (Gemini radar
+   issues, MET warning text) occasionally carry U+2013/U+2014. */
+const dc = s => String(s ?? "").replace(/[\u2013\u2014]/g, "-");
 /* MET sends some free text with entities already encoded ("&amp;"); decode
    once so the reader doesn't see the raw entity, then escape for insertion. */
 const ENT = { amp:"&", lt:"<", gt:">", quot:'"', apos:"'", nbsp:" " };
@@ -1248,7 +1265,7 @@ const deent = s => String(s ?? "").replace(/&(#\d+|#x[0-9a-f]+|\w+);/gi, (m, e) 
   return m;
 });
 const txt = s => esc(deent(s));
-const nf = (n, d = 0) => n == null || isNaN(n) ? "—"
+const nf = (n, d = 0) => n == null || isNaN(n) ? "-"
   : Number(n).toLocaleString("en-MY", { minimumFractionDigits:d, maximumFractionDigits:d });
 const ymd = d => { const t = new Date(d); return isNaN(t) ? String(d)
   : t.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" }); };
@@ -1260,7 +1277,7 @@ const hhmm = ts => new Date(ts).toLocaleTimeString("en-MY", { hour:"2-digit", mi
 const hms = ts => new Date(ts).toLocaleTimeString("en-MY",
   { hour:"2-digit", minute:"2-digit", second:"2-digit" });
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-/* Canvas colours must be concrete hex/rgba — Chart.js can't resolve var().
+/* Canvas colours must be concrete hex/rgba - Chart.js can't resolve var().
    Resolve the design tokens at render time so charts follow the theme. */
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 /** Accessible alternative to a chart: a plain sortable-free table. */
@@ -1268,7 +1285,7 @@ function dataTableHTML(headers, rows, numCols = []){
   return `<div class="tw scroll-y" style="max-height:280px"><table>
     <thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>
     <tbody>${rows.map(r => `<tr>${r.map((c, i) =>
-      `<td class="${numCols.includes(i) ? "num" : ""}">${c == null || c === "" ? "—" : esc(String(c))}</td>`
+      `<td class="${numCols.includes(i) ? "num" : ""}">${c == null || c === "" ? "-" : esc(String(c))}</td>`
     ).join("")}</tr>`).join("") || `<tr><td colspan="${headers.length}" class="state">No data.</td></tr>`}
     </tbody></table></div>`;
 }
@@ -1276,7 +1293,7 @@ function dataTableHTML(headers, rows, numCols = []){
 /** Count a KPI up to its value; instant when reduced motion is requested. */
 function countTo(node, value, decimals, prefix, suffix){
   const fmt = v => (prefix || "") + nf(v, decimals) + (suffix || "");
-  if (value == null || isNaN(value)){ node.textContent = "—"; return; }
+  if (value == null || isNaN(value)){ node.textContent = "-"; return; }
   // Write the real value first: requestAnimationFrame is throttled in
   // background tabs, and an animation that never runs must not leave the
   // number blank. The count-up below is decoration on top of correct text.
@@ -1456,7 +1473,7 @@ function decodeVehiclePositions(arrayBuffer){
 /* ════════════════════════════ loaders ════════════════════════════ */
 
 /* The forecast feed has 360 distinct location_id values but only ~284 distinct
-   NAMES — "Perlis" exists as a state (St001), a district (Ds002) and a town
+   NAMES - "Perlis" exists as a state (St001), a district (Ds002) and a town
    (Tn001), each with its own forecast. Keying by name silently merges them, so
    everything here is keyed by location_id and the type is shown to the user. */
 const LOC_TYPE = { St:"state", Ds:"district", Tn:"town", Rc:"recreation", Dv:"division" };
@@ -1505,12 +1522,12 @@ async function loadWeather(){
 }
 
 async function loadFuel(){
-  /* Fuel updates weekly, hh_income yearly — the slow-data collector's file
+  /* Fuel updates weekly, hh_income yearly - the slow-data collector's file
      is current within a day of publication. */
   const slow = await readSlow();
   if (slow && slow.fuel) return slow.fuel;
   // series_type=level filtering is done server-side (verified working), which
-  // halves the payload — the other half is change_weekly deltas we don't chart.
+  // halves the payload - the other half is change_weekly deltas we don't chart.
   const fuel = await request("data-catalogue", "/data-catalogue",
     { id:"fuelprice", filter:"level@series_type" });
   const lv = (fuel || []).sort((a,b) => String(a.date).localeCompare(String(b.date)));
@@ -1518,7 +1535,7 @@ async function loadFuel(){
   const hhRows = (hh || []).map(r => [r.date, r.income_mean, r.income_median]);
   /* Freshness gate: hh_income is published every few years by DOSM. The card
      is hidden while the series is older than FRESH_YEARS, and automatically
-     reappears when a new release lands — no code change needed. */
+     reappears when a new release lands - no code change needed. */
   const hhLatest = hhRows.length ? String(hhRows[hhRows.length - 1][0]).slice(0, 10) : null;
   const freshAfter = new Date(); freshAfter.setFullYear(freshAfter.getFullYear() - FRESH_YEARS);
   const hhFresh = hhLatest && new Date(hhLatest) >= freshAfter;
@@ -1548,7 +1565,7 @@ async function loadEconomy(){
   if (slow && slow.economy) return slow.economy;
   const core = await request("opendosm", "/opendosm", { id:"cpi_core" });
   /* Only the all-items line is charted against core, so filter the division
-     breakdown away server-side — it is ~14x the rows we would keep. */
+     breakdown away server-side - it is ~14x the rows we would keep. */
   const head = await request("opendosm", "/opendosm",
     { id:"cpi_headline", filter:"overall@division" });
   const lfs  = await request("opendosm", "/opendosm", { id:"lfs_month" });
@@ -1557,7 +1574,7 @@ async function loadEconomy(){
      for every month the state chart can land on. */
   const st   = await request("opendosm", "/opendosm",
     { id:"cpi_state", filter:"overall@division", date_start:cutoff(3) + "@date" });
-  /* The EPF rate lives in the general catalogue, not OpenDOSM — a different
+  /* The EPF rate lives in the general catalogue, not OpenDOSM - a different
      rate-limit family, so it costs this section nothing in opendosm tokens. */
   let epf = null;
   try {
@@ -1597,14 +1614,14 @@ async function loadFinance(){
   const fx = await request("data-catalogue", "/data-catalogue",
     { id:"exchangerates", sort:"-date" });
   /* The daily series carries 27 currencies x 3 rate types back to 1997. Pin it
-     to the middle rate server-side and to three years here — that is the whole
+     to the middle rate server-side and to three years here - that is the whole
      difference between a 40 kB payload and a 30 MB one. */
   const fxd = await request("data-catalogue", "/data-catalogue",
     { id:"exchangerates_daily_1200", filter:"middle@rate_type",
       date_start:cutoff(3) + "@date", sort:"date" });
   const ir = await request("data-catalogue", "/data-catalogue",
     { id:"interestrates", sort:"-date" });
-  /* "both" is PayNet's own B2B + B2C total — summing the two models here would
+  /* "both" is PayNet's own B2B + B2C total - summing the two models here would
      double-count, since all three are published side by side. */
   const fpx = await request("data-catalogue", "/data-catalogue",
     { id:"trnsc_daily_fpx", filter:"both@model", sort:"date" });
@@ -1668,7 +1685,7 @@ async function loadMobility(){
 }
 
 async function loadSociety(){
-  /* Postcode reference table is static data — the freshness policy does not
+  /* Postcode reference table is static data - the freshness policy does not
      apply to it. */
   const po = await request("data-catalogue", "/data-catalogue", { id:"poskod" });
   return {
@@ -1682,8 +1699,8 @@ async function loadSociety(){
 async function loadPopulation(){
   const slow = await readSlow();
   if (slow && slow.population) return slow.population;
-  /* One server-side filter is allowed, so narrow to the "overall" age band —
-     that alone drops ~95% of the rows — and split by sex/ethnicity here. */
+  /* One server-side filter is allowed, so narrow to the "overall" age band -
+     that alone drops ~95% of the rows - and split by sex/ethnicity here. */
   const rows = await request("opendosm", "/opendosm",
     { id:"population_malaysia", filter:"overall@age", sort:"date" });
   const both = (rows || []).filter(r => r.sex === "both");
@@ -1709,7 +1726,7 @@ const isoOf  = day => new Date(day * DAY_MS).toISOString().slice(0, 10);
 /** Fold one row per key per day into { t0, n, keys, series:{key:[…]} }.
  *
  *  A daily series with a categorical split arrives as one JSON object per
- *  category per day — five keys over twenty years is tens of thousands of
+ *  category per day - five keys over twenty years is tens of thousands of
  *  objects. Collapsing each key to a start day plus a flat array of values is
  *  roughly a fifth the size, which matters: these sections share one
  *  localStorage budget with seven others.
@@ -1767,7 +1784,7 @@ async function readSlow(){
 async function loadHealth(){
   /* Prefer the daily collector's static file (same-origin, no rate-limit
      cost, served from the Cloudflare edge). Fall back to the live API when
-     the file is absent or more than a few days stale — e.g. the Action
+     the file is absent or more than a few days stale - e.g. the Action
      hasn't run, or a visitor is on the repo's plain static hosting. */
   try {
     const r = await fetch("health.json", { cache:"no-store" });
@@ -1788,19 +1805,19 @@ async function loadHealth(){
   const D = denseDaily(don,   "blood_type", "donations");
   const O = denseDaily(organ, null,         "pledges");
   const P = denseDaily(peka,  null,         "screenings");
-  /* No published "last updated" stamp on these endpoints — the newest date
+  /* No published "last updated" stamp on these endpoints - the newest date
      any of the three carries is the honest answer. */
   const updated = [D, O, P].filter(s => s.n)
     .map(s => isoOf(s.t0 + s.n - 1)).sort().pop() || null;
   return { updated, don:D, organ:O, peka:P };
 }
 const FEEDS = [
-  { key:"ktmb", label:"KTMB", desc:"Keretapi Tanah Melayu — Komuter, ETS & intercity",
+  { key:"ktmb", label:"KTMB", desc:"Keretapi Tanah Melayu - Komuter, ETS & intercity",
     agency:"ktmb", category:null, path:"/gtfs-static/ktmb", params:null },
-  { key:"prasarana", label:"Rapid KL", desc:"Prasarana Rapid Bus — Klang Valley network",
+  { key:"prasarana", label:"Rapid KL", desc:"Prasarana Rapid Bus - Klang Valley network",
     agency:"prasarana", category:"rapid-bus-kl",
     path:"/gtfs-static/prasarana", params:{ category:"rapid-bus-kl" } },
-  { key:"rail", label:"LRT & MRT", desc:"Rapid KL rail — LRT, MRT & monorail lines",
+  { key:"rail", label:"LRT & MRT", desc:"Rapid KL rail - LRT, MRT & monorail lines",
     agency:"prasarana", category:"rapid-rail-kl",
     path:"/gtfs-static/prasarana", params:{ category:"rapid-rail-kl" } },
 ];
@@ -1833,7 +1850,7 @@ async function loadTransport(){
     const per = new Map();
     for (const t of trips) per.set(t.route_id, (per.get(t.route_id) || 0) + 1);
     const stopList = stops
-      .map(s => ({ id:s.stop_id || "", name:s.stop_name || "—",
+      .map(s => ({ id:s.stop_id || "", name:s.stop_name || "-",
                    lat:Number(s.stop_lat), lon:Number(s.stop_lon) }))
       .filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lon))
       .slice(0, 6000);
@@ -1853,7 +1870,7 @@ async function loadTransport(){
     if (f.key === "rail" && files["stop_times.txt"]){
       const st = parseCSV(files["stop_times.txt"]);
       const byStop = new Map(stops.map(s => [s.stop_id, {
-        name:s.stop_name || "—",
+        name:s.stop_name || "-",
         lat:Number(s.stop_lat), lon:Number(s.stop_lon),
       }]));
       const tripByRoute = new Map();
@@ -1952,8 +1969,8 @@ function baseOpts(extra){
 /* ════════════════════════════ shell ════════════════════════════ */
 /* Publishes the two sticky bars' real heights as CSS variables. The header
    grows to two or three rows on narrow screens and when the install/offline
-   badges appear, so every offset derived from it — the nav's `top`, the
-   scroll-padding for anchor jumps, the scroll-spy's root margin — has to be
+   badges appear, so every offset derived from it - the nav's `top`, the
+   scroll-padding for anchor jumps, the scroll-spy's root margin - has to be
    measured rather than assumed. */
 function trackStickyHeights(){
   const hdr = document.querySelector("header"), nav = document.querySelector("nav.sections");
@@ -1968,7 +1985,7 @@ function trackStickyHeights(){
   };
   sync();
   /* Both, deliberately. ResizeObserver catches the reflows a resize event
-     never fires for — the install prompt appearing, the offline badge, a
+     never fires for - the install prompt appearing, the offline badge, a
      font swap, BM labels being longer than the English ones. The resize and
      pageshow listeners cover the case where observer callbacks are not being
      delivered, e.g. a backgrounded tab restored from the bfcache. */
@@ -2000,8 +2017,8 @@ addEventListener("resize", syncTrackFades);
 
 function buildShell(){
   const nav = $("#navlist"), main = $("#main");
-  /* Radar sits above <main> and is not part of SECTIONS — it has no data
-     family, no status dot and no lazy load — but it is a destination, so it
+  /* Radar sits above <main> and is not part of SECTIONS - it has no data
+     family, no status dot and no lazy load - but it is a destination, so it
      gets a nav entry and joins the scroll-spy below. */
   const radarLi = el("li");
   radarLi.hidden = true;
@@ -2028,7 +2045,7 @@ function buildShell(){
       <div id="body-${s.id}"></div>`;
     main.appendChild(sec);
   }
-  // highlight the section currently in view — the top margin has to clear the
+  // highlight the section currently in view - the top margin has to clear the
   // sticky bars, otherwise a section counts as "in view" while still hidden
   const stackH = trackStickyHeights();
   const obs = new IntersectionObserver(entries => {
@@ -2051,7 +2068,7 @@ function errorBox(id, err, retry){
   $("#body-" + id).innerHTML = `<div class="card"><div class="state err">
       <div class="big">${rate ? "⏱" : "⚠"}</div>
       <strong>${esc(err.message || "Couldn't load this section")}</strong>
-      <div>${rate ? T("Rate limited — cached data is reused for 15 minutes, so this usually clears on its own.")
+      <div>${rate ? T("Rate limited - cached data is reused for 15 minutes, so this usually clears on its own.")
                   : T("The dataset may be temporarily unavailable.")}</div>
       <button class="btn" style="margin-top:16px" id="retry-${id}">${T("Try again")}</button>
     </div></div>`;
@@ -2061,7 +2078,7 @@ function errorBox(id, err, retry){
 /* ════════════════════════ location awareness ════════════════════════ */
 const geo = { status:"idle", label:null, matchedId:null, candidates:[], manual:false };
 
-/* OSM often names the local authority rather than the place — "Majlis
+/* OSM often names the local authority rather than the place - "Majlis
    Perbandaran Kajang" for Kajang. Strip council wording so the place name is
    left. Note "kota"/"bandar" are NOT stripped: they are genuine parts of
    Malaysian names (Kota Bharu, Kota Kinabalu), and both sides normalise
@@ -2083,8 +2100,8 @@ function matchQuality(name, term){
 /** Score a forecast location against the names OSM gave us.
  *
  *  `fine` holds specific place names (town, suburb, council, district);
- *  `coarse` is just the state. A fine match always outranks the state — being
- *  "in Selangor" must never beat being in Kajang — and within the fine tier
+ *  `coarse` is just the state. A fine match always outranks the state - being
+ *  "in Selangor" must never beat being in Kajang - and within the fine tier
  *  granularity decides. Previously an exact state match (100) beat a
  *  substring district match (60) because the tier penalty was only 4/rank.
  */
@@ -2115,9 +2132,9 @@ async function locate(){
         navigator.geolocation.getCurrentPosition(res, rej,
           { timeout: attempt ? 8000 : 6000, maximumAge:600000, enableHighAccuracy:false }));
     } catch (e) {
-      // 1 = PERMISSION_DENIED — the user said no, respect it.
+      // 1 = PERMISSION_DENIED - the user said no, respect it.
       if (e && e.code === 1){ geo.status = "denied"; paintWeather(); return; }
-      // 2/3 = unavailable/timeout — try IP-based location instead.
+      // 2/3 = unavailable/timeout - try IP-based location instead.
     }
   }
   if (!pos){ await geoipLocate(); return; }
@@ -2127,7 +2144,7 @@ async function locate(){
   try {
     // Nominatim sends no access-control-allow-origin, so a direct browser call
     // is blocked. The Worker proxies it (and sets the User-Agent their policy
-    // requires, which browsers refuse to set) — see src/index.js.
+    // requires, which browsers refuse to set) - see src/index.js.
     const r = await fetch(`/api/reverse?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}`);
     if (r.ok) addr = (await r.json()).address || null;
   } catch { /* proxy unavailable (e.g. plain static host) */ }
@@ -2172,7 +2189,7 @@ async function geoipLocate(){
     geo.status = "unavailable"; paintWeather(); return;
   }
   const data = wx.data;
-  /* We already have a city name from Cloudflare — match it straight against
+  /* We already have a city name from Cloudflare - match it straight against
      the forecast list before spending a reverse-geocode hop. */
   if (data && g.city){
     const term = norm(g.city);
@@ -2191,7 +2208,7 @@ async function geoipLocate(){
       }
     }
   }
-  /* No name match — reverse-geocode the IP coordinates and run the normal
+  /* No name match - reverse-geocode the IP coordinates and run the normal
      pipeline so a suburb/town match can still land. */
   let addr = null;
   try {
@@ -2278,8 +2295,8 @@ function renderWeather(d){
           const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
           return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
             <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
-            <td>${txt(q.loc || "—")}</td><td class="num dim">${nf(q.dep,0)} km</td>
-            <td class="dim">${txt(q.near || "—")}</td>
+            <td>${txt(q.loc || "-")}</td><td class="num dim">${nf(q.dep,0)} km</td>
+            <td class="dim">${txt(q.near || "-")}</td>
             <td><a class="maplink" target="_blank" rel="noopener"
               href="https://www.google.com/maps?q=${q.lat},${q.lon}"
               aria-label="Open earthquake location in Google Maps">map ↗</a></td></tr>`;
@@ -2296,7 +2313,7 @@ function renderWeather(d){
 }
 
 /** Guess a short severity label from the warning's own text. */
-const warnHead = x => LANG === "ms" ? (x.headBm || x.head) : x.head;
+const warnHead = x => dc(LANG === "ms" ? (x.headBm || x.head) : x.head);
 const warnText = x => LANG === "ms" ? (x.textBm || x.text) : x.text;
 const warnInstr = x => LANG === "ms" ? (x.instrBm || x.instr) : x.instr;
 function sevClass(x){
@@ -2313,7 +2330,7 @@ function warnCard(x){
   const [cls, label, color] = sevClass(x);
   const icon = x.info ? "✅" : (SEV_ICON[cls] || "⚠️");
   /* h4, not h5: these alert cards are siblings of the section's other cards,
-     which are h4 under the section's h3 — an h5 here made the outline read
+     which are h4 under the section's h3 - an h5 here made the outline read
      3 → 5 → 4 as you moved down the weather section. */
   return `<div class="alert ${x.info ? "info" : cls}">
     <h4><span class="alert-ico" aria-hidden="true">${icon}</span> ${txt(warnHead(x) || x.title)}
@@ -2346,7 +2363,7 @@ function paintWarnings(){
   const empty = wxFilter === "all"
     ? [T("No active warnings"), T("MET Malaysia has nothing on issue.")]
     : [T(wxFilter === "area" ? "No warnings in your area right now" : "No marine warnings right now"),
-       `${total} ${T("active")} ${T("elsewhere — try “All Malaysia”.")}`];
+       `${total} ${T("active")} ${T("elsewhere - try “All Malaysia”.")}`];
   const FILT = [["all",T("All Malaysia")],["area",T("My area")],["marine",T("Marine")]];
   w.innerHTML = `<div class="chips mb" id="wx-filters">` +
     FILT.map(([v, label]) =>
@@ -2364,7 +2381,7 @@ function paintWarnings(){
       : `<div class="chips"><span class="chip chip-ok">✅ ${empty[0]}</span>
          <span class="dim" style="font-size:11.5px">${empty[1]}</span></div>`) +
     (notices.length ? `<details class="wx-other">
-        <summary>${T("Other notices")} — ${notices.length} ${T("all clear")}</summary>
+        <summary>${T("Other notices")} - ${notices.length} ${T("all clear")}</summary>
         <div class="grid g2" style="margin-top:var(--s2)">${notices.map(warnCard).join("")}</div>
       </details>` : "");
   w.querySelectorAll("[data-wf]").forEach(b => {
@@ -2428,7 +2445,7 @@ function wxTableRows(){
     const r = first.get(i);
     return { id:l.id, name:l.name, kind:LOC_TYPE[l.kind] || l.kind,
              min:r ? r[2] : null, max:r ? r[3] : null,
-             today:r ? (d.dict[r[7]] || "—") : "—" };
+             today:r ? (d.dict[r[7]] || "-") : "-" };
   });
 }
 function paintWxRows(pre){
@@ -2522,9 +2539,9 @@ function paintLocChip(){
   else if (S === "unavailable") html = chip("off", `${ico("live")} ${T("Couldn't pin your location")}`) +
       `<button class="link-btn" id="loc-try">${T("try again")}</button>`;
   else if (S === "nomatch") html = chip("off", `${ico("live")} ${esc(geo.osm || T("Not in the forecast list"))}`) +
-      `<span class="dim" style="font-size:11.5px">— ${T("search below")}</span>`;
+      `<span class="dim" style="font-size:11.5px">- ${T("search below")}</span>`;
   else if (S === "noproxy") html = chip("off", `${ico("live")} ${T("Location lookup unavailable")}`) +
-      `<span class="dim" style="font-size:11.5px">— ${T("search below")}</span>`;
+      `<span class="dim" style="font-size:11.5px">- ${T("search below")}</span>`;
   else if (S === "unsupported") html = chip("off", `${ico("live")} ${T("Not supported")}`);
   else html = `<button class="link-btn" id="loc-try">${ico("live")} ${T("use my location")}</button>`;
   host.innerHTML = html;
@@ -2567,9 +2584,9 @@ function paintWxChart(){
           titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
           usePointStyle:true, boxWidth:8, boxHeight:8,
           callbacks:{ afterBody: items => { const r = rows[items[0].dataIndex]; if (!r) return "";
-            return ["", T("Morning") + ":   " + wxPhrase(d.dict[r[4]] || "—"),
-                        T("Afternoon") + ": " + wxPhrase(d.dict[r[5]] || "—"),
-                        T("Night") + ":     " + wxPhrase(d.dict[r[6]] || "—")]; } } },
+            return ["", T("Morning") + ":   " + wxPhrase(d.dict[r[4]] || "-"),
+                        T("Afternoon") + ": " + wxPhrase(d.dict[r[5]] || "-"),
+                        T("Night") + ":     " + wxPhrase(d.dict[r[6]] || "-")]; } } },
       },
     }),
   });
@@ -2579,8 +2596,8 @@ function paintWxChart(){
     rows.map(r => [ `${md(r[1])} ${dow(r[1])}`,
                     r[2] == null ? null : r[2] + "°",
                     r[3] == null ? null : r[3] + "°",
-                    wxPhrase(d.dict[r[4]] || "—"), wxPhrase(d.dict[r[5]] || "—"),
-                    wxPhrase(d.dict[r[6]] || "—") ]),
+                    wxPhrase(d.dict[r[4]] || "-"), wxPhrase(d.dict[r[5]] || "-"),
+                    wxPhrase(d.dict[r[6]] || "-") ]),
     [1, 2]);
 }
 
@@ -2605,7 +2622,7 @@ const CURR = {
   aud:{ label:"AUD", color:"#22d3ee" },
 };
 const FX_ORDER = ["usd","gbp","eur","sgd","idr","cny","jpy","thb","aud"];
-/* Column of each currency inside compact fxd/fx rows ([date, …]) — derived
+/* Column of each currency inside compact fxd/fx rows ([date, …]) - derived
    from FX_ORDER so the collector and the dashboard can never disagree. */
 const FX_COL = Object.fromEntries(FX_ORDER.map((k, i) => [k, i + 1]));
 const FX_RANGES = ["6m","1y","all"];
@@ -2619,7 +2636,7 @@ function renderFuel(d){
   const L = d.latest, P = d.prev;
   const delta = (a, b) => (a == null || b == null) ? null : a - b;
   const badge = v => v == null ? "" :
-    `<span class="${v > 0 ? "up" : v < 0 ? "down" : "neutral"}">${v > 0 ? "▲" : v < 0 ? "▼" : "—"} ${nf(Math.abs(v),2)}</span>`;
+    `<span class="${v > 0 ? "up" : v < 0 ? "down" : "neutral"}">${v > 0 ? "▲" : v < 0 ? "▼" : "-"} ${nf(Math.abs(v),2)}</span>`;
   $("#body-fuel").innerHTML = `
     <div class="grid g4 mb">
       ${[["RON 95","ron95"],["RON 97","ron97"],["Diesel","diesel"]].map(([lab,k]) => `
@@ -2653,7 +2670,7 @@ function renderFuel(d){
     <div class="card mb">
       <div class="card-b" style="display:flex;align-items:center;gap:var(--s3);color:var(--fg-3);font-size:12.5px">
         <span aria-hidden="true">⏳</span>
-        <span>${T("Household income is awaiting the next DOSM release (last updated ")}${d.hhLatest ? esc(d.hhLatest.slice(0,4)) : "—"}${T("). The chart will appear automatically when new data lands.")}</span>
+        <span>${T("Household income is awaiting the next DOSM release (last updated ")}${d.hhLatest ? esc(d.hhLatest.slice(0,4)) : "-"}${T("). The chart will appear automatically when new data lands.")}</span>
       </div>
     </div>
     `}
@@ -2719,8 +2736,8 @@ const COICOP = { overall:"Overall", "01":"Food & beverages", "02":"Alcohol & tob
   "06":"Health", "07":"Transport", "08":"Information & communication",
   "09":"Recreation & culture", "10":"Education", "11":"Restaurants & accommodation",
   "12":"Insurance & finance", "13":"Personal care & misc." };
-const divLabel = k => k === "headline" ? T("Headline — all items")
-  : k === "overall" ? T("Core — all items")
+const divLabel = k => k === "headline" ? T("Headline - all items")
+  : k === "overall" ? T("Core - all items")
   : (COICOP[k] ? `${k} · ${COICOP[k]}` : k);
 /* Headline vs core is the comparison people come for, so both are on by
    default; the expenditure divisions below them are opt-in. */
@@ -2748,7 +2765,7 @@ function renderEconomy(d){
         <div class="sub">${yoy == null ? "" :
           `<span class="${yoy>0?"down":"up"}">${yoy>0?"▲":"▼"} ${nf(Math.abs(yoy),1)}%</span> y/y`}</div></div>
       <div class="kpi"><div class="lab">${T("EPF dividend")}</div>
-        <div class="val">${d.epf ? nf(d.epf.conventional, 2) + "%" : "—"}</div>
+        <div class="val">${d.epf ? nf(d.epf.conventional, 2) + "%" : "-"}</div>
         <div class="sub">${d.epf ? `${nf(d.epf.shariah, 2)}% ${T("shariah")} · ${esc(String(d.epf.date).slice(0,4))}` : ""}</div></div>
     </div>
     <div class="card mb">
@@ -2863,7 +2880,7 @@ function renderEconomy(d){
 }
 
 /** Year-on-year inflation per state for the newest month every state carries.
- *  The published series is an index, not a rate — the rate is the point of
+ *  The published series is an index, not a rate - the rate is the point of
  *  comparison, so it is derived here from the pair twelve months apart. */
 function paintCpiState(d){
   const rows = [];
@@ -2928,7 +2945,7 @@ function renderFinance(d){
         <div class="fx-pick">
           <span class="fx-code" id="fx-hero-code">USD</span>
           <span class="fx-hero">
-            <span class="val" id="fx-hero-val">—</span>
+            <span class="val" id="fx-hero-val">-</span>
             <span class="chg" id="fx-hero-chg"></span>
           </span>
           <span class="sub" id="fx-hero-sub"></span>
@@ -2973,10 +2990,10 @@ function renderFinance(d){
     </div>
     <div class="card">
       <div class="card-h"><h4>${T("Interest rates")}</h4>
-        <span class="sub">${T("Commercial base rate — tracks the OPR")}</span></div>
+        <span class="sub">${T("Commercial base rate - tracks the OPR")}</span></div>
       <div class="card-b">
         <div class="chart"><canvas id="ir-chart" role="img" aria-label="Interest rates"></canvas></div>
-        <p class="note">ℹ️ ${T("The OPR is not published in this dataset — the commercial base rate (BR) tracks it.")}</p>
+        <p class="note">ℹ️ ${T("The OPR is not published in this dataset - the commercial base rate (BR) tracks it.")}</p>
         <h5 class="mini-h">${T("Latest rates by bank type")}</h5>
         <div class="tw"><table>
           <thead><tr><th>${T("Rate")}</th><th class="num">${T("Commercial")}</th><th class="num">${T("Investment")}</th></tr></thead>
@@ -3015,8 +3032,8 @@ function renderFinance(d){
 }
 
 /* Latest rate for the currency selected in the dropdown (USD by default).
-   One compact figure — a code badge, the rate, and the day-over-day
-   change — plus the as-of date. Switching the dropdown repaints it. */
+   One compact figure - a code badge, the rate, and the day-over-day
+   change - plus the as-of date. Switching the dropdown repaints it. */
 let fxPick = "usd";
 function paintLatestFx(d){
   const src = d.fxd && d.fxd.length ? d.fxd : d.fx;
@@ -3027,7 +3044,7 @@ function paintLatestFx(d){
   const pick = fxPick in CURR ? fxPick : "usd";
   const v = last ? last[col[pick]] : null;
   const fmt = vv => {
-    if (vv == null || !isFinite(vv)) return "—";
+    if (vv == null || !isFinite(vv)) return "-";
     /* IDR trades around 0.0002 RM/unit; showing "RM 0.0002" is unreadable.
        Display it per 1,000 rupiah (0.228) like FX boards do, with a marker. */
     if (pick === "idr") return "RM " + nf(vv * 1000, 3) + " /k";
@@ -3058,13 +3075,13 @@ function paintLatestFx(d){
 
 function paintFx(d){
   /* The daily series is fetched for three years only, so "ALL" means three
-     years there and the full monthly history here — the note says which. */
+     years there and the full monthly history here - the note says which. */
   const daily = fxGran === "daily" && d.fxd && d.fxd.length;
   const src = daily ? d.fxd : d.fx;
   const note = $("#fx-note");
   if (note) note.innerHTML = "ℹ️ " + (daily
     ? esc(T("Daily 12:00 middle rates from Bank Negara."))
-    : esc(T("Daily Bank Negara reference rates — monthly average values.")));
+    : esc(T("Daily Bank Negara reference rates - monthly average values.")));
   const from = fxRange === "all" ? "0000" : cutoff(RANGES[fxRange]);
   const rows = src.filter(r => String(r[0]) >= from);
   const sel = FX_ORDER.filter(k => fxCurr.has(k));
@@ -3102,7 +3119,7 @@ function paintFx(d){
 }
 
 /** FPX value and volume share an x-axis but not a unit, so volume gets its own
- *  right-hand scale — plotting billions of ringgit and millions of payments on
+ *  right-hand scale - plotting billions of ringgit and millions of payments on
  *  one axis would flatten the smaller of the two into the baseline. */
 function paintFpx(d){
   const from = fpxRange === "all" ? "0000" : cutoff(RANGES[fpxRange]);
@@ -3154,7 +3171,7 @@ function paintIr(d){
   chart("ir-chart", {
     type:"line",
     data:{ labels: br.map(r => md(r[1]) + " '" + String(r[1]).slice(2,4)),
-      datasets:[{ label:T("Base rate") + " — " + T("Commercial"), data:br.map(r => r[3]),
+      datasets:[{ label:T("Base rate") + " - " + T("Commercial"), data:br.map(r => r[3]),
         borderColor:"#2dd4bf", borderWidth:2, pointRadius:0, tension:.25, fill:true,
         backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf") }] },
     options: baseOpts({ plugins:{ legend:{ display:false },
@@ -3185,7 +3202,7 @@ function paintIr(d){
         return v == null ? null : v.value.toFixed(2) + "%";
       });
       return `<tr><td>${esc(T(RATE_LABEL[r] || r))}</td>${cells.map(c =>
-        `<td class="num">${c == null ? "—" : esc(c)}</td>`).join("")}</tr>`;
+        `<td class="num">${c == null ? "-" : esc(c)}</td>`).join("")}</tr>`;
     }).join("");
   }
   const dt = $("#ir-dt");
@@ -3235,13 +3252,13 @@ function renderMobility(d){
         <div class="val" data-count="${ev || 0}">0</div>
         <div class="sub">${last ? esc(ymd(last)) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("EV share")}</div>
-        <div class="val">${share == null ? "—" : nf(share, 1) + "%"}</div>
+        <div class="val">${share == null ? "-" : nf(share, 1) + "%"}</div>
         <div class="sub">${T("of new vehicles")} · ${nf(tot)}</div></div>
       <div class="kpi"><div class="lab">${T("KTMB ridership")}</div>
         <div class="val" data-count="${ridTotal || 0}">0</div>
         <div class="sub">${ridDate ? esc(ymd(ridDate)) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("Busiest service")}</div>
-        <div class="val" style="font-size:19px">${busiest ? esc(busiest.label) : "—"}</div>
+        <div class="val" style="font-size:19px">${busiest ? esc(busiest.label) : "-"}</div>
         <div class="sub">${busiest ? nf(busiest.v) + " " + T("passengers") : ""}</div></div>
     </div>
     <div class="card mb">
@@ -3410,7 +3427,7 @@ const ETHNIC = [
   ["bumi_other",      "Bumiputera other", "#22d3ee"],
   ["chinese",         "Chinese",          "#fbbf24"],
   ["indian",          "Indian",           "#a78bfa"],
-  /* A muted slate for the 0.7% residual — it should not read as a peer of the
+  /* A muted slate for the 0.7% residual - it should not read as a peer of the
      four named groups, and green here sat too close to the Bumiputera teal. */
   ["other_citizen",   "Other citizens",   "#94a3b8"],
   ["other_noncitizen","Non-citizens",     "#f87171"],
@@ -3431,15 +3448,15 @@ function renderPopulation(d){
         <div class="val" data-count="${total || 0}" data-dec="0">0</div>
         <div class="sub">${last ? esc(ymd(last[0])) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("Year-on-year")}</div>
-        <div class="val" style="font-size:22px">${yoy == null ? "—" :
+        <div class="val" style="font-size:22px">${yoy == null ? "-" :
           `<span class="${yoy > 0 ? "down" : "up"}">${yoy > 0 ? "▲" : "▼"} ${nf(Math.abs(yoy), 2)}%</span>`}</div>
         <div class="sub">${prev ? T("vs ") + esc(String(prev[0]).slice(0, 4)) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("Largest group")}</div>
-        <div class="val" style="font-size:20px">${top ? esc(ethnicLabel(top[0])) : "—"}</div>
+        <div class="val" style="font-size:20px">${top ? esc(ethnicLabel(top[0])) : "-"}</div>
         <div class="sub">${top && ethTotal ? nf(top[1] / ethTotal * 100, 1) + "%" : ""}</div></div>
       <div class="kpi"><div class="lab">${T("Years on record")}</div>
         <div class="val" style="font-size:20px">${nf(d.trend.length)}</div>
-        <div class="sub">${d.trend.length ? esc(String(d.trend[0][0]).slice(0, 4)) + "–" +
+        <div class="sub">${d.trend.length ? esc(String(d.trend[0][0]).slice(0, 4)) + "-" +
           esc(String(last[0]).slice(0, 4)) : ""}</div></div>
     </div>
     <div class="grid g2">
@@ -3507,14 +3524,14 @@ function paintEthnicity(d){
           titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
           usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
           callbacks:{ label: it => ` ${nf(it.parsed * 1000)} · ` +
-            (total ? nf(it.parsed / total * 100, 1) + "%" : "—") } },
+            (total ? nf(it.parsed / total * 100, 1) + "%" : "-") } },
       },
     },
   });
   const dt = $("#eth-dt");
   if (dt) dt.innerHTML = dataTableHTML([T("Group"), T("Population"), T("Share")],
     rows.map(r => [ethnicLabel(r[0]), nf(r[1] * 1000),
-      total ? nf(r[1] / total * 100, 1) + "%" : "—"]), [1, 2]);
+      total ? nf(r[1] / total * 100, 1) + "%" : "-"]), [1, 2]);
 }
 
 /* ════════════════════════════ health view ════════════════════════════ */
@@ -3524,13 +3541,13 @@ const H_RANGES = { "6m":183, "1y":365, "all":Infinity };
    what makes it feel slow, not the draw. */
 const H_ANIM_MAX = 1500;
 /* A "view data table" listing 14 years of days would be tens of thousands of
-   rows of DOM. Show the most recent slice — the chart above it is the full
+   rows of DOM. Show the most recent slice - the chart above it is the full
    picture, and the table exists for screen readers and spot-checks. */
 const H_TABLE_MAX = 400;
 
 const hIso = (ds, i) => isoOf(ds.t0 + i);
 
-/** Trailing 7-day mean, computed rather than stored — the smoothed series is
+/** Trailing 7-day mean, computed rather than stored - the smoothed series is
  *  the same size as the raw one, and caching both would double what these
  *  daily sections cost in localStorage. */
 function dma7(a){
@@ -3544,7 +3561,7 @@ function dma7(a){
   return out;
 }
 /** Index of the first point to show for a range, anchored to the end of the
- *  series rather than to today — several of these feeds lag by a few days. */
+ *  series rather than to today - several of these feeds lag by a few days. */
 const hFrom = (len, range) => Math.max(0, len - (H_RANGES[range] ?? Infinity));
 
 function renderHealth(d){
@@ -3557,9 +3574,9 @@ function renderHealth(d){
   const pekaWeek = peka.slice(-7);
   const pekaAvg = pekaWeek.length
     ? Math.round(pekaWeek.reduce((a, v) => a + (v || 0), 0) / pekaWeek.length) : null;
-  /* A series the ministry has not published gets an em dash, not a zero — "no
+  /* A series the ministry has not published gets an em dash, not a zero - "no
      figure was reported" and "nobody donated" are very different statements. */
-  const kpiVal = v => v == null ? `<div class="val">—</div>`
+  const kpiVal = v => v == null ? `<div class="val">-</div>`
                                 : `<div class="val" data-count="${v}">0</div>`;
 
   const rangeSeg = (name, cur) => `<span class="seg" role="group" aria-label="${T("Date range")}">
@@ -3568,7 +3585,7 @@ function renderHealth(d){
 
   $("#body-health").innerHTML = `
     <div class="hbar mb">
-      <span class="hstamp">🗓 ${T("Health data updated")}: ${esc(d.updated || "—")}</span>
+      <span class="hstamp">🗓 ${T("Health data updated")}: ${esc(d.updated || "-")}</span>
     </div>
     <div class="grid g4 mb">
       <div class="kpi"><div class="lab">${T("Blood donations")}</div>
@@ -3624,7 +3641,7 @@ function renderHealth(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="peka-dt"></div></details></div>
     </div>
-    <p class="credit">${T("Data: MoH via data.gov.my")} —
+    <p class="credit">${T("Data: MoH via data.gov.my")} -
       <a href="https://developer.data.gov.my/realtime-api/data-catalogue" target="_blank"
          rel="noopener">data catalogue</a></p>`;
 
@@ -3691,8 +3708,8 @@ function paintDonations(d){
   chart("don-chart", {
     type:"line",
     data:{ labels, datasets:[
-      /* Daily donations are spiky — weekday drives run into the thousands, weekends
-         near zero — so the raw series is drawn faintly and the average on top of it. */
+      /* Daily donations are spiky - weekday drives run into the thousands, weekends
+         near zero - so the raw series is drawn faintly and the average on top of it. */
       { label:T("Daily donors"), data:daily, borderColor:"rgba(248,113,113,.5)", borderWidth:1,
         pointRadius:0, tension:.2, fill:true,
         backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#f87171") },
@@ -3708,7 +3725,7 @@ function paintDonations(d){
 
 /** The four types side by side, smoothed. The raw daily counts follow the same
  *  weekday rhythm for every type, so plotting them unsmoothed would show that
- *  rhythm four times over and hide the thing worth seeing — the gap between
+ *  rhythm four times over and hide the thing worth seeing - the gap between
  *  O and AB. Fixed to one year: the split is a composition, not a trend. */
 function paintBloodTypes(d){
   const S = d.don.series;
@@ -3733,7 +3750,7 @@ function paintBloodTypes(d){
 
 function paintOrgan(d){
   const all = d.organ.series.value; if (!all) return;
-  /* Cumulative from the very first day — the pledge count is a running total,
+  /* Cumulative from the very first day - the pledge count is a running total,
      so it is never windowed by a range toggle. */
   const labels = [], cum = [];
   let run = 0;
@@ -3825,7 +3842,7 @@ async function loadFlights(force){
 
 function fTime(s){
   /* "2026-08-09 00:05:00" → "00:05" */
-  if (!s) return "—";
+  if (!s) return "-";
   const m = String(s).match(/(\d{2}):(\d{2})/); return m ? `${m[1]}:${m[2]}` : String(s).slice(5,16);
 }
 
@@ -3848,10 +3865,10 @@ function paintFlights(){
       return `<tr>
         <td><span class="mono" style="font-weight:650">${esc(f.flightNumber)}</span>
           <span class="dim" style="display:block;font-size:10.5px">${esc(f.airline)}</span></td>
-        <td class="wrapcell" style="min-width:130px">${esc(city || "—")}</td>
+        <td class="wrapcell" style="min-width:130px">${esc(city || "-")}</td>
         <td class="num mono">${fTime(f.scheduled)}</td>
-        <td><span class="fs-badge ${tone}">${esc(lab || "—")}</span></td>
-        <td class="mono dim">${esc(f.gate || "—")}${f.belt ? ` · B${esc(f.belt)}` : ""}</td>
+        <td><span class="fs-badge ${tone}">${esc(lab || "-")}</span></td>
+        <td class="mono dim">${esc(f.gate || "-")}${f.belt ? ` · B${esc(f.belt)}` : ""}</td>
       </tr>`; }).join("")}
       ${!rows.length ? `<tr><td colspan="5" class="state">${T("No flights match ")}“${esc(fids.q)}”.</td></tr>` : ""}
     </tbody></table>`;
@@ -4007,7 +4024,7 @@ function paintRailDiagram(){
   /* measure label widths with a scratch canvas; the rail spine is
      left-aligned at a fixed x (like classic metro diagrams) and columns
      grow only as wide as their longest label, capped so no card gets
-     enormous — anything longer is truncated with an ellipsis */
+     enormous - anything longer is truncated with an ellipsis */
   const mctx = document.createElement("canvas").getContext("2d");
   const tw = (s, f) => { mctx.font = f; return mctx.measureText(s).width; };
   const labelFont = "600 9px Inter,system-ui,-apple-system,sans-serif";
@@ -4023,7 +4040,7 @@ function paintRailDiagram(){
   const padT = 26, padB = 12;
   host.innerHTML = `<div class="metro-wrap"><div class="metro-head">
       <h4>${T("LRT & MRT network")}</h4>
-      <span class="sub">${T("Rapid KL rail — click a station to open it on the map")}</span>
+      <span class="sub">${T("Rapid KL rail - click a station to open it on the map")}</span>
       <span class="right"><span class="seg" role="group" aria-label="View">
         <button data-mv="schematic" aria-pressed="false">${T("Schematic")}</button>
         <button data-mv="map" aria-pressed="true">${T("Network map")}</button>
@@ -4054,7 +4071,7 @@ function paintRailDiagram(){
         const multi = calls.has(k) && calls.get(k).length > 1;
         const linesHere = (calls.get(k) || []).join(", ");
         return `<g class="metro-stn" data-idx="${i}" tabindex="0" role="button" aria-label="${esc(s.name)}">
-          <title>${esc(s.name)}${multi ? " — " + esc(linesHere) : ""}</title>
+          <title>${esc(s.name)}${multi ? " - " + esc(linesHere) : ""}</title>
           ${multi ? `<circle cx="${spineX}" cy="${y}" r="${dotR + 3.5}" fill="none" stroke="${esc(l.color)}" stroke-width="1.6"/>` : ""}
           <circle cx="${spineX}" cy="${y}" r="${dotR}" fill="${esc(l.color)}" stroke="var(--bg)" stroke-width="1.5"/>
           <text x="${labelX}" y="${y + 3.5}" class="metro-lbl">${esc(trunc(s.name || "", labelFont, avail))}</text>
@@ -4092,7 +4109,7 @@ function paintRailDiagram(){
     };
   });
   host.hidden = false;
-  /* Schematic ⇄ network-map toggle — network map is the default view */
+  /* Schematic ⇄ network-map toggle - network map is the default view */
   const setMv = (mode) => {
     host.querySelectorAll("[data-mv]").forEach(x =>
       x.setAttribute("aria-pressed", String(x.dataset.mv === mode)));
@@ -4105,7 +4122,7 @@ function paintRailDiagram(){
   });
   setMv("map");   // paint the network map right away (default view)
 }
-/* All 8 lines as colored polylines on one Leaflet map — interchanges show
+/* All 8 lines as colored polylines on one Leaflet map - interchanges show
    as ringed dots where the lines physically cross. Lazy-built on first
    "Network map" click because Leaflet cannot measure hidden containers. */
 let railMapInst = null;
@@ -4171,7 +4188,7 @@ function paintFilters(){
     if (tgeo.status === "ok" && tgeo.near)
       st.textContent = `${T("Showing nearest stops from ")}${tgeo.lat.toFixed(3)}, ${tgeo.lon.toFixed(3)}`;
     else if (tgeo.status === "asking") st.textContent = T("Locating…");
-    else if (tgeo.status === "denied") st.textContent = T("Location permission denied — search by name instead.");
+    else if (tgeo.status === "denied") st.textContent = T("Location permission denied - search by name instead.");
     else if (tgeo.status === "unavailable") st.textContent = T("Couldn't pin your location.");
     else st.textContent = "";
   }
@@ -4196,7 +4213,7 @@ function paintBlocks(){
           <div class="sub">${esc(f.desc)}</div></div>
       </div>
       <div class="card mb">
-        <div class="card-h"><h4>${T("Busiest routes — ")}${esc(f.label)}</h4>
+        <div class="card-h"><h4>${T("Busiest routes - ")}${esc(f.label)}</h4>
           <span class="sub">${T("by scheduled trips")}</span>
           <span class="right"><span class="seg" role="group" aria-label="Rows to show">
             ${[10,25,"all"].map(v => `<button data-top="${v}" data-feed="${f.key}" aria-pressed="${String(v) === String(topN)}">${v === "all" ? "ALL" : "TOP " + v}</button>`).join("")}
@@ -4207,7 +4224,7 @@ function paintBlocks(){
             const pct = f.top[0].trips ? (r.trips / f.top[0].trips) * 100 : 0;
             return `<tr>
               <td><span class="pill" style="background:${esc(r.color)}22;color:${esc(r.color)};border:1px solid ${esc(r.color)}55">${esc(r.short)}</span></td>
-              <td class="wrapcell">${esc(r.long || "—")}</td>
+              <td class="wrapcell">${esc(r.long || "-")}</td>
               <td class="num" style="font-weight:650">${nf(r.trips)}</td>
               <td><div style="background:var(--surface-3);border-radius:99px;height:6px;overflow:hidden">
                 <div style="width:${pct.toFixed(1)}%;height:100%;background:${esc(r.color)};border-radius:99px"></div></div></td>
@@ -4217,7 +4234,7 @@ function paintBlocks(){
       </div>
     </div>`; }).join("")}
     <div class="card">
-      <div class="card-h"><h4>${T("All stops — both networks")}</h4>
+      <div class="card-h"><h4>${T("All stops - both networks")}</h4>
         <span class="sub">${T("type to filter or use “Find stops near me”")}</span>
         <span class="right"><span class="dim" id="tr-stop-count"></span></span></div>
       <div class="tw scroll-y" style="max-height:420px"><table>
@@ -4246,7 +4263,7 @@ function paintStops(){
       return { ...x, km:d };
     })
     .filter(x => !sq || x.s.name.toLowerCase().includes(sq) || x.s.id.toLowerCase().includes(sq))
-    /* "near me" mode: stops beyond the radius have no distance — drop them */
+    /* "near me" mode: stops beyond the radius have no distance - drop them */
     .filter(x => !near || x.km != null)
     .sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9))
     .slice(0, 200);
@@ -4260,11 +4277,11 @@ function paintStops(){
   rows.innerHTML = ranked.map(x => `<tr>
       <td><span class="pill">${esc(x.label)}</span></td>
       <td class="wrapcell" style="min-width:160px;font-weight:550">${esc(x.s.name)}</td>
-      ${near ? `<td class="num" style="font-weight:650">${x.km != null ? kmTxt(x.km) : "—"}</td>`
+      ${near ? `<td class="num" style="font-weight:650">${x.km != null ? kmTxt(x.km) : "-"}</td>`
              : `<td><a class="maplink" href="https://www.openstreetmap.org/?mlat=${x.s.lat.toFixed(5)}&mlon=${x.s.lon.toFixed(5)}#map=17/${x.s.lat.toFixed(5)}/${x.s.lon.toFixed(5)}" target="_blank" rel="noopener">🗺 ${T("View on map")}</a></td>`}
     </tr>`).join("")
     || `<tr><td colspan="3" class="state">${near
-        ? T("No stops found within your area — try widening your search or switching network.")
+        ? T("No stops found within your area - try widening your search or switching network.")
         : T("No stops match ") + "“" + esc(stopQ) + "”."}</td></tr>`;
 }
 function animateCounters(root){
@@ -4275,11 +4292,19 @@ function animateCounters(root){
 
 /* ════════════════════════════ trend radar carousel ════════════════════════════ */
 async function loadRadar(){
-  /* radar.json is same-origin static data generated by the CI pipeline —
+  /* radar.json is same-origin static data generated by the CI pipeline -
      no rate-limit family, fetched straight from the site root. */
   const r = await fetch("/radar.json", { cache: "no-store" });
   if (!r.ok) throw new ApiError("Trend Radar data unavailable.", "http");
-  return r.json();
+  const d = await r.json();
+  /* Gemini-written titles occasionally carry en/em dashes; normalise them
+     once at load so every surface (carousel, modal, refresh, feed) stays
+     clean without touching the collected data file. */
+  for (const i of (d.top_issues || [])){
+    if (i.title_bm) i.title_bm = dc(i.title_bm);
+    if (i.title_en) i.title_en = dc(i.title_en);
+  }
+  return d;
 }
 
 const FC_BADGE = {
@@ -4442,23 +4467,43 @@ let lvdata = null;
 const lvMaps = {};
 function vcard(f, v){
   return `<div class="card vcard">
-    <div class="card-h"><h4 class="mono">${esc(v.vehicleId || v.entityId || "—")}</h4>
+    <div class="card-h"><h4 class="mono">${esc(v.vehicleId || v.entityId || "-")}</h4>
       ${v.routeId ? `<span class="pill" style="background:var(--accent-dim);color:${cssVar("--chip-fg")}">${esc(v.routeId)}</span>` : ""}</div>
     <div class="card-b">
       <div class="vrow"><span>${T("Network")}</span><span>${esc(f.label)}</span></div>
-      <div class="vrow"><span>${T("Trip")}</span><span class="mono dim">${esc(v.tripId || "—")}</span></div>
-      <div class="vrow"><span>${T("Speed")}</span><span>${v.speed == null ? "—" : nf(v.speed, 1) + " km/h"}</span></div>
-      <div class="vrow"><span>${T("Last seen")}</span><span>${v.timestamp ? ago(v.timestamp) : "—"}</span></div>
-      <div class="vrow"><span>${T("Position")}</span><span class="mono dim">${v.lat == null ? "—" : v.lat.toFixed(4) + ", " + v.lon.toFixed(4)}</span></div>
+      <div class="vrow"><span>${T("Trip")}</span><span class="mono dim">${esc(v.tripId || "-")}</span></div>
+      <div class="vrow"><span>${T("Speed")}</span><span>${v.speed == null ? "-" : nf(v.speed, 1) + " km/h"}</span></div>
+      <div class="vrow"><span>${T("Last seen")}</span><span>${v.timestamp ? ago(v.timestamp) : "-"}</span></div>
+      <div class="vrow"><span>${T("Position")}</span><span class="mono dim">${v.lat == null ? "-" : v.lat.toFixed(4) + ", " + v.lon.toFixed(4)}</span></div>
       ${v.lat == null ? "" : `<a class="link-btn" target="_blank" rel="noopener"
         href="https://www.google.com/maps?q=${v.lat},${v.lon}">map ↗</a>`}
     </div></div>`;
+}
+/* Live trains render as compact chips; the per-vehicle details (network,
+   trip, speed, last seen, position, map link) live in a hover/focus tooltip
+   so a busy KTMB feed doesn't sprawl into N full cards. Touch: tapping the
+   chip focuses it, which shows the tooltip the same way. */
+function vchip(f, v){
+  const rows = [
+    [T("Network"), esc(f.label)],
+    [T("Trip"), `<span class="mono">${esc(v.tripId || "-")}</span>`],
+    [T("Speed"), v.speed == null ? "-" : nf(v.speed, 1) + " km/h"],
+    [T("Last seen"), v.timestamp ? ago(v.timestamp) : "-"],
+    [T("Position"), `<span class="mono">${v.lat == null ? "-" : v.lat.toFixed(4) + ", " + v.lon.toFixed(4)}</span>`],
+  ].map(([k, val]) => `<div class="vrow"><span>${k}</span><span>${val}</span></div>`).join("");
+  return `<span class="vchip mono" tabindex="0" role="button" aria-label="${esc(v.vehicleId || v.entityId || "train")}">
+    ${esc(v.vehicleId || v.entityId || "-")}
+    ${v.routeId ? `<span class="pill" style="background:var(--accent-dim);color:${cssVar("--chip-fg")}">${esc(v.routeId)}</span>` : ""}
+    <span class="tip">${rows}
+      ${v.lat == null ? "" : `<a class="link-btn" target="_blank" rel="noopener"
+        href="https://www.google.com/maps?q=${v.lat},${v.lon}">map ↗</a>`}
+    </span></span>`;
 }
 function renderLive(d){
   lvdata = d;
   $("#body-live").innerHTML = Object.values(d).map(f => {
     const n = f.vehicles.length;
-    const ts = f.feedTimestamp ? ago(f.feedTimestamp) : "—";
+    const ts = f.feedTimestamp ? ago(f.feedTimestamp) : "-";
     return `<div style="margin-bottom:var(--s6)">
       <div class="grid g3 mb">
         <div class="kpi"><div class="lab">${esc(f.label)} ${T("live now")}</div>
@@ -4472,14 +4517,16 @@ function renderLive(d){
           <div class="sub">${T("among live ")}${esc(f.noun)}</div></div>
       </div>
       <div class="card mb">
-        <div class="card-h"><h4>${T("Live map — ")}${esc(f.label)}</h4>
+        <div class="card-h"><h4>${T("Live map - ")}${esc(f.label)}</h4>
           <span class="sub">${T("positions as broadcast")}</span></div>
         <div class="card-b" style="padding:0"><div class="lvmap" id="lvmap-${f.key}"></div></div>
       </div>
-      ${n ? `<div class="vgrid">${f.vehicles.map(v => vcard(f, v)).join("")}</div>`
+      ${n ? (f.key === "ktmb"
+          ? `<div class="vchips">${f.vehicles.map(v => vchip(f, v)).join("")}</div>`
+          : `<div class="vgrid">${f.vehicles.map(v => vcard(f, v)).join("")}</div>`)
           : `<div class="card"><div class="state"><div class="big">🌙</div>
-             <strong>${T(f.noun === "trains" ? "No trains are broadcasting right now" : "No buses are broadcasting right now")}</strong>
-             <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles — normal outside service hours, or when the operator's tracking feed is paused.")}</div></div>`}
+            <strong>${T(f.noun === "trains" ? "No trains are broadcasting right now" : "No buses are broadcasting right now")}</strong>
+            <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles - normal outside service hours, or when the operator's tracking feed is paused.")}</div></div>`}
       </div></div>`;
   }).join("");
   animateCounters($("#body-live"));
@@ -4512,7 +4559,7 @@ function paintMaps(){
         const delay = [1200, 3000, 6000][n] || 6000;
         setTimeout(() => { if (t.isConnected) t.src = t.src; }, delay);
       } else if (!fellBack && omsFailed >= 8) {
-        /* OSM looks down for everyone — switch the whole map to CARTO */
+        /* OSM looks down for everyone - switch the whole map to CARTO */
         fellBack = true;
         map.removeLayer(tiles);
         fallback.addTo(map);
@@ -4525,7 +4572,7 @@ function paintMaps(){
           radius: 6, color:"#0a0c10", weight:1.5,
           fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.9,
         }).addTo(map);
-        m.bindPopup(`<b>${esc(v.vehicleId || v.entityId || "—")}</b>` +
+        m.bindPopup(`<b>${esc(v.vehicleId || v.entityId || "-")}</b>` +
           (v.routeId ? ` · ${esc(v.routeId)}` : "") +
           (v.tripId ? `<br>${esc(v.tripId)}` : "") +
           (v.timestamp ? `<br>${ago(v.timestamp)}` : ""));
@@ -4558,7 +4605,7 @@ function renderKpis(){
   host.innerHTML = cards.map(c => {
     const s = kpiState[c.k];
     return `<a class="kpi${s ? " fade" : " kpi-load"}" href="${c.href}"
-      aria-label="${esc(T(c.lab))} — go to the ${esc(c.href.slice(1))} section">
+      aria-label="${esc(T(c.lab))} - go to the ${esc(c.href.slice(1))} section">
       <div class="kpi-t"><span class="lab">${ico(c.ico)} ${esc(T(c.lab))}</span>
         <span class="go" aria-hidden="true">↗</span></div>
       ${s ? `<div class="val" id="kpi-${c.k}"></div>
@@ -4577,7 +4624,7 @@ function renderKpis(){
 /* ════════════════════════════ orchestration ════════════════════════════ */
 const META = {
   weather:{ title:"Weather & Warnings",
-    desc:"Seven-day forecast for every state, district and town in Malaysia — plus severe-weather warnings and recent earthquakes.",
+    desc:"Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.",
     how:"Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.",
     eps:["/weather/forecast","/weather/warning","/weather/warning/earthquake"] },
   fuel:{ title:"Fuel & Households",
@@ -4585,35 +4632,35 @@ const META = {
     how:"Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.",
     eps:["/data-catalogue?id=fuelprice","/data-catalogue?id=hh_income"] },
   economy:{ title:"Economy",
-    desc:"Department of Statistics Malaysia — headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.",
-    how:"Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly — all from OpenDOSM. The EPF dividend card comes from the general data catalogue.",
+    desc:"Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.",
+    how:"Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.",
     eps:["/opendosm?id=cpi_core","/opendosm?id=cpi_headline&filter=overall@division",
          "/opendosm?id=cpi_state&filter=overall@division","/opendosm?id=lfs_month",
          "/opendosm?id=gdp_qtr_real","/data-catalogue?id=epf_dividend"] },
   finance:{ title:"Finance",
     desc:"Exchange rates and interest rates from Bank Negara Malaysia, and the daily pulse of FPX online payments from PayNet.",
-    how:"Exchange rates are Bank Negara's reference rates — either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.",
+    how:"Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume.",
     eps:["/data-catalogue?id=exchangerates",
          "/data-catalogue?id=exchangerates_daily_1200&filter=middle@rate_type",
          "/data-catalogue?id=interestrates",
          "/data-catalogue?id=trnsc_daily_fpx&filter=both@model"] },
   mobility:{ title:"Vehicles & Ridership",
-    desc:"New vehicle registrations split by fuel type — the EV adoption curve — and daily passenger numbers on every KTMB rail service.",
+    desc:"New vehicle registrations split by fuel type - the EV adoption curve - and daily passenger numbers on every KTMB rail service.",
     how:"Registrations are counted by the Road Transport Department (JPJ) at first registration and published monthly by fuel type; only all-vehicle totals are charted here. Ridership is KTMB's own daily passenger count per service, published to the previous day.",
     eps:["/data-catalogue?id=registrations_type_fuel&filter=all_types@type",
          "/data-catalogue?id=ridership_ktmb_daily"] },
   population:{ title:"Population",
     desc:"How many people live in Malaysia, every year since 1970, and how the population is made up today.",
-    how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown — the state-level dataset has not been updated since 2023.",
+    how:"DOSM's annual national population estimates, published to 1 January each year in thousands of people. Only the national series is shown - the state-level dataset has not been updated since 2023.",
     eps:["/opendosm?id=population_malaysia&filter=overall@age"] },
   health:{ title:"Health & Donations",
-    desc:"Blood donations by blood type, organ pledges and PeKa B40 health screenings — published daily by the Ministry of Health.",
+    desc:"Blood donations by blood type, organ pledges and PeKa B40 health screenings - published daily by the Ministry of Health.",
     how:"The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.",
     eps:["/data-catalogue?id=blood_donations","/data-catalogue?id=organ_pledges",
          "/data-catalogue?id=pekab40_screenings"] },
   transport:{ title:"Public Transport",
-    desc:"Scheduled bus and train routes for KTMB and Rapid KL — the busiest lines, and how many stops and trips each network runs.",
-    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser — only routes, trips and stops are read, never the largest file.",
+    desc:"Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.",
+    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips and stops are read, never the largest file.",
     eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl"] },
   live:{ title:"Live Vehicles",
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
@@ -4652,7 +4699,7 @@ const LOADERS = {
       return m || null;
     } },
   finance:  { load:loadFinance,   render:renderFinance,   asOf:d => {
-      /* FPX is daily and the FX averages are monthly — the section is as fresh
+      /* FPX is daily and the FX averages are monthly - the section is as fresh
          as its freshest series. */
       let m = null;
       for (const s of [d.fx, d.fxd, d.fpx])
@@ -4690,7 +4737,7 @@ function setSecTime(id, mode){
   const n = $("#time-" + id); if (!n) return;
   const at = stamps[id] ? hhmm(stamps[id]) : "";
   const dd = dataDate[id];
-  /* 183 days ≈ 6 months — the freshness policy's "may be delayed" threshold. */
+  /* 183 days ≈ 6 months - the freshness policy's "may be delayed" threshold. */
   const stale = dd ? (Date.now() - new Date(dd).getTime() > 183 * 86400000) : false;
   let text = "", cls = "";
   if (mode === "loading"){ text = "loading…"; cls = " loading"; }
@@ -4698,7 +4745,7 @@ function setSecTime(id, mode){
     if (dd){ text = T("data as of ") + md(dd); if (stale){ text += " ⚠️ " + T("may be delayed"); cls = " warn"; } }
     else text = (mode === "cached" ? T("cached · fetched ") : T("updated ")) + at;
   }
-  else if (mode === "error"){ text = T("refresh failed — showing last data"); cls = " error"; }
+  else if (mode === "error"){ text = T("refresh failed - showing last data"); cls = " error"; }
   n.textContent = text; n.className = "sec-time" + cls;
   secMode[id] = mode;
 }
@@ -4718,9 +4765,9 @@ async function loadSection(id, force){
         setDot(id, "ok"); setSecTime(id, "cached");
         tick(); renderKpis();
         return;
-      } catch { /* shape drift — refetch */ }
+      } catch { /* shape drift - refetch */ }
     }
-    /* Keep whatever is already on screen during a refresh — never replace
+    /* Keep whatever is already on screen during a refresh - never replace
        existing content with skeletons. Only first load shows them. */
     const hasContent = loaded.has(id);
     if (!hasContent) skeleton(id);
@@ -4747,7 +4794,7 @@ function tick(){
   bar.style.width = (ts.length / SECTIONS.length * 100) + "%";
   if (ts.length === SECTIONS.length) setTimeout(() => { bar.style.width = "0%"; }, 800);
   /* the clock is wrapped so the narrow-screen rule can drop it and leave the
-     progress count — at full width it is the widest thing in the header and
+     progress count - at full width it is the widest thing in the header and
      forces the whole control row to wrap */
   $("#stamp-t").innerHTML = ts.length
     ? `<span class="stamp-time">${esc(T("Updated"))} ${esc(hms(Math.max(...ts)))} · </span>${ts.length}/${SECTIONS.length}`
@@ -4776,7 +4823,7 @@ function primeCached(){
       if (LOADERS[s.id].after) LOADERS[s.id].after(rec.d);
       loaded.add(s.id); stamps[s.id] = rec.t; dataMap[s.id] = rec.d;
       setDot(s.id, "ok"); setSecTime(s.id, "cached");
-    } catch { /* shape drift — refetch on load */ }
+    } catch { /* shape drift - refetch on load */ }
   }
   tick(); renderKpis();
 }
@@ -4802,7 +4849,7 @@ function pwa(){
   syncNet = () => {
     const off = !navigator.onLine;
     net.hidden = !off;
-    if (off){ net.className = "badge off"; netT.textContent = T("Offline — showing cached data"); }
+    if (off){ net.className = "badge off"; netT.textContent = T("Offline - showing cached data"); }
   };
   addEventListener("online", syncNet);
   addEventListener("offline", syncNet);
