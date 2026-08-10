@@ -7,7 +7,13 @@ the data straight to KV. The Worker serves the KV copy with a static-file
 fallback.
 
 Modes:
-  push [--snap]   Upload public/{slow,health,radar}.json + feed.xml to KV.
+  push [keys...] [--snap]
+                  Upload public/{slow,health,radar,prices}.json + feed.xml to
+                  KV. Naming one or more keys restricts the upload to those.
+                  Do that whenever a workflow regenerates only part of the set:
+                  an unfiltered push also re-uploads the *git-committed* copies
+                  of the files it did not touch, clobbering fresher KV values
+                  written by another collector.
                   --snap also builds the SEO snapshot from embed_seo.snapshot()
                   and uploads it as the 'seo_snap' key (index.html splice).
   pull <key> <dest>  Download a KV key into a local file (used by the radar
@@ -30,6 +36,7 @@ FILES = {
     "slow": "public/slow.json",
     "health": "public/health.json",
     "radar": "public/radar.json",
+    "prices": "public/prices.json",
     "feed": "public/feed.xml",
 }
 
@@ -68,8 +75,10 @@ def put(key, value):
     print(f"kv: uploaded {key} ({len(value)} bytes)")
 
 
-def push(include_snap=False):
+def push(include_snap=False, only=None):
     for key, path in FILES.items():
+        if only and key not in only:
+            continue
         try:
             with open(path, encoding="utf-8") as f:
                 put(key, f.read())
@@ -104,7 +113,11 @@ def pull(key, dest):
 if __name__ == "__main__":
     args = sys.argv[1:]
     if args and args[0] == "push":
-        push(include_snap="--snap" in args)
+        only = [a for a in args[1:] if not a.startswith("--")]
+        unknown = [k for k in only if k not in FILES]
+        if unknown:
+            sys.exit(f"kv: unknown key(s) {unknown}; known: {sorted(FILES)}")
+        push(include_snap="--snap" in args, only=only or None)
     elif args and args[0] == "pull" and len(args) == 3:
         pull(args[1], args[2])
     else:

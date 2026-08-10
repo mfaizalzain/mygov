@@ -1,0 +1,76 @@
+name: Update PriceCatcher Basket Index
+
+on:
+  # PriceCatcher's monthly Parquet is rebuilt daily at 12:00 UTC, so run after
+  # that: 13:30 UTC = 9:30 PM MYT. Daily, because the current month's file
+  # gains a day of prices every day.
+  schedule:
+    - cron: '30 13 * * *'
+  # Manual trigger so a delayed/skipped cron can be caught up instantly
+  workflow_dispatch:
+    inputs:
+      months:
+        description: 'Months of history to aggregate (default 13)'
+        required: false
+        default: '13'
+
+jobs:
+  collect-prices:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # The other collectors are stdlib-only. This one cannot be: PriceCatcher
+      # is published as Parquet and no stdlib module reads it.
+      - name: Install dependencies
+        run: pip install --disable-pip-version-check 'pandas~=2.2' 'pyarrow~=21.0'
+
+      - name: Syntax check collector
+        run: |
+          python3 -m py_compile tools/collect_prices.py
+          echo "syntax OK"
+
+      - name: Run collector (PriceCatcher basket index)
+        run: |
+          python3 tools/collect_prices.py --months "${{ inputs.months || '13' }}"
+
+      # Sanity gate: a silently-empty or wildly-wrong index is worse than a
+      # stale one, so refuse to publish rather than overwrite good KV data.
+      - name: Validate output
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open('public/prices.json'))
+          nat = (d.get('basket') or {}).get('national') or []
+          errs = []
+          if d['basket']['n'] < 80:
+              errs.append(f"basket too small: {d['basket']['n']} items")
+          if len(nat) < 6 or any(v is None for v in nat):
+              errs.append(f"index has gaps: {nat}")
+          elif not all(40 < v < 250 for v in nat):
+              errs.append(f"index out of plausible range: {nat}")
+          if len(d.get('districts') or {}) < 100:
+              errs.append(f"only {len(d.get('districts') or {})} districts")
+          if len(d.get('items') or []) < 80:
+              errs.append(f"only {len(d.get('items') or [])} items")
+          if errs:
+              sys.exit('prices: validation failed -> ' + '; '.join(errs))
+          print(f"ok: {d['basket']['n']} items, {len(d['districts'])} districts, "
+                f"index {nat[0]} -> {nat[-1]}, asOf {d['asOf']}")
+          PY
+
+      # Only the `prices` key: an unfiltered push would also re-upload the
+      # git-committed slow/health/radar copies over fresher KV values.
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push prices

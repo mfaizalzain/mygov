@@ -233,6 +233,90 @@ export default {
       return out;
     }
 
+    /* JPS flood / water level proxy.
+     *
+     * publicinfobanjir.water.gov.my serves its live telemetry as static JSON
+     * files on the WordPress theme path (the old /waterlevel/ endpoints are
+     * gone). The two feeds:
+     *   - latestreadingstrendabc.json (~1.3 MB, all 2700+ stations): current
+     *     water level (m), status (Danger/Warning/Alert/Normal/Error), trend
+     *     (Rising/Steady/Receding), lat/lon, district/state, last reading ts.
+     *     Fields are single letters (a..nn) - legacy, no header.
+     *   - newrtureadings.json (~100 KB): station metadata + telemetry flags.
+     * The browser cannot reasonably ship 1.3 MB per visitor, so this route
+     * slims to the at-risk stations only (Danger/Warning/Alert) plus a
+     * per-state summary. Edge-caches 5 min - flood telemetry updates every
+     * 15 min upstream, so 5 min is a fair sharing window. */
+    if (url.pathname === "/api/flood") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      const FEED = "https://publicinfobanjir.water.gov.my/wp-content/themes/enlighten/data/latestreadingstrendabc.json";
+      let res;
+      try {
+        res = await fetch(FEED, { headers: { "user-agent": UA }, cf: { cacheTtl: 300, cacheEverything: true } });
+      } catch {
+        return json({ error: "upstream_unreachable" }, 502);
+      }
+      if (!res.ok)
+        return json({ error: "upstream_error", status: res.status }, res.status === 429 ? 429 : 502);
+
+      let rows;
+      try { rows = await res.json(); }
+      catch { return json({ error: "bad_upstream_payload" }, 502); }
+
+      const now = Date.now();
+      const parseTs = s => {
+        if (!s) return null;
+        const m = String(s).match(/^(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2})/);
+        if (!m) return null;
+        // JPS timestamps are local (MYT, UTC+8, no DST).
+        return Math.floor(Date.parse(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:00+08:00`) / 1000);
+      };
+      const num = v => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+
+      const atRisk = [];
+      const stateStats = {};
+      const WATCH = new Set(["Danger", "Warning", "Alert"]);
+      // Only CURRENT risk: the feed carries dead telemetry (last reading
+      // months/years old) alongside live stations. A 2025 "Danger" marker is
+      // not today's flood risk - it is a broken gauge. Require a reading
+      // within 24h so the map shows today's picture only.
+      const FRESH_MS = 24 * 3600 * 1000;
+      for (const s of Array.isArray(rows) ? rows : []) {
+        const status = String(s.n || "");
+        if (!WATCH.has(status)) continue;
+        const ts = parseTs(s.q) ? parseTs(s.q) * 1000 : null;
+        if (!ts || now - ts > FRESH_MS) continue;
+        const state = String(s.f || "Unknown");
+        stateStats[state] = (stateStats[state] || 0) + 1;
+        atRisk.push({
+          id: String(s.a || ""),
+          name: String(s.b || ""),
+          lat: num(s.c), lon: num(s.d),
+          district: String(s.e || ""), state,
+          river: String(s.g || ""), basin: String(s.h || ""),
+          type: String(s.i || ""),
+          level: num(s.m), dangerLevel: num(s.o), margin: num(s.p),
+          status, trend: String(s.s || ""),
+          ts,
+          updated: new Date(now).toISOString(),
+        });
+      }
+      const out = json({
+        updated: new Date(now).toISOString(),
+        at_risk: atRisk.length,
+        states: Object.entries(stateStats)
+          .map(([state, count]) => ({ state, count }))
+          .sort((a, b) => b.count - a.count),
+        stations: atRisk,
+      }, 200, { "cache-control": "public, max-age=300" });
+      return out;
+    }
+
     /* Malaysia Airports FIDS (flight information display) proxy.
      *
      * The official live arrivals/departures board on malaysiaairports.com.my
@@ -352,6 +436,7 @@ export default {
       "/slow.json":   { key: "slow",  type: "json" },
       "/health.json": { key: "health", type: "json" },
       "/radar.json":  { key: "radar",  type: "json" },
+      "/prices.json": { key: "prices", type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {

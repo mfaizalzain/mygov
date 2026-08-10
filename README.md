@@ -34,6 +34,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
 | Live | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
+| Flood | JPS (DID) | Live water-level stations at danger / warning / alert, from JPS's public info banjir telemetry - status-coloured map, per-state counts, station chips with level, trend and last-reading |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 
 ---
@@ -77,14 +78,20 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
 
 ## KKM health data + slow-data collector (daily)
 
-Two collectors pre-fetch everything that changes at most daily, so visitors
-spend zero API budget on it. Both run as GitHub Actions and commit a static
+Three collectors pre-fetch everything that changes at most daily, so visitors
+spend zero API budget on it. All run as GitHub Actions and produce a static
 JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
 | Collector | Workflow | Writes | Contents |
 | --- | --- | --- | --- |
 | KKM health | `collect_health.yml`, daily 00:30 UTC | `public/health.json` | blood donations (3y), organ pledges, PeKa B40 |
 | Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance, mobility, economy, population |
+| PriceCatcher | `collect_prices.yml`, daily 13:30 UTC | `public/prices.json` | grocery basket index, per-item prices, 166 districts |
+
+> Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
+> unfiltered push also re-uploads the git-committed copies of the files that
+> run did *not* regenerate, clobbering fresher KV values from another
+> collector.
 
 - Every collector finishes with `tools/embed_seo.py`, which (a) injects the
   **current headline values** (fuel, USD/MYR, CPI, blood donations, top radar
@@ -110,6 +117,60 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
 ---
 
+## PriceCatcher basket index
+
+KPDN enumerators record the shelf price of ~340 grocery items at ~2,100
+premises across all 177 districts, daily. `tools/collect_prices.py` turns that
+into `public/prices.json` (~87 KB).
+
+**It is not on the OpenAPI.** `pricecatcher` carries `exclude_openapi: true`,
+so `api.data.gov.my/data-catalogue/?id=pricecatcher` answers `404`. It exists
+only as monthly Parquet on `storage.data.gov.my` - ~2.5 MB and ~1.6 M rows
+*per month*. Same for `lookup_item` / `lookup_premise`. The collector reads 13
+months (~33 MB) and aggregates in CI, so the browser never sees any of it.
+This is also why it is the one collector with dependencies (`pandas`,
+`pyarrow`): no stdlib module reads Parquet.
+
+Two indices, because they answer different questions - both over a **fixed
+item basket**, since the set of items sampled drifts month to month and
+district to district, and an index over "whatever was recorded" measures the
+sampling rather than the prices:
+
+- **Over time** (`basket.national`, `basket.states`) - a **Jevons index**: the
+  geometric mean of each item's price relative to the base month, over items
+  priced in *every* month of the window. This is the standard
+  elementary-aggregate formula when expenditure weights are unavailable, which
+  they are: DOSM publishes no per-item CPI weights at this granularity. So it
+  is equal-weighted, and the UI must not call it "inflation".
+- **Across places** (`districts[].idx`) - a **spatial price level**: each
+  item's district median over its national median, then the geometric mean of
+  those ratios. `100` = the national average basket. Summing raw local prices
+  instead would rank districts by which items they happen to stock.
+
+`cheapest` ranks premises within their *own* district on the same relative-price
+basis, never on a raw basket total - a shop carrying only the cheap half of the
+basket must not be reported as the cheapest shop in town. A premise needs 15+
+basket items before it is ranked at all.
+
+Sanity checks that the numbers are right, not merely plausible:
+
+- The Aug 2025 → Aug 2026 basket change is **+1.27%**, against DOSM's official
+  CPI for food & non-alcoholic beverages (`cpi_headline_inflation`, division
+  `01`) at **+1.4%** over the same window. Independent method, independent
+  source, same answer.
+- The most expensive districts are Nabawan (120.9), Belaga (119.5) and Batu
+  Niah (116.5) - remote Sabah/Sarawak, which is the expected result.
+- Prices outside `[0.2x, 5x]` of an item's median are dropped as unit-entry
+  errors before any median is taken (~0.02% of rows).
+- `collect_prices.yml` refuses to publish if the basket falls under 80 items,
+  the index has gaps or leaves `40..250`, or coverage drops below 100
+  districts. A silently-wrong index is worse than a stale one.
+
+The current month is always partial (it gains a day of prices daily); the
+payload flags it as `partial` so the UI can mark that point.
+
+---
+
 ## Architecture
 
 ```
@@ -120,19 +181,20 @@ public/
   icons/                generated PNGs (192, 512, apple-touch)
   vendor/               self-hosted Chart.js, Leaflet (SRI-pinned)
 src/
-  index.js              Worker: static assets + /api/reverse, /api/gtfs, /api/fids, /api/rapid
+  index.js              Worker: static assets + /api/reverse, /api/gtfs, /api/fids, /api/rapid, /api/flood
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
   collect_radar.py      Trend Radar collector (see above)
   collect_health.py     KKM health collector → public/health.json
   collect_slow.py       slow-data collector → public/slow.json
+  collect_prices.py     PriceCatcher basket index → public/prices.json
   embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```
 
-The Worker serves `public/` through the `ASSETS` binding and owns four routes,
-`/api/reverse`, `/api/gtfs`, `/api/fids` and `/api/rapid`. Everything else is
-static.
+The Worker serves `public/` through the `ASSETS` binding and owns five routes,
+`/api/reverse`, `/api/gtfs`, `/api/fids`, `/api/rapid` and `/api/flood`.
+Everything else is static.
 
 > Static assets are served by Cloudflare's asset router **without invoking the
 > Worker**, so response headers for them come from `public/_headers`, not from
@@ -186,6 +248,17 @@ the map renders, and edge-caches for ~25 s so every visitor shares one
 upstream poll. The page aggregates those buses into route chips and grid
 clusters on the map (dissolving into individual markers as you zoom), so 800+
 points never freeze the browser.
+
+The fifth route, `/api/flood`, backs the Flood section. JPS's public info
+banjir site publishes its live gauge telemetry as a ~1.3 MB static JSON file
+(`latestreadingstrendabc.json`) on the WordPress theme path - the old
+`/waterlevel/` endpoints are gone. The Worker fetches it server-side, keeps
+only stations at **danger / warning / alert with a reading in the last 24
+hours** (the feed also carries dead gauges whose last reading is months old),
+slims each station to name, coordinates, level, threshold margin, trend and
+timestamp, adds a per-state count, and edge-caches for 5 minutes (upstream
+telemetry updates every 15). The page renders status-coloured markers on the
+map and one chip per station with the details in a tooltip.
 
 ### Security
 
@@ -249,6 +322,11 @@ slowest datasets arrive.
   `mnha`, which exist but are frozen (see *Data freshness* below), and
   `blood_donations`, `organ_pledges`, `pekab40_screenings`, which the KKM
   collector uses (see above)
+- **Parquet-only, not on the OpenAPI at all** (`exclude_openapi: true`, so
+  `?id=` returns 404): `pricecatcher`, `lookup_item`, `lookup_premise`,
+  `registration_transactions_car`, `ridership_od_*`. These live on
+  `storage.data.gov.my` and must be read as Parquet - see the PriceCatcher
+  section above
 - `opendosm`: `cpi_core`, `cpi_headline`, `lfs_month`, `gdp_qtr_real`,
   `population_malaysia`
 - Not found: `electrictariff`, `watertariff`, `interestrate`, `unemployment`,

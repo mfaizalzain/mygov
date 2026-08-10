@@ -542,6 +542,10 @@ th.sortable:hover{color:var(--fg-2)}
 th .arrow{opacity:.4;margin-left:3px}
 th[aria-sort] .arrow{opacity:1;color:var(--accent)}
 td{padding:9px var(--s3);border-bottom:1px solid var(--line-soft);white-space:nowrap}
+/* Item names ("KUBIS BULAT (TEMPATAN) · 1kg") are long and this table sits in
+   a half-width card, so let the name column wrap instead of forcing the whole
+   row into a horizontal scroll. */
+#px-movers td:first-child{white-space:normal;min-width:9.5rem}
 tbody tr:nth-child(even){background:rgba(255,255,255,.014)}
 tbody tr:last-child td{border-bottom:none}
 tbody tr.sel{background:var(--accent-dim)}
@@ -700,6 +704,7 @@ html[data-text="large"] table{font-size:14px}
 <svg class="ico-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><defs>
   <symbol id="i-weather" viewBox="0 0 24 24"><path d="M17.4 15.6H7.9a4.4 4.4 0 0 1 .3-8.8 5.5 5.5 0 0 1 10.2 1.4 3.6 3.6 0 0 1-1 7.4Z"/><path d="M8.8 18.6v1.9M12.5 18.2v3M16.2 18.6v1.9"/></symbol>
   <symbol id="i-fuel" viewBox="0 0 24 24"><path d="M3 21h12"/><path d="M4.5 21V5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v16"/><path d="M6.5 10h5"/><path d="M13.5 9H16a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0v-5.6L18 7.7"/></symbol>
+  <symbol id="i-basket" viewBox="0 0 24 24"><path d="M3 9h18l-1.7 9.3a2 2 0 0 1-2 1.7H6.7a2 2 0 0 1-2-1.7Z"/><path d="M8.5 9 11 3.8"/><path d="M15.5 9 13 3.8"/><path d="M9.5 13v3"/><path d="M14.5 13v3"/></symbol>
   <symbol id="i-population" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.2 5.6a3.2 3.2 0 0 1 0 6.1"/><path d="M17.6 14.4A6 6 0 0 1 21 20"/></symbol>
   <symbol id="i-economy" viewBox="0 0 24 24"><path d="M3 17.5 8.6 12l3.5 3.5L21 6.5"/><path d="M15 6.5h6v6"/></symbol>
   <symbol id="i-finance" viewBox="0 0 24 24"><path d="M4 8.5h13"/><path d="M14 5.5l3 3-3 3"/><path d="M20 15.5H7"/><path d="M10 12.5l-3 3 3 3"/></symbol>
@@ -707,6 +712,7 @@ html[data-text="large"] table{font-size:14px}
   <symbol id="i-mobility" viewBox="0 0 24 24"><path d="M5 13.6l1.5-4.5a2 2 0 0 1 1.9-1.4h7.2a2 2 0 0 1 1.9 1.4l1.5 4.5"/><path d="M4.6 13.6h14.8a1.6 1.6 0 0 1 1.6 1.6V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-1.8a1.6 1.6 0 0 1 1.6-1.6Z"/><circle cx="7.4" cy="18" r="1.5"/><circle cx="16.6" cy="18" r="1.5"/></symbol>
   <symbol id="i-transport" viewBox="0 0 24 24"><rect x="5" y="3.2" width="14" height="13" rx="3"/><path d="M5 10.2h14"/><path d="M9 13.3h.01M15 13.3h.01"/><path d="M7.5 20l1.8-3.8M16.5 20l-1.8-3.8"/></symbol>
   <symbol id="i-live" viewBox="0 0 24 24"><path d="M20 10.5c0 5.2-6.3 10.4-7.4 11.3a1 1 0 0 1-1.2 0C10.3 20.9 4 15.7 4 10.5a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10.3" r="2.8"/></symbol>
+  <symbol id="i-flood" viewBox="0 0 24 24"><path d="M3 13.5c2.5-1.2 4.5-1.2 7 0s4.5 1.2 7 0 2.5-1.2 4 0"/><path d="M3 18c2.5-1.2 4.5-1.2 7 0s4.5 1.2 7 0 2.5-1.2 4 0"/><path d="M12 3.5 7.2 8.3a3.4 3.4 0 0 0 6.8 0Z"/></symbol>
   <symbol id="i-temp" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4.5 4.5 0 1 0 4 0Z"/><path d="M12 9.5v5.8"/></symbol>
   <symbol id="i-ev" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4H11l-.9 8.1 8.4-10.9H12.3l.9-8.1Z"/></symbol>
   <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 4.4 2.7 17.5A2 2 0 0 0 4.4 20.5h15.2a2 2 0 0 0 1.7-3L13.7 4.4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4.2"/><path d="M12 17.2h.01"/></symbol>
@@ -744,6 +750,7 @@ html[data-text="large"] table{font-size:14px}
     <li hidden><a href="#radar-band" id="nav-radar-band"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> Trending</a></li>
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Fuel</a></li>
+    <li><a href="#prices" id="nav-prices"><span class="dot" id="dot-prices"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> Population</a></li>
     <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
     <li><a href="#finance" id="nav-finance"><span class="dot" id="dot-finance"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg> Finance</a></li>
@@ -860,6 +867,21 @@ html[data-text="large"] table{font-size:14px}
       </div>
       <div id="body-fuel"><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:40%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:34%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:28%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel skel-table"></div></div></div></div>
     </section>
+    <section id="prices" aria-labelledby="h-prices">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg></div>
+        <div><h3 id="h-prices">Groceries</h3>
+          <p>What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.</p>
+            <ul><li><code>GET storage.data.gov.my/pricecatcher/pricecatcher_YYYY-MM.parquet</code></li><li><code>GET storage.data.gov.my/pricecatcher/lookup_item.parquet</code></li><li><code>GET storage.data.gov.my/pricecatcher/lookup_premise.parquet</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-prices"></span>
+      </div>
+      <div id="body-prices"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+    </section>
     <section id="population" aria-labelledby="h-population">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-population"/></svg></div>
@@ -965,6 +987,23 @@ html[data-text="large"] table{font-size:14px}
       </div>
       <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
+    <section id="flood" aria-labelledby="h-flood">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg></div>
+        <div><h3 id="h-flood">Flood Risk</h3>
+          <p>Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.</p>
+            <ul><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-flood"></span>
+      </div>
+      <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+    </section>
+
+
 
 
 
@@ -1072,6 +1111,32 @@ const I18N = {
     "stns":"stns",
   },
   ms: {
+  /* Groceries (PriceCatcher) */
+  "Groceries":"Barangan Runcit", "Basket index":"Indeks bakul",
+  "Cheapest district":"Daerah termurah", "Most expensive district":"Daerah termahal",
+  "Basket size":"Saiz bakul", "items · priced every month":"barangan · berharga setiap bulan",
+  "since":"sejak", "Grocery basket over time":"Bakul runcit mengikut masa",
+  "equal-weighted, not CPI":"pemberat sama rata, bukan IHP",
+  "Compare a state":"Bandingkan negeri", "National only":"Kebangsaan sahaja",
+  "Grocery basket index over time":"Indeks bakul runcit mengikut masa",
+  "A Jevons index: the geometric mean of each item's price against the base month, over the":"Indeks Jevons: min geometri harga setiap barangan berbanding bulan asas, bagi",
+  "items priced in every one of these months. Equal-weighted, because no per-item expenditure weights are published - so this tracks shelf prices, not official inflation.":"barangan yang berharga pada setiap bulan ini. Pemberat sama rata, kerana tiada pemberat perbelanjaan setiap barangan diterbitkan - jadi ini menjejaki harga rak, bukan inflasi rasmi.",
+  "The final point is a part-month and will move.":"Titik terakhir ialah bulan separa dan akan berubah.",
+  "Biggest movers":"Perubahan terbesar", "12 months":"12 bulan",
+  "Filter movers":"Tapis perubahan", "Risers":"Naik", "Fallers":"Turun", "All":"Semua",
+  "Prices near you":"Harga berhampiran anda",
+  "100 = national average":"100 = purata kebangsaan",
+  "Choose a district":"Pilih daerah", "Choose a district…":"Pilih daerah…",
+  "Item":"Barangan", "Price (RM)":"Harga (RM)",
+  "1 mo":"1 bln", "12 mo":"12 bln", "Month":"Bulan", "Malaysia":"Malaysia",
+  "Pick a district to see how its basket compares with the national average, and which premises price it lowest.":"Pilih daerah untuk melihat perbandingan bakulnya dengan purata kebangsaan, dan premis mana yang paling murah.",
+  "vs the national basket":"berbanding bakul kebangsaan",
+  "items at":"barangan di", "premises":"premis",
+  "Lowest-priced premises in this district":"Premis termurah di daerah ini",
+  "Premise":"Premis", "Type":"Jenis", "vs district":"berbanding daerah",
+  "Compared item by item against the district median, so a shop that stocks only cheap items is not flattered. Each is priced on at least 15 basket items.":"Dibandingkan barangan demi barangan dengan median daerah, jadi kedai yang hanya menjual barangan murah tidak dilebihkan. Setiap satu berharga sekurang-kurangnya 15 barangan bakul.",
+  "Not enough premises in this district to rank shops.":"Premis di daerah ini tidak cukup untuk membuat kedudukan kedai.",
+
   "Refresh":"Muat semula", "Refreshing…":"Memuat semula…", "Loading…":"Memuatkan…",
   "Online":"Dalam talian", "Offline - showing cached data":"Luar talian - memaparkan data cache",
   "Updated":"Dikemas kini", "Skip to content":"Langkau ke kandungan",
@@ -1127,6 +1192,14 @@ const I18N = {
   "Active warnings":"Amaran aktif", "Vehicles live":"Kenderaan langsung",
   "issued by MET":"dikeluarkan oleh MET", "all clear":"tiada amaran", "week of ":"minggu ",
   "core CPI, ":"CPI teras, ", "trains + buses":"kereta api + bas", "none reporting now":"tiada laporan kini",
+  "Stations at risk":"Stesen berisiko", "reported within 24h":"dilaporkan dalam 24 jam",
+  "Danger / Warning / Alert":"Bahaya / Amaran / Waspada",
+  "water level vs station thresholds":"aras air vs ambang stesen",
+  "Last feed update":"Kemaskini suapan terakhir", "JPS telemetry":"Telemetri JPS",
+  "Flood risk map":"Peta risiko banjir", "Danger red · Warning amber · Alert yellow":"Bahaya merah · Amaran amber · Waspada kuning",
+  "Station":"Stesen", "River":"Sungai", "Water level":"Aras air", "Trend":"Trend",
+  "Last reading":"Bacaan terakhir", "stations at risk":"stesen berisiko",
+  "Flood":"Banjir", "Flood Risk":"Risiko Banjir",
   "Storm":"Ribut", "Rain":"Hujan", "Wind":"Angin", "Heat":"Panas", "Advisory":"Nasihat",
   "Search locations":"Cari lokasi", "Local time":"Masa tempatan", "Depth":"Kedalaman",
   "Nearest Malaysian town":"Bandar Malaysia terdekat",
@@ -1364,6 +1437,7 @@ const ico = (name, size) =>
 const SECTIONS = [
   { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
   { id:"fuel",      label:"Fuel",       icon:"fuel",       family:"data-catalogue" },
+  { id:"prices",    label:"Groceries",  icon:"basket",     family:"data-catalogue" },
   { id:"population",label:"Population", icon:"population", family:"opendosm" },
   { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
@@ -1371,12 +1445,13 @@ const SECTIONS = [
   { id:"mobility",  label:"Vehicles",   icon:"mobility",   family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"transport",  family:"gtfs-static" },
   { id:"live",      label:"Live",       icon:"live",       family:"gtfs-realtime" },
+  { id:"flood",     label:"Flood",      icon:"flood",      family:"flood" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["economy","finance","mobility","population","health",
-                     "transport","live"]);
+const LAZY = new Set(["prices","economy","finance","mobility","population","health",
+                     "transport","live","flood"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -2155,6 +2230,20 @@ async function loadLive(){
     }
   }
   return out;
+}
+
+/* Flood risk: JPS live gauge telemetry, proxied + slimmed by the Worker.
+   The Worker already excludes dead gauges (no reading in 24h), so this just
+   fetches and shapes what /api/flood returns. */
+async function loadFlood(){
+  const d = await fetch("/api/flood", { cache:"no-store" })
+    .then(r => { if (!r.ok) throw new ApiError("Flood feed unavailable.", "http"); return r.json(); });
+  return {
+    updated: d.updated,
+    atRisk: d.at_risk || 0,
+    states: d.states || [],
+    stations: (d.stations || []).filter(s => s.lat != null && s.lon != null),
+  };
 }
 
 /* ════════════════════════════ charts ════════════════════════════ */
@@ -3007,6 +3096,221 @@ function paintFuel(d){
   const fdt = $("#fuel-dt");
   if (fdt) fdt.innerHTML = dataTableHTML([T("Week"),"RON 95","RON 97","Diesel"],
     rows.map(r => [ymd(r[0]), r[1], r[2], r[3]]), [1,2,3]);
+}
+
+/* ════════════════════════════ groceries view ════════════════════════════ */
+/* PriceCatcher has no live-API fallback, unlike every other section: the
+   source is monthly Parquet on storage.data.gov.my, which a browser cannot
+   read. prices.json (built by tools/collect_prices.py) is the only path, so
+   a missing file is a hard error here rather than a degrade-to-API. */
+async function loadPrices(){
+  const r = await fetch("prices.json", { cache:"no-store" });
+  if (!r.ok) throw new Error("prices.json " + r.status);
+  const j = await r.json();
+  if (!j || !j.basket || !Array.isArray(j.basket.national))
+    throw new Error("prices.json malformed");
+  return j;
+}
+
+let pxState = "";       // "" = national only, else overlay this state
+let pxMovers = "up";    // up | down | all
+let pxDistrict = null;  // null = not yet chosen; set from geo on first render
+
+/** "2026-08" → "Aug 26". */
+const mlab = ym => {
+  const t = new Date(String(ym) + "-01T00:00:00");
+  return isNaN(t) ? String(ym)
+    : t.toLocaleDateString("en-MY", { month:"short", year:"2-digit" });
+};
+/** Signed percentage with the same up/down colouring the fuel card uses. */
+const pctBadge = (v, dp = 1) => v == null ? `<span class="neutral">-</span>` :
+  `<span class="${v > 0.05 ? "up" : v < -0.05 ? "down" : "neutral"}">` +
+  `${v > 0.05 ? "▲" : v < -0.05 ? "▼" : "–"} ${nf(Math.abs(v), dp)}%</span>`;
+
+/** Best-effort district guess from the reverse-geocoded place, reusing the
+ *  weather section's normaliser so "Majlis Perbandaran Kajang" still lands on
+ *  Kajang. Returns null when nothing scores - the picker then stays unset
+ *  rather than showing a confidently wrong district. */
+function guessDistrict(d){
+  if (!geo.osm) return null;
+  const terms = String(geo.osm).split(",").map(norm).filter(Boolean);
+  let best = null, bestQ = 0;
+  for (const name of Object.keys(d.districts)){
+    const n = norm(name);
+    for (const t of terms){
+      const q = matchQuality(n, t);
+      if (q > bestQ){ bestQ = q; best = name; }
+    }
+  }
+  return bestQ >= 60 ? best : null;
+}
+
+function renderPrices(d){
+  const B = d.basket, months = d.months;
+  const nat = B.national || [];
+  const last = nat.length ? nat[nat.length - 1] : null;
+  const change = (last != null && nat[0]) ? (last / nat[0] - 1) * 100 : null;
+
+  const dl = Object.entries(d.districts).sort((a, b) => a[1].idx - b[1].idx);
+  const cheap = dl[0], dear = dl[dl.length - 1];
+  const stateNames = Object.keys(B.states || {}).sort();
+
+  if (pxDistrict === null) pxDistrict = guessDistrict(d) || "";
+
+  /* The newest month is still being collected - the collector flags it and
+     the chart marks that point, so nobody reads a 10-day partial as a month. */
+  const partialAt = d.partial ? months.indexOf(d.partial) : -1;
+
+  $("#body-prices").innerHTML = `
+    <div class="grid g4 mb">
+      <div class="kpi"><div class="lab">${T("Basket index")}</div>
+        <div class="val">${nf(last, 1)}</div>
+        <div class="sub">${pctBadge(change)} ${T("since")} ${esc(mlab(B.base))}</div></div>
+      <div class="kpi"><div class="lab">${T("Cheapest district")}</div>
+        <div class="val" style="font-size:18px">${esc(cheap ? cheap[0] : "-")}</div>
+        <div class="sub">${cheap ? nf(cheap[1].idx, 1) + " · " + esc(cheap[1].s) : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("Most expensive district")}</div>
+        <div class="val" style="font-size:18px">${esc(dear ? dear[0] : "-")}</div>
+        <div class="sub">${dear ? nf(dear[1].idx, 1) + " · " + esc(dear[1].s) : ""}</div></div>
+      <div class="kpi"><div class="lab">${T("Basket size")}</div>
+        <div class="val">${nf(B.n)}</div>
+        <div class="sub">${T("items · priced every month")}</div></div>
+    </div>
+
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Grocery basket over time")}</h4>
+        <span class="sub">${esc(mlab(B.base))} = 100 · ${T("equal-weighted, not CPI")}</span>
+        <span class="right"><label class="sr" for="px-state">${T("Compare a state")}</label>
+          <select class="fx-select" id="px-state">
+            <option value="">${T("National only")}</option>
+            ${stateNames.map(s => `<option value="${esc(s)}"${s === pxState ? " selected" : ""}>${esc(s)}</option>`).join("")}
+          </select></span></div>
+      <div class="card-b"><div class="chart tall"><canvas id="px-chart"
+        role="img" aria-label="${T("Grocery basket index over time")}"></canvas></div>
+        <p class="note">${T("A Jevons index: the geometric mean of each item's price against the base month, over the")} ${nf(B.nIndex)} ${T("items priced in every one of these months. Equal-weighted, because no per-item expenditure weights are published - so this tracks shelf prices, not official inflation.")}${
+          partialAt >= 0 ? " " + T("The final point is a part-month and will move.") : ""}</p>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="px-dt"></div></details></div>
+    </div>
+
+    <div class="grid g2 mb">
+      <div class="card">
+        <div class="card-h"><h4>${T("Biggest movers")}</h4>
+          <span class="sub">${T("12 months")}</span>
+          <span class="right"><span class="seg" role="group" aria-label="${T("Filter movers")}">
+            ${[["up", T("Risers")], ["down", T("Fallers")], ["all", T("All")]].map(([k, lab]) =>
+              `<button data-mv="${k}" aria-pressed="${k === pxMovers}">${esc(lab)}</button>`).join("")}
+          </span></span></div>
+        <div class="card-b"><div id="px-movers"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h4>${T("Prices near you")}</h4>
+          <span class="sub">${T("100 = national average")}</span>
+          <span class="right"><label class="sr" for="px-district">${T("Choose a district")}</label>
+            <select class="fx-select" id="px-district">
+              <option value="">${T("Choose a district…")}</option>
+              ${dl.map(([name, v]) =>
+                `<option value="${esc(name)}"${name === pxDistrict ? " selected" : ""}>${esc(name)} · ${esc(v.s)}</option>`).join("")}
+            </select></span></div>
+        <div class="card-b"><div id="px-near"></div></div>
+      </div>
+    </div>
+  `;
+
+  $("#body-prices").querySelectorAll("[data-mv]").forEach(b => {
+    b.onclick = () => {
+      pxMovers = b.dataset.mv;
+      $("#body-prices").querySelectorAll("[data-mv]")
+        .forEach(o => o.setAttribute("aria-pressed", String(o.dataset.mv === pxMovers)));
+      paintMovers(d);
+    };
+  });
+  const sel = $("#px-state");
+  if (sel) sel.onchange = () => { pxState = sel.value; paintPrices(d); };
+  const dsel = $("#px-district");
+  if (dsel) dsel.onchange = () => { pxDistrict = dsel.value; paintNear(d); };
+
+  paintPrices(d);
+  paintMovers(d);
+  paintNear(d);
+}
+
+function paintPrices(d){
+  const months = d.months, B = d.basket;
+  const labels = months.map(mlab);
+  const sets = [{
+    label:T("Malaysia"), data:B.national, borderColor:"#fbbf24", borderWidth:2,
+    pointRadius:0, pointHoverRadius:4, tension:.3, fill:true,
+    backgroundColor:c => grad(c.chart.ctx, c.chart.chartArea, "#fbbf24"),
+  }];
+  const st = pxState && B.states[pxState];
+  if (st) sets.push({
+    label:pxState, data:st.idx, borderColor:"#22d3ee", borderWidth:2,
+    pointRadius:0, pointHoverRadius:4, tension:.3, fill:false, borderDash:[5, 3],
+  });
+
+  chart("px-chart", {
+    type:"line",
+    data:{ labels, datasets:sets },
+    options: baseOpts({ scales:{
+      x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, maxTicksLimit:13, maxRotation:0 } },
+      /* The index moves within a few points, so whole-number ticks would
+         print "104, 104, 103, 103…" - one decimal keeps them distinct. */
+      y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
+          ticks:{ color:cssVar("--fg-3"), font:{size:10}, padding:8, maxTicksLimit:7,
+                  callback:v => Number(v).toFixed(1) } } } }),
+  });
+
+  const dt = $("#px-dt");
+  if (dt) dt.innerHTML = dataTableHTML(
+    [T("Month"), T("Malaysia")].concat(st ? [pxState] : []),
+    months.map((m, i) => [mlab(m), nf(B.national[i], 1)]
+      .concat(st ? [nf(st.idx[i], 1)] : [])),
+    st ? [1, 2] : [1]);
+}
+
+function paintMovers(d){
+  const n = $("#px-movers"); if (!n) return;
+  /* d.items arrives sorted by 12-month change, biggest rise first. */
+  const all = d.items.filter(i => i.yoy != null);
+  const rows = pxMovers === "up" ? all.slice(0, 12)
+    : pxMovers === "down" ? all.slice(-12).reverse()
+    : all;
+  const price = i => (i.p && i.p.length) ? i.p[i.p.length - 1] : null;
+  /* Unit rides along in the item cell: five columns overflow this card at
+     half-grid width, and the unit is only ever read next to the name. */
+  n.innerHTML = dataTableHTML(
+    [T("Item"), T("Price (RM)"), T("1 mo"), T("12 mo")],
+    rows.map(i => [i.u ? `${i.n} · ${i.u}` : i.n, nf(price(i), 2),
+                   i.mom == null ? "-" : nf(i.mom, 1) + "%",
+                   i.yoy == null ? "-" : nf(i.yoy, 1) + "%"]),
+    [1, 2, 3]);
+}
+
+function paintNear(d){
+  const n = $("#px-near"); if (!n) return;
+  const name = pxDistrict, rec = name && d.districts[name];
+  if (!rec){
+    n.innerHTML = `<p class="note">${T("Pick a district to see how its basket compares with the national average, and which premises price it lowest.")}</p>`;
+    return;
+  }
+  const diff = rec.idx - 100;
+  const shops = d.cheapest[name] || [];
+  n.innerHTML = `
+    <div class="kpi" style="margin-bottom:var(--s3)">
+      <div class="lab">${esc(name)} · ${esc(rec.s)}</div>
+      <div class="val">${nf(rec.idx, 1)}</div>
+      <div class="sub">${pctBadge(diff)} ${T("vs the national basket")} · ${nf(rec.ni)} ${T("items at")} ${nf(rec.np)} ${T("premises")}</div>
+    </div>
+    ${shops.length ? `
+      <div class="sub" style="margin-bottom:var(--s2)">${T("Lowest-priced premises in this district")}</div>
+      ${dataTableHTML([T("Premise"), T("Type"), T("vs district")],
+        shops.map(s => [s.p, s.t, nf(s.d, 1) + "%"]), [2])}
+      <p class="note">${T("Compared item by item against the district median, so a shop that stocks only cheap items is not flattered. Each is priced on at least 15 basket items.")}</p>
+    ` : `<p class="note">${T("Not enough premises in this district to rank shops.")}</p>`}
+  `;
 }
 
 /* ════════════════════════════ economy view ════════════════════════════ */
@@ -4840,6 +5144,104 @@ function renderLive(d){
   paintMaps();
 }
 
+/* Flood risk: KPI row + state chips + status-coloured map. 26 stations is
+   small enough to render individual markers (no clustering needed), but the
+   same marker styling family as the live vehicles map keeps the theme
+   coherent. Status colours: Danger red, Warning amber, Alert yellow. */
+const FLOOD_COL = { Danger:"#f87171", Warning:"#fb923c", Alert:"#facc15" };
+let floodMap = null;
+function renderFlood(d){
+  const host = $("#body-flood");
+  if (!host) return;
+  const n = d.atRisk, by = d.stations.length;
+  const statCount = s => d.stations.filter(x => x.status === s).length;
+  const chips = d.states.map(s =>
+    `<span class="vchip mono" tabindex="0" role="button" aria-label="${esc(s.state)} · ${s.count}">
+      ${esc(s.state.replace(/\s+$/,""))}<b class="cnt">${s.count}</b></span>`).join("");
+  host.innerHTML = `
+    <div class="grid g3 mb">
+      <div class="kpi"><div class="lab">${T("Stations at risk")}</div>
+        <div class="val" style="color:${n ? "var(--warn)" : "var(--ok)"}" data-count="${n}">0</div>
+        <div class="sub">${T("reported within 24h")}</div></div>
+      <div class="kpi"><div class="lab">${T("Danger / Warning / Alert")}</div>
+        <div class="val" style="font-size:19px">${statCount("Danger")} · ${statCount("Warning")} · ${statCount("Alert")}</div>
+        <div class="sub">${T("water level vs station thresholds")}</div></div>
+      <div class="kpi"><div class="lab">${T("Last feed update")}</div>
+        <div class="val" style="font-size:19px">${d.updated ? ago(Math.floor(Date.parse(d.updated)/1000)) : "-"}</div>
+        <div class="sub">${T("JPS telemetry")}</div></div>
+    </div>
+    ${chips ? `<div class="vchips mb">${chips}</div>` : ""}
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Flood risk map")}</h4>
+        <span class="sub">${T("Danger red · Warning amber · Alert yellow")}</span></div>
+      <div class="card-b" style="padding:0"><div class="lvmap" id="flood-map"></div></div>
+    </div>
+    <div class="vchips" data-role="flood-chips">${d.stations.map(s => fchip(s)).join("")}</div>`;
+  animateCounters(host);
+  paintFloodMap(d);
+}
+function fchip(s){
+  const col = FLOOD_COL[s.status] || "#94a3b8";
+  const rows = [
+    [T("Station"), esc(s.name)],
+    [T("State"), esc(s.state)],
+    [T("River"), esc(s.river || "-")],
+    [T("Water level"), s.level == null ? "-" : nf(s.level, 2) + " m"],
+    [T("Trend"), esc(s.trend || "-")],
+    [T("Last reading"), s.ts ? ago(s.ts) : "-"],
+  ].map(([k, val]) => `<div class="vrow"><span>${k}</span><span>${val}</span></div>`).join("");
+  return `<span class="vchip mono" tabindex="0" role="button"
+    aria-label="${esc(s.name)} · ${esc(s.status)}">
+    <span class="dot" style="background:${col}"></span>${esc(s.name.replace(/^Sg\.?\s*/i, "").split(" (")[0])}
+    <span class="pill" style="background:${col}22;color:${col}">${esc(s.status)}</span>
+    <span class="tip">${rows}
+      ${s.lat == null ? "" : `<a class="link-btn" target="_blank" rel="noopener"
+        href="https://www.google.com/maps?q=${s.lat},${s.lon}">map ↗</a>`}
+    </span></span>`;
+}
+function paintFloodMap(d){
+  if (!window.L) return;
+  const el = document.getElementById("flood-map"); if (!el) return;
+  if (floodMap){ floodMap.remove(); floodMap = null; }
+  const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 6);
+  const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+  const fallback = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 20, subdomains: "abcd", attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  });
+  let omsFailed = 0, fellBack = false;
+  tiles.on("tileerror", e => {
+    const t = e.tile; if (!t) return;
+    omsFailed++;
+    const n = +(t.dataset.retries || 0);
+    if (n < 3 && !fellBack){
+      t.dataset.retries = String(n + 1);
+      const delay = [1200, 3000, 6000][n] || 6000;
+      setTimeout(() => { if (t.isConnected) t.src = t.src; }, delay);
+    } else if (!fellBack && omsFailed >= 8){
+      fellBack = true;
+      map.removeLayer(tiles);
+      fallback.addTo(map);
+    }
+  });
+  tiles.on("tileload", () => { omsFailed = Math.max(0, omsFailed - 1); });
+  if (d.stations.length){
+    for (const s of d.stations){
+      const m = L.circleMarker([s.lat, s.lon], {
+        radius: 7, color:"#0a0c10", weight:1.5,
+        fillColor: FLOOD_COL[s.status] || "#94a3b8", fillOpacity:.9,
+      }).addTo(map);
+      m.bindPopup(`<b>${esc(s.name)}</b><br>` +
+        `<span style="color:${FLOOD_COL[s.status] || "#fff"}">${esc(s.status)}</span>` +
+        (s.level == null ? "" : ` · ${nf(s.level, 2)} m`) +
+        (s.river ? `<br><span class="dim">${esc(s.river)}</span>` : "") +
+        (s.ts ? `<br><span class="dim">${ago(s.ts)}</span>` : ""));
+    }
+    map.fitBounds(d.stations.map(s => [s.lat, s.lon]), { padding:[30, 30], maxZoom:13 });
+  }
+}
+
 /* Rapid bus routes render as compact chips: route number + live count, with
    the vehicles on that route in the tooltip. Clicking a chip filters the map
    and chips to that route; clicking the active chip clears the filter. With
@@ -5017,6 +5419,12 @@ const META = {
     desc:"The weekly retail ceiling price for RON 95, RON 97 and diesel, and how Malaysian household income has grown over time.",
     how:"Prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Household income comes from the Household Income Survey.",
     eps:["/data-catalogue?id=fuelprice","/data-catalogue?id=hh_income"] },
+  prices:{ title:"Groceries",
+    desc:"What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.",
+    how:"PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.",
+    eps:["storage.data.gov.my/pricecatcher/pricecatcher_YYYY-MM.parquet",
+         "storage.data.gov.my/pricecatcher/lookup_item.parquet",
+         "storage.data.gov.my/pricecatcher/lookup_premise.parquet"] },
   economy:{ title:"Economy",
     desc:"Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, and quarterly real GDP.",
     how:"Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly and real GDP is quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.",
@@ -5052,6 +5460,10 @@ const META = {
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
     how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)"] },
+  flood:{ title:"Flood Risk",
+    desc:"Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.",
+    how:"JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.",
+    eps:["publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)"] },
 };
 const LOADERS = {
   weather:  { load:loadWeather,   render:renderWeather,   after:d => {
@@ -5071,6 +5483,7 @@ const LOADERS = {
   fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
       if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
         sub:T("week of ") + ymd(d.latest.date) }; }, asOf:d => d.latest ? d.latest.date : null },
+  prices:   { load:loadPrices,    render:renderPrices,    asOf:d => d.asOf },
   economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
       const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
       if (ov.length > 12){
@@ -5111,6 +5524,9 @@ const LOADERS = {
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
       kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
+  flood:    { load:loadFlood,     render:renderFlood,     after:d => {
+      kpiState.flood = { value:d.atRisk, dec:0,
+        sub:d.atRisk ? T("stations at risk") : T("all clear") }; } },
 };
 
 let stamps = {};
