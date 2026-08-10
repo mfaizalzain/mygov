@@ -4004,12 +4004,21 @@ function paintRailDiagram(){
       if (!calls.has(k)) calls.set(k, []);
       calls.get(k).push(l.name);
     }
-  /* measure label widths with a scratch canvas so long station names and
-     interchange descriptions don't clip inside the fixed 132px column */
+  /* measure label widths with a scratch canvas; the rail spine is
+     left-aligned at a fixed x (like classic metro diagrams) and columns
+     grow only as wide as their longest label, capped so no card gets
+     enormous — anything longer is truncated with an ellipsis */
   const mctx = document.createElement("canvas").getContext("2d");
   const tw = (s, f) => { mctx.font = f; return mctx.measureText(s).width; };
   const labelFont = "600 9px Inter,system-ui,-apple-system,sans-serif";
   const descFont  = "400 7.5px ui-monospace,SFMono-Regular,Menlo,monospace";
+  const spineX = 24, labelX = spineX + 14, maxColW = 340;
+  const trunc = (s, f, avail) => {
+    if (tw(s, f) <= avail) return s;
+    let out = s;
+    while (out.length > 1 && tw(out + "…", f) > avail) out = out.slice(0, -1);
+    return out + "…";
+  };
   const railH = 24, dotR = 4.5;
   const padT = 26, padB = 12;
   host.innerHTML = `<div class="metro-wrap"><div class="metro-head">
@@ -4028,17 +4037,16 @@ function paintRailDiagram(){
     rail.lines.map(l => {
       const n = l.stations.length;
       const h = padT + (n - 1) * railH + padB;
-      /* column width fits the longest name/description on this line:
-         text starts at colW/2 + 12, so colW ≥ 2·(12 + textW) + pad */
+      /* column width = longest label on this line, capped */
       let needW = 132;
       for (const s of l.stations){
         const k = (s.name || "").toUpperCase().trim();
         const linesHere = calls.has(k) ? calls.get(k).join(", ") : "";
-        needW = Math.max(needW,
-          Math.ceil(2 * (12 + tw(s.name || "", labelFont) + 14)),
-          linesHere ? Math.ceil(2 * (12 + tw(linesHere, descFont) + 14)) : 0);
+        needW = Math.max(needW, labelX + tw(s.name || "", labelFont) + 16,
+          linesHere ? labelX + tw(linesHere, descFont) + 16 : 0);
       }
-      const colW = Math.max(132, needW);
+      const colW = Math.max(132, Math.min(needW, maxColW));
+      const avail = colW - labelX - 8;
       const dot = (i) => {
         const y = padT + i * railH;
         const s = l.stations[i];
@@ -4047,16 +4055,16 @@ function paintRailDiagram(){
         const linesHere = (calls.get(k) || []).join(", ");
         return `<g class="metro-stn" data-idx="${i}" tabindex="0" role="button" aria-label="${esc(s.name)}">
           <title>${esc(s.name)}${multi ? " — " + esc(linesHere) : ""}</title>
-          ${multi ? `<circle cx="${colW / 2}" cy="${y}" r="${dotR + 3.5}" fill="none" stroke="${esc(l.color)}" stroke-width="1.6"/>` : ""}
-          <circle cx="${colW / 2}" cy="${y}" r="${dotR}" fill="${esc(l.color)}" stroke="var(--bg)" stroke-width="1.5"/>
-          <text x="${colW / 2 + 12}" y="${y + 3.5}" class="metro-lbl">${esc(s.name)}</text>
-          <text x="${colW / 2 + 12}" y="${y + 13}" class="metro-lbl-s">${multi ? esc(linesHere) : ""}</text>
+          ${multi ? `<circle cx="${spineX}" cy="${y}" r="${dotR + 3.5}" fill="none" stroke="${esc(l.color)}" stroke-width="1.6"/>` : ""}
+          <circle cx="${spineX}" cy="${y}" r="${dotR}" fill="${esc(l.color)}" stroke="var(--bg)" stroke-width="1.5"/>
+          <text x="${labelX}" y="${y + 3.5}" class="metro-lbl">${esc(trunc(s.name || "", labelFont, avail))}</text>
+          <text x="${labelX}" y="${y + 13}" class="metro-lbl-s">${multi ? esc(trunc(linesHere, descFont, avail)) : ""}</text>
         </g>`;
       };
       const links = [];
       for (let i = 0; i < n - 1; i++){
         const y1 = padT + i * railH, y2 = y1 + railH;
-        links.push(`<line x1="${colW / 2}" y1="${y1}" x2="${colW / 2}" y2="${y2}" stroke="${esc(l.color)}" stroke-width="5" stroke-linecap="round"/>`);
+        links.push(`<line x1="${spineX}" y1="${y1}" x2="${spineX}" y2="${y2}" stroke="${esc(l.color)}" stroke-width="5" stroke-linecap="round"/>`);
       }
       return `<div class="metro-col" data-line-idx="${rail.lines.indexOf(l)}">
         <div class="metro-line-h" style="--lc:${esc(l.color)}">
