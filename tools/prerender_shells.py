@@ -120,6 +120,7 @@ KPIS = [
     ("cpi", "Inflation y/y", "economy", "#economy"),
     ("ev", "New EVs", "ev", "#mobility"),
     ("warn", "Active warnings", "warn", "#weather"),
+    ("flood", "Stations at risk", "flood", "#flood-sub"),
     ("live", "Vehicles live", "bus", "#live"),
 ]
 kpi_cards = "\n".join(

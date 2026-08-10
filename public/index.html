@@ -818,6 +818,11 @@ html[data-text="large"] table{font-size:14px}
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-warn"><span class="skel skel-val"></span></div>
         <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#flood-sub" aria-label="Stations at risk - go to the flood risk block">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg> Stations at risk</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-flood"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
       <a class="kpi kpi-load" href="#live" aria-label="Vehicles live - go to the live section">
         <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bus"/></svg> Vehicles live</span>
           <span class="go" aria-hidden="true">↗</span></div>
@@ -1122,6 +1127,11 @@ const I18N = {
     "footerB":" (MET Malaysia · MOF · DOSM · BNM · MoH · Immigration · KTMB · Prasarana). Reverse geocoding by ",
     "footerC":" contributors. Data is fetched directly by your browser and cached locally for 15 minutes to respect the API's 4-requests-per-minute limit. No analytics, no tracking.",
     "bmc":"Support this project on Buy Me a Coffee",
+    /* applyLang() overwrites every [data-i18n] node with T(key), and T falls
+       back to the key itself - so an abstract key with no `en` entry renders
+       literally ("flood-desc") for English readers while BM looks fine. */
+    "flood-desc":"Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.",
+    "flood-how":"JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.",
     "verified_claim":"Verified claim",
     "no_check_found":"Not checked yet",
     "LRT & MRT network":"LRT & MRT network",
@@ -1210,6 +1220,7 @@ const I18N = {
   "refresh failed - showing last data":"gagal dimuat semula - memaparkan data terakhir",
   "Hottest today":"Paling panas hari ini", "Inflation y/y":"Inflasi t/t",
   "Active warnings":"Amaran aktif", "Vehicles live":"Kenderaan langsung",
+  "Stations at risk":"Stesen berisiko",
   "issued by MET":"dikeluarkan oleh MET", "all clear":"tiada amaran", "week of ":"minggu ",
   "core CPI, ":"CPI teras, ", "trains + buses":"kereta api + bas", "none reporting now":"tiada laporan kini",
   "Stations at risk":"Stesen berisiko", "reported within 24h":"dilaporkan dalam 24 jam",
@@ -5405,6 +5416,7 @@ function renderKpis(){
     { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
     { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
     { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#weather" },
+    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#flood-sub" },
     { k:"live",  lab:"Vehicles live",   ico:"bus",      href:"#live" },
   ];
   /* Pending cards get the same shimmer the sections use. Six cards each
