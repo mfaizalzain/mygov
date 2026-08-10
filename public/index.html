@@ -248,6 +248,11 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
    to a second line and desynchronise the row's heights */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));
   gap:var(--s3);margin-top:var(--s6)}
+/* With an odd number of cards the last tile is stranded alone on its row.
+   The hero column is capped by .wrap's max-width, so this grid resolves to
+   exactly two columns at every desktop size and one on mobile - spanning the
+   stray card keeps the block rectangular, and is a no-op single-column. */
+.kpis > :last-child:nth-child(odd){grid-column:1/-1}
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);transition:var(--t)}
@@ -790,6 +795,11 @@ html[data-text="large"] table{font-size:14px}
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-ron95"><span class="skel skel-val"></span></div>
         <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#prices" aria-label="Groceries y/y - go to the prices section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries y/y</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-basket"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
       <a class="kpi kpi-load" href="#economy" aria-label="Inflation y/y - go to the economy section">
         <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Inflation y/y</span>
           <span class="go" aria-hidden="true">↗</span></div>
@@ -1002,12 +1012,6 @@ html[data-text="large"] table{font-size:14px}
       </div>
       <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
     </section>
-
-
-
-
-
-
     <!-- Static fallback: rendered before the app script runs, and visible to
          browsers/crawlers without JavaScript. buildShell() replaces #main's
          contents when the script executes, so JS users never see this. -->
@@ -1127,6 +1131,8 @@ const I18N = {
   "Prices near you":"Harga berhampiran anda",
   "100 = national average":"100 = purata kebangsaan",
   "Choose a district":"Pilih daerah", "Choose a district…":"Pilih daerah…",
+  "Groceries y/y":"Barangan runcit t/t",
+  "grocery items · shelf prices":"barangan runcit · harga rak",
   "Item":"Barangan", "Price (RM)":"Harga (RM)",
   "1 mo":"1 bln", "12 mo":"12 bln", "Month":"Bulan", "Malaysia":"Malaysia",
   "Pick a district to see how its basket compares with the national average, and which premises price it lowest.":"Pilih daerah untuk melihat perbandingan bakulnya dengan purata kebangsaan, dan premis mana yang paling murah.",
@@ -5380,6 +5386,7 @@ function renderKpis(){
   const cards = [
     { k:"hot",   lab:"Hottest today",   ico:"temp",     href:"#weather" },
     { k:"ron95", lab:"RON 95",          ico:"fuel",     href:"#fuel" },
+    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#prices" },
     { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
     { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
     { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#weather" },
@@ -5483,7 +5490,16 @@ const LOADERS = {
   fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
       if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
         sub:T("week of ") + ymd(d.latest.date) }; }, asOf:d => d.latest ? d.latest.date : null },
-  prices:   { load:loadPrices,    render:renderPrices,    asOf:d => d.asOf },
+  prices:   { load:loadPrices,    render:renderPrices,    after:d => {
+      /* The index level (101.3) means nothing on its own in a hero tile, so
+         the KPI leads with the 12-month change - the same shape as the CPI
+         card next to it - and names the basket underneath. */
+      const nat = d.basket.national || [];
+      const last = nat.length ? nat[nat.length - 1] : null;
+      if (last != null && nat[0])
+        kpiState.basket = { value:(last / nat[0] - 1) * 100, dec:1, suffix:"%",
+          sub:nf(d.basket.n) + " " + T("grocery items · shelf prices") };
+    }, asOf:d => d.asOf },
   economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
       const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
       if (ov.length > 12){

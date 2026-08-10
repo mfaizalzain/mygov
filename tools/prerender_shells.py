@@ -95,6 +95,7 @@ shell_html = "\n".join(shells)
 KPIS = [
     ("hot", "Hottest today", "temp", "#weather"),
     ("ron95", "RON 95", "fuel", "#fuel"),
+    ("basket", "Groceries y/y", "basket", "#prices"),
     ("cpi", "Inflation y/y", "economy", "#economy"),
     ("ev", "New EVs", "ev", "#mobility"),
     ("warn", "Active warnings", "warn", "#weather"),
@@ -163,8 +164,13 @@ src = re.sub(r'(<main id="main">)\s*(?:    <section id="[^"]+"[^>]*>.*?</section
 main_m = re.search(r'(<main id="main">)(\s*)(<!-- Static fallback)', src)
 if not main_m:
     sys.exit("main marker not found")
-src = src[:main_m.start()] + '<main id="main">\n' + shell_html + "\n" + src[main_m.start(2):]
-src = src.replace(main_m.group(3), "<!-- Static fallback", 1)
+# Resume at group 3 (the comment), NOT group 2 (the whitespace before it):
+# group 2 already starts with the newline this splice emits, so carrying it
+# over appended one blank line per run - the script drifted every time it was
+# re-run despite the "idempotent" promise above. The four-space indent is
+# re-emitted here so the comment keeps its original position.
+src = (src[:main_m.start()] + '<main id="main">\n' + shell_html + "\n    "
+       + src[main_m.start(3):])
 
 # 2. kpis div gets the skeleton cards
 src = re.sub(r'(<div class="kpis" id="kpis"></div>)',
