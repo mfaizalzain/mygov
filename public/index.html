@@ -1683,6 +1683,9 @@ const el = (t, c, h) => { const n = document.createElement(t);
   if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+/* Only http(s) may become an href - esc() neutralises quotes, not schemes,
+   and a javascript: URL from a feed or the model must not be clickable. */
+const safeUrl = u => /^https?:\/\//i.test(String(u ?? "")) ? String(u) : null;
 /* Normalise en/em dashes to a plain hyphen - data titles (Gemini radar
    issues, MET warning text) occasionally carry U+2013/U+2014. */
 const dc = s => String(s ?? "").replace(/[\u2013\u2014]/g, "-");
@@ -5765,7 +5768,7 @@ function radarDetail(i){
   const vt = /TRUE/i.test(verdict) && !/PARTLY/.test(verdict) ? "ok"
     : /FALSE|HOAX|PALSU/i.test(verdict) ? "err" : "warn";
   const vIcon = vt === "ok" ? "✅" : vt === "err" ? "🚫" : "⚠️";
-  const srcs = (i.sources || []).filter(s => s.url);
+  const srcs = (i.sources || []).filter(s => safeUrl(s.url));
   return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-label="${esc(i.title_bm)}">
     <div class="rd-card card">
       <button class="rd-x" id="radar-close" aria-label="Close">✕</button>
@@ -5787,7 +5790,7 @@ function radarDetail(i){
           ${fcBadge(fc.status)}
         </div>
         ${fc.reason ? `<p class="rd-reason">${esc(fc.reason)}</p>` : ""}
-        ${fc.sebenarnya_url ? `<a class="rd-sb" href="${esc(fc.sebenarnya_url)}" target="_blank" rel="noopener">
+        ${fc.sebenarnya_url && safeUrl(fc.sebenarnya_url) ? `<a class="rd-sb" href="${esc(fc.sebenarnya_url)}" target="_blank" rel="noopener">
           ${T("Official Sebenarnya.my fact-check")} ↗</a>` : ""}
         ${srcs.length ? `<h5 class="rd-src-h">${T("Sources")}</h5>
           <ol class="rd-srcs">${srcs.slice(0,5).map(s =>

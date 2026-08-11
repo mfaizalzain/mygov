@@ -30,6 +30,12 @@ NEWS_FEEDS = [
 
 TRENDS_RSS = "https://trends.google.com/trending/rss?geo=MY"  # curl-able, no browser needed
 
+# Every URL that leaves this collector is rendered as an <a href> on the
+# dashboard. Only http(s) may reach that attribute - a javascript: or data:
+# URL in a feed item or a model-invented link would otherwise become a
+# click-to-execute XSS vector.
+SAFE_URL = re.compile(r"^https?://", re.I)
+
 
 
 def gemini_post(url, body, timeout=90, tries=3):
@@ -73,7 +79,7 @@ def parse_rss(text, source, lang, limit=30):
             title = html.unescape((it.findtext("title") or "").strip())
             link = (it.findtext("link") or "").strip()
             pub = (it.findtext("pubDate") or "").strip()
-            if title and link:
+            if title and SAFE_URL.match(link):
                 items.append({"source": source, "lang": lang, "title": title,
                               "url": link, "pub": pub})
             if len(items) >= limit:
@@ -273,6 +279,13 @@ def backfill_urls(issues, signals):
                 "sebenarnya_url": None}
 
     for issue in issues:
+        # Gemini is instructed to use "" for unmatched URLs, but a stray
+        # model-invented scheme must not survive into radar.json. Blank
+        # anything that is not http(s); the backfill below then fills the
+        # hole from a matched signal URL, which was vetted at parse time.
+        for src in issue.get("sources", []):
+            if src.get("url") and not SAFE_URL.match(str(src["url"])):
+                src["url"] = ""
         for src in issue.get("sources", []):
             if not src.get("url"):
                 m = lookup(src.get("title"))
