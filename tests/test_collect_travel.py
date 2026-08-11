@@ -103,7 +103,7 @@ class TestFallback(unittest.TestCase):
         self.assertEqual(extreme["start"], "2026-08-29")
         self.assertEqual(extreme["end"], "2026-09-06")
         self.assertIn("National Day", extreme["holidays"])
-        self.assertTrue(extreme["t_en"] and extreme["t_ms"])
+        self.assertTrue(extreme["t_en"])
 
     def test_periods_sorted(self):
         hol, breaks = ct.build_facts(sample_slow(), "2026-08-11", "2026-10-06")
@@ -111,11 +111,17 @@ class TestFallback(unittest.TestCase):
         starts = [p["start"] for p in out["periods"]]
         self.assertEqual(starts, sorted(starts))
 
-    def test_bilingual_texts_present(self):
+    def test_texts_present_and_english_only(self):
+        """The outlook is English-only - a stray t_ms would render nowhere
+        and would only be a translation the prompt no longer asks for."""
         hol, breaks = ct.build_facts(sample_slow(), "2026-08-11", "2026-10-06")
         out = ct.fallback("2026-08-11", hol, breaks)
         for p in out["periods"]:
-            self.assertTrue(p["t_en"] and p["t_ms"])
+            self.assertTrue(p["t_en"])
+            self.assertNotIn("t_ms", p)
+        for t in out["tips"]:
+            self.assertTrue(t["t_en"])
+            self.assertNotIn("t_ms", t)
         self.assertGreaterEqual(len(out["tips"]), 2)
 
 

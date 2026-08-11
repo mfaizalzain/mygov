@@ -379,31 +379,45 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .t-track{display:flex;gap:var(--s3);overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:none;list-style:none;margin:0;padding:0 0 2px}
 .t-track::-webkit-scrollbar{display:none}
-.t-row{flex:0 0 232px;scroll-snap-align:start;display:flex;flex-direction:column;
+/* Impact is carried by the card, not by a chip in front of the title: a pill
+   of varying width pushed every driver name to a different x and the column
+   of titles read as ragged. Left rule + tint, the same language the weather
+   alert cards use. */
+.t-row{flex:0 0 268px;scroll-snap-align:start;display:flex;flex-direction:column;
   gap:6px;padding:var(--s3) var(--s4);background:var(--bg-2);
-  border:1px solid var(--line-soft);border-radius:var(--r)}
+  border:1px solid var(--line-soft);border-left:4px solid var(--fg-3);
+  border-radius:var(--r)}
+.t-row.t-extreme{border-left-color:#f87171;
+  background:linear-gradient(180deg,rgba(248,113,113,.09),var(--bg-2) 60%)}
+.t-row.t-high{border-left-color:#fbbf24;
+  background:linear-gradient(180deg,rgba(251,191,36,.09),var(--bg-2) 60%)}
+.t-row.t-moderate{border-left-color:#34d399;
+  background:linear-gradient(180deg,rgba(52,211,153,.07),var(--bg-2) 60%)}
 .t-ctl{display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);
   margin-top:var(--s2)}
-.t-dates{font-family:var(--mono);font-size:11.5px;color:var(--fg-3);line-height:1.5}
+.t-dates{display:flex;align-items:center;gap:var(--s2);font-family:var(--mono);
+  font-size:11.5px;color:var(--fg-3);line-height:1.5}
 .t-mid{min-width:0}
 .t-driver{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   font-size:13.5px;margin-bottom:3px}
 .t-driver b{font-weight:700}
+/* The level still has to be readable without colour vision, so the word
+   survives - as small type on the dates line, where it cannot shift the
+   title. */
 .t-imp{font-family:var(--mono);font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;
-  border-radius:999px;border:1px solid var(--line-soft)}
-.t-imp.t-extreme{color:#f87171;border-color:rgba(248,113,113,.4);
-  background:rgba(248,113,113,.08)}
-.t-imp.t-high{color:#fbbf24;border-color:rgba(251,191,36,.4);
-  background:rgba(251,191,36,.08)}
-.t-imp.t-moderate{color:#34d399;border-color:rgba(52,211,153,.35);
-  background:rgba(52,211,153,.07)}
+  text-transform:uppercase;letter-spacing:.04em;margin-left:auto}
+.t-imp.t-extreme{color:#f87171}
+.t-imp.t-high{color:#fbbf24}
+.t-imp.t-moderate{color:#34d399}
+/* The outlook text is English only, in both UI languages: the collector
+   prompts Gemini for one English sentence per period. A machine-translated
+   second line under every card doubled the height of a hero block whose
+   whole point was to be compact. */
 .t-note{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:2px}
-.t-note.bm{color:var(--fg-3);font-size:12px}
-/* A period covering today: amber card + a NOW marker on the dates line;
-   the band above the deck shouts the live peak once. */
-.t-row.t-cur{background:rgba(251,191,36,.05);
-  border-color:rgba(251,191,36,.25)}
+/* A period covering today keeps its impact colour and gets a ring instead -
+   painting it amber would make a live "quiet" period look like a peak. The
+   NOW marker on the dates line and the banner above say the rest. */
+.t-row.t-cur{box-shadow:0 0 0 2px rgba(251,191,36,.35)}
 .t-now{font-family:var(--mono);font-size:9.5px;font-weight:700;
   color:#111;background:#fbbf24;padding:1px 6px;border-radius:999px;
   margin-right:4px;letter-spacing:.05em}
@@ -422,7 +436,6 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .t-tips ul{margin:0;padding:0 var(--s4) var(--s3) var(--s4);list-style:disc;
   padding-left:calc(var(--s4) + 16px)}
 .t-tips li{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:6px}
-.t-tips li .bm{color:var(--fg-3);font-size:12px}
 /* One card per swipe on a phone, where 232px strands half of the next card at
    the edge. 100% is the track's own width, so it never overshoots the way a
    100vw-minus-padding guess does. */
@@ -5546,13 +5559,12 @@ async function loadTravel(){
   if (!fresh) throw new Error("travel stale");
   return d;
 }
-function travelImpact(p){
-  const cls = p.impact === "extreme" ? " t-extreme"
-    : p.impact === "high" ? " t-high" : " t-moderate";
-  const lab = p.impact === "extreme" ? T("extreme peak")
-    : p.impact === "high" ? T("peak") : T("quiet");
-  return `<span class="t-imp${cls}">${esc(lab)}</span>`;
-}
+/* One class per impact level, used twice: to colour the card and to colour
+   the word on its dates line. */
+const travelImpactClass = p => p.impact === "extreme" ? "t-extreme"
+  : p.impact === "high" ? "t-high" : "t-moderate";
+const travelImpactLabel = p => p.impact === "extreme" ? T("extreme peak")
+  : p.impact === "high" ? T("peak") : T("quiet");
 function renderTravel(d){
   /* Only upcoming periods belong on the page; a stale cached copy could
      carry last week's window, and past peaks are not advice. A period
@@ -5565,12 +5577,14 @@ function renderTravel(d){
   const cur = periods.filter(p => p.start <= today);
   const rows = periods.map(p => {
     const live = p.start <= today;
-    return `<li class="t-row${live ? " t-cur" : ""}">
-      <div class="t-dates">${live ? `<span class="t-now">${T("now")}</span> ` : ""}${esc(md(p.start))}${p.end !== p.start ? ` - ${esc(md(p.end))}` : ""}</div>
+    const imp = travelImpactClass(p);
+    return `<li class="t-row ${imp}${live ? " t-cur" : ""}">
+      <div class="t-dates">${live ? `<span class="t-now">${T("now")}</span>` : ""}
+        <span>${esc(md(p.start))}${p.end !== p.start ? ` - ${esc(md(p.end))}` : ""}</span>
+        <span class="t-imp ${imp}">${esc(travelImpactLabel(p))}</span></div>
       <div class="t-mid">
-        <div class="t-driver">${travelImpact(p)} <b>${esc(p.driver)}</b></div>
+        <div class="t-driver"><b>${esc(p.driver)}</b></div>
         <div class="t-note">${esc(p.t_en)}</div>
-        <div class="t-note bm">${esc(p.t_ms)}</div>
       </div>
     </li>`;
   }).join("");
@@ -5580,7 +5594,7 @@ function renderTravel(d){
   </div>` : "";
   const tipList = tips.length ? `<details class="t-tips">
     <summary>${ico("live")} ${T("Tips to travel around the peak")}</summary>
-    <ul>${tips.map(t => `<li>${esc(t.t_en)}<br><span class="bm">${esc(t.t_ms)}</span></li>`).join("")}</ul>
+    <ul>${tips.map(t => `<li>${esc(t.t_en)}</li>`).join("")}</ul>
   </details>` : "";
   $("#body-travel").innerHTML = periods.length ? `
     <div class="card mb">
@@ -5611,9 +5625,12 @@ function initTravelCarousel(){
   const slides = track.querySelectorAll(".t-row");
   const n = slides.length;
   if (n <= 1){ c.querySelector(".t-ctl").style.display = "none"; return; }
-  const perView = () => Math.max(1, Math.floor(track.clientWidth / 244));
+  const step = () => (slides[0] ? slides[0].offsetWidth : 268) + 12;
+  /* Derived from the measured card, not a hardcoded width: the cards carry a
+     model-written sentence and got wider once those ran long, and a stale
+     constant here silently mis-pages the deck. */
+  const perView = () => Math.max(1, Math.floor((track.clientWidth + 12) / step()));
   const maxIdx = () => Math.max(0, n - perView());
-  const step = () => (slides[0] ? slides[0].offsetWidth : 232) + 12;
   const pageNum = i => { const m = maxIdx(); return m ? Math.round((i / m) * (n - 1)) + 1 : 1; };
   const sync = () => {
     $("#t-ccount").textContent = `${pageNum(tCtl.idx)} / ${n}`;
