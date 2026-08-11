@@ -125,7 +125,24 @@ def main():
 
     days = {d["date"]: d for d in hist["days"]}
     if today in days:
-        sys.stderr.write(f"  {today} already snapshotted - nothing to do\n")
+        # Idempotency guard. Backfill a flight count that a previous run
+        # could not record (FIDS down at cron time, or a seed row) rather
+        # than leaving an honest-looking null forever.
+        row = days[today]
+        api_key = os.environ.get("FIDS_API_KEY", "")
+        if row.get("kul_flights") is None and api_key:
+            try:
+                row["kul_flights"] = kul_flights_today(api_key)
+                sys.stderr.write(f"  {today}: backfilled kul_flights={row['kul_flights']}\n")
+            except Exception as e:
+                sys.stderr.write(f"  fids backfill failed: {e}\n")
+            ordered = sorted(days.values(), key=lambda d: d["date"])[-120:]
+            hist["days"] = ordered
+            hist["updated"] = today
+            with open(OUT, "w") as f:
+                json.dump(hist, f, separators=(",", ":"))
+        else:
+            sys.stderr.write(f"  {today} already snapshotted - nothing to do\n")
         return
 
     bus = scheduled_bus_trips(today)
