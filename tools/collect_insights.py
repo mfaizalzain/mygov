@@ -242,14 +242,19 @@ def anomalies(series_map, holidays, z=2.5):
 
 # ════════════════════════════ grounding gate ══════════════════════════
 def _numbers_in(obj, acc):
+    """Collect the exact numeric values a bullet is allowed to contain.
+
+    Values, not rendered strings. An earlier version stored rounded variants
+    ("3.8" for 3.77) and accepted a token if any rounding matched, which let
+    "RM3.78" through against a real price of 3.77 - a plausible near-miss,
+    which is the most dangerous kind of wrong number and the exact thing this
+    gate exists to stop. Both signs are stored because the token regex does
+    not capture a leading minus."""
     if isinstance(obj, bool):
         return
     if isinstance(obj, (int, float)):
-        acc.update({f"{obj}", f"{obj:.0f}", f"{obj:.1f}", f"{obj:.2f}",
-                    f"{round(obj)}"})
-        if obj:
-            acc.add(f"{abs(obj):.1f}")
-            acc.add(f"{abs(obj):.2f}")
+        acc.add(float(obj))
+        acc.add(abs(float(obj)))
     elif isinstance(obj, dict):
         for v in obj.values():
             _numbers_in(v, acc)
@@ -274,12 +279,11 @@ def ground(text, facts):
     clean = re.sub(r"\b(?:RM|MYR|USD|SGD|EUR|GBP|JPY|THB|AUD|CNY|IDR)\s*",
                    " ", str(text), flags=re.I)
     for tok in re.findall(r"(?<![A-Za-z0-9.])\d+(?:[.,]\d+)*", clean):
-        plain = tok.replace(",", "")
-        if plain in allowed:
-            continue
-        # tolerate a trailing zero difference ("3.70" vs "3.7")
         try:
-            if f"{float(plain):.2f}" in allowed or f"{float(plain):.1f}" in allowed:
+            # Numeric comparison, so "3.70" and "3.7" agree while "3.78" and
+            # "3.77" do not. Rounding is not the model's to do - the prompt
+            # says so, and this enforces it.
+            if float(tok.replace(",", "")) in allowed:
                 continue
         except ValueError:
             pass
@@ -358,7 +362,14 @@ def build_brief(slow, health, prices, radar, fc, hits):
             date=out["generated"],
             facts=json.dumps(facts, ensure_ascii=False, indent=1),
             hits=json.dumps(hits[:6], ensure_ascii=False, indent=1))}]}],
-        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1400},
+        # gemini-flash-latest thinks before it answers and those tokens come
+        # out of the same budget as the reply. At 1400 the model spent the lot
+        # thinking and returned finishReason=MAX_TOKENS with an EMPTY text
+        # part, which is indistinguishable from "nothing to report" and would
+        # have written zero bullets every day in silence. Headroom is the fix:
+        # this endpoint rejects thinkingConfig with a bare INVALID_ARGUMENT, so
+        # budget for both halves the way collect_radar.py does.
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
     }).encode("utf-8")
     try:
         req = urllib.request.Request(
@@ -366,7 +377,18 @@ def build_brief(slow, health, prices, radar, fc, hits):
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=90) as r:
             payload = json.loads(r.read().decode("utf-8"))
-        text = payload["candidates"][0]["content"]["parts"][0]["text"]
+        cand = (payload.get("candidates") or [{}])[0]
+        parts = (cand.get("content") or {}).get("parts") or [{}]
+        text = parts[0].get("text") or ""
+        # An empty reply is a distinct failure from a refused or malformed one,
+        # and the reason matters: MAX_TOKENS means the budget was consumed
+        # before any answer was emitted. Say so rather than reporting "0
+        # bullets" as though the day were simply quiet.
+        if not text.strip():
+            reason = cand.get("finishReason", "unknown")
+            sys.stderr.write(f"  gemini returned no text (finishReason={reason})\n")
+            out["error"] = f"empty:{reason}"
+            return out
     except Exception as e:
         sys.stderr.write(f"  gemini failed: {e}\n")
         out["error"] = "gemini"

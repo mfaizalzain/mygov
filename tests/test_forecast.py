@@ -98,3 +98,25 @@ def test_gain_ignores_gaps():
     for i in range(0, 200, 5):
         seasonal[i] = None
     assert backtest_gain(seasonal, season=7) > 0.5
+
+
+def test_grounding_rejects_a_near_miss():
+    """The dangerous hallucination is the plausible one.
+
+    Storing rounded string variants let "RM3.78" match a real 3.77 because
+    both render as "3.8" at one decimal place. Comparison is numeric and
+    exact, so a near-miss is rejected while 3.70 == 3.7 still agrees."""
+    facts = {"ron95": 3.77}
+    assert ground("RON95 is RM3.77", facts) is True
+    assert ground("RON95 is RM3.78", facts) is False
+    assert ground("RON95 is RM3.8", facts) is False
+    assert ground("value 3.70", {"x": 3.7}) is True
+
+
+def test_grounding_handles_negative_facts():
+    """The token regex does not capture a leading minus, so a fact of -0.05
+    must still ground a bullet that writes "-0.05" or "0.05"."""
+    facts = {"change": -0.05}
+    assert ground("a change of -0.05", facts) is True
+    assert ground("a change of 0.05", facts) is True
+    assert ground("a change of 0.06", facts) is False
