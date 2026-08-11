@@ -391,6 +391,13 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .hol-chip b{font-weight:700}
 .hol-chip.hol-today{border-color:rgba(251,191,36,.45);
   background:rgba(251,191,36,.08);color:#fbbf24}
+/* District ethnicity mini-bar: a stacked 6-segment bar, one per ETHNIC
+   group, width = share of the district's population. 160 rows render as
+   plain spans - no canvas, no layout thrash. */
+.ethbar{display:inline-flex;height:7px;width:88px;border-radius:4px;
+  overflow:hidden;vertical-align:middle;margin-left:6px;
+  background:var(--line-soft)}
+.ethseg{height:100%;display:block;min-width:0}
 /* Affluent-vs-poorest comparison strip (Places view). */
 .cmp-row{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--s3);
   align-items:stretch}
@@ -1554,6 +1561,8 @@ const I18N = {
   "median household income":"pendapatan isi rumah median",
   "Most affluent":"Paling makmur", "Poorest":"Termiskin",
   "income gap":"jurang pendapatan", "Top group":"Kumpulan teratas",
+  "Ethnicity":"Etnik", "Male":"Lelaki", "Age":"Umur",
+  "Under 15":"Bawah 15", "15-64":"15-64", "65+":"65+",
   "Median income":"Pendapatan median", "Poverty":"Kemiskinan", "Gini":"Gini",
   "Income data not available yet.":"Data pendapatan belum tersedia.",
 } };
@@ -2195,8 +2204,13 @@ const KTMB_SERVICES = [
 async function loadMobility(){
   const slow = await readSlow();
   await readForecasts();          // additive; null is a fine outcome
+  let cars = null;
+  try {
+    const r = await fetch("cars.json", { cache:"no-store" });
+    if (r.ok) cars = await r.json();
+  } catch { /* optional enrichment - the section works without it */ }
   if (slow && slow.mobility)
-    return Object.assign({}, slow.mobility, { holidays: slow.holidays || [] });
+    return Object.assign({}, slow.mobility, { holidays: slow.holidays || [] }, cars ? { cars } : {});
   /* One server-side filter is allowed; "all_types" collapses the per-body-type
      rows (car/bus/lorry/…) that this section does not chart. */
   const reg = await request("data-catalogue", "/data-catalogue",
@@ -4438,6 +4452,7 @@ function paintIr(d){
    of the stack has been growing, which only reads against the full total. */
 let regFuels = new Set(FUELS.map(f => f[0]));
 let regRange = "5y", ridRange = "1y";
+let carsYear = null;   // selected year in the car-sales block
 /* Absolute counts are ~90% petrol, which squeezes the EV curve this section
    is named after into an invisible sliver at the base of every bar. "Share"
    normalises each month to 100% so the transition is actually legible. */
@@ -4451,6 +4466,13 @@ function renderMobility(d){
   const ev = n ? (d.byFuel.electric || [])[n - 1] : null;
   const tot = n ? d.total[n - 1] : null;
   const share = (ev != null && tot) ? ev / tot * 100 : null;
+  /* Car sales come from cars.json (JPJ granular registrations), merged into
+     the section data by loadMobility. The payload carries a per-year series
+     (current + previous for YoY); the chips switch between them. */
+  const carYears = d.cars ? Object.keys(d.cars.series).sort().reverse() : [];
+  if (!carYears.includes(String(carsYear))) carsYear = carYears[0] || null;
+  const cy = carsYear ? d.cars.series[carsYear] : null;
+  const carsAsOf = cy ? String(cy.asOf || "").slice(0, 7) : "";
 
   /* Ridership is published per service with no national total row, so the
      day's headline figure is the sum of the services that reported. */
@@ -4502,6 +4524,29 @@ function renderMobility(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="reg-dt"></div></details></div>
     </div>
+    ${d.cars && cy ? `
+    <div class="card mb" style="margin-top:var(--s4)">
+      <div class="card-h"><h4>${T("Car sales")}</h4>
+        <span class="sub">${T("new cars by maker")} · ${esc(carsAsOf)}</span></div>
+      <div class="card-b">
+        <div class="grid g2 mb">
+          <div class="kpi"><div class="lab">${T("YTD registrations")}</div>
+            <div class="val" data-count="${cy.rows}">0</div>
+            <div class="sub">${esc(carsYear)} ${T("new cars")}</div></div>
+          <div class="kpi"><div class="lab">${T("Top maker")}</div>
+            <div class="val" style="font-size:20px">${cy.topMakers[0] ? esc(cy.topMakers[0].name) : "-"}</div>
+            <div class="sub">${cy.topMakers[0] ? nf(cy.topMakers[0].n) + " " + T("registered") : ""}</div></div>
+        </div>
+        <div class="chips" id="cars-year-chips" style="margin-bottom:var(--s2)">
+          ${carYears.map(y =>
+            `<button class="chip" data-carsyear="${y}" aria-pressed="${y === String(carsYear)}">${y}</button>`).join("")}
+        </div>
+        <div class="chart" style="height:190px"><canvas id="cars-makers" role="img"
+          aria-label="Top car makers by registrations"></canvas></div>
+        <div class="chart" style="height:150px;margin-top:var(--s3)"><canvas id="cars-ev" role="img"
+          aria-label="EV share of new registrations by month"></canvas></div>
+      </div>
+    </div>` : ""}
     <div class="card">
       <div class="card-h"><h4>${T("KTMB ridership")}</h4>
         <span class="sub">${T("passengers per day")} · ${T("7-day average")}${(d.holidays || []).length ? " · " + T("public holidays marked") : ""}</span>
@@ -4538,7 +4583,42 @@ function renderMobility(d){
   seg2("regrange", v => { regRange = v; paintReg(d); });
   seg2("ridrange", v => { ridRange = v; paintRid(d); });
   paintReg(d); paintRid(d);
+  if (d.cars) paintCars(d);
   animateCounters($("#body-mobility"));
+}
+
+/* Car-sales block: top makers as horizontal bars, EV share as a line. */
+function paintCars(d){
+  const cy = d.cars && carsYear ? d.cars.series[carsYear] : null;
+  if (!cy) return;
+  chart("cars-makers", {
+    type:"bar",
+    data:{ labels: cy.topMakers.map(m => esc(m.name)),
+      datasets:[{ data: cy.topMakers.map(m => m.n), backgroundColor:"#34d399",
+        borderRadius:4 }] },
+    options:{ indexAxis:"y", plugins:{ legend:{ display:false } },
+      scales:{ x:{ ticks:{ callback:v => nf(v) }, grid:{ color:"rgba(128,128,128,.12)" } },
+               y:{ ticks:{ font:{ size:11 } }, grid:{ display:false } } },
+      maintainAspectRatio:false } });
+  chart("cars-ev", {
+    type:"line",
+    data:{ labels: cy.months.map(m => md(m)),
+      datasets:[{ data: cy.evShare, borderColor:"#34d399", backgroundColor:"rgba(52,211,153,.15)",
+        fill:true, borderWidth:2, tension:.3, pointRadius:2.5 }] },
+    options:{ plugins:{ legend:{ display:false } },
+      scales:{ y:{ title:{ display:true, text:"%", font:{ size:10 } },
+        ticks:{ callback:v => v + "%" }, grid:{ color:"rgba(128,128,128,.12)" } },
+        x:{ grid:{ display:false }, ticks:{ maxRotation:0, autoSkip:true } } },
+      maintainAspectRatio:false } });
+  /* Year chips switch the series; only the cars block re-renders. */
+  $("#body-mobility").querySelectorAll("[data-carsyear]").forEach(b => {
+    b.onclick = () => {
+      carsYear = b.dataset.carsyear;
+      $("#body-mobility").querySelectorAll("[data-carsyear]").forEach(o =>
+        o.setAttribute("aria-pressed", String(o.dataset.carsyear === carsYear)));
+      paintCars(d);
+    };
+  });
 }
 
 function paintReg(d){
@@ -4842,50 +4922,12 @@ const ETHNIC = [
 const ethnicLabel = k => T((ETHNIC.find(e => e[0] === k) || [, k])[1]);
 
 function renderPopulation(d){
-  const last = d.trend[d.trend.length - 1];
-  const prev = d.trend[d.trend.length - 2];
-  const yoy = (last && prev) ? (last[1] / prev[1] - 1) * 100 : null;
-  const total = last ? last[1] * 1000 : null;
-  const ethTotal = d.ethnicity.reduce((a, r) => a + r[1], 0);
-  const top = d.ethnicity[0];
-
-  $("#body-population").innerHTML = `
-    <div class="grid g4 mb">
-      <div class="kpi"><div class="lab">${T("Population")}</div>
-        <div class="val" data-count="${total || 0}" data-dec="0">0</div>
-        <div class="sub">${last ? esc(ymd(last[0])) : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Year-on-year")}</div>
-        <div class="val" style="font-size:22px">${yoy == null ? "-" :
-          `<span class="${yoy > 0 ? "down" : "up"}">${yoy > 0 ? "▲" : "▼"} ${nf(Math.abs(yoy), 2)}%</span>`}</div>
-        <div class="sub">${prev ? T("vs ") + esc(String(prev[0]).slice(0, 4)) : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Largest group")}</div>
-        <div class="val" style="font-size:20px">${top ? esc(ethnicLabel(top[0])) : "-"}</div>
-        <div class="sub">${top && ethTotal ? nf(top[1] / ethTotal * 100, 1) + "%" : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Years on record")}</div>
-        <div class="val" style="font-size:20px">${nf(d.trend.length)}</div>
-        <div class="sub">${d.trend.length ? esc(String(d.trend[0][0]).slice(0, 4)) + "-" +
-          esc(String(last[0]).slice(0, 4)) : ""}</div></div>
-    </div>
-    <div class="grid g2">
-      <div class="card">
-        <div class="card-h"><h4>${T("Population growth")}</h4>
-          <span class="sub">${T("millions · annual")}</span></div>
-        <div class="card-b"><div class="chart"><canvas id="pop-chart" role="img"
-          aria-label="Malaysian population since 1970"></canvas></div>
-          <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="pop-dt"></div></details></div>
-      </div>
-      <div class="card">
-        <div class="card-h"><h4>${T("Composition")}</h4>
-          <span class="sub">${last ? esc(ymd(last[0])) : ""}</span></div>
-        <div class="card-b"><div class="chart"><canvas id="eth-chart" role="img"
-          aria-label="Population by ethnic group"></canvas></div>
-          <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="eth-dt"></div></details></div>
-      </div>
-    </div>`;
-  paintPopulation(d); paintEthnicity(d);
-  animateCounters($("#body-population"));
+  /* Merged into the Places explorer: the national view (Malaysia chip)
+     already covers trend, composition, districts and seats - a superset of
+     these two cards - so nothing renders here. Kept as a function so the
+     LOADERS entry and its after-hook (which triggers places) stay intact. */
+  if (document.getElementById("body-population"))
+    document.getElementById("body-population").hidden = true;
 }
 
 function paintPopulation(d){
@@ -4960,20 +5002,37 @@ async function loadPlaces(){
 
 function renderPlaces(g){
   const st = g.state;
-  if (!placesState || !st.trend[placesState]) placesState = Object.keys(st.trend).sort()[0];
-  const trend = st.trend[placesState] || [];
+  /* National view is the default: `placesState === ""` means the whole
+     country (trend/eth summed across states, every district/seat). The
+     Population and Places blocks were split across two loaders for the
+     same file; with a national chip the Places view covers both, so the
+     section renders one explorer instead of two. */
+  if (placesState && !st.trend[placesState]) placesState = "";
+  const national = !placesState;
+  const states = Object.keys(st.trend).sort();
+  const trend = national
+    ? st.years.map((y, i) => states.reduce((a, s) => a + (st.trend[s][i] || 0), 0))
+    : st.trend[placesState] || [];
   const yr = st.latest;
   const cur = trend[trend.length - 1];
   const prev = trend.length > 1 ? trend[trend.length - 2] : null;
   const yoy = (cur != null && prev) ? (cur / prev - 1) * 100 : null;
-  const eth = st.eth[placesState] || {};
+  const eth = national
+    ? Object.fromEntries(ETHNIC.map(([k]) =>
+        [k, states.reduce((a, s) => a + ((st.eth[s] || {})[k] || 0), 0)]))
+    : st.eth[placesState] || {};
   const ethTot = Object.values(eth).reduce((a, v) => a + (v || 0), 0);
   const top = Object.entries(eth).sort((a, b) => (b[1] || 0) - (a[1] || 0))[0];
-  const dists = g.district.list.filter(x => x.s === placesState);
-  const parl = g.parlimen.list.filter(x => x.s === placesState);
-  const duns = g.dun.list.filter(x => x.s === placesState);
+  const dists = national ? g.district.list
+    : g.district.list.filter(x => x.s === placesState);
+  const parl = national ? g.parlimen.list
+    : g.parlimen.list.filter(x => x.s === placesState);
+  const duns = national ? g.dun.list
+    : g.dun.list.filter(x => x.s === placesState);
 
-  const chips = Object.keys(st.trend).sort().map(s =>
+  /* Malaysia chip first; the state chips follow. */
+  const chips = `<button class="chip" data-place="" aria-pressed="${national}">${esc(T("Malaysia"))}</button>` +
+    states.map(s =>
     `<button class="chip" data-place="${esc(s)}" aria-pressed="${s === placesState}">${esc(s)}</button>`).join("");
 
   $("#body-places").innerHTML = `
@@ -5017,7 +5076,7 @@ function renderPlaces(g){
       <div class="card-h"><h4>${T("Affluent vs poorest districts")}</h4>
         <span class="sub">${T("median household income")} · ${yr}</span></div>
       <div class="card-b">
-        ${placesCompare(g.district.list)}
+        ${placesCompare(dists)}
       </div>
     </div>
     <div class="card mb">
@@ -5028,9 +5087,12 @@ function renderPlaces(g){
       <div class="card-b"><div class="tw"><table id="places-dist-table">
         <thead><tr>
           <th class="sortable" data-key="n">${T("District")} <span class="arrow">↕</span></th>
+          ${national ? `<th class="sortable" data-key="s">${T("State")} <span class="arrow">↕</span></th>` : ""}
           <th class="sortable num" data-key="p" data-num="1" data-desc="1">${T("Population")} <span class="arrow">↕</span></th>
           <th class="sortable num" data-key="g" data-num="1" data-desc="1">${T("YoY")} <span class="arrow">↕</span></th>
-          <th class="sortable" data-key="grp">${T("Top group")} <span class="arrow">↕</span></th>
+          <th class="sortable" data-key="grp">${T("Ethnicity")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="sxm" data-num="1" data-desc="1">${T("Male")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="young" data-num="1" data-desc="1">${T("Age")} <span class="arrow">↕</span></th>
           <th class="sortable num" data-key="inc" data-num="1" data-desc="1">${T("Median income")} <span class="arrow">↕</span></th>
           <th class="sortable num" data-key="pov" data-num="1" data-desc="1">${T("Poverty")} <span class="arrow">↕</span></th>
           <th class="sortable num" data-key="gini" data-num="1" data-desc="1">${T("Gini")} <span class="arrow">↕</span></th>
@@ -5082,11 +5144,20 @@ function renderPlaces(g){
 function placesDistRows(g){
   const q = placesDQ.trim().toLowerCase();
   return g.district.list
-    .filter(x => x.s === placesState && (!q || x.n.toLowerCase().includes(q)))
-    .map(x => ({
-      n: x.n, p: x.p, g: x.g,
-      grp: topGroup(x.eth),
-      inc: x.inc, pov: x.pov, gini: x.gini }));
+    .filter(x => (!placesState || x.s === placesState) &&
+      (!q || x.n.toLowerCase().includes(q)))
+    .map(x => {
+      const sx = x.sx || {};
+      const sxTot = (sx.male || 0) + (sx.female || 0);
+      return {
+        n: x.n, p: x.p, g: x.g, s: x.s,
+        grp: topGroup(x.eth), eth: x.eth,
+        sxm: sxTot ? (sx.male || 0) / sxTot * 100 : null,
+        sxf: sxTot ? (sx.female || 0) / sxTot * 100 : null,
+        age: x.age || null,
+        young: (x.age || {}).young != null ? (x.age).young : null,
+        inc: x.inc, pov: x.pov, gini: x.gini };
+    });
 }
 
 /* Largest ethnic group + share for a district's eth map, e.g.
@@ -5099,9 +5170,46 @@ function topGroup(eth){
   return [k, (v || 0) / tot * 100];
 }
 
-/* Affluent-vs-poorest comparison strip: two compact panels side by side,
-   computed nationally (not restricted to the selected state), so the gap
-   the whole country lives with is visible at a glance. */
+/* Compact ethnicity composition bar for a district row: one segment per
+   ETHNIC group in the dashboard's fixed palette, width = share. Tooltip
+   shows the per-group share on hover; the leading label stays in the cell
+   above the bar. Pure HTML - no canvas, cheap to render 160 rows. */
+function ethMiniBar(eth){
+  const tot = Object.values(eth).reduce((a, v) => a + (v || 0), 0);
+  if (!tot) return "-";
+  const segs = ETHNIC
+    .map(([k, label, color]) => {
+      const v = eth[k] || 0;
+      if (!v) return "";
+      return `<span class="ethseg" style="background:${color};width:${(v / tot * 100).toFixed(2)}%"
+        title="${esc(label)} ${nf(v / tot * 100, 1)}%"></span>`;
+    }).join("");
+  return `<span class="ethbar">${segs}</span>`;
+}
+
+/* Age-structure mini-bar: young (0-14) / working-age (15-64) / elderly
+   (65+). The three shares always sum to 100, so the bar is the district's
+   dependency picture at a glance - youth-heavy rows lean education and
+   entertainment, elderly-heavy rows lean health and accessibility. */
+function ageMiniBar(age){
+  const segs = [
+    ["young", "#2dd4bf", T("Under 15")],
+    ["work",  "#60a5fa", T("15-64")],
+    ["old",   "#fbbf24", T("65+")],
+  ].map(([k, color, label]) => {
+    const v = age[k];
+    if (v == null) return "";
+    return `<span class="ethseg" style="background:${color};width:${v}%"
+      title="${esc(label)} ${nf(v, 1)}%"></span>`;
+  }).join("");
+  return `<span class="ethbar">${segs}</span>`;
+}
+
+/* Affluent-vs-poorest comparison strip: two compact panels side by side.
+   Scoped to whatever chip is active - the national view compares every
+   district in the country (Ulu Langat vs Bukit Mabong, a 4.4x gap), a
+   state chip compares within that state only, so the gap is honest at
+   every zoom level. */
 function placesCompare(list){
   const withInc = (list || []).filter(r => r.inc != null);
   if (withInc.length < 2) return `<div class="state">${T("Income data not available yet.")}</div>`;
@@ -5129,22 +5237,26 @@ function paintPlacesDistricts(g, rows){
   rows = rows || placesDistRows(g);
   tb.innerHTML = rows.map(r => `<tr>
       <td>${esc(r.n)}</td>
+      ${placesState === "" ? `<td>${esc(r.s)}</td>` : ""}
       <td class="num">${r.p == null ? "-" : nf(r.p * 1000)}</td>
       <td class="num">${r.g == null ? "-" :
         `<span class="${r.g > 0 ? "down" : "up"}">${r.g > 0 ? "▲" : "▼"} ${nf(Math.abs(r.g), 2)}%</span>`}</td>
-      <td>${r.grp ? `${esc(ethnicLabel(r.grp[0]))} <span class="dim">${nf(r.grp[1], 0)}%</span>` : "-"}</td>
+      <td>${r.eth ? ethMiniBar(r.eth) : (r.grp ? `${esc(ethnicLabel(r.grp[0]))} <span class="dim">${nf(r.grp[1], 0)}%</span>` : "-")}</td>
+      <td class="num">${r.sxm == null ? "-" :
+        `<span title="M ${nf(r.sxm, 0)}% / F ${r.sxf == null ? "-" : nf(r.sxf, 0) + "%"}">${nf(r.sxm, 0)}%</span>`}</td>
+      <td>${r.age ? ageMiniBar(r.age) : "-"}</td>
       <td class="num">${r.inc == null ? "-" : "RM " + nf(r.inc, 0)}</td>
       <td class="num">${r.pov == null ? "-" : nf(r.pov, 1) + "%"}</td>
       <td class="num">${r.gini == null ? "-" : nf(r.gini, 3)}</td>
     </tr>`).join("")
-    || `<tr><td colspan="7" class="state">${T("No districts match.")}</td></tr>`;
+    || `<tr><td colspan="${placesState === "" ? 10 : 9}" class="state">${T("No districts match.")}</td></tr>`;
 }
 
 function placesSeatRows(g){
   const q = placesSQ.trim().toLowerCase();
   const socio = g.socio[placesLevel] || {};
   return g[placesLevel].list
-    .filter(x => x.s === placesState &&
+    .filter(x => (!placesState || x.s === placesState) &&
       (!q || x.n.toLowerCase().includes(q) || x.c.toLowerCase().includes(q)))
     .map(x => Object.assign({ c:x.c, n:x.n, s:x.s, p:x.p, cz:x.cz }, socio[x.k] || {}));
 }

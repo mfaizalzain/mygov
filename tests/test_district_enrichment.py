@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
 
-from collect_geo import build_district_socio, district_eth_sx, num
+from collect_geo import build_district_socio, district_eth_sx, district_age, num
 
 
 def _cur():
@@ -63,6 +63,32 @@ def test_district_sx_only_when_no_ethnicity_rows():
     bm = out[("Sarawak", "Bukit Mabong")]
     assert bm["sx"] == {"male": 5.5, "female": 5.2}
     assert "eth" not in bm
+
+
+def _age_df():
+    import pandas as pd
+    rows = []
+    for age, pop in [("0-4", 10), ("5-9", 8), ("10-14", 6), ("15-19", 5),
+                     ("20-24", 5), ("25-29", 5), ("60-64", 5), ("65-69", 4),
+                     ("70-74", 3), ("80-84", 2), ("85+", 1)]:
+        rows.append({"state": "Perak", "district": "Kinta", "sex": "both",
+                     "age": age, "ethnicity": "overall", "population": pop})
+    return pd.DataFrame(rows)
+
+
+def test_district_age_shares():
+    out = district_age(_age_df())
+    # young: 0-14 = 24; work: 15-64 = 20; old: 65+ = 10; total 54
+    k = out[("Perak", "Kinta")]
+    assert k["young"] == round(24 / 54 * 100, 1)
+    assert k["work"] == round(20 / 54 * 100, 1)
+    assert k["old"] == round(10 / 54 * 100, 1)
+    assert abs(sum(k.values()) - 100) < 0.2
+
+
+def test_district_age_handles_85_plus():
+    out = district_age(_age_df())
+    assert out[("Perak", "Kinta")]["old"] > 18   # 10/54 = 18.5%
 
 
 def test_district_socio_joins_on_state_district():

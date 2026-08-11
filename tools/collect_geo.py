@@ -164,6 +164,33 @@ def district_eth_sx(cur):
     return out
 
 
+def district_age(cur):
+    """Pure: per-district age structure as three broad shares (%). Age is a
+    socio signal - a youth-heavy district faces schooling/entertainment
+    demand, a work-heavy one commutes and taxes, an old one needs health
+    and accessibility - so three numbers carry the signal that eighteen
+    bands would drown in. Returns {state|district: {"young": %, "work": %,
+    "old": %}} for districts present in `cur`."""
+    def band_of(a):
+        a = str(a)
+        if a == "85+":
+            return "old"
+        n = int(a.split("-")[0])
+        return "young" if n < 15 else ("work" if n < 65 else "old")
+
+    out = {}
+    rows = cur[(cur.sex == "both") & (cur.ethnicity == "overall") & (cur.age != "overall")]
+    for (st, d), g in rows.groupby(["state", "district"]):
+        tot = float(g.population.sum())
+        if not tot:
+            continue
+        m = {"young": 0.0, "work": 0.0, "old": 0.0}
+        for r in g.itertuples():
+            m[band_of(r.age)] += float(r.population)
+        out[(st, d)] = {k: round(v / tot * 100, 1) for k, v in m.items()}
+    return out
+
+
 def build_district(df):
     df = df.copy()
     df["y"] = df.date.astype(str).str[:4].astype(int)
@@ -177,12 +204,16 @@ def build_district(df):
     # unrestricted dataframe at the same year as the totals.
     full = df[df.y == latest]
     comp = district_eth_sx(full)
+    age = district_age(full)
     rows = []
     for r in cur.itertuples():
         was = pm.get(r.district)
         row = {"n": r.district, "s": r.state, "p": num(r.population),
                "g": None if not was else num((r.population / was - 1) * 100, 2)}
         row.update(comp.get((r.state, r.district), {}))
+        a = age.get((r.state, r.district))
+        if a:
+            row["age"] = a
         rows.append(row)
     rows.sort(key=lambda x: -(x["p"] or 0))
     # 4 of the 164 districts carry no row for the newest year upstream. Ship

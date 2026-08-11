@@ -131,7 +131,7 @@ self.addEventListener("fetch", event => {
       url.pathname === "/radar.json" || url.pathname === "/prices.json" ||
       url.pathname === "/geo.json" ||
       url.pathname === "/insights.json" || url.pathname === "/forecasts.json" ||
-      url.pathname === "/transport_history.json" ||
+      url.pathname === "/transport_history.json" || url.pathname === "/cars.json" ||
       url.pathname === "/feed.xml") return;
 
   // Everything else (icons, vendor scripts): cache first.
