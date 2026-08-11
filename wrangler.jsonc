@@ -5,8 +5,11 @@
   "compatibility_date": "2026-08-01",
   // Attaching the custom domain here makes wrangler create/maintain the DNS
   // record and certificate on deploy, so it is reproducible from the repo.
+  // Production serves malaysia-at-a-glance.com; the dev branch owns
+  // mygov.faizalmzain.com (mygov-staging worker).
   "routes": [
-    { "pattern": "mygov.faizalmzain.com", "custom_domain": true }
+    { "pattern": "malaysia-at-a-glance.com", "custom_domain": true },
+    { "pattern": "www.malaysia-at-a-glance.com", "custom_domain": true }
   ],
   // Declaring routes turns workers.dev off by default; keep it as a fallback
   // URL for testing so a DNS or certificate issue never leaves the app dark.
