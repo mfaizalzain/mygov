@@ -2549,10 +2549,13 @@ function renderHolWidget(){
     const sts = h[3];
     /* A holiday applies if it covers the visitor's state; without a state,
        national entries (federal + most states) qualify. mycal uses ["*"]
-       as an all-states wildcard on some entries. */
-    if (Array.isArray(sts) && sts.includes("*")) return true;
-    if (slug) return Array.isArray(sts) && sts.includes(slug);
-    return Array.isArray(sts) ? sts.length >= 10 : true;
+       as an all-states wildcard on some entries. Entries with no states
+       array at all (older collector output) are treated as national so
+       the chips never silently vanish. */
+    if (!Array.isArray(sts) || !sts.length) return true;
+    if (sts.includes("*")) return true;
+    if (slug) return sts.includes(slug);
+    return sts.length >= 10;
   };
   const on = hol.filter(h => applies(h) && h[0] === todayIso)[0];
   const next = hol.filter(h => applies(h) && h[0] > todayIso)[0];
