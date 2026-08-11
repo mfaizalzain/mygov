@@ -86,70 +86,95 @@ def days_back(n):
     return (dt.date.today() - dt.timedelta(days=n)).isoformat()
 
 
-# ── public holidays ────────────────────────────────────────────────────
+# ── public + school holidays ──────────────────────────────────────────
 # Transit ridership is driven by the holiday calendar more than by anything
 # else in this dataset: the Feb 2026 Komuter spike is Chinese New Year (17
 # Feb) and the level shift after it is Ramadan starting two days later. A
 # chart that shows the spike without naming it invites the reader to invent
 # an explanation, so the dates ride along in slow.json and the chart labels
-# them.
+# them. School breaks are equally load-bearing: they are the travel peak
+# seasons (mid-year and year-end holidays), so the chart shades them too.
 #
-# Source: Google's public Malaysia holiday calendar. data.gov.my publishes no
-# holiday dataset (almanak_astronomi is moon phases and meteor showers), and
-# the purpose-built malaysia-holiday.dydxsoft.my API - which does carry the
-# per-state codes this feed lacks - currently returns data for 2026 only,
-# while the charts go back to 2021. Revisit if its back-catalogue fills in.
-ICS = ("https://calendar.google.com/calendar/ical/"
-       "en.malaysia%23holiday%40group.v.calendar.google.com/public/basic.ics")
-# Observances Google carries that are not Malaysian public holidays.
+# Source: the Malaysia Calendar API (mycal) - MIT-licensed, data from the
+# official gazette (JPM BKPP), JAKIM, KPM and MPM, hosted on Cloudflare
+# Workers. data.gov.my publishes no holiday dataset (almanak_astronomi is
+# moon phases). mycal carries per-state coverage, the school calendar
+# (KPM cuti perayaan, Kumpulan A/B) and exam schedules - the Google ICS
+# used previously was federal-only and had no school data.
+# Mirrored into slow.json at collect time so the dashboard never hot-links
+# the third-party Worker from the browser.
+MYCAL = "https://mycal-api.huijun00100101.workers.dev/v1"
 NOT_HOLIDAYS = {"Valentine's Day", "Easter Sunday", "Christmas Eve",
                 "New Year's Eve", "Mother's Day", "Father's Day"}
 # The ones that visibly move intercity travel get emphasis in the UI.
 MAJOR = ("Chinese New Year", "Hari Raya", "Deepavali", "Ramadan",
-         "Wesak", "National Day", "Malaysia Day", "Christmas Day")
-HOL_FROM = 2021
+         "Wesak", "National Day", "Malaysia Day", "Christmas Day",
+         "Labour Day", "Maulidur Rasul")
+HOL_FROM = 2024   # mycal's holiday archive starts here
+
+
+def mycal(path, params):
+    qs = "&".join(f"{k}={urllib.parse.quote(str(v))}" for k, v in params.items())
+    req = urllib.request.Request(f"{MYCAL}/{path}?{qs}",
+                                 headers={"Accept": "application/json",
+                                          "User-Agent": "mygov/1.0 (+https://mygov.faizalmzain.com)"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.loads(r.read().decode("utf-8"))
 
 
 def holidays():
-    """[[YYYY-MM-DD, name, major], …] - national holidays only, plus the
-    Ramadan start (tagged regional upstream but it opens a month-long change
-    in travel patterns, so the chart needs it)."""
-    try:
-        req = urllib.request.Request(ICS, headers={"Accept": "text/calendar"})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            text = r.read().decode("utf-8", "replace")
-    except Exception as e:
-        sys.stderr.write(f"  holidays: {e} - skipped\n")
-        return []
-
-    import re
-    out, seen = [], set()
-    for block in re.findall(r"BEGIN:VEVENT(.*?)END:VEVENT", text, re.S):
-        md = re.search(r"DTSTART;VALUE=DATE:(\d{4})(\d{2})(\d{2})", block)
-        ms = re.search(r"SUMMARY:(.*)", block)
-        if not (md and ms):
+    """[[YYYY-MM-DD, name, major, [states]], …] - state-aware holidays from
+    the mycal API. Each entry carries the snake_case state list it applies to
+    (federal entries list all states), so the app can filter to the
+    visitor's location. `major` is the UI-emphasis flag (travel-moving)."""
+    out = []
+    for year in range(HOL_FROM, dt.date.today().year + 2):
+        try:
+            d = mycal("holidays", {"year": year})
+        except Exception as e:
+            sys.stderr.write(f"  holidays {year}: {e} - skipped\n")
             continue
-        y, m, day = md.groups()
-        if int(y) < HOL_FROM:
-            continue
-        name = ms.group(1).strip()
-        regional = "(regional holiday)" in name
-        name = name.replace("(regional holiday)", "").replace("(tentative)", "").strip()
-        # Regional entries are dropped except the Ramadan marker, which is the
-        # one period boundary that matters nationally for travel.
-        if regional and "Ramadan" not in name:
-            continue
-        if name in NOT_HOLIDAYS:
-            continue
-        date = f"{y}-{m}-{day}"
-        key = (date, name)
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append([date, name, 1 if any(k in name for k in MAJOR) else 0])
-    out.sort()
+        for h in (d or {}).get("data", []):
+            name = str(h.get("name", {}).get("en", "")).strip()
+            if not name or name in NOT_HOLIDAYS:
+                continue
+            date = str(h.get("date", ""))
+            if not date or date < f"{HOL_FROM}-01-01":
+                continue
+            states = [str(s) for s in h.get("states", []) if s]
+            if not states:
+                continue
+            out.append([date, name,
+                        1 if any(k in name for k in MAJOR) else 0,
+                        states])
+    out.sort(key=lambda r: r[0])
     sys.stderr.write(f"  holidays: {len(out)} entries "
                      f"({sum(h[2] for h in out)} major) from {HOL_FROM}\n")
+    return out
+
+
+def school_holidays():
+    """[{type, group, start, end, name, days}, …] - KPM school breaks
+    (Kumpulan A = Kedah/Kelantan/Terengganu Fri-Sat weekend; B = the rest).
+    School breaks ARE travel peak seasons, so the chart shades them."""
+    out = []
+    for year in range(dt.date.today().year - 1, dt.date.today().year + 2):
+        try:
+            d = mycal("school/holidays", {"year": year})
+        except Exception as e:
+            sys.stderr.write(f"  school {year}: {e} - skipped\n")
+            continue
+        for h in (d or {}).get("data", []):
+            out.append({
+                "type": str(h.get("type", "")),
+                "group": str(h.get("group", "")),
+                "start": str(h.get("startDate", "")),
+                "end": str(h.get("endDate", "")),
+                "name": str(h.get("name", {}).get("en", "")),
+                "days": h.get("days", 0),
+            })
+    out.sort(key=lambda r: r["start"])
+    sys.stderr.write(f"  school: {len(out)} breaks\n")
     return out
 
 
@@ -269,8 +294,9 @@ def main():
         ethnicity = [[r["ethnicity"], num(r.get("population"))] for r in both
                      if r.get("date") == latest and r.get("ethnicity") != "overall"]
 
-        # ── public holidays (Google calendar ICS; self-contained failure) ─
+        # ── public + school holidays (mycal API; self-contained failure) ─
         hol = holidays()
+        sch = school_holidays()
 
     except Exception as e:
         sys.stderr.write(f"fetch failed: {e}\n")
@@ -304,6 +330,7 @@ def main():
         },
         "population": {"trend": trend, "latest": latest, "ethnicity": ethnicity},
         "holidays": hol,
+        "school": sch,
     }
     with open(OUT, "w") as f:
         json.dump(payload, f, separators=(",", ":"))
