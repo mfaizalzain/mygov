@@ -1,0 +1,76 @@
+name: Snapshot Transport Activity
+
+on:
+  # The GTFS-static feed regenerates at ~03:00 UTC; run after it so the bus
+  # count reflects the freshest schedule. Daily - the history is one row per
+  # day and grows into the air+bus trend line the dashboard plots.
+  schedule:
+    - cron: '30 3 * * *'
+  # Manual trigger for catch-up after a missed/delayed cron
+  workflow_dispatch:
+
+jobs:
+  collect-transport:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        # SHA-pinned (checkout v5.1.0) so a retargeted tag cannot change what runs.
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.11'
+
+      - name: Syntax check collector
+        run: |
+          python3 -m py_compile tools/collect_transport.py
+          echo "syntax OK"
+
+      # Pull yesterday's history from KV so a missed cron does not lose rows
+      # (the git-committed copy is the cold-start fallback).
+      - name: Fetch existing history from KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          python3 tools/kv_upload.py pull transport public/transport_history.json || true
+
+      - name: Run collector (transport snapshot)
+        env:
+          FIDS_API_KEY: ${{ secrets.FIDS_API_KEY }}
+        run: python3 tools/collect_transport.py
+
+      # Sanity gate: the bus count comes from the deterministic GTFS schedule
+      # (~2k trips); a value of 0 or >10k means the feed changed shape and the
+      # row should not be published.
+      - name: Validate output
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open('public/transport_history.json'))
+          days = d.get('days') or []
+          if not days:
+              sys.exit('transport: no days recorded')
+          latest = days[-1]
+          bt = latest.get('bus_trips', 0)
+          errs = []
+          if bt < 500 or bt > 10000:
+              errs.append(f"bus_trips implausible: {bt}")
+          if not latest.get('date'):
+              errs.append('missing date')
+          if errs:
+              sys.exit('transport: validation failed -> ' + '; '.join(errs))
+          print(f"ok: {len(days)} days, latest {latest['date']} "
+                f"bus_trips={bt} kul_flights={latest.get('kul_flights')}")
+          PY
+
+      # Only the `transport` key: an unfiltered push would clobber fresher
+      # KV values written by the other collectors.
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push transport

@@ -40,6 +40,7 @@ FILES = {
     "geo": "public/geo.json",
     "insights": "public/insights.json",
     "forecasts": "public/forecasts.json",
+    "transport": "public/transport_history.json",
     "feed": "public/feed.xml",
 }
 
