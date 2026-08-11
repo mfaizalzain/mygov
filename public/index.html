@@ -956,7 +956,7 @@ html[data-text="large"] table{font-size:14px}
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-ron95"><span class="skel skel-val"></span></div>
         <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#groceries-sub" aria-label="Groceries y/y - go to the groceries block">
+      <a class="kpi kpi-load" href="#prices-sub" aria-label="Groceries y/y - go to the groceries block">
         <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries y/y</span>
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-basket"><span class="skel skel-val"></span></div>
@@ -2993,6 +2993,81 @@ function buildShell(){
   SECTIONS.forEach(s => obs.observe(document.getElementById(s.id)));
   const band = document.getElementById("radar-band"); if (band) obs.observe(band);
 }
+/* ═══════════════════ in-page navigation ═══════════════════
+   Anchor jumps used to be left to the browser: href="#health" plus
+   `scroll-behavior:smooth` and a `scroll-padding-top` matching the sticky
+   bars. That is correct only if the page keeps still while it scrolls, and
+   this one does not - sections lazy-load, and the observer that loads them
+   fires at 45% below the viewport, so a long smooth scroll sweeps through
+   several sections and each one swaps a skeleton for differently-sized
+   content mid-flight. Measured on the real page: jumping to Health landed
+   3,045px short, Vehicles 1,979px short, and Transport and Live did not move
+   at all (the browser abandons a smooth scroll whose target keeps moving).
+
+   So: place instantly, then keep re-placing while the content settles, and
+   get out of the way the moment the reader takes over. Instant is also the
+   better call for a page this tall - smoothly animating 13,000px is a long
+   wait to look at, not a nicety. */
+const stackTop = () =>
+  (parseFloat(cssVar("--hdr")) || 61) + (parseFloat(cssVar("--nav")) || 53) + 18;
+
+function goToAnchor(id){
+  const target = document.getElementById(id);
+  if (!target) return false;
+  /* Load the destination before jumping, so its body is closer to final
+     height on arrival instead of growing under the reader afterwards. */
+  const sec = target.closest("section[id]");
+  const sid = sec && sec.id;
+  if (sid && LOADERS[sid] && !loaded.has(sid)) loadSection(sid, false);
+
+  const place = () => {
+    const top = target.getBoundingClientRect().top + window.scrollY - stackTop();
+    window.scrollTo({ top: Math.max(0, top), behavior: "instant" });
+  };
+  place();
+  /* Re-place until the section stops resizing. `seen` is the position we last
+     set; if it changes without us, the reader has scrolled and we stop. */
+  let ticks = 0, seen = Math.round(window.scrollY);
+  clearInterval(goToAnchor.timer);
+  goToAnchor.timer = setInterval(() => {
+    if (Math.abs(Math.round(window.scrollY) - seen) > 4 || ++ticks > 16){
+      clearInterval(goToAnchor.timer); return;
+    }
+    place();
+    seen = Math.round(window.scrollY);
+  }, 110);
+  return true;
+}
+
+function initAnchorNav(){
+  /* Delegated, so it covers the nav, the KPI cards and the briefing bullets
+     without each having to opt in. */
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a || a.target === "_blank") return;
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey ||
+        e.button !== 0) return;
+    const id = decodeURIComponent(a.getAttribute("href").slice(1));
+    if (!id || id === "main") return;          // leave the skip-link alone
+    if (!goToAnchor(id)) return;
+    e.preventDefault();
+    /* replaceState, not the default jump: the hash should still be
+       copy-pasteable and the scroll-spy still updates, but the browser must
+       not perform its own (wrong) scroll on top of ours. */
+    try { history.replaceState(null, "", "#" + id); } catch {}
+  });
+  /* Back/forward between hashes, and a deep link on first load. */
+  addEventListener("hashchange", () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (id) goToAnchor(id);
+  });
+  if (location.hash.length > 1){
+    const id = decodeURIComponent(location.hash.slice(1));
+    /* The shell is still filling in at boot, so let a frame pass first. */
+    requestAnimationFrame(() => goToAnchor(id));
+  }
+}
+
 const setDot = (id, st) => { const d = $("#dot-" + id); if (d) d.className = "dot " + st; };
 /* Sections whose body element has a different id than the section (the
    Places explorer merged into Population renders in #body-places). */
@@ -7136,7 +7211,10 @@ function renderKpis(){
   const cards = [
     { k:"hot",   lab:"Hottest today",   ico:"temp",     href:"#weather" },
     { k:"ron95", lab:"RON 95",          ico:"fuel",     href:"#fuel" },
-    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#groceries-sub",
+    /* The block is titled "Groceries" but its element id comes from the
+       loader id ("prices"), so #groceries-sub matched nothing and the card was
+       a dead link - a missing anchor target scrolls nowhere at all. */
+    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#prices-sub",
       where:"groceries block" },
     { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
     { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
@@ -7554,6 +7632,7 @@ function boot(){
   };
   addEventListener("scroll", onScroll, { passive:true });
   onScroll();
+  initAnchorNav();
   topbtn.onclick = () => scrollTo({ top:0, behavior:"smooth" });
   primeCached();
   /* Warm the three hero-KPI-backed lazy sections without waiting for

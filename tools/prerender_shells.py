@@ -134,7 +134,7 @@ shell_html = "\n".join(shells)
 KPIS = [
     ("hot", "Hottest today", "temp", "#weather"),
     ("ron95", "RON 95", "fuel", "#fuel"),
-    ("basket", "Groceries y/y", "basket", "#groceries-sub", "groceries block"),
+    ("basket", "Groceries y/y", "basket", "#prices-sub", "groceries block"),
     ("cpi", "Inflation y/y", "economy", "#economy"),
     ("ev", "New EVs", "ev", "#mobility"),
     ("warn", "Active warnings", "warn", "#hazards", "warnings section"),
