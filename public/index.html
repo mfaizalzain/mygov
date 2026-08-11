@@ -887,13 +887,11 @@ html[data-text="large"] table{font-size:14px}
     <li><a href="#hazards" id="nav-hazards"><span class="dot" id="dot-hazards"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Warnings</a></li>
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Household</a></li>
-    <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> Population</a></li>
+    <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> People</a></li>
     <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
     <li><a href="#finance" id="nav-finance"><span class="dot" id="dot-finance"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg> Finance</a></li>
-    <li><a href="#health" id="nav-health"><span class="dot" id="dot-health"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-health"/></svg> Health</a></li>
     <li><a href="#mobility" id="nav-mobility"><span class="dot" id="dot-mobility"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mobility"/></svg> Vehicles</a></li>
     <li><a href="#transport" id="nav-transport"><span class="dot" id="dot-transport"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-transport"/></svg> Transport</a></li>
-    <li><a href="#live" id="nav-live"><span class="dot" id="dot-live"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-live"/></svg> Live</a></li>
   </ul>
 </nav>
 
@@ -1078,8 +1076,8 @@ html[data-text="large"] table{font-size:14px}
     <section id="population" aria-labelledby="h-population">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-population"/></svg></div>
-        <div><h3 id="h-population">Population</h3>
-          <p>How many people live in Malaysia - the national total every year since 1970, then the same DOSM estimates broken down by state, district and constituency, with per-seat income, poverty, inequality and unemployment.</p>
+        <div><h3 id="h-population">People</h3>
+          <p>Who lives in Malaysia and how they are doing - DOSM population estimates from 1970 to now, broken down by state, district and constituency with per-seat income, poverty, inequality and unemployment, plus the Health block below on blood donations, organ pledges and PeKa B40 screenings.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
             <p>DOSM's annual population estimates, published to 1 January each year in thousands of people. The national series comes over OpenDOSM; state, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json, which a weekly GitHub Action regenerates. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.</p>
@@ -1089,7 +1087,22 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-population"></span>
       </div>
       <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
+            <!-- Health & Donations: a merged sub-block of its parent section. -->
+      <div class="sec-sub" id="health-sub" aria-labelledby="h-health">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-health"/></svg></div>
+          <div><h3 id="h-health" style="font-size:17px" data-i18n="Health & Donations">Health &amp; Donations</h3>
+            <p data-i18n="Blood donations by blood type, organ pledges and PeKa B40 health screenings - published daily by the Ministry of Health.">Blood donations by blood type, organ pledges and PeKa B40 health screenings - published daily by the Ministry of Health.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.">The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.</p>
+              <ul><li><code>GET /data-catalogue?id=blood_donations</code></li><li><code>GET /data-catalogue?id=organ_pledges</code></li><li><code>GET /data-catalogue?id=pekab40_screenings</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-health"></span>
+        </div>
+        <div id="body-health"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      </div>
     </section>
     <section id="economy" aria-labelledby="h-economy">
       <div class="sec-h">
@@ -1138,22 +1151,6 @@ html[data-text="large"] table{font-size:14px}
       <div id="body-finance"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       
     </section>
-    <section id="health" aria-labelledby="h-health">
-      <div class="sec-h">
-        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-health"/></svg></div>
-        <div><h3 id="h-health">Health &amp; Donations</h3>
-          <p>Blood donations by blood type, organ pledges and PeKa B40 health screenings - published daily by the Ministry of Health.</p>
-          <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>The Ministry of Health publishes these three daily series through the government data catalogue. Donations carry a blood-type breakdown and are charted for the last three years; organ pledges run from 2009 and PeKa B40 screenings from 2019, both shown in full.</p>
-            <ul><li><code>GET /data-catalogue?id=blood_donations</code></li><li><code>GET /data-catalogue?id=organ_pledges</code></li><li><code>GET /data-catalogue?id=pekab40_screenings</code></li></ul>
-          </details>
-        </div>
-        <span class="sec-time" id="time-health"></span>
-      </div>
-      <div id="body-health"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
-    </section>
     <section id="mobility" aria-labelledby="h-mobility">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-mobility"/></svg></div>
@@ -1184,23 +1181,22 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-transport"></span>
       </div>
       <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
-    </section>
-    <section id="live" aria-labelledby="h-live">
-      <div class="sec-h">
-        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
-        <div><h3 id="h-live">Live Vehicles</h3>
-          <p>Trains and buses currently reporting their position, straight from the operators' live feeds.</p>
-          <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.</p>
-            <ul><li><code>GET /gtfs-realtime/vehicle-position/ktmb</code></li><li><code>GET myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)</code></li></ul>
-          </details>
+            <!-- Live Vehicles: a merged sub-block of its parent section. -->
+      <div class="sec-sub" id="live-sub" aria-labelledby="h-live">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
+          <div><h3 id="h-live" style="font-size:17px" data-i18n="Live Vehicles">Live Vehicles</h3>
+            <p data-i18n="Trains and buses currently reporting their position, straight from the operators' live feeds.">Trains and buses currently reporting their position, straight from the operators' live feeds.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.">Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.</p>
+              <ul><li><code>GET /gtfs-realtime/vehicle-position/ktmb</code></li><li><code>GET myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-live"></span>
         </div>
-        <span class="sec-time" id="time-live"></span>
+        <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       </div>
-      <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
     </section>
     <!-- Static fallback: rendered before the app script runs, and visible to
          browsers/crawlers without JavaScript. buildShell() replaces #main's
@@ -1370,7 +1366,8 @@ const I18N = {
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
   "Data source & methodology":"Sumber data & kaedah",
   "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
-  "Population":"Penduduk", "Population growth":"Pertumbuhan penduduk",
+  "Population":"Penduduk", "People":"Penduduk",
+  "Who lives in Malaysia and how they are doing - DOSM population estimates from 1970 to now, broken down by state, district and constituency with per-seat income, poverty, inequality and unemployment, plus the Health block below on blood donations, organ pledges and PeKa B40 screenings.":"Siapa yang tinggal di Malaysia dan bagaimana keadaan mereka - anggaran penduduk DOSM dari 1970 hingga kini, dipecahkan mengikut negeri, daerah dan kawasan pilihan raya dengan pendapatan, kemiskinan, ketaksamaan dan pengangguran setiap kerusi, serta blok Kesihatan di bawah tentang derma darah, ikrar organ dan saringan PeKa B40.", "Population growth":"Pertumbuhan penduduk",
   "How many people live in Malaysia - the national total every year since 1970, then the same DOSM estimates broken down by state, district and constituency, with per-seat income, poverty, inequality and unemployment.":"Berapa ramai penduduk Malaysia - jumlah kebangsaan setiap tahun sejak 1970, kemudian anggaran DOSM yang sama dipecahkan mengikut negeri, daerah dan kawasan pilihan raya, dengan pendapatan, kemiskinan, ketaksamaan dan pengangguran bagi setiap kerusi.",
   "DOSM's annual population estimates, published to 1 January each year in thousands of people. The national series comes over OpenDOSM; state, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json, which a weekly GitHub Action regenerates. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.":"Anggaran penduduk tahunan DOSM, diterbitkan pada 1 Januari setiap tahun dalam ribuan orang. Siri kebangsaan datang melalui OpenDOSM; anggaran peringkat negeri, daerah dan kawasan pilihan raya hanya wujud sebagai Parquet di hos storan DOSM dan tiba melalui geo.json, yang dijana semula oleh GitHub Action mingguan. Jadual kawasan pilihan raya tidak mengandungi kumpulan umur, jadi bilangan warganegara ialah proksi untuk pengundi, bukan populasi umur mengundi. Angka pendapatan, kemiskinan, ketaksamaan dan tenaga buruh bagi setiap kerusi datang daripada Survei Pendapatan Isi Rumah dan Survei Tenaga Buruh melalui OpenAPI.",
   "Composition":"Komposisi", "Largest group":"Kumpulan terbesar",
@@ -1766,19 +1763,16 @@ const SECTIONS = [
   { id:"hazards",   label:"Warnings",   icon:"warn",       family:"weather" },
   { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
   { id:"fuel",      label:"Household",  icon:"fuel",       family:"data-catalogue" },
-  { id:"population",label:"Population", icon:"population", family:"opendosm" },
+  { id:"population",label:"People",     icon:"population", family:"opendosm" },
   { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
-  { id:"health",    label:"Health",     icon:"health",     family:"data-catalogue" },
   { id:"mobility",  label:"Vehicles",   icon:"mobility",   family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"transport",  family:"gtfs-static" },
-  { id:"live",      label:"Live",       icon:"live",       family:"gtfs-realtime" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
    making the first screen feel fast. */
-const LAZY = new Set(["economy","finance","mobility","population","health",
-                     "transport","live"]);
+const LAZY = new Set(["economy","finance","mobility","population","transport"]);
 
 /* ════════════════════════════ throttled fetch ════════════════════════════ */
 const hits = {};
@@ -3049,11 +3043,21 @@ function buildShell(){
 const stackTop = () =>
   (parseFloat(cssVar("--hdr")) || 61) + (parseFloat(cssVar("--nav")) || 53) + 18;
 
+/* Anchors that no longer name an element, mapped to where the content went.
+   Sections have been merged and sub-blocks renamed, and a link that scrolls
+   nowhere is indistinguishable from a broken page - these live in the sitemap,
+   in llms.txt, in the MCP server's docs and in whatever anyone has shared. */
+const ANCHOR_ALIAS = {
+  flood: "hazards", "flood-sub": "hazards",   // flood is a tile in the hazard strip
+  "groceries-sub": "prices-sub",              // block titled Groceries, loader id prices
+};
 function goToAnchor(id){
   /* Sections that became sub-blocks keep their old anchor working: #tourism
-     was a section before it merged into Economy, and links to it are in the
-     sitemap, llms.txt and anywhere anyone has shared one. */
-  const target = document.getElementById(id) || document.getElementById(id + "-sub");
+     was a section before it merged into Economy, #health and #live before they
+     merged into People and Public Transport. */
+  const target = document.getElementById(id)
+    || document.getElementById(id + "-sub")
+    || document.getElementById(ANCHOR_ALIAS[id] || "");
   if (!target) return false;
   /* Load the destination before jumping, so its body is closer to final
      height on arrival instead of growing under the reader afterwards. */
@@ -7364,8 +7368,8 @@ const META = {
     how:"Registrations are counted by the Road Transport Department (JPJ) at first registration and published monthly by fuel type; only all-vehicle totals are charted here. Ridership is KTMB's own daily passenger count per service, published to the previous day.",
     eps:["/data-catalogue?id=registrations_type_fuel&filter=all_types@type",
          "/data-catalogue?id=ridership_ktmb_daily"] },
-  population:{ title:"Population",
-    desc:"How many people live in Malaysia - the national total every year since 1970, then the same DOSM estimates broken down by state, district and constituency, with per-seat income, poverty, inequality and unemployment.",
+  population:{ title:"People",
+    desc:"Who lives in Malaysia and how they are doing - DOSM population estimates from 1970 to now, broken down by state, district and constituency with per-seat income, poverty, inequality and unemployment, plus the Health block below on blood donations, organ pledges and PeKa B40 screenings.",
     how:"DOSM's annual population estimates, published to 1 January each year in thousands of people. The national series comes over OpenDOSM; state, district and constituency estimates are Parquet-only on DOSM's storage host and arrive through geo.json, which a weekly GitHub Action regenerates. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.",
     eps:["/opendosm?id=population_malaysia&filter=overall@age",
          "storage.dosm.gov.my/population/population_state.parquet",
@@ -7477,14 +7481,23 @@ const LOADERS = {
   population:{ load:loadPopulation, render:renderPopulation,
     after:d => {
       /* The Places explorer is a sub-block of this section, loaded with it
-         the same way flood rides along with the weather. */
+         the same way flood rides along with the weather. Health joins it:
+         donations, organ pledges and PeKa screenings are population data,
+         and the section is three static-file loaders plus three requests -
+         no throttle pressure from putting them together. */
       if (!loaded.has("places")) loadSection("places", false);
+      if (!loaded.has("health")) loadSection("health", false);
     }, asOf:d => d.latest },
   places:   { load:loadPlaces,    render:renderPlaces,    asOf:d => d.asOf },
   tourism:  { load:loadTourism,   render:renderTourism,   asOf:d =>
     d.asOf ? `${d.asOf.year}-${String(d.asOf.month).padStart(2,"0")}-01` : null },
   health:   { load:loadHealth,    render:renderHealth,    asOf:d => d.updated },
-  transport:{ load:loadTransport, render:renderTransport },
+  transport:{ load:loadTransport, render:renderTransport, after:() => {
+      /* Live vehicles are a merged sub-block of this section: KTMB schedules,
+         KTMB ridership and live KTMB trains were three separate nav entries
+         for one operator. Same pattern as Groceries under Household. */
+      if (!loaded.has("live")) loadSection("live", false);
+    } },
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
       kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },

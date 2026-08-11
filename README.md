@@ -31,12 +31,12 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
 | Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
 | Vehicles & Ridership | JPJ, KTMB | Monthly new-vehicle registrations stacked by fuel type (the EV adoption curve), and a **Car sales** sub-block - YTD registrations, top makers, **top EV makers** and EV share from JPJ's granular registration data |
-| Population | DOSM (OpenDOSM + storage) | National population 1970-present and ethnic composition, then the same estimates by state, district and constituency (a merged **Places explorer** with a Malaysia-wide default chip, **paginated tables** and **federal territories shown by constituency** - KL/Putrajaya/Labuan have no districts) - per-district ethnicity, sex split, age structure, median income, poverty and inequality, and per-seat income, poverty, gini and unemployment |
+| People | DOSM (OpenDOSM + storage) | National population 1970-present and ethnic composition, then the same estimates by state, district and constituency (a merged **Places explorer** with a Malaysia-wide default chip, **paginated tables** and **federal territories shown by constituency** - KL/Putrajaya/Labuan have no districts) - per-district ethnicity, sex split, age structure, median income, poverty and inequality, and per-seat income, poverty, gini and unemployment |
 | Tourism (sub-block of Economy) | Tourism Malaysia | Monthly international visitor arrivals by country of nationality (top 51) - the month's total, month-on-month and year-on-year growth vs 2025 and 2019, plus year-to-date, from Tourism Malaysia's published PDFs |
-| Health | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
+| Health (sub-block of People) | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
-| Live | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
+| Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
 
