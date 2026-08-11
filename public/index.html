@@ -368,6 +368,22 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .radar-src a:hover{text-decoration:underline}
 .radar-src .dim{flex:none}
 /* trend radar carousel band */
+/* Daily briefing band. Deliberately quieter than the radar band above it:
+   this is a summary of numbers already on the page, not a headline of its own,
+   and machine-written text should not shout. */
+.brief{background:var(--bg-2);border:1px solid var(--line-soft);
+  border-radius:var(--r);padding:var(--s4);margin:0 0 var(--s2)}
+.brief-h{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
+  margin-bottom:var(--s3)}
+.brief-h h3{margin:0;font-size:15px;font-weight:660;letter-spacing:-.02em}
+.brief-note{font-family:var(--mono);font-size:11px;color:var(--fg-3)}
+.brief-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
+.brief-list li{display:flex;align-items:flex-start;gap:var(--s2);font-size:13.5px;
+  line-height:1.5;color:var(--fg-2)}
+.brief-list li::before{content:"";flex:0 0 5px;width:5px;height:5px;margin-top:7px;
+  border-radius:50%;background:var(--accent)}
+.brief-list a{color:inherit;text-decoration:none;border-bottom:1px solid transparent}
+.brief-list a:hover{color:var(--fg);border-bottom-color:var(--line)}
 .radar-band{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);margin:0 0 var(--s2)}
@@ -830,6 +846,16 @@ html[data-text="large"] table{font-size:14px}
         <div class="sub"><span class="skel skel-sub"></span></div></a>
     </div>
   </div>
+
+  <!-- Daily briefing. Hidden until insights.json produces grounded bullets;
+       a missing, stale or empty file leaves no trace on the page. -->
+  <section class="brief" id="brief-band" aria-labelledby="brief-h" hidden>
+    <div class="brief-h">
+      <h3 id="brief-h" data-i18n="Today in brief">Today in brief</h3>
+      <span class="brief-note" id="brief-note"></span>
+    </div>
+    <ul class="brief-list" id="brief-list"></ul>
+  </section>
 
   <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
@@ -1443,6 +1469,7 @@ const I18N = {
   "The constituency tables carry no age bands, so citizen count is a proxy for the electorate - it still includes everyone under 18. Income, poverty and inequality come from the Household Income Survey; unemployment and participation from the Labour Force Survey.":"Jadual kawasan pilihan raya tidak mengandungi kumpulan umur, jadi bilangan warganegara ialah proksi untuk pengundi - ia masih termasuk semua yang berumur bawah 18 tahun. Pendapatan, kemiskinan dan ketaksamaan daripada Survei Pendapatan Isi Rumah; pengangguran dan penyertaan daripada Survei Tenaga Buruh.",
   "public holidays marked":"cuti umum ditanda",
   "forecast":"unjuran", "forecast · 80% band":"unjuran · jalur 80%",
+  "Today in brief":"Ringkasan hari ini",
 } };
 const T = s => (I18N[LANG] && I18N[LANG][s]) || s;
 /* Forecasts arrive only in Bahasa Melayu; map the common phrases to English
@@ -1524,6 +1551,9 @@ function rerenderAll(){
     try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d); } catch {}
   }
   renderKpis();
+  /* The briefing ships both languages in one payload, so a language switch is
+     a re-render, not a re-fetch. */
+  renderBrief();
 }
 
 /** An <svg> referencing a sprite symbol. Decorative by default - every call
@@ -2201,6 +2231,39 @@ async function readForecasts(){
     fcData = fresh ? j : null;
   } catch { fcData = null; }
   return fcData;
+}
+
+/* Daily briefing. Every number in it was produced by the statistics layer and
+   machine-checked against the source data before publication (ground() in
+   tools/collect_insights.py); the model only phrases them. The band stays
+   hidden unless real bullets arrive, so a missing key, a rate-limited call or
+   a quiet day all degrade to "no band" rather than to an empty box. */
+let briefData = null;
+async function loadBrief(){
+  try {
+    const r = await fetch("insights.json", { cache:"no-store" });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const fresh = j.generated &&
+      (Date.now() - Date.parse(j.generated + "T00:00:00Z")) < 3 * DAY_MS;
+    briefData = (fresh && Array.isArray(j.bullets) && j.bullets.length) ? j : null;
+  } catch { briefData = null; }
+  return briefData;
+}
+function renderBrief(){
+  const band = $("#brief-band"), list = $("#brief-list");
+  if (!band || !list) return;
+  if (!briefData){ band.hidden = true; return; }
+  const note = $("#brief-note");
+  if (note) note.textContent = ymd(briefData.generated);
+  list.innerHTML = briefData.bullets.map(b => {
+    const text = esc(LANG === "ms" ? (b.t_ms || b.t_en) : (b.t_en || b.t_ms));
+    /* Only link to a section that exists - the model picks `sec` from a list
+       in the prompt, and a typo there must not produce a dead anchor. */
+    const target = b.sec && document.getElementById(b.sec) ? b.sec : null;
+    return `<li>${target ? `<a href="#${esc(target)}">${text}</a>` : text}</li>`;
+  }).join("");
+  band.hidden = false;
 }
 
 let slowData = null;
@@ -6543,6 +6606,7 @@ function boot(){
   readForecasts().then(f => {
     if (f && loaded.has("mobility") && dataMap.mobility) paintRid(dataMap.mobility);
   });
+  loadBrief().then(renderBrief);
   setInterval(tick, 30000);
 }
 /* Chart.js is deferred, so it exists only after parsing; wait for both. */
