@@ -20,7 +20,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pymupdf
+        run: pip install pymupdf pytest
 
       - name: Syntax
         run: python3 -m py_compile tools/collect_tourism.py tools/kv_upload.py
