@@ -212,6 +212,10 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 @media (min-width:1100px){
   .hero{display:flex;gap:var(--s8);align-items:flex-start}
   .hero-copy{flex:1 1 0;min-width:0}
+  /* two columns, not three: three would make the cards narrower than the
+     full-width row they replaced, which is the opposite of the point */
+  .hero .kpis{flex:1.15 1 0;min-width:0;margin-top:6px;
+    grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 .hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;min-height:40px}
 .hero-loc .loc-chip{text-decoration:none}
@@ -242,9 +246,16 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .pos-panel tr:last-child td{border-bottom:none}
 .pos-panel tr:hover td{background:var(--surface-3)}
 .pos-panel .state{text-align:center;color:var(--fg-3);padding:var(--s4)}
-/* In-section KPI cards (fuel, groceries, tourism, health, ...): a labelled
-   value with a sub-line. The hero KPI strip was removed in favour of the
-   daily briefing + Travel Outlook band - these rules serve the sections. */
+/* auto-fit rather than a fixed 6: at 1240px six tracks give 232px cards, which
+   is too narrow for names like "Pusat Konservasi Gajah Kebangsaan" - they wrap
+   to a second line and desynchronise the row's heights */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));
+  gap:var(--s3);margin-top:var(--s6)}
+/* With an odd number of cards the last tile is stranded alone on its row.
+   The hero column is capped by .wrap's max-width, so this grid resolves to
+   exactly two columns at every desktop size and one on mobile - spanning the
+   stray card keeps the block rectangular, and is a no-op single-column. */
+.kpis > :last-child:nth-child(odd){grid-column:1/-1}
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);transition:var(--t)}
@@ -261,6 +272,10 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
 .kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
 .kpi-t{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
+a.kpi{color:inherit;text-decoration:none}
+a.kpi:hover{text-decoration:none}
+.kpi .go{font-size:13px;color:var(--fg-3);opacity:0;transform:translateX(-3px);transition:var(--t)}
+.kpi:hover .go,.kpi:focus-visible .go{opacity:1;transform:none;color:var(--accent)}
 .up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
 /* ── latest exchange rate (dropdown + hero) ── */
 .fx-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);flex-wrap:wrap}
@@ -367,59 +382,6 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 /* Holiday + school chips: one slim row under the hero location bar. */
 .hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   margin:var(--s2) 0 0}
-/* Travel Outlook card: a timeline of peak travel periods. Impact badges
-   are traffic-light colour-coded; the dates column is fixed-width mono so
-   rows line up. The bilingual note sits under the driver line. */
-.t-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.t-row{display:flex;gap:var(--s3);padding:var(--s3) 0;
-  border-bottom:1px solid var(--line-soft)}
-.t-row:last-child{border-bottom:none;padding-bottom:0}
-.t-row:first-child{padding-top:0}
-.t-dates{flex:0 0 118px;font-family:var(--mono);font-size:11.5px;
-  color:var(--fg-3);padding-top:2px;line-height:1.5}
-.t-mid{flex:1;min-width:0}
-.t-driver{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
-  font-size:13.5px;margin-bottom:3px}
-.t-driver b{font-weight:700}
-.t-imp{font-family:var(--mono);font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;
-  border-radius:999px;border:1px solid var(--line-soft)}
-.t-imp.t-extreme{color:#f87171;border-color:rgba(248,113,113,.4);
-  background:rgba(248,113,113,.08)}
-.t-imp.t-high{color:#fbbf24;border-color:rgba(251,191,36,.4);
-  background:rgba(251,191,36,.08)}
-.t-imp.t-moderate{color:#34d399;border-color:rgba(52,211,153,.35);
-  background:rgba(52,211,153,.07)}
-.t-note{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:2px}
-.t-note.bm{color:var(--fg-3);font-size:12px}
-/* A period covering today: amber highlight + a NOW marker in the dates
-   column; the band above the list shouts the live peak once. */
-.t-row.t-cur{background:rgba(251,191,36,.05);
-  border:1px solid rgba(251,191,36,.25);border-radius:var(--r);
-  padding:var(--s3) var(--s3)}
-.t-now{font-family:var(--mono);font-size:9.5px;font-weight:700;
-  color:#111;background:#fbbf24;padding:1px 6px;border-radius:999px;
-  margin-right:4px;letter-spacing:.05em}
-.t-curband{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
-  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);
-  border-radius:var(--r);padding:var(--s3) var(--s4);margin-bottom:var(--s3);
-  font-size:13px}
-.t-curband b{display:inline-flex;align-items:center;gap:6px;color:#fbbf24}
-.t-curband span{color:var(--fg-2)}
-.t-curband .ico{width:15px;height:15px}
-.t-tips{margin-top:var(--s3);border:1px solid var(--line-soft);
-  border-radius:var(--r);background:var(--bg-2)}
-.t-tips summary{cursor:pointer;font-size:12.5px;font-weight:650;
-  padding:var(--s3) var(--s4);display:flex;align-items:center;gap:6px;
-  color:var(--fg-1)}
-.t-tips ul{margin:0;padding:0 var(--s4) var(--s3) var(--s4);list-style:disc;
-  padding-left:calc(var(--s4) + 16px)}
-.t-tips li{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:6px}
-.t-tips li .bm{color:var(--fg-3);font-size:12px}
-@media (max-width:620px){
-  .t-row{flex-direction:column;gap:var(--s2)}
-  .t-dates{flex:none}
-}
 .hol-chip{display:inline-flex;align-items:center;gap:6px;
   font-family:var(--mono);font-size:11.5px;line-height:1;
   padding:5px 10px;border-radius:999px;border:1px solid var(--line-soft);
@@ -720,11 +682,6 @@ tr.sel .pick{color:var(--chip-fg)}
 /* An open tile spans the strip - the flood map and the warning carousel need
    the full width, and a tall tile in one column would strand the other two. */
 .hz-strip details.hz-tile[open]{grid-column:1/-1}
-/* When both neighbours are open (and spanning), the remaining compact tile
-   sits alone in a row as a 289px card next to ~900px of dead space. renderHazards
-   marks the lone quiet tile hz-solo so it fills the row instead - an all-clear
-   status is still a full-width row, not a stub. */
-.hz-strip .hz-tile.hz-solo{grid-column:1/-1}
 .hz-sum{cursor:pointer;list-style:none}
 .hz-sum::-webkit-details-marker{display:none}
 .hz-top{display:flex;align-items:center;gap:var(--s2);color:var(--fg-3)}
@@ -813,7 +770,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 .bmc:hover{background:#fcd34d;border-color:#fcd34d;transform:translateY(-1px);text-decoration:none}
 @media (max-width:620px){ .foot{flex-direction:column-reverse;gap:var(--s4)} .bmc{width:100%;justify-content:center} }
 
-@media (max-width:1000px){ .g4,.g5{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4,.g5{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
 @media (max-width:620px){
   .wrap{padding:0 var(--s4) 64px} .hd{padding:var(--s3) var(--s4)}
@@ -824,7 +781,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .hero-loc-row{min-height:85px}
   .hero-loc{flex:1 1 100%}
   nav.sections ul{padding:var(--s2) var(--s4)}
-  .g4{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:1fr}
   .g5{grid-template-columns:repeat(2,1fr)}
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
@@ -985,28 +942,49 @@ html[data-text="large"] table{font-size:14px}
         <ul class="brief-list" id="brief-list"></ul>
       </section>
     </div>
-    <!-- Travel Outlook lives here in the hero: the next peak travel periods
-         are planning info, not reference data - the same reason the daily
-         briefing sits above the fold. Fed by travel.json (weekly Gemini
-         summary of the holiday + school calendar) via LOADERS.travel. -->
-    <section class="radar-band travel-band" id="travel-band" aria-labelledby="travel-h">
-      <div class="radar-band-h">
-        <div class="radar-band-t">
-          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
-          <div>
-            <h3 id="travel-h" data-i18n="Travel Outlook">Travel Outlook</h3>
-            <p data-i18n="The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.">The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.</p>
-            <details class="meta">
-              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
-              <p data-i18n="Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.">Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.</p>
-              <ul><li><code>GET mycal-api.huijun00100101.workers.dev/v1/holidays</code></li><li><code>GET mycal-api.huijun00100101.workers.dev/v1/school/holidays</code></li><li><code>travel.json (KV)</code></li></ul>
-            </details>
-          </div>
-        </div>
-        <span class="sec-time" id="time-travel"></span>
-      </div>
-      <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-    </section>
+    <div class="kpis" id="kpis">
+      <a class="kpi kpi-load" href="#weather" aria-label="Hottest today - go to the weather section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-temp"/></svg> Hottest today</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-hot"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#fuel" aria-label="RON 95 - go to the fuel section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> RON 95</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-ron95"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#prices-sub" aria-label="Groceries y/y - go to the groceries block">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries y/y</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-basket"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#economy" aria-label="Inflation y/y - go to the economy section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Inflation y/y</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-cpi"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#mobility" aria-label="New EVs - go to the mobility section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-ev"/></svg> New EVs</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-ev"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#hazards" aria-label="Active warnings - go to the warnings section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Active warnings</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-warn"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#hazards" aria-label="Stations at risk - go to the warnings section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg> Stations at risk</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-flood"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+      <a class="kpi kpi-load" href="#live" aria-label="Vehicles live - go to the live section">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bus"/></svg> Vehicles live</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-live"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>
+    </div>
+  </div>
 
   <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
@@ -1305,10 +1283,8 @@ const FRESH_YEARS = 2;   // datasets whose last update is older than this are hi
 /* v9: weather.eq gains km + eqRadius. v10: weather.eq is strictly the last
    24 h - a replayed v9 payload carries history under a "last 24 hours" head.
    v11: transport gains rid/holidays (KTMB ridership moved in from Vehicles);
-   a v10 transport payload has no rid and the card silently does not render.
-   v12: weather gains eqRecent (30-day near quakes for the quiet-day carousel);
-   a v11 payload has no eqRecent and renderHazards would throw on .length. */
-const CK = "mygov.cache.v12.";
+   a v10 transport payload has no rid and the card silently does not render. */
+const CK = "mygov.cache.v11.";
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -1373,9 +1349,6 @@ const I18N = {
   "footerC":" penyumbang. Data diambil terus oleh pelayar anda dan dicache setempat selama 15 minit bagi menghormati had 4-permintaan-seminit API. Tiada analitik, tiada penjejakan.",
   "bmc":"Sokong projek ini di Buy Me a Coffee",
   "Weather":"Cuaca", "Household":"Isi Rumah", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
-  "Travel":"Perjalanan",
-  "Travel Outlook":"Tinjauan Perjalanan",
-  "The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.":"Tempoh perjalanan puncak Malaysia yang akan datang - cuti sekolah, cuti umum dan hujung minggu panjang - dengan jangkaan di jalan raya, hotel dan lapangan terbang, serta tip untuk mengelak kesesakan.",
   "Trending":"Trend",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
@@ -1684,14 +1657,6 @@ const I18N = {
      because the key itself carried no unit for T() to fall back on. */
   "in N days":"dalam N hari", "tomorrow":"esok",
   "School on break":"Cuti sekolah", "School in session":"Sekolah bersekolah",
-  "extreme peak":"puncak melampau", "peak":"puncak", "quiet":"tenang",
-  "now":"kini",
-  "no quakes in 24h · N in the last 30 days":"tiada gempa dalam 24 jam · N dalam 30 hari lepas",
-  "Previous earthquakes":"Gempa bumi sebelumnya", "Next earthquakes":"Gempa bumi seterusnya",
-  "Peak travel period right now":"Tempoh puncak perjalanan sekarang",
-  "plan around the crowds":"rancang perjalanan elak orang ramai",
-  "Tips to travel around the peak":"Tips mengelak puncak perjalanan",
-  "No upcoming peak periods in the next 8 weeks.":"Tiada tempoh puncak dalam 8 minggu akan datang.",
   "Affluent vs poorest districts":"Daerah paling makmur vs termiskin",
   "median household income":"pendapatan isi rumah median",
   "Most affluent":"Paling makmur", "Poorest":"Termiskin",
@@ -1780,6 +1745,7 @@ function rerenderAll(){
     const d = dataMap[id]; if (!d) continue;
     try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d); } catch {}
   }
+  renderKpis();
   /* The briefing ships both languages in one payload, so a language switch is
      a re-render, not a re-fetch. */
   renderBrief();
@@ -2194,24 +2160,18 @@ async function loadHazards(){
     return m ? Number(m[1].replace(/,/g, "")) : null;
   };
   const nowMs = Date.now();
-  const EQ_RECENT_MS = 30 * 24 * 3600 * 1000;  // the "recent activity" window
   /* Live view only - within 500 km AND within the last 24 h. Malaysia is
      seismically quiet, so this is empty on most days; that is the honest
      answer, not a gap. */
-  const allNear = (quakes || []).filter(q => q.visible !== false)
+  const eq = (quakes || []).filter(q => q.visible !== false)
     .map(q => ({ q, km: eqKm(q),
                  ts: Date.parse(String(q.utcdatetime || "").replace(" ", "T") + "Z") }))
     .filter(x => x.km != null && x.km <= EQ_RADIUS_KM)
-    .filter(x => Number.isFinite(x.ts))
-    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  const toEq = x => ({ t:x.q.localdatetime, lat:x.q.lat, lon:x.q.lon, dep:x.q.depth,
-    loc:x.q.location_original || x.q.location, mag:x.q.magdefault,
-    near:x.q.n_distancemas, km:x.km, ts:x.ts });
-  /* Live: last 24 h (the alerts band). Recent: last 7 days - used to keep the
-     tile useful on the usual quiet days, shown as a carousel behind an
-     "All clear" headline instead of an empty table. */
-  const eq = allNear.filter(x => nowMs - x.ts <= EQ_FRESH_MS).map(toEq);
-  const eqRecent = allNear.filter(x => nowMs - x.ts <= EQ_RECENT_MS).map(toEq);
+    .filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS)
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+    .map(x => ({ t:x.q.localdatetime, lat:x.q.lat, lon:x.q.lon, dep:x.q.depth,
+      loc:x.q.location_original || x.q.location, mag:x.q.magdefault,
+      near:x.q.n_distancemas, km:x.km, ts:x.ts }));
 
   const warn = (warnings || []).filter(w => {
     if (!w.valid_to) return true;
@@ -2229,7 +2189,7 @@ async function loadHazards(){
              dated: real(w.valid_from) && real(w.valid_to) };
   }).sort((a,b) => Number(a.info) - Number(b.info));
 
-  return { warn, eq, eqRecent, flood, eqRadius:EQ_RADIUS_KM };
+  return { warn, eq, flood, eqRadius:EQ_RADIUS_KM };
 }
 
 async function loadFuel(){
@@ -3067,7 +3027,6 @@ function buildShell(){
   }, { rootMargin:`-${stackH() + 46}px 0px -70% 0px`, threshold:0 });
   SECTIONS.forEach(s => obs.observe(document.getElementById(s.id)));
   const band = document.getElementById("radar-band"); if (band) obs.observe(band);
-  const tband = document.getElementById("travel-band"); if (tband) obs.observe(tband);
 }
 /* ═══════════════════ in-page navigation ═══════════════════
    Anchor jumps used to be left to the browser: href="#health" plus
@@ -3449,7 +3408,7 @@ function hzTile(key, ico, label, active, headline, sub, body){
   const tone = active ? "hz-on" : "hz-ok";
   const mark = active ? "&#9888;" : "&#10003;";
   if (!body)
-    return `<div class="hz-tile hz-quiet ${tone}">
+    return `<div class="hz-tile ${tone}">
       <div class="hz-top"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-${ico}"/></svg>
         <span class="hz-lab">${esc(label)}</span><span class="hz-mark">${mark}</span></div>
       <div class="hz-val">${headline}</div>
@@ -3485,39 +3444,25 @@ function renderHazards(d){
       : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue")),
     wxBody);
 
-  /* Earthquakes - within 500 km and 24 h, or an explicit all-clear. On a
-     quiet day the live list is empty, so the tile falls back to a carousel
-     of the last 7 days' near quakes (same interaction as the warnings
-     carousel) - the tile always has content instead of a bare stub. */
-  const eqLive = d.eq.length
-    ? `<div class="tw scroll-y"><table>
-        <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
-          <th class="num">${T("Depth")}</th><th class="num">${T("From Malaysia")}</th>
-          <th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
-        <tbody>${d.eq.map(eqRow).join("")}</tbody></table></div>`
-    : "";
-  const eqCarousel = !d.eq.length && (d.eqRecent || []).length
-    ? `<div class="wx-carousel eq-carousel" id="eq-carousel">
-        <div class="wx-track">${d.eqRecent.slice(0, 12).map(eqCard).join("")}</div>
-        <div class="wx-ctl">
-          <span class="radar-count" id="eq-ccount" aria-live="polite"></span>
-          <button class="btn" id="eq-prev" aria-label="${T("Previous earthquakes")}">‹</button>
-          <button class="btn" id="eq-next" aria-label="${T("Next earthquakes")}">›</button>
-        </div>
-      </div>`
-    : "";
-  const eqBody = eqLive || eqCarousel;
-  const eqHeadline = d.eq.length
-    ? `${d.eq.length} ${T(d.eq.length === 1 ? "event" : "events")}`
-    : T("All clear");
-  const eqSub = d.eq.length
-    ? T("within Nkm - last 24h").replace("N", nf(d.eqRadius))
-    : (d.eqRecent.length
-        ? T("no quakes in 24h · N in the last 7 days")
-            .replace("N", d.eqRecent.length)
-        : T("within Nkm - last 24h").replace("N", nf(d.eqRadius)));
+  /* Earthquakes - within 500 km and 24 h, or an explicit all-clear. */
+  const eqBody = d.eq.length ? `<div class="tw scroll-y"><table>
+      <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
+        <th class="num">${T("Depth")}</th><th class="num">${T("From Malaysia")}</th>
+        <th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
+      <tbody>${d.eq.map(q => { const m = Number(q.mag) || 0;
+        const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
+        return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
+          <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
+          <td>${txt(q.loc || "-")}</td><td class="num dim">${nf(q.dep,0)} km</td>
+          <td class="num">${q.km == null ? "-" : nf(q.km) + " km"}</td>
+          <td class="dim">${txt(q.near || "-")}</td>
+          <td><a class="maplink" target="_blank" rel="noopener"
+            href="https://www.google.com/maps?q=${q.lat},${q.lon}"
+            aria-label="Open earthquake location in Google Maps">map &#8599;</a></td></tr>`;
+      }).join("")}</tbody></table></div>` : "";
   const eqTile = hzTile("eq", "quake", T("Earthquakes"), d.eq.length > 0,
-    eqHeadline, eqSub, eqBody);
+    d.eq.length ? `${d.eq.length} ${T(d.eq.length === 1 ? "event" : "events")}` : T("All clear"),
+    T("within Nkm - last 24h").replace("N", nf(d.eqRadius)), eqBody);
 
   /* Flood - the map is expensive, so it is only mounted when the tile opens. */
   const fTile = !f
@@ -3532,20 +3477,7 @@ function renderHazards(d){
 
   host.innerHTML = `<div class="hz-strip">${wxTile}${eqTile}${fTile}</div>`;
 
-  /* A lone quiet tile in a strip of open (full-width) neighbours would sit as
-     a 289px stub next to ~900px of empty grid. When exactly one tile has no
-     body, stretch it across the row so the all-clear reads as a status row. */
-  const quiet = host.querySelectorAll(".hz-tile.hz-quiet");
-  if (quiet.length === 1) quiet[0].classList.add("hz-solo");
-
   if (wxBody) paintWarnings();
-  if (eqCarousel) initCarousel("eq");
-  /* A quiet-day earthquake tile still has something to show (the recent
-     carousel) - open it so the content is visible and the tile spans the
-     strip, instead of a 289px stub beside two full-width neighbours. The
-     green "all clear" tone stays: nothing is live in the last 24 h. */
-  const eqd = $("details#hz-eq");
-  if (eqd && eqCarousel) eqd.open = true;
   /* Leaflet needs a laid-out container, so the map waits for the disclosure
      to actually open - drawing it into a display:none body gives a grey box. */
   const fd = $("#hz-fl");
@@ -3554,36 +3486,6 @@ function renderHazards(d){
     fd.addEventListener("toggle", draw);
     draw();
   }
-}
-
-/** Table row for a live earthquake (24 h view). */
-function eqRow(q){
-  const m = Number(q.mag) || 0;
-  const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
-  return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
-    <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
-    <td>${txt(q.loc || "-")}</td><td class="num dim">${nf(q.dep,0)} km</td>
-    <td class="num">${q.km == null ? "-" : nf(q.km) + " km"}</td>
-    <td class="dim">${txt(q.near || "-")}</td>
-    <td><a class="maplink" target="_blank" rel="noopener"
-      href="https://www.google.com/maps?q=${q.lat},${q.lon}"
-      aria-label="Open earthquake location in Google Maps">map &#8599;</a></td></tr>`;
-}
-
-/** Card for the recent-quakes carousel (the quiet-day fallback). */
-function eqCard(q){
-  const m = Number(q.mag) || 0;
-  const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
-  return `<div class="alert">
-    <h4><span class="alert-ico" aria-hidden="true">&#127757;</span>
-      <span style="color:${c};font-weight:700">${nf(q.mag,1)}</span>
-      <span class="pill" style="color:${c};border:1px solid ${c}55;background:${c}18">
-        ${q.km == null ? "-" : nf(q.km) + " km"}</span></h4>
-    <p>${txt(q.loc || "-")}</p>
-    <div class="meta">${esc(String(q.t).replace("T"," "))}${q.near ? " · " + txt(q.near) : ""}
-      <a class="maplink" target="_blank" rel="noopener"
-        href="https://www.google.com/maps?q=${q.lat},${q.lon}">map &#8599;</a></div>
-  </div>`;
 }
 
 /** Guess a short severity label from the warning's own text. */
@@ -3661,15 +3563,12 @@ function paintWarnings(){
   w.querySelectorAll("[data-wf]").forEach(b => {
     b.onclick = () => { wxFilter = b.dataset.wf; paintWarnings(); };
   });
-  initCarousel("wx");
+  initWxCarousel();
 }
-/* Carousels as a scroll-snap track, same interaction as the radar band.
-   One implementation, two instances: wx- (weather warnings) and eq-
-   (recent earthquakes). Each keeps its own state in ctl[prefix]. */
-let carouselCtl = {};
-function initCarousel(prefix){
-  const c = $(`#${prefix}-carousel`); if (!c) return;
-  const ctl = (carouselCtl[prefix] = carouselCtl[prefix] || { idx:0, timer:null });
+/* Warnings as a scroll-snap carousel, same interaction as the radar band. */
+let wxCtl = { idx:0, timer:null };
+function initWxCarousel(){
+  const c = $("#wx-carousel"); if (!c) return;
   const track = c.querySelector(".wx-track");
   const slides = track.querySelectorAll(".alert");
   const n = slides.length;
@@ -3684,29 +3583,29 @@ function initCarousel(prefix){
     return m ? Math.round((i / m) * (n - 1)) + 1 : 1;
   };
   const render = () => {
-    track.scrollTo({ left: ctl.idx * step(), behavior: "smooth" });
-    $(`#${prefix}-ccount`).textContent = `${pageNum(ctl.idx)} / ${n}`;
-    $(`#${prefix}-prev`).disabled = ctl.idx === 0;
-    $(`#${prefix}-next`).disabled = ctl.idx >= maxIdx();
+    track.scrollTo({ left: wxCtl.idx * step(), behavior: "smooth" });
+    $("#wx-ccount").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
+    $("#wx-prev").disabled = wxCtl.idx === 0;
+    $("#wx-next").disabled = wxCtl.idx >= maxIdx();
   };
   const start = () => {
-    clearInterval(ctl.timer);
-    ctl.timer = setInterval(() => {
-      if (ctl.idx >= maxIdx()) ctl.idx = 0; else ctl.idx++;
+    clearInterval(wxCtl.timer);
+    wxCtl.timer = setInterval(() => {
+      if (wxCtl.idx >= maxIdx()) wxCtl.idx = 0; else wxCtl.idx++;
       render();
     }, 8000);
   };
-  $(`#${prefix}-prev`).onclick = () => { ctl.idx = Math.max(0, ctl.idx - 1); render(); start(); };
-  $(`#${prefix}-next`).onclick = () => { ctl.idx = Math.min(ctl.idx + 1, maxIdx()); render(); start(); };
+  $("#wx-prev").onclick = () => { wxCtl.idx = Math.max(0, wxCtl.idx - 1); render(); start(); };
+  $("#wx-next").onclick = () => { wxCtl.idx = Math.min(wxCtl.idx + 1, maxIdx()); render(); start(); };
   track.addEventListener("scroll", () => {
     const st = step();
     const n0 = st ? Math.round(track.scrollLeft / st) : 0;
-    ctl.idx = Math.min(Math.max(n0, 0), maxIdx());
-    $(`#${prefix}-ccount`).textContent = `${pageNum(ctl.idx)} / ${n}`;
-    $(`#${prefix}-prev`).disabled = ctl.idx === 0;
-    $(`#${prefix}-next`).disabled = ctl.idx >= maxIdx();
+    wxCtl.idx = Math.min(Math.max(n0, 0), maxIdx());
+    $("#wx-ccount").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
+    $("#wx-prev").disabled = wxCtl.idx === 0;
+    $("#wx-next").disabled = wxCtl.idx >= maxIdx();
   }, { passive:true });
-  track.addEventListener("mouseenter", () => clearInterval(ctl.timer));
+  track.addEventListener("mouseenter", () => clearInterval(wxCtl.timer));
   track.addEventListener("mouseleave", start);
   render(); start();
 }
@@ -5563,69 +5462,6 @@ function renderTourism(d){
   animateCounters($("#body-tourism"));
 }
 
-/* ════════════════════════════ travel outlook (Gemini peak-period advice) ════════════════════════════
-   travel.json (tools/collect_travel.py, weekly via KV) carries the next 8
-   weeks of peak travel periods - derived from the official holiday + KPM
-   school calendars, with bilingual one-liners written by Gemini (or a
-   deterministic fallback). Every date in it comes from the calendar; the
-   model never invents one. */
-async function loadTravel(){
-  const r = await fetch("travel.json", { cache:"no-store" });
-  if (!r.ok) throw new Error("travel " + r.status);
-  const d = await r.json();
-  /* Freshness gate: the outlook is regenerated weekly; a month-old outlook
-     is worse than none (the window has moved on). */
-  const fresh = d.generated && (Date.now() - Date.parse(d.generated)) < 14 * DAY_MS;
-  if (!fresh) throw new Error("travel stale");
-  return d;
-}
-function travelImpact(p){
-  const cls = p.impact === "extreme" ? " t-extreme"
-    : p.impact === "high" ? " t-high" : " t-moderate";
-  const lab = p.impact === "extreme" ? T("extreme peak")
-    : p.impact === "high" ? T("peak") : T("quiet");
-  return `<span class="t-imp${cls}">${esc(lab)}</span>`;
-}
-function renderTravel(d){
-  /* Only upcoming periods belong on the page; a stale cached copy could
-     carry last week's window, and past peaks are not advice. A period
-     whose range covers today is a CURRENT peak - the collector clamps
-     ongoing school breaks to start today, so start <= today <= end
-     reliably identifies a live one. */
-  const today = isoOf(Math.floor(Date.now() / DAY_MS));
-  const periods = (d.periods || []).filter(p => p && p.end >= today).slice(0, 5);
-  const tips = (d.tips || []).slice(0, 4);
-  const cur = periods.filter(p => p.start <= today);
-  const rows = periods.map(p => {
-    const live = p.start <= today;
-    return `<li class="t-row${live ? " t-cur" : ""}">
-      <div class="t-dates">${live ? `<span class="t-now">${T("now")}</span> ` : ""}${esc(md(p.start))}${p.end !== p.start ? ` - ${esc(md(p.end))}` : ""}</div>
-      <div class="t-mid">
-        <div class="t-driver">${travelImpact(p)} <b>${esc(p.driver)}</b></div>
-        <div class="t-note">${esc(p.t_en)}</div>
-        <div class="t-note bm">${esc(p.t_ms)}</div>
-      </div>
-    </li>`;
-  }).join("");
-  const curBand = cur.length ? `<div class="t-curband">
-    <b>${ico("warn")} ${T("Peak travel period right now")}</b>
-    <span>${cur.map(c => esc(c.driver)).join(" · ")} - ${T("plan around the crowds")}</span>
-  </div>` : "";
-  const tipList = tips.length ? `<details class="t-tips">
-    <summary>${ico("live")} ${T("Tips to travel around the peak")}</summary>
-    <ul>${tips.map(t => `<li>${esc(t.t_en)}<br><span class="bm">${esc(t.t_ms)}</span></li>`).join("")}</ul>
-  </details>` : "";
-  $("#body-travel").innerHTML = periods.length ? `
-    <div class="card mb">
-      <div class="card-b">
-        ${curBand}
-        <ul class="t-list">${rows}</ul>
-        ${tipList}
-      </div>
-    </div>` : `<div class="card"><div class="card-b"><p class="dim">${T("No upcoming peak periods in the next 8 weeks.")}</p></div></div>`;
-  animateCounters($("#body-travel"));
-}
-
 /* ════════════════════════════ places view (DOSM sub-national) ════════════════════════════
    geo.json is the weekly collector's output (tools/collect_geo.py): state
    trends and composition, districts, and parliament/DUN seats with per-seat
@@ -7444,6 +7280,52 @@ function paintMaps(){
 }
 
 /* ════════════════════════════ KPI summary ════════════════════════════ */
+const kpiState = {};
+function renderKpis(){
+  const host = $("#kpis");
+  const cards = [
+    { k:"hot",   lab:"Hottest today",   ico:"temp",     href:"#weather" },
+    { k:"ron95", lab:"RON 95",          ico:"fuel",     href:"#fuel" },
+    /* The block is titled "Groceries" but its element id comes from the
+       loader id ("prices"), so #groceries-sub matched nothing and the card was
+       a dead link - a missing anchor target scrolls nowhere at all. */
+    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#prices-sub",
+      where:"groceries block" },
+    { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
+    { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
+    { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#hazards",
+      where:"warnings section" },
+    /* `where` is the spoken destination; without it the slug is used, which
+       reads badly for anchors that are not section ids. Keep in sync with
+       KPIS in tools/prerender_shells.py. */
+    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#hazards",
+      where:"warnings section" },
+    { k:"live",  lab:"Vehicles live",   ico:"bus",      href:"#live" },
+  ];
+  /* Pending cards get the same shimmer the sections use. Six cards each
+     spelling out "loading…" was a wall of the same word, and with the
+     inter-request gap they sit that way for a while. */
+  const pending = cards.some(c => !kpiState[c.k]);
+  host.setAttribute("aria-busy", pending ? "true" : "false");
+  host.innerHTML = cards.map(c => {
+    const s = kpiState[c.k];
+    return `<a class="kpi${s ? " fade" : " kpi-load"}" href="${c.href}"
+      aria-label="${esc(T(c.lab))} - go to the ${esc(c.where || c.href.slice(1) + " section")}">
+      <div class="kpi-t"><span class="lab">${ico(c.ico)} ${esc(T(c.lab))}</span>
+        <span class="go" aria-hidden="true">↗</span></div>
+      ${s ? `<div class="val" id="kpi-${c.k}"></div>
+      <div class="sub">${esc(s.sub)}</div>`
+          : `<div class="val" id="kpi-${c.k}"><span class="skel skel-val"></span></div>
+      <div class="sub"><span class="skel skel-sub"></span></div>`}</a>`;
+  }).join("");
+  for (const c of cards){
+    const s = kpiState[c.k]; if (!s) continue;
+    const node = $("#kpi-" + c.k);
+    if (s.text != null) node.textContent = s.text;
+    else countTo(node, s.value, s.dec || 0, s.prefix, s.suffix);
+  }
+}
+
 /* ════════════════════════════ orchestration ════════════════════════════ */
 const META = {
   hazards:{ title:"Warnings & Hazards",
@@ -7525,30 +7407,48 @@ const META = {
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
     how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)"] },
-  travel:{ title:"Travel Outlook",
-    desc:"The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.",
-    how:"Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.",
-    eps:["mycal-api.huijun00100101.workers.dev/v1/holidays","mycal-api.huijun00100101.workers.dev/v1/school/holidays","travel.json (KV)"] },
 };
 const LOADERS = {
-  hazards:  { load:loadHazards,  render:renderHazards },
+  hazards:  { load:loadHazards,  render:renderHazards,  after:d => {
+      const active = d.warn.filter(w => !w.info).length;
+      kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
+      if (d.flood) kpiState.flood = { value:d.flood.atRisk, dec:0,
+        sub:d.flood.atRisk ? T("stations at risk") : T("all clear") };
+    } },
   weather:  { load:loadWeather,   render:renderWeather,   after:d => {
       let hot = null;
       const first = new Map();
       for (const r of d.rows){ const c = first.get(r[0]);
         if (!c || String(r[1]) < String(c[1])) first.set(r[0], r); }
       for (const [i, r] of first) if (r[3] != null && (!hot || r[3] > hot.t)) hot = { t:r[3], i };
+      if (hot) kpiState.hot = { value:hot.t, dec:0, suffix:"\u00b0C", sub:d.locs[hot.i].name };
       if (geo.status === "waiting") locate();
     }, asOf:d => {   /* the forecast starts today */
       let m = null; for (const r of d.rows){ const x = String(r[1]); if (x && (m === null || x < m)) m = x; }
       return m;
     } },
   fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
+      if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
+        sub:T("week of ") + ymd(d.latest.date) };
       /* Groceries is a sub-block of this section - load it with the fuel
          (it keeps its own LOADERS entry so caching/KPI/error handling work). */
       if (!loaded.has("prices")) loadSection("prices", false); }, asOf:d => d.latest ? d.latest.date : null },
-  prices:   { load:loadPrices,    render:renderPrices,    asOf:d => d.asOf },
+  prices:   { load:loadPrices,    render:renderPrices,    after:d => {
+      /* The index level (101.3) means nothing on its own in a hero tile, so
+         the KPI leads with the 12-month change - the same shape as the CPI
+         card next to it - and names the basket underneath. */
+      const nat = d.basket.national || [];
+      const last = nat.length ? nat[nat.length - 1] : null;
+      if (last != null && nat[0])
+        kpiState.basket = { value:(last / nat[0] - 1) * 100, dec:1, suffix:"%",
+          sub:nf(d.basket.n) + " " + T("grocery items · shelf prices") };
+    }, asOf:d => d.asOf },
   economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
+      const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
+      if (ov.length > 12){
+        const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
+        kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
+      }
       /* Tourism is a merged sub-block of this section - one table and one
          chart did not earn a nav entry of its own, and visitor arrivals are
          an economic indicator. Same pattern as Groceries under Household. */
@@ -7569,7 +7469,14 @@ const LOADERS = {
         if (s && s.length){ const x = String(s[s.length-1][0]); if (!m || x > m) m = x; }
       return m;
     } },
-  mobility: { load:loadMobility,  render:renderMobility,  asOf:d => {
+  mobility: { load:loadMobility,  render:renderMobility,  after:d => {
+      const n = d.months.length;
+      const ev = n ? (d.byFuel.electric || [])[n - 1] : null;
+      const tot = n ? d.total[n - 1] : null;
+      if (ev != null) kpiState.ev = { value:ev, dec:0,
+        sub:(tot ? nf(ev / tot * 100, 1) + "% " + T("of new vehicles") + " · " : "") +
+            ymd(d.months[n - 1]) };
+    }, asOf:d => {
       const reg = d.months.length ? String(d.months[d.months.length-1]) : null;
       const rid = d.rid.n ? isoOf(d.rid.t0 + d.rid.n - 1) : null;
       return [reg, rid].filter(Boolean).sort().pop() || null;
@@ -7594,8 +7501,9 @@ const LOADERS = {
          for one operator. Same pattern as Groceries under Household. */
       if (!loaded.has("live")) loadSection("live", false);
     } },
-  travel:   { load:loadTravel,    render:renderTravel,    asOf:d => d.generated },
-  live:     { load:loadLive,      render:renderLive },
+  live:     { load:loadLive,      render:renderLive,      after:d => {
+      const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
+      kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
 };
 
 let stamps = {};
@@ -7614,7 +7522,7 @@ const dataDate = {};         // latest data date per section, for the "data as o
  * trips the warning while a normal cadence never does. Sections with no
  * asOf (transport, live) never reach this - `dd` is undefined for them. */
 const MAX_AGE_DAYS = {
-  flood:1, live:1, weather:3, health:14, travel:14, fuel:21, transport:30,
+  flood:1, live:1, weather:3, health:14, fuel:21, transport:30,
   prices:45, finance:60, mobility:75, economy:120, population:430, places:430,
 };
 function setSecTime(id, mode){
@@ -7648,7 +7556,7 @@ async function loadSection(id, force){
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
         dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
         setDot(id, "ok"); setSecTime(id, "cached");
-        tick();
+        tick(); renderKpis();
         return;
       } catch { /* shape drift - refetch */ }
     }
@@ -7668,7 +7576,7 @@ async function loadSection(id, force){
       if (!hasContent) errorBox(id, err, () => loadSection(id, true));
       else setSecTime(id, "error");   // stale content stays visible
     }
-    tick();
+    tick(); renderKpis();
   } finally {
     loading.delete(id);
   }
@@ -7701,9 +7609,6 @@ async function loadAll(force){
      still covers every section so the button means "update everything". */
   for (const s of SECTIONS) if (!LAZY.has(s.id)) await loadSection(s.id, force);
   if (force) for (const s of SECTIONS) if (LAZY.has(s.id)) await loadSection(s.id, force);
-  /* Travel Outlook is a hero band above the fold, not a SECTIONS member -
-     it must load eagerly like weather, and refresh with everything else. */
-  await loadSection("travel", force);
   /* Flood is a sub-block of weather (not in SECTIONS): on a full refresh it
      is normally re-fetched by weather's after-hook, but that hook only fires
      when it is NOT yet loaded - so force the sub-blocks here too. */
@@ -7724,16 +7629,28 @@ function primeCached(){
       setDot(s.id, "ok"); setSecTime(s.id, "cached");
     } catch { /* shape drift - refetch on load */ }
   }
-  /* Travel Outlook is a hero band, not a SECTIONS member - prime it too. */
-  const trec = cacheGet("travel");
-  if (trec){
+  tick(); renderKpis();
+}
+
+/* The hero KPI strip is fed by LOADERS' after() hooks, and three of its
+   cards (Inflation, New EVs, Vehicles live) belong to lazy sections that
+   only load once scrolled into view. On a cold visit that left the cards
+   shimmering until the user scrolled past the section. Prefetch exactly
+   those three loaders at boot: fetch the data, run the after() hook so the
+   KPI fills in, and cache the record so the eventual scroll-in render is
+   instant (no double fetch, no skeleton flash). */
+async function primeKpis(){
+  const ids = ["economy", "mobility", "live"];
+  await Promise.all(ids.map(async id => {
+    if (loaded.has(id) || loading.has(id)) return;   // already done/in flight
+    const cfg = LOADERS[id];
     try {
-      LOADERS.travel.render(trec.d);
-      loaded.add("travel"); stamps.travel = trec.t; dataMap.travel = trec.d;
-      setDot("travel", "ok"); setSecTime("travel", "cached");
-    } catch { /* shape drift - refetch on load */ }
-  }
-  tick();
+      const data = await cfg.load();
+      cacheSet(id, data);                            // scroll-in uses this
+      if (cfg.after) cfg.after(data);                // sets kpiState.*
+    } catch { /* leave the card shimmering; the section shows its own error */ }
+  }));
+  renderKpis();
 }
 
 /* ════════════════════════════ PWA plumbing ════════════════════════════ */
@@ -7771,6 +7688,7 @@ let syncNet = null;
 function boot(){
   loadPrefs();
   buildShell();
+  renderKpis();
   pwa();
   applyTheme(); applyText(); applyLang();
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyTheme(); rerenderAll(); });
@@ -7806,6 +7724,9 @@ function boot(){
   initAnchorNav();
   topbtn.onclick = () => scrollTo({ top:0, behavior:"smooth" });
   primeCached();
+  /* Warm the three hero-KPI-backed lazy sections without waiting for
+     scroll; see primeKpis(). */
+  primeKpis();
   /* Start lazy-loading only after weather + fuel have rendered: while the
      page is still skeletons it is short, so every section looks "near" the
      viewport and IntersectionObserver would fire immediately. Once the eager

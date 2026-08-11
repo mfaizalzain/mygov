@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Generate static section shells for mygov index.html.
+"""Generate static section shells + KPI skeletons for mygov index.html.
 
 Splices pre-rendered markup into <main> so the page has its full height at
 first paint (kills the 0.93 CLS from buildShell() injecting sections late).
-Also pre-renders the radar band visible with a skeleton track. The hero
-KPI strip was removed in favour of the daily briefing + Travel Outlook
-band (static HTML, fed by KV-backed travel.json).
+Also pre-renders the radar band visible with a skeleton and the 6 KPI cards
+in their loading state.
 
 Usage: python3 tools/prerender_shells.py  (idempotent; safe to re-run)
 """
@@ -126,13 +125,37 @@ for s in sections:
         <span class="sec-time" id="time-{s["id"]}"></span>
       </div>
       <div id="body-{sid_body}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
-      {(sub_block("prices", "basket") if s["id"] == "fuel" else "") +
-       (sub_block("tourism", "tourism") if s["id"] == "economy" else "") +
-       (sub_block("live", "live") if s["id"] == "transport" else "") +
-       (sub_block("health", "health") if s["id"] == "population" else "")}
+      {sub_block("prices", "basket") if s["id"] == "fuel" else
+       sub_block("tourism", "tourism") if s["id"] == "economy" else
+       sub_block("live", "live") if s["id"] == "transport" else
+       sub_block("health", "health") if s["id"] == "population" else ""}
     </section>''')
 
 shell_html = "\n".join(shells)
+
+# ── KPI skeleton cards (exact markup renderKpis produces pre-data) ──────
+KPIS = [
+    ("hot", "Hottest today", "temp", "#weather"),
+    ("ron95", "RON 95", "fuel", "#fuel"),
+    ("basket", "Groceries y/y", "basket", "#prices-sub", "groceries block"),
+    ("cpi", "Inflation y/y", "economy", "#economy"),
+    ("ev", "New EVs", "ev", "#mobility"),
+    ("warn", "Active warnings", "warn", "#hazards", "warnings section"),
+    # 5th field is the spoken destination; defaults to the href slug, which
+    # reads badly for anchors that are not section ids.
+    ("flood", "Stations at risk", "flood", "#hazards", "warnings section"),
+    ("live", "Vehicles live", "bus", "#live"),
+]
+def kpi_aria(lab, href, rest):
+    where = rest[0] if rest else href.lstrip("#") + " section"
+    return f"{lab} - go to the {where}"
+kpi_cards = "\n".join(
+    f'''      <a class="kpi kpi-load" href="{k[3]}" aria-label="{kpi_aria(k[1], k[3], k[4:])}">
+        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-{k[2]}"/></svg> {k[1]}</span>
+          <span class="go" aria-hidden="true">↗</span></div>
+        <div class="val" id="kpi-{k[0]}"><span class="skel skel-val"></span></div>
+        <div class="sub"><span class="skel skel-sub"></span></div></a>'''
+    for k in KPIS)
 
 # ── radar band: visible with a skeleton track (no late unhide) ──────────
 radar_new = '''  <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
@@ -202,9 +225,15 @@ if not main_m:
 src = (src[:main_m.start()] + '<main id="main">\n' + shell_html + "\n    "
        + src[main_m.start(3):])
 
-# 2. radar band: replace the hidden section with the visible skeleton version
+# 2. kpis div gets the skeleton cards
+#    Same re-entrancy fix as the navlist above: match the populated form too,
+#    otherwise a new KPI's skeleton silently never lands.
+src = re.sub(r'<div class="kpis" id="kpis">.*?\n    </div>',
+             '<div class="kpis" id="kpis">\n' + kpi_cards + "\n    </div>", src, count=1, flags=re.S)
+
+# 3. radar band: replace the hidden section with the visible skeleton version
 src = re.sub(r'  <section class="radar-band" id="radar-band" hidden.*?</section>\n',
              radar_new + "\n", src, count=1, flags=re.S)
 
 io.open(P, "w", encoding="utf-8").write(src)
-print(f"shells: {len(sections)} sections, {len(meta)} meta")
+print(f"shells: {len(sections)} sections, {len(meta)} meta, {len(KPIS)} KPI cards spliced")

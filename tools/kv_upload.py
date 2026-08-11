@@ -43,7 +43,6 @@ FILES = {
     "transport": "public/transport_history.json",
     "cars": "public/cars.json",
     "tourism": "public/tourism.json",
-    "travel": "public/travel.json",
     "feed": "public/feed.xml",
 }
 

@@ -9,7 +9,7 @@
  *   Freshness is driven by the app's own 15-minute TTL in index.html, which is
  *   the "revalidate" half of SWR moved into a rate-limit-aware layer.
  */
-const VERSION    = "mygov-v14";
+const VERSION    = "mygov-v12";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -132,7 +132,7 @@ self.addEventListener("fetch", event => {
       url.pathname === "/geo.json" ||
       url.pathname === "/insights.json" || url.pathname === "/forecasts.json" ||
       url.pathname === "/transport_history.json" || url.pathname === "/cars.json" ||
-      url.pathname === "/tourism.json" || url.pathname === "/travel.json" ||
+      url.pathname === "/tourism.json" ||
       url.pathname === "/feed.xml") return;
 
   // Everything else (icons, vendor scripts): cache first.
