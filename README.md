@@ -39,6 +39,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
+| Travel Outlook (hero band) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and bilingual one-liners, plus tips to travel around them |
 
 ---
 
@@ -94,6 +95,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Insights | `collect_insights.yml`, daily 01:30 UTC | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
 | Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers **and top EV makers** (current + previous year) |
 | Tourism | `collect_tourism.yml`, monthly 2nd 02:30 UTC | `public/tourism.json` | Tourism Malaysia visitor-arrivals PDF - top-51 table with month, y/y vs 2025 and 2019, YTD (May 2026 seeded) |
+| Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and bilingual one-liners (Gemini, deterministic fallback) |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that
@@ -312,6 +314,36 @@ of filler.
 Without a `GOOGLE_API_KEY` the collector writes an empty briefing and exits 0 -
 the band hides and the rest of the site is unaffected. The forecast half needs
 no key at all.
+
+---
+
+## Travel Outlook
+
+`tools/collect_travel.py` (weekly, Monday 01:30 UTC) turns the holiday + KPM
+school calendar - already mirrored into `slow.json` from the mycal API - into
+the **next 8 weeks of peak travel periods**: school breaks, public holidays and
+long weekends, each with an impact level (`extreme` / `high` / `moderate`) and
+bilingual one-liners written by Gemini. It is rendered as a **hero band above
+the fold**, between the daily briefing and the Trend Radar: a timeline with
+traffic-light impact badges, a `NOW` marker plus amber banner when a visitor
+arrives during a live peak (e.g. the Term 2 break overlapping Merdeka Day),
+and a collapsible tips list.
+
+The same governing rule as the briefing applies, and it is enforced in code:
+
+- **The calendar is the ground truth, the model writes words.** Gemini only
+  ever receives dates `>= today` - holidays in the past are dropped, ongoing
+  school breaks are clamped to start today, and fully-finished breaks are
+  removed - so it cannot emit a past date. Every period it returns is
+  cross-checked against the calendar facts; a period whose start or end is not
+  in that set is discarded, never corrected.
+- **No key, rate limit or bad JSON falls back to a deterministic outlook**
+  built from the same calendar (school break + major festival = extreme,
+  break alone = high, other holidays = moderate), so the card always renders.
+- The client filters `end >= today` again, so even a stale cached copy never
+  shows a past peak.
+
+KV key `travel`, workflow `collect_travel.yml`, sw.js exclusion list updated.
 
 ---
 

@@ -578,6 +578,7 @@ export default {
       "/transport_history.json": { key: "transport", type: "json" },
       "/cars.json": { key: "cars", type: "json" },
       "/tourism.json": { key: "tourism", type: "json" },
+      "/travel.json":  { key: "travel",  type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {
