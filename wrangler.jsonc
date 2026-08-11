@@ -1,15 +1,47 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "mygov-staging",
+  "name": "mygov",
   "main": "src/index.js",
   "compatibility_date": "2026-08-01",
-  // Attaching the custom domain here makes wrangler create/maintain the DNS
-  // record and certificate on deploy, so it is reproducible from the repo.
-  // Staging (this branch) serves the dev URL; production (main branch)
-  // serves malaysia-at-a-glance.com.
+  // One identical file on both branches (no merge conflicts).
+  // Production: `wrangler deploy` → mygov worker → malaysia-at-a-glance.com.
+  // Staging: `wrangler deploy --env staging` → mygov-staging worker →
+  // mygov.faizalmzain.com. Cloudflare git integration build commands:
+  //   mygov worker (main branch):  wrangler deploy
+  //   mygov-staging worker (dev branch): wrangler deploy --env staging
   "routes": [
-    { "pattern": "mygov.faizalmzain.com", "custom_domain": true }
+    { "pattern": "malaysia-at-a-glance.com", "custom_domain": true },
+    { "pattern": "www.malaysia-at-a-glance.com", "custom_domain": true }
   ],
+  "env": {
+    "staging": {
+      "name": "mygov-staging",
+      "routes": [
+        { "pattern": "mygov.faizalmzain.com", "custom_domain": true }
+      ],
+      "observability": {
+        "enabled": false,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": true
+        },
+        "traces": {
+          "enabled": false,
+          "persist": true,
+          "head_sampling_rate": 1
+        }
+      },
+      "kv_namespaces": [
+        { "binding": "MYGOV_DATA", "id": "40812fc5fedb4e1fb66d70f75e707f90" }
+      ],
+      "vars": {
+        "FIDS_API_KEY": "f02f252a781a4db584d1ae9fce22bed1"
+      }
+    }
+  },
   // Declaring routes turns workers.dev off by default; keep it as a fallback
   // URL for testing so a DNS or certificate issue never leaves the app dark.
   "workers_dev": true,
@@ -24,19 +56,7 @@
     "run_worker_first": true
   },
   "observability": {
-    "enabled": false,
-    "head_sampling_rate": 1,
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "persist": true,
-      "invocation_logs": true
-    },
-    "traces": {
-      "enabled": false,
-      "persist": true,
-      "head_sampling_rate": 1
-    }
+    "enabled": true
   },
   // Collector data (slow/health/radar JSON + SEO snapshot + feed) lives in KV
   // so GitHub Action collectors write data without committing to git - no more
