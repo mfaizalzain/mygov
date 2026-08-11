@@ -39,7 +39,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
-| Travel Outlook (hero band) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and a one-line English outlook each, plus tips to travel around them |
+| Travel Outlook (hero band) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and a one-line English outlook each, plus tips to travel around them, with the next-holiday and school-session chips riding under the band |
 
 ---
 
@@ -330,7 +330,10 @@ rendered **in the hero**, in the right-hand column the KPI card strip used to
 occupy (beside the location and daily briefing on desktop, stacked under them
 on mobile): a **scroll-snap card deck** with traffic-light impact badges, a
 `NOW` marker plus amber banner when a visitor arrives during a live peak (e.g.
-the Term 2 break overlapping Merdeka Day), and a collapsible tips list.
+the Term 2 break overlapping Merdeka Day), and a collapsible tips list. The
+next-holiday and school-session chips (previously a slim row under the hero
+location bar) live inside the band above the deck - same calendar, one travel
+block.
 
 The same governing rule as the briefing applies, and it is enforced in code:
 
