@@ -39,6 +39,7 @@ import os
 import re
 import statistics as st
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -297,6 +298,39 @@ def gemini_key():
             or os.environ.get("GEMINI_API_KEY") or "").strip()
 
 
+def gemini_call(key, body, tries=3):
+    """POST to Gemini, retrying transient failures.
+
+    The project runs on a free-tier key, which is exactly where 429s happen,
+    and a rate-limited brief is a recoverable blip rather than a lost day. 4xx
+    other than 429 are permanent - a bad key or a malformed request will not
+    fix itself - so those fail immediately instead of burning three attempts.
+
+    Only aggregate public statistics are ever sent (see build_facts): no
+    personal data, no visitor location, nothing identifying. That matters on a
+    free-tier key, whose traffic may be used for product improvement."""
+    last = None
+    for attempt in range(tries):
+        try:
+            req = urllib.request.Request(
+                GEMINI + "?key=" + key, data=body,
+                headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=90) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            last = e
+            if e.code != 429 and e.code < 500:
+                raise
+            sys.stderr.write(f"  gemini {e.code}, attempt {attempt + 1}/{tries}\n")
+        except Exception as e:
+            last = e
+            sys.stderr.write(f"  gemini {type(e).__name__}, "
+                             f"attempt {attempt + 1}/{tries}\n")
+        if attempt < tries - 1:
+            time.sleep(10 * (attempt + 1))       # 10s, 20s
+    raise last or RuntimeError("gemini failed")
+
+
 def build_facts(slow, health, prices, radar, fc, hits):
     """The single source of truth for every number the brief may use."""
     f = {}
@@ -317,9 +351,12 @@ def build_facts(slow, health, prices, radar, fc, hits):
         f["basket_n"] = basket.get("n")
     f["anomalies"] = hits[:6]
     f["forecast_days"] = fc.get("horizon")
+    # Counts are whole things - passengers, donations. Handing the model 3256.0
+    # makes it write "3256.0 units". Grounding compares numerically, so an int
+    # here still matches whatever the model writes.
     for bucket in ("ridership", "blood"):
         for k, v in (fc.get(bucket) or {}).items():
-            f[f"fc_{bucket}_{k}"] = v["fc"][0]["mid"]
+            f[f"fc_{bucket}_{k}"] = int(round(v["fc"][0]["mid"]))
     f["radar"] = [i.get("title") for i in (radar.get("issues") or [])[:3]]
     return f
 
@@ -372,11 +409,7 @@ def build_brief(slow, health, prices, radar, fc, hits):
         "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
     }).encode("utf-8")
     try:
-        req = urllib.request.Request(
-            GEMINI + "?key=" + key, data=body,
-            headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=90) as r:
-            payload = json.loads(r.read().decode("utf-8"))
+        payload = gemini_call(key, body)
         cand = (payload.get("candidates") or [{}])[0]
         parts = (cand.get("content") or {}).get("parts") or [{}]
         text = parts[0].get("text") or ""
