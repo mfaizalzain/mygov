@@ -28,6 +28,7 @@ const json = (body, status = 200, extra = {}) =>
     headers: {
       "content-type": "application/json; charset=utf-8",
       "access-control-allow-origin": "*",
+      "x-content-type-options": "nosniff",
       "cache-control": `public, max-age=${CACHE_TTL}`,
       ...extra,
     },
@@ -208,7 +209,7 @@ export default {
         const text = new TextDecoder().decode(await new Response(stream).arrayBuffer());
         data = JSON.parse(text);
       } catch (e) {
-        return json({ error: "kiosk_unreachable", detail: String(e && e.message) }, 502);
+        return json({ error: "kiosk_unreachable" }, 502);
       }
 
       const buses = Array.isArray(data) ? data : [];
@@ -449,6 +450,7 @@ export default {
         const body = type === "json" ? v : v; // KV.get returns the raw string
         const headers = {
           "access-control-allow-origin": "*",
+          "x-content-type-options": "nosniff",
           "cache-control": "public, max-age=600",
         };
         headers["content-type"] =
@@ -479,14 +481,12 @@ export default {
                 /<!-- SEO:SNAP -->[\s\S]*?<!-- \/SEO:SNAP -->/,
                 `<!-- SEO:SNAP -->\n${snap}\n<!-- /SEO:SNAP -->`)
             : html;
-          return new Response(out, {
-            status: 200,
-            headers: {
-              "content-type": "text/html; charset=utf-8",
-              // Same caching posture as the committed file (see _headers).
-              "cache-control": res.headers.get("cache-control") || "public, max-age=300",
-            },
-          });
+          // Preserve the asset's headers (CSP, HSTS, X-Frame-Options, and the
+          // _headers cache-control) - building a fresh Response here used to
+          // drop every security header from the served homepage.
+          const headers = new Headers(res.headers);
+          headers.delete("content-length");  // body changes; length is stale
+          return new Response(out, { status: 200, headers });
         }
         return res;
       }

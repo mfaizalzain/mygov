@@ -54,7 +54,7 @@ def snapshot(radar, health, slow):
         lines.append(
             f"<li><strong>Fuel</strong> - RON95 RM{f2(fl.get('ron95'))}, "
             f"RON97 RM{f2(fl.get('ron97'))}, diesel RM{f2(fl.get('diesel'))} "
-            f"({fl.get('date', '-')}).</li>")
+            f"({html.escape(str(fl.get('date', '-')))}).</li>")
 
     # ── finance: latest business-day USD/MYR ─────────────────────────
     fxd = (slow or {}).get("finance", {}).get("fxd", []) if slow else []
@@ -63,7 +63,7 @@ def snapshot(radar, health, slow):
         date, usd = fxd[-1][0], fxd[-1][1]
         lines.append(
             f"<li><strong>Finance</strong> - USD/MYR {f2(usd)} "
-            f"(business-day rate, {date}).</li>")
+            f"(business-day rate, {html.escape(str(date))}).</li>")
 
     # ── economy: headline CPI ────────────────────────────────────────
     cpi = None
@@ -74,7 +74,8 @@ def snapshot(radar, health, slow):
                 break
     if cpi and cpi.get("pts"):
         d, v = cpi["pts"][-1]
-        lines.append(f"<li><strong>Economy</strong> - CPI {v:.1f} points ({d}).</li>")
+        lines.append(f"<li><strong>Economy</strong> - CPI {v:.1f} points "
+                     f"({html.escape(str(d))}).</li>")
 
     # ── population ───────────────────────────────────────────────────
     pop = (slow or {}).get("population", {}).get("latest") if slow else None
@@ -87,7 +88,7 @@ def snapshot(radar, health, slow):
         n = don.get("n")
         lines.append(
             f"<li><strong>Health</strong> - blood donations {n:,} units "
-            f"({health['updated']}).</li>")
+            f"({html.escape(str(health['updated']))}).</li>")
 
     # ── trend radar: top 3 ───────────────────────────────────────────
     issues = (radar or {}).get("top_issues", [])
