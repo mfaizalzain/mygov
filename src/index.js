@@ -96,6 +96,47 @@ export default {
       return response;
     }
 
+    /* Forward geocoding: town name -> coordinates, used by the weather "Now"
+       map to pin the selected location. Same wrapper as /api/reverse -
+       Nominatim needs a descriptive User-Agent and a browser cannot set one.
+       Restricted to Malaysia (countrycodes=my) so an ambiguous town name can
+       never resolve to a same-named city abroad. Rounding is done client-side
+       before the map is drawn. */
+    if (url.pathname === "/api/geocode") {
+      if (request.method !== "GET")
+        return json({ error: "method_not_allowed" }, 405);
+      const q = (url.searchParams.get("q") || "").trim().slice(0, 120);
+      if (!q) return json({ error: "bad_query" }, 400);
+      const origin = request.headers.get("origin");
+      if (origin && new URL(request.url).origin !== origin)
+        return json({ error: "forbidden" }, 403);
+      const cacheKey = new Request(
+        `${url.origin}/api/geocode?q=${encodeURIComponent(q)}`, { method: "GET" });
+      const cache = caches.default;
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+      const upstream =
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=my&q=${encodeURIComponent(q)}`;
+      let res;
+      try {
+        res = await fetch(upstream, {
+          headers: { "user-agent": UA, accept: "application/json" },
+          cf: { cacheTtl: CACHE_TTL, cacheEverything: true },
+        });
+      } catch {
+        return json({ error: "upstream_unreachable" }, 502);
+      }
+      if (!res.ok) return json({ error: "upstream_error", status: res.status }, 502);
+      let data;
+      try { data = await res.json(); }
+      catch { return json({ error: "bad_upstream_payload" }, 502); }
+      const top = (Array.isArray(data) ? data : [])[0];
+      if (!top) return json({ error: "not_found" }, 404);
+      const out = json({ lat: Number(top.lat), lon: Number(top.lon), label: top.display_name });
+      ctx.waitUntil(cache.put(cacheKey, out.clone()));
+      return out;
+    }
+
     /* GTFS static ZIP proxy.
      *
      * /gtfs-static/* on the upstream API answers 302 to an S3 bucket. A

@@ -621,6 +621,21 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
 html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.7)}
 .lvmap .leaflet-control-attribution{background:rgba(0,0,0,.55);color:var(--fg-3);font-size:10px}
 .lvmap .leaflet-control-attribution a{color:var(--fg-2)}
+/* Weather "Now" card: live current conditions + today line + the location map. */
+.wx-now{padding-bottom:var(--s3)}
+.wx-now-row{display:flex;align-items:center;gap:var(--s3)}
+.wx-cond{font-size:34px;line-height:1}
+.wx-temp{font-size:34px;font-weight:720;letter-spacing:-.03em;color:var(--fg)}
+.wx-condlab{font-size:14px;font-weight:600;color:var(--fg-2)}
+.wx-meta{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:6px;
+  font-size:12px;color:var(--fg-2);font-family:var(--mono)}
+.wx-today{margin-top:var(--s2);font-size:12.5px;color:var(--fg-2)}
+.wx-today b{font-weight:650;color:var(--fg)}
+.wx-now .dim{margin:var(--s1) 0 0}
+.wxp{font-size:12.5px;line-height:1.5;min-width:150px}
+.wxp b{display:block;margin-bottom:2px}
+.wxp-cond{display:block;font-weight:650}
+.wxp-meta{color:var(--fg-3);font-size:11.5px;font-family:var(--mono)}
 .vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
 .vcard .card-h h4{margin-right:auto}
 .vcard .vrow{display:flex;justify-content:space-between;gap:var(--s2);font-size:12.5px;padding:3px 0;color:var(--fg-2)}
@@ -1040,11 +1055,11 @@ html[data-text="large"] table{font-size:14px}
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg></div>
         <div><h3 id="h-weather">Weather</h3>
-          <p>Seven-day forecast for every state, district and town in Malaysia.</p>
+          <p>Live current conditions at your location on a map, plus the seven-day MET outlook for every state, district and town in Malaysia.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Forecasts come from MET Malaysia, covering 360 locations from states down to individual towns and highland resorts. Warnings and earthquakes moved to the Warnings &amp; Hazards section above.</p>
-            <ul><li><code>GET /weather/forecast</code></li></ul>
+            <p>Live conditions come from Open-Meteo (free, open data, no key) at the selected location's coordinates, with the map pinning that location; when it is unreachable the card falls back to MET's day-0 forecast, honestly labelled. The seven-day outlook comes from MET Malaysia, covering 360 locations from states down to individual towns and highland resorts. Warnings and earthquakes moved to the Warnings &amp; Hazards section above.</p>
+            <ul><li><code>GET /weather/forecast</code></li><li><code>GET api.open-meteo.com (current conditions)</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-weather"></span>
@@ -1431,7 +1446,7 @@ const I18N = {
   "Storm":"Ribut", "Rain":"Hujan", "Wind":"Angin", "Heat":"Panas", "Advisory":"Nasihat",
   "Search locations":"Cari lokasi", "Local time":"Masa tempatan", "Depth":"Kedalaman",
   "Nearest Malaysian town":"Bandar Malaysia terdekat",
-  "7-day outlook":"Ramalan 7 hari", "All locations":"Semua lokasi",
+  "All locations":"Semua lokasi",
   "Search a district, town or state…":"Cari daerah, bandar atau negeri…",
   "View data table":"Lihat jadual data", "Recent earthquakes":"Gempa bumi terkini",
   "No earthquake records.":"Tiada rekod gempa bumi.", "events":"peristiwa",
@@ -1477,6 +1492,11 @@ const I18N = {
   "Showing forecast for ":"Memaparkan ramalan untuk ", "of":"daripada",
   "Location":"Lokasi", "Type":"Jenis", "Min":"Min", "Max":"Maks", "Today":"Hari Ini",
   "Morning":"Pagi", "Afternoon":"Petang", "Night":"Malam", "Day":"Hari",
+  "Now":"Sekarang", "Feels like":"Rasa seperti", "Humidity":"Kelembapan", "Wind":"Angin",
+  "Today (forecast)":"Hari ini (ramalan)", "Live conditions unavailable":"Keadaan semasa tidak tersedia",
+  "clear":"Cerah", "partly":"Sebahagian cerah", "overcast":"Mendung", "fog":"Kabus",
+  "drizzle":"Gerimis", "rain":"Hujan", "showers":"Hujan setempat", "snow":"Salji",
+  "storm":"Ribut petir",
   "Price week of":"Minggu harga", "vs last week":"berbanding minggu lepas",
   "weeks on record":"minggu direkod", "Retail fuel prices":"Harga runcit minyak",
   "RM per litre · weekly ceiling":"RM seliter · siling mingguan",
@@ -3145,7 +3165,7 @@ function errorBox(id, err, retry){
 }
 
 /* ════════════════════════ location awareness ════════════════════════ */
-const geo = { status:"idle", label:null, matchedId:null, candidates:[], manual:false };
+const geo = { status:"idle", label:null, matchedId:null, candidates:[], manual:false, lat:null, lon:null };
 
 /* OSM often names the local authority rather than the place - "Majlis
    Perbandaran Kajang" for Kajang. Strip council wording so the place name is
@@ -3209,6 +3229,8 @@ async function locate(){
   if (!pos){ await geoipLocate(); return; }
 
   const { latitude:lat, longitude:lon } = pos.coords;
+  geo.lat = Math.round(lat * 100) / 100;
+  geo.lon = Math.round(lon * 100) / 100;
   let addr = null;
   try {
     // Nominatim sends no access-control-allow-origin, so a direct browser call
@@ -3241,7 +3263,7 @@ async function locate(){
   geo.label = top.loc.name;
   geo.manual = false;
   wx.pick = top.loc.id;
-  try { localStorage.setItem(LK, JSON.stringify({ id:top.loc.id, label:top.loc.name, osm:geo.osm })); } catch {}
+  try { localStorage.setItem(LK, JSON.stringify({ id:top.loc.id, label:top.loc.name, osm:geo.osm, lat:geo.lat, lon:geo.lon })); } catch {}
   paintWeather();
 }
 
@@ -3257,6 +3279,8 @@ async function geoipLocate(){
   if (!g || g.latitude == null || g.longitude == null){
     geo.status = "unavailable"; paintWeather(); return;
   }
+  geo.lat = Math.round(g.latitude * 100) / 100;
+  geo.lon = Math.round(g.longitude * 100) / 100;
   const data = wx.data;
   /* We already have a city name from Cloudflare - match it straight against
      the forecast list before spending a reverse-geocode hop. */
@@ -3302,7 +3326,7 @@ async function geoipLocate(){
   geo.label = top.loc.name;
   geo.manual = false;
   wx.pick = top.loc.id;
-  try { localStorage.setItem(LK, JSON.stringify({ id:top.loc.id, label:top.loc.name, osm:geo.osm })); } catch {}
+  try { localStorage.setItem(LK, JSON.stringify({ id:top.loc.id, label:top.loc.name, osm:geo.osm, lat:geo.lat, lon:geo.lon })); } catch {}
   paintWeather();
 }
 
@@ -3317,6 +3341,7 @@ function renderWeather(d){
     try { saved = JSON.parse(localStorage.getItem(LK) || "null"); } catch {}
     if (saved && d.locs.some(l => l.id === saved.id)){
       wx.pick = saved.id; geo.label = saved.label; geo.osm = saved.osm;
+      geo.lat = saved.lat ?? null; geo.lon = saved.lon ?? null;
       if (geo.status === "idle") geo.status = "cached";
     } else {
       const kl = d.locs.find(l => l.kind === "Ds" && /kuala lumpur/i.test(l.name))
@@ -3328,13 +3353,13 @@ function renderWeather(d){
     <div class="sr" id="wx-live" aria-live="polite"></div>
     <div class="grid g2 mb">
       <div class="card">
-        <div class="card-h"><h4>${T("7-day outlook")}</h4>
+        <div class="card-h"><h4>${T("Now")}</h4>
           <span class="sub" id="wx-name"></span>
           <span class="right" id="wx-loc"></span></div>
-        <div class="card-b"><div class="chart"><canvas id="wx-chart"
-          role="img" aria-label="Seven day minimum and maximum temperature"></canvas></div>
-          <details class="dt"><summary>${T("View data table")}</summary>
-            <div class="dt-body" id="wx-dt"></div></details></div>
+        <div class="card-b">
+          <div class="wx-now" id="wx-now"></div>
+          <div class="lvmap" id="wx-map"></div>
+        </div>
       </div>
       <div class="card">
         <div class="card-h"><h4>${T("All locations")}</h4><span class="sub" id="wx-count"></span></div>
@@ -3681,14 +3706,15 @@ function pickLoc(id){
   if (l){
     geo.label = l.name;
     geo.manual = true;
+    geo.matchedId = id;   // wxCoords() then geocodes by name, not the old fix
     try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
     const live = $("#wx-live"); if (live) live.textContent = T("Showing forecast for ") + l.name;
   }
-  paintWxRows(); paintWxChart(); paintHeroLoc(); paintLocChip();
+  paintWxRows(); paintNow(); paintHeroLoc(); paintLocChip();
 }
 function paintWeather(){
   if (!wx.data) return;
-  paintWxRows(); paintWxChart(); paintLocChip(); paintHeroLoc();
+  paintWxRows(); paintNow(); paintLocChip(); paintHeroLoc();
 }
 function paintHeroLoc(){
   const host = $("#hero-loc"); if (!host) return;
@@ -3759,54 +3785,144 @@ function paintLocChip(){
     b.onclick = () => { geo.status = "matched"; pickLoc(b.getAttribute("data-cand")); };
   });
 }
-function paintWxChart(){
-  const d = wx.data;
+/* Live current weather at the selected location. The MET data.gov.my feed is
+   a daily forecast only - it has no observations - so "right now" comes from
+   Open-Meteo (free, keyless, open data) at the location's coordinates, and
+   falls back to MET's day-0 row honestly labelled "Today (forecast)". */
+const WMO_CLASS = { 0:"clear",1:"partly",2:"partly",3:"overcast",45:"fog",48:"fog",
+  51:"drizzle",53:"drizzle",55:"drizzle",56:"drizzle",57:"drizzle",
+  61:"rain",63:"rain",65:"rain",66:"rain",67:"rain",
+  71:"snow",73:"snow",75:"snow",77:"snow",
+  80:"showers",81:"showers",82:"showers",85:"snow",86:"snow",
+  95:"storm",96:"storm",99:"storm" };
+const WMO_ICON = { clear:"☀️", partly:"⛅", overcast:"☁️", fog:"🌫️", drizzle:"🌦️",
+  rain:"🌧️", showers:"🌦️", snow:"🌨️", storm:"⛈️" };
+const wxCond = code => {
+  const cls = WMO_CLASS[code] || "clear";
+  return { cls, icon:WMO_ICON[cls] || "☀️", label:T(cls) };
+};
+let wxMapInst = null;
+const wxCoordCache = new Map();
+/* Coordinates for the selected location: the located fix when the selected
+   town IS the located one, otherwise a forward geocode (cached per town). */
+async function wxCoords(){
+  const l = wx.data && wx.data.locs.find(x => x.id === wx.pick);
+  const name = l ? l.name : (geo.label || "");
+  if (!name) return null;
+  if (!geo.manual && geo.matchedId === wx.pick && geo.lat != null && geo.lon != null)
+    return [geo.lat, geo.lon];
+  if (wxCoordCache.has(name)) return wxCoordCache.get(name);
+  try {
+    const r = await fetch(`/api/geocode?q=${encodeURIComponent(name)}`);
+    if (r.ok){
+      const j = await r.json();
+      if (j && Number.isFinite(j.lat) && Number.isFinite(j.lon)){
+        const c = [Math.round(j.lat * 100) / 100, Math.round(j.lon * 100) / 100];
+        wxCoordCache.set(name, c);
+        return c;
+      }
+    }
+  } catch {}
+  return null;
+}
+async function loadCurrentWx(lat, lon){
+  try {
+    const r = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
+      `&timezone=Asia%2FKuala_Lumpur`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const c = d && d.current;
+    if (!c) return null;
+    return { temp:c.temperature_2m, feels:c.apparent_temperature,
+      hum:c.relative_humidity_2m, wind:c.wind_speed_10m,
+      code:c.weather_code, time:c.time };
+  } catch { return null; }
+}
+/* MET day-0 row for the selected location: min/max + summary_forecast. */
+function wxTodayRow(){
+  const d = wx.data; if (!d) return null;
   const i = d.locs.findIndex(l => l.id === wx.pick);
-  const loc = d.locs[i];
-  const rows = d.rows.filter(r => r[0] === i)
-    .sort((a,b) => String(a[1]).localeCompare(String(b[1])));
+  if (i < 0) return null;
+  return d.rows.filter(r => r[0] === i)
+    .sort((a,b) => String(a[1]).localeCompare(String(b[1])))[0] || null;
+}
+async function paintNow(){
+  const host = $("#wx-now"); if (!host || !wx.data) return;
+  const i = wx.data.locs.findIndex(l => l.id === wx.pick);
+  const loc = wx.data.locs[i] || null;
   const nameEl = $("#wx-name");
   if (nameEl) nameEl.textContent = loc ? `${loc.name} · ${LOC_TYPE[loc.kind] || ""}` : "";
-  chart("wx-chart", {
-    type:"bar",
-    data:{ labels: rows.map(r => `${dow(r[1])} ${md(r[1])}`),
-      datasets:[
-        { label:"Max °C", data:rows.map(r => r[3]), backgroundColor:"rgba(251,191,36,.8)",
-          borderRadius:6, borderSkipped:false, order:2 },
-        { label:"Min °C", data:rows.map(r => r[2]), backgroundColor:"rgba(34,211,238,.55)",
-          borderRadius:6, borderSkipped:false, order:3 },
-      ] },
-    options: baseOpts({
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 } } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8, callback:v => v + "°" },
-            suggestedMin: Math.min(...rows.map(r => r[2] ?? 20)) - 3,
-            suggestedMax: Math.max(...rows.map(r => r[3] ?? 34)) + 3 },
-      },
-      plugins:{
-        legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
-          pointStyle:"circle", font:{ size:11 }, padding:14 }, onClick:() => {} },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
-          usePointStyle:true, boxWidth:8, boxHeight:8,
-          callbacks:{ afterBody: items => { const r = rows[items[0].dataIndex]; if (!r) return "";
-            return ["", T("Morning") + ":   " + wxPhrase(d.dict[r[4]] || "-"),
-                        T("Afternoon") + ": " + wxPhrase(d.dict[r[5]] || "-"),
-                        T("Night") + ":     " + wxPhrase(d.dict[r[6]] || "-")]; } } },
-      },
-    }),
-  });
-  const dt = $("#wx-dt");
-  if (dt) dt.innerHTML = dataTableHTML(
-    [T("Day"),T("Min"),T("Max"),T("Morning"),T("Afternoon"),T("Night")],
-    rows.map(r => [ `${md(r[1])} ${dow(r[1])}`,
-                    r[2] == null ? null : r[2] + "°",
-                    r[3] == null ? null : r[3] + "°",
-                    wxPhrase(d.dict[r[4]] || "-"), wxPhrase(d.dict[r[5]] || "-"),
-                    wxPhrase(d.dict[r[6]] || "-") ]),
-    [1, 2]);
+  host.innerHTML = `<div class="skel" style="width:46%"></div><div class="skel" style="width:72%"></div>`;
+  const row = wxTodayRow();
+  const sum = row ? wxPhrase(wx.data.dict[row[7]] || wx.data.dict[row[4]] || "-") : "";
+  const today = row
+    ? `<div class="wx-today"><b>${T("Today")}:</b> ${nf(row[2])}°-${nf(row[3])}° · ${esc(sum)}</div>`
+    : "";
+  const coords = await wxCoords();
+  let live = null;
+  if (coords) live = await loadCurrentWx(coords[0], coords[1]);
+  const locEl = $("#wx-loc");
+  if (locEl) locEl.textContent = live && live.time ? live.time.slice(11, 16) : "";
+  if (!host) return;   // a re-render raced us
+  if (live){
+    const c = wxCond(live.code);
+    host.innerHTML = `
+      <div class="wx-now-row">
+        <span class="wx-cond">${c.icon}</span>
+        <span class="wx-temp">${nf(live.temp,1)}°</span>
+        <span class="wx-condlab">${esc(c.label)}</span>
+      </div>
+      <div class="wx-meta">
+        <span>${T("Feels like")} ${nf(live.feels,1)}°</span>
+        <span>${T("Humidity")} ${live.hum}%</span>
+        <span>${T("Wind")} ${nf(live.wind,0)} km/h</span>
+      </div>${today}`;
+  } else if (row){
+    host.innerHTML = `
+      <div class="wx-now-row">
+        <span class="wx-cond">🌡️</span>
+        <span class="wx-temp">${nf(row[2])}°-${nf(row[3])}°</span>
+        <span class="wx-condlab">${T("Today (forecast)")}</span>
+      </div>${today}`;
+  } else {
+    host.innerHTML = `<p class="dim">${T("Live conditions unavailable")}</p>`;
+  }
+  initWxMap(coords, live, loc);
+}
+function initWxMap(coords, live, loc){
+  const el = $("#wx-map");
+  if (!el || !window.L) return;
+  if (wxMapInst){ wxMapInst.remove(); wxMapInst = null; }
+  const c = coords || [4.2105, 101.9758];   // fallback: peninsular centre
+  const map = L.map(el, { attributionControl:true, zoomControl:true });
+  wxMapInst = map;
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' })
+    .addTo(map);
+  map.setView(c, 11);
+  const name = loc ? loc.name : (geo.label || "");
+  const cond = live ? wxCond(live.code) : null;
+  const popup = `<div class="wxp">
+    <b>${esc(name)}</b>
+    ${cond
+      ? `<span class="wxp-cond">${cond.icon} ${nf(live.temp,1)}° · ${esc(cond.label)}</span>
+         <span class="wxp-meta">${T("Feels like")} ${nf(live.feels,1)}° · ${T("Humidity")} ${live.hum}% · ${T("Wind")} ${nf(live.wind,0)} km/h</span>`
+      : `<span class="wxp-meta">${T("Today (forecast)")} · ${esc(name)}</span>`}
+  </div>`;
+  L.marker(c).addTo(map).bindPopup(popup).openPopup();
+  /* Leaflet cannot size a hidden container: if the map mounted below the
+     fold (mobile), invalidate once it scrolls into view. */
+  if (el.offsetWidth === 0){
+    const io = new IntersectionObserver(ents => {
+      if (ents.some(e => e.isIntersecting)){
+        io.disconnect();
+        if (wxMapInst) wxMapInst.invalidateSize();
+      }
+    }, { threshold: 0.05 });
+    io.observe(el);
+  }
 }
 
 /* ════════════════════════════ fuel view ════════════════════════════ */
@@ -7421,9 +7537,9 @@ const META = {
     eps:["/weather/warning","/weather/warning/earthquake",
          "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)"] },
   weather:{ title:"Weather",
-    desc:"Seven-day forecast for every state, district and town in Malaysia.",
-    how:"Forecasts come from MET Malaysia, covering 360 locations from states down to individual towns and highland resorts. Warnings and earthquakes moved to the Warnings & Hazards section above.",
-    eps:["/weather/forecast"] },
+    desc:"Live current conditions at your location on a map, plus the seven-day MET outlook for every state, district and town in Malaysia.",
+    how:"Live conditions come from Open-Meteo (free, open data, no key) at the selected location's coordinates, with the map pinning that location; when it is unreachable the card falls back to MET's day-0 forecast, honestly labelled. The seven-day outlook comes from MET Malaysia, covering 360 locations from states down to individual towns and highland resorts. Warnings and earthquakes moved to the Warnings & Hazards section above.",
+    eps:["/weather/forecast","api.open-meteo.com (current conditions)"] },
   fuel:{ title:"Household",
     desc:"What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.",
     how:"Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.",
