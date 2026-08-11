@@ -9,7 +9,7 @@
  *   Freshness is driven by the app's own 15-minute TTL in index.html, which is
  *   the "revalidate" half of SWR moved into a rate-limit-aware layer.
  */
-const VERSION    = "mygov-v13";
+const VERSION    = "mygov-v14";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

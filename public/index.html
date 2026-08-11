@@ -201,21 +201,19 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .dot.load{background:var(--warn);animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* ═══════════════════════════ hero + KPIs ═══════════════════════════ */
+/* ═══════════════════════════ hero ═══════════════════════════ */
 .hero{padding:var(--s8) 0 var(--s6)}
 .hero h2{margin:0 0 var(--s2);font-size:30px;font-weight:720;letter-spacing:-.035em;line-height:1.15}
 .hero p{margin:0;color:var(--fg-2);font-size:14.5px;max-width:62ch}
 /* Above 1100px the copy caps out at 62ch and would leave the right half of
-   the hero empty, so the KPIs move up beside it into a 2x4 block and the
-   daily brief fills the space under the copy. Below that both go back to a
-   full-width stack under the copy. */
+   the hero empty, so the Travel Outlook band moves up beside it and the daily
+   brief fills the space under the copy. Below that the band goes back to a
+   full-width block under the copy. */
+.hero .travel-band{margin-top:var(--s6)}
 @media (min-width:1100px){
   .hero{display:flex;gap:var(--s8);align-items:flex-start}
   .hero-copy{flex:1 1 0;min-width:0}
-  /* two columns, not three: three would make the cards narrower than the
-     full-width row they replaced, which is the opposite of the point */
-  .hero .kpis{flex:1.15 1 0;min-width:0;margin-top:6px;
-    grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero .travel-band{flex:1.15 1 0;min-width:0;margin-top:6px}
 }
 .hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;min-height:40px}
 .hero-loc .loc-chip{text-decoration:none}
@@ -246,16 +244,9 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .pos-panel tr:last-child td{border-bottom:none}
 .pos-panel tr:hover td{background:var(--surface-3)}
 .pos-panel .state{text-align:center;color:var(--fg-3);padding:var(--s4)}
-/* auto-fit rather than a fixed 6: at 1240px six tracks give 232px cards, which
-   is too narrow for names like "Pusat Konservasi Gajah Kebangsaan" - they wrap
-   to a second line and desynchronise the row's heights */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));
-  gap:var(--s3);margin-top:var(--s6)}
-/* With an odd number of cards the last tile is stranded alone on its row.
-   The hero column is capped by .wrap's max-width, so this grid resolves to
-   exactly two columns at every desktop size and one on mobile - spanning the
-   stray card keeps the block rectangular, and is a no-op single-column. */
-.kpis > :last-child:nth-child(odd){grid-column:1/-1}
+/* In-section KPI cards (fuel, groceries, tourism, health, …): a labelled value
+   with a sub-line. The hero KPI strip is gone - Travel Outlook holds that slot
+   now - so these rules serve the sections only; there is no .kpis grid. */
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);transition:var(--t)}
@@ -272,10 +263,6 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
 .kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
 .kpi-t{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
-a.kpi{color:inherit;text-decoration:none}
-a.kpi:hover{text-decoration:none}
-.kpi .go{font-size:13px;color:var(--fg-3);opacity:0;transform:translateX(-3px);transition:var(--t)}
-.kpi:hover .go,.kpi:focus-visible .go{opacity:1;transform:none;color:var(--accent)}
 .up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
 /* ── latest exchange rate (dropdown + hero) ── */
 .fx-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);flex-wrap:wrap}
@@ -382,36 +369,55 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 /* Holiday + school chips: one slim row under the hero location bar. */
 .hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   margin:var(--s2) 0 0}
-/* Travel Outlook card: a timeline of peak travel periods. Impact badges
-   are traffic-light colour-coded; the dates column is fixed-width mono so
-   rows line up. The bilingual note sits under the driver line. */
-.t-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.t-row{display:flex;gap:var(--s3);padding:var(--s3) 0;
-  border-bottom:1px solid var(--line-soft)}
-.t-row:last-child{border-bottom:none;padding-bottom:0}
-.t-row:first-child{padding-top:0}
-.t-dates{flex:0 0 118px;font-family:var(--mono);font-size:11.5px;
-  color:var(--fg-3);padding-top:2px;line-height:1.5}
-.t-mid{flex:1;min-width:0}
+/* Travel Outlook: peak travel periods as a scroll-snap carousel, the same
+   interaction as the radar and hazard-alert decks. It was a five-row stacked
+   list, which in the hero column ran taller than the copy beside it; one row
+   of cards fits the same five periods in a third of the height. Impact badges
+   are traffic-light colour-coded and the dates line is mono so the cards
+   scan as a timeline left to right. */
+.t-carousel{position:relative}
+.t-track{display:flex;gap:var(--s3);overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;list-style:none;margin:0;padding:0 0 2px}
+.t-track::-webkit-scrollbar{display:none}
+/* Impact is carried by the card, not by a chip in front of the title: a pill
+   of varying width pushed every driver name to a different x and the column
+   of titles read as ragged. Left rule + tint, the same language the weather
+   alert cards use. */
+.t-row{flex:0 0 268px;scroll-snap-align:start;display:flex;flex-direction:column;
+  gap:6px;padding:var(--s3) var(--s4);background:var(--bg-2);
+  border:1px solid var(--line-soft);border-left:4px solid var(--fg-3);
+  border-radius:var(--r)}
+.t-row.t-extreme{border-left-color:#f87171;
+  background:linear-gradient(180deg,rgba(248,113,113,.09),var(--bg-2) 60%)}
+.t-row.t-high{border-left-color:#fbbf24;
+  background:linear-gradient(180deg,rgba(251,191,36,.09),var(--bg-2) 60%)}
+.t-row.t-moderate{border-left-color:#34d399;
+  background:linear-gradient(180deg,rgba(52,211,153,.07),var(--bg-2) 60%)}
+.t-ctl{display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);
+  margin-top:var(--s2)}
+.t-dates{display:flex;align-items:center;gap:var(--s2);font-family:var(--mono);
+  font-size:11.5px;color:var(--fg-3);line-height:1.5}
+.t-mid{min-width:0}
 .t-driver{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   font-size:13.5px;margin-bottom:3px}
 .t-driver b{font-weight:700}
+/* The level still has to be readable without colour vision, so the word
+   survives - as small type on the dates line, where it cannot shift the
+   title. */
 .t-imp{font-family:var(--mono);font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;
-  border-radius:999px;border:1px solid var(--line-soft)}
-.t-imp.t-extreme{color:#f87171;border-color:rgba(248,113,113,.4);
-  background:rgba(248,113,113,.08)}
-.t-imp.t-high{color:#fbbf24;border-color:rgba(251,191,36,.4);
-  background:rgba(251,191,36,.08)}
-.t-imp.t-moderate{color:#34d399;border-color:rgba(52,211,153,.35);
-  background:rgba(52,211,153,.07)}
+  text-transform:uppercase;letter-spacing:.04em;margin-left:auto}
+.t-imp.t-extreme{color:#f87171}
+.t-imp.t-high{color:#fbbf24}
+.t-imp.t-moderate{color:#34d399}
+/* The outlook text is English only, in both UI languages: the collector
+   prompts Gemini for one English sentence per period. A machine-translated
+   second line under every card doubled the height of a hero block whose
+   whole point was to be compact. */
 .t-note{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:2px}
-.t-note.bm{color:var(--fg-3);font-size:12px}
-/* A period covering today: amber highlight + a NOW marker in the dates
-   column; the band above the list shouts the live peak once. */
-.t-row.t-cur{background:rgba(251,191,36,.05);
-  border:1px solid rgba(251,191,36,.25);border-radius:var(--r);
-  padding:var(--s3) var(--s3)}
+/* A period covering today keeps its impact colour and gets a ring instead -
+   painting it amber would make a live "quiet" period look like a peak. The
+   NOW marker on the dates line and the banner above say the rest. */
+.t-row.t-cur{box-shadow:0 0 0 2px rgba(251,191,36,.35)}
 .t-now{font-family:var(--mono);font-size:9.5px;font-weight:700;
   color:#111;background:#fbbf24;padding:1px 6px;border-radius:999px;
   margin-right:4px;letter-spacing:.05em}
@@ -430,11 +436,10 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .t-tips ul{margin:0;padding:0 var(--s4) var(--s3) var(--s4);list-style:disc;
   padding-left:calc(var(--s4) + 16px)}
 .t-tips li{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:6px}
-.t-tips li .bm{color:var(--fg-3);font-size:12px}
-@media (max-width:620px){
-  .t-row{flex-direction:column;gap:var(--s2)}
-  .t-dates{flex:none}
-}
+/* One card per swipe on a phone, where 232px strands half of the next card at
+   the edge. 100% is the track's own width, so it never overshoots the way a
+   100vw-minus-padding guess does. */
+@media (max-width:620px){ .t-row{flex-basis:100%} }
 .hol-chip{display:inline-flex;align-items:center;gap:6px;
   font-family:var(--mono);font-size:11.5px;line-height:1;
   padding:5px 10px;border-radius:999px;border:1px solid var(--line-soft);
@@ -525,11 +530,11 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
    the only hint that the row scrolls - and it reads as a layout bug rather
    than an affordance. The mask fades the cut instead. data-end is set by the
    scroll handler so the fade disappears once you reach the end. */
-.radar-track,.wx-track,.metro-scroll,nav.sections ul{
+.radar-track,.wx-track,.t-track,.metro-scroll,nav.sections ul{
   -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 56px),transparent);
   mask-image:linear-gradient(90deg,#000 calc(100% - 56px),transparent)}
-.radar-track[data-end="1"],.wx-track[data-end="1"],.metro-scroll[data-end="1"],
-nav.sections ul[data-end="1"]{-webkit-mask-image:none;mask-image:none}
+.radar-track[data-end="1"],.wx-track[data-end="1"],.t-track[data-end="1"],
+.metro-scroll[data-end="1"],nav.sections ul[data-end="1"]{-webkit-mask-image:none;mask-image:none}
 .radar-slide{flex:0 0 320px;scroll-snap-align:start;display:flex;gap:var(--s3);
   align-items:flex-start;text-align:left;cursor:pointer;background:var(--surface);
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
@@ -823,7 +828,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 .bmc:hover{background:#fcd34d;border-color:#fcd34d;transform:translateY(-1px);text-decoration:none}
 @media (max-width:620px){ .foot{flex-direction:column-reverse;gap:var(--s4)} .bmc{width:100%;justify-content:center} }
 
-@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4,.g5{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:1000px){ .g4,.g5{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
 @media (max-width:620px){
   .wrap{padding:0 var(--s4) 64px} .hd{padding:var(--s3) var(--s4)}
@@ -834,7 +839,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .hero-loc-row{min-height:85px}
   .hero-loc{flex:1 1 100%}
   nav.sections ul{padding:var(--s2) var(--s4)}
-  .kpis{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:1fr}
+  .g4{grid-template-columns:1fr}
   .g5{grid-template-columns:repeat(2,1fr)}
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
@@ -995,51 +1000,13 @@ html[data-text="large"] table{font-size:14px}
         <ul class="brief-list" id="brief-list"></ul>
       </section>
     </div>
-    <div class="kpis" id="kpis">
-      <a class="kpi kpi-load" href="#weather" aria-label="Hottest today - go to the weather section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-temp"/></svg> Hottest today</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-hot"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#fuel" aria-label="RON 95 - go to the fuel section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> RON 95</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-ron95"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#prices-sub" aria-label="Groceries y/y - go to the groceries block">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries y/y</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-basket"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#economy" aria-label="Inflation y/y - go to the economy section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Inflation y/y</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-cpi"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#mobility" aria-label="New EVs - go to the mobility section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-ev"/></svg> New EVs</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-ev"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#hazards" aria-label="Active warnings - go to the warnings section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Active warnings</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-warn"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#hazards" aria-label="Stations at risk - go to the warnings section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg> Stations at risk</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-flood"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#live" aria-label="Vehicles live - go to the live section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bus"/></svg> Vehicles live</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-live"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-    </div>
-  </div>
-
-  <section class="radar-band" id="travel-band" aria-labelledby="travel-h">
+    <!-- Travel Outlook occupies the hero's right column - the slot the 8-card
+         KPI strip used to hold. Those cards were links into sections the nav
+         already reaches; the next peak travel periods are planning info the
+         visitor cannot get anywhere else on the page, and belong above the
+         fold beside the briefing they extend. Fed by travel.json via
+         LOADERS.travel, which loadAll()/primeCached() run eagerly. -->
+    <section class="radar-band travel-band" id="travel-band" aria-labelledby="travel-h">
     <div class="radar-band-h">
       <div class="radar-band-t">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg></div>
@@ -1056,7 +1023,8 @@ html[data-text="large"] table{font-size:14px}
     </div>
     <span class="sec-time" id="time-travel"></span>
     <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div>
-  </section>
+    </section>
+  </div>
 
   <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
@@ -1089,7 +1057,7 @@ html[data-text="large"] table{font-size:14px}
           <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
+            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. Warnings and earthquakes share one card carousel - both answer the same question - filterable by weather, earthquakes, your area or marine. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
             <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
           </details>
         </div>
@@ -1514,6 +1482,15 @@ const I18N = {
   "No earthquakes within Nkm of Malaysia in the last 24 hours.":
     "Tiada gempa bumi dalam lingkungan Nkm dari Malaysia dalam 24 jam lepas.",
   "All Malaysia":"Seluruh Malaysia", "My area":"Kawasan saya", "Marine":"Marin",
+  /* ── the merged weather + earthquake alert deck ── */
+  "Weather & earthquakes":"Cuaca & gempa bumi",
+  "active alert":"amaran aktif", "active alerts":"amaran aktif",
+  "warnings":"amaran", "quakes":"gempa bumi", "Earthquake":"Gempa bumi",
+  "from Malaysia":"dari Malaysia",
+  "No active warnings or earthquakes":"Tiada amaran atau gempa bumi aktif",
+  "Nothing on issue in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
+  "No earthquakes near Malaysia right now":"Tiada gempa bumi berhampiran Malaysia buat masa ini",
+  "No quakes within Nkm in the last 24h.":"Tiada gempa bumi dalam lingkungan Nkm dalam 24 jam lepas.",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
   "No warnings in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
@@ -1569,6 +1546,7 @@ const I18N = {
   "No postcodes match ":"Tiada poskod sepadan ",
   "valid":"sah", "No active warnings":"Tiada amaran aktif",
   "Previous warnings":"Amaran sebelumnya", "Next warnings":"Amaran seterusnya",
+  "Previous periods":"Tempoh sebelumnya", "Next periods":"Tempoh seterusnya",
   "Trend Radar":"Radar Trend",
   "The hottest issues and viral claims circulating in Malaysia right now, gathered from news feeds, Google Trends and Sebenarnya.my fact-checks - each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang, dikumpul daripada suapan berita, Google Trends dan semakan fakta Sebenarnya.my - setiap satu disahkan terhadap sumber sebenar.",
   "The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.":"Isu dan dakwaan tular paling panas di Malaysia sekarang - setiap satu disahkan terhadap sumber sebenar.",
@@ -1824,7 +1802,6 @@ function rerenderAll(){
     const d = dataMap[id]; if (!d) continue;
     try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d); } catch {}
   }
-  renderKpis();
   /* The briefing ships both languages in one payload, so a language switch is
      a re-render, not a re-fetch. */
   renderBrief();
@@ -3017,7 +2994,7 @@ function trackStickyHeights(){
 }
 /* Clears the right-edge fade on a horizontal track once it is scrolled to the
    end, and on tracks short enough not to scroll at all. */
-const TRACKS = ".radar-track,.wx-track,.metro-scroll,nav.sections ul";
+const TRACKS = ".radar-track,.wx-track,.t-track,.metro-scroll,nav.sections ul";
 function syncTrackFades(){
   document.querySelectorAll(TRACKS).forEach(t => {
     const atEnd = t.scrollLeft + t.clientWidth >= t.scrollWidth - 2;
@@ -3168,7 +3145,7 @@ function goToAnchor(id){
 }
 
 function initAnchorNav(){
-  /* Delegated, so it covers the nav, the KPI cards and the briefing bullets
+  /* Delegated, so it covers the nav, the hazard tiles and the briefing bullets
      without each having to opt in. */
   document.addEventListener("click", e => {
     const a = e.target.closest && e.target.closest('a[href^="#"]');
@@ -3412,7 +3389,7 @@ async function geoipLocate(){
 
 /* ════════════════════════════ weather view ════════════════════════════ */
 const wx = { q:"", pick:null, data:null };
-let wxFilter = "all";   // warning filter: all | area | marine
+let wxFilter = "all";   // hazard-alert filter: all | weather | quake | area | marine
 
 function renderWeather(d){
   wx.data = d;
@@ -3514,35 +3491,20 @@ function renderHazards(d){
   const f = d.flood;
   const atRisk = f ? f.atRisk : null;
 
-  /* Weather - the filter chips and carousel are the existing paintWarnings(),
-     mounted into this tile instead of into the Weather section. */
-  const wxBody = (active.length || notices.length) ? `<div id="wx-warn"></div>` : "";
-  const wxTile = hzTile("wx", "warn", T("Weather warnings"), active.length > 0,
-    active.length ? `${active.length} ${T(active.length === 1 ? "active warning" : "active warnings")}`
-                  : T("All clear"),
-    active.length ? T("issued by MET")
+  /* Weather warnings and earthquakes are one tile with one carousel: both are
+     "something is happening in the sky or the ground right now", both arrive
+     from MET, and split across two tiles the same person had to open two
+     disclosures and read a table in one and cards in the other. The chips and
+     the carousel are paintAlerts(), mounted here. */
+  const alertN = active.length + d.eq.length;
+  const wxBody = (alertN || notices.length) ? `<div id="wx-warn"></div>` : "";
+  const wxTile = hzTile("wx", "warn", T("Weather & earthquakes"), alertN > 0,
+    alertN ? `${alertN} ${T(alertN === 1 ? "active alert" : "active alerts")}`
+           : T("All clear"),
+    alertN
+      ? `${active.length} ${T("warnings")} · ${d.eq.length} ${T("quakes")}`
       : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue")),
     wxBody);
-
-  /* Earthquakes - within 500 km and 24 h, or an explicit all-clear. */
-  const eqBody = d.eq.length ? `<div class="tw scroll-y"><table>
-      <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
-        <th class="num">${T("Depth")}</th><th class="num">${T("From Malaysia")}</th>
-        <th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
-      <tbody>${d.eq.map(q => { const m = Number(q.mag) || 0;
-        const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
-        return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
-          <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
-          <td>${txt(q.loc || "-")}</td><td class="num dim">${nf(q.dep,0)} km</td>
-          <td class="num">${q.km == null ? "-" : nf(q.km) + " km"}</td>
-          <td class="dim">${txt(q.near || "-")}</td>
-          <td><a class="maplink" target="_blank" rel="noopener"
-            href="https://www.google.com/maps?q=${q.lat},${q.lon}"
-            aria-label="Open earthquake location in Google Maps">map &#8599;</a></td></tr>`;
-      }).join("")}</tbody></table></div>` : "";
-  const eqTile = hzTile("eq", "quake", T("Earthquakes"), d.eq.length > 0,
-    d.eq.length ? `${d.eq.length} ${T(d.eq.length === 1 ? "event" : "events")}` : T("All clear"),
-    T("within Nkm - last 24h").replace("N", nf(d.eqRadius)), eqBody);
 
   /* Flood - the map is expensive, so it is only mounted when the tile opens. */
   const fTile = !f
@@ -3555,9 +3517,9 @@ function renderHazards(d){
                : T("no station above threshold"),
         atRisk ? `<div id="body-flood"></div>` : "");
 
-  host.innerHTML = `<div class="hz-strip">${wxTile}${eqTile}${fTile}</div>`;
+  host.innerHTML = `<div class="hz-strip">${wxTile}${fTile}</div>`;
 
-  if (wxBody) paintWarnings();
+  if (wxBody) paintAlerts();
   /* Leaflet needs a laid-out container, so the map waits for the disclosure
      to actually open - drawing it into a display:none body gives a grey box. */
   const fd = $("#hz-fl");
@@ -3596,38 +3558,80 @@ function warnCard(x){
     ${x.dated ? `<div class="meta">${T("valid")} ${esc(ymd(x.from))} ${esc(hhmm(x.from))} → ${esc(ymd(x.to))} ${esc(hhmm(x.to))}</div>` : ""}
   </div>`;
 }
-/** Active warnings as alert cards; all-clear notices collapsed below. */
+/* An earthquake as an alert card, so it can ride in the same carousel as the
+   weather warnings. The table it replaces is still all here - magnitude leads,
+   depth/distance/nearest town are the meta line, and the map link survives. */
+function quakeCard(q){
+  const m = Number(q.mag) || 0;
+  const color = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--info)";
+  const cls = m >= 6 ? "heat" : m >= 5 ? "storm" : "rain";
+  return `<div class="alert ${cls}">
+    <h4><span class="alert-ico" aria-hidden="true">🌐</span> M${nf(q.mag,1)} ${txt(q.loc || "-")}
+      <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${T("Earthquake")}</span></h4>
+    <p>${q.km == null ? "" : `${nf(q.km)} km ${T("from Malaysia")}`}${
+      q.near ? ` · ${txt(q.near)}` : ""}</p>
+    <p style="margin-top:6px">${T("Depth")} ${nf(q.dep,0)} km ·
+      <a class="maplink" target="_blank" rel="noopener"
+         href="https://www.google.com/maps?q=${q.lat},${q.lon}"
+         aria-label="Open earthquake location in Google Maps">map &#8599;</a></p>
+    <div class="meta">${esc(String(q.t).replace("T"," "))}</div>
+  </div>`;
+}
+/** Active warnings + nearby quakes as one card deck; notices collapsed below. */
 const MARINE_RE = /waters|coastal|sea |seas|wave|maritim|perairan|laut|pantai|ombak/i;
-function warnInArea(x){
+function pickedName(){
   const l = wx.data && wx.data.locs.find(l => l.id === wx.pick);
-  if (!l) return false;
-  const term = norm(l.name); if (!term) return false;
+  return l ? norm(l.name) : "";
+}
+function warnInArea(x){
+  const term = pickedName(); if (!term) return false;
   const t = (x.head + " " + x.text + " " + (x.instr || "") + " " +
              x.headBm + " " + x.textBm + " " + (x.instrBm || "")).toLowerCase();
   return t.includes(term);
 }
-const WARN_FILTERS = {
-  all:    () => true,
-  area:   x => warnInArea(x),
-  marine: x => MARINE_RE.test(x.head + " " + x.text + " " + (x.instr || "")),
+/* Each filter answers for both feeds, so a chip never silently drops one of
+   them: "marine" has no earthquake meaning, "quake" has no warning meaning,
+   and "area" reads the nearest-town string MET ships with each event. */
+const ALERT_FILTERS = {
+  all:     { warn: () => true,  eq: () => true },
+  weather: { warn: () => true,  eq: () => false },
+  quake:   { warn: () => false, eq: () => true },
+  area:    { warn: warnInArea,
+             eq: q => { const term = pickedName();
+                        return !!term && String(q.near || "").toLowerCase().includes(term); } },
+  marine:  { warn: x => MARINE_RE.test(x.head + " " + x.text + " " + (x.instr || "")),
+             eq: () => false },
 };
-function paintWarnings(){
+function paintAlerts(){
   const d = hzData; const w = $("#wx-warn"); if (!d || !w) return;
-  const active = d.warn.filter(x => !x.info && WARN_FILTERS[wxFilter](x));
+  const filt = ALERT_FILTERS[wxFilter] || ALERT_FILTERS.all;
+  const active = d.warn.filter(x => !x.info && filt.warn(x));
+  const quakes = d.eq.filter(filt.eq);
   const notices = d.warn.filter(x => x.info);
-  const total = d.warn.filter(x => !x.info).length;
+  const total = d.warn.filter(x => !x.info).length + d.eq.length;
+  /* Cards in one deck: warnings first (they are actionable now), then quakes
+     newest-first as loadHazards already sorted them. */
+  const cards = active.map(warnCard).concat(quakes.map(quakeCard));
   const empty = wxFilter === "all"
-    ? [T("No active warnings"), T("MET Malaysia has nothing on issue.")]
-    : [T(wxFilter === "area" ? "No warnings in your area right now" : "No marine warnings right now"),
+    ? [T("No active warnings or earthquakes"),
+       T("MET Malaysia has nothing on issue.") + " " +
+       /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
+          "N" rewrote that instead of the radius. */
+       T("No quakes within Nkm in the last 24h.").replace("Nkm", nf(d.eqRadius) + "km")]
+    : [T(wxFilter === "area" ? "Nothing on issue in your area right now"
+        : wxFilter === "marine" ? "No marine warnings right now"
+        : wxFilter === "quake" ? "No earthquakes near Malaysia right now"
+        : "No active weather warnings"),
        `${total} ${T("active")} ${T("elsewhere - try “All Malaysia”.")}`];
-  const FILT = [["all",T("All Malaysia")],["area",T("My area")],["marine",T("Marine")]];
+  const FILT = [["all",T("All Malaysia")],["weather",T("Weather")],["quake",T("Earthquakes")],
+                ["area",T("My area")],["marine",T("Marine")]];
   w.innerHTML = `<div class="chips mb" id="wx-filters">` +
     FILT.map(([v, label]) =>
       `<button class="chip" data-wf="${v}" aria-pressed="${wxFilter === v}">${label}</button>`).join("") +
     `</div>` +
-    (active.length
+    (cards.length
       ? `<div class="wx-carousel" id="wx-carousel">
-          <div class="wx-track">${active.map(warnCard).join("")}</div>
+          <div class="wx-track">${cards.join("")}</div>
           <div class="wx-ctl">
             <span class="radar-count" id="wx-ccount" aria-live="polite"></span>
             <button class="btn" id="wx-prev" aria-label="${T("Previous warnings")}">‹</button>
@@ -3641,8 +3645,11 @@ function paintWarnings(){
         <div class="grid g2" style="margin-top:var(--s2)">${notices.map(warnCard).join("")}</div>
       </details>` : "");
   w.querySelectorAll("[data-wf]").forEach(b => {
-    b.onclick = () => { wxFilter = b.dataset.wf; paintWarnings(); };
+    b.onclick = () => { wxFilter = b.dataset.wf; paintAlerts(); };
   });
+  /* A repaint builds a new deck - keeping the old index would land a
+     narrower filter mid-track, or past its end. */
+  wxCtl.idx = 0;
   initWxCarousel();
 }
 /* Warnings as a scroll-snap carousel, same interaction as the radar band. */
@@ -5552,13 +5559,12 @@ async function loadTravel(){
   if (!fresh) throw new Error("travel stale");
   return d;
 }
-function travelImpact(p){
-  const cls = p.impact === "extreme" ? " t-extreme"
-    : p.impact === "high" ? " t-high" : " t-moderate";
-  const lab = p.impact === "extreme" ? T("extreme peak")
-    : p.impact === "high" ? T("peak") : T("quiet");
-  return `<span class="t-imp${cls}">${esc(lab)}</span>`;
-}
+/* One class per impact level, used twice: to colour the card and to colour
+   the word on its dates line. */
+const travelImpactClass = p => p.impact === "extreme" ? "t-extreme"
+  : p.impact === "high" ? "t-high" : "t-moderate";
+const travelImpactLabel = p => p.impact === "extreme" ? T("extreme peak")
+  : p.impact === "high" ? T("peak") : T("quiet");
 function renderTravel(d){
   /* Only upcoming periods belong on the page; a stale cached copy could
      carry last week's window, and past peaks are not advice. A period
@@ -5571,12 +5577,14 @@ function renderTravel(d){
   const cur = periods.filter(p => p.start <= today);
   const rows = periods.map(p => {
     const live = p.start <= today;
-    return `<li class="t-row${live ? " t-cur" : ""}">
-      <div class="t-dates">${live ? `<span class="t-now">${T("now")}</span> ` : ""}${esc(md(p.start))}${p.end !== p.start ? ` - ${esc(md(p.end))}` : ""}</div>
+    const imp = travelImpactClass(p);
+    return `<li class="t-row ${imp}${live ? " t-cur" : ""}">
+      <div class="t-dates">${live ? `<span class="t-now">${T("now")}</span>` : ""}
+        <span>${esc(md(p.start))}${p.end !== p.start ? ` - ${esc(md(p.end))}` : ""}</span>
+        <span class="t-imp ${imp}">${esc(travelImpactLabel(p))}</span></div>
       <div class="t-mid">
-        <div class="t-driver">${travelImpact(p)} <b>${esc(p.driver)}</b></div>
+        <div class="t-driver"><b>${esc(p.driver)}</b></div>
         <div class="t-note">${esc(p.t_en)}</div>
-        <div class="t-note bm">${esc(p.t_ms)}</div>
       </div>
     </li>`;
   }).join("");
@@ -5586,17 +5594,61 @@ function renderTravel(d){
   </div>` : "";
   const tipList = tips.length ? `<details class="t-tips">
     <summary>${ico("live")} ${T("Tips to travel around the peak")}</summary>
-    <ul>${tips.map(t => `<li>${esc(t.t_en)}<br><span class="bm">${esc(t.t_ms)}</span></li>`).join("")}</ul>
+    <ul>${tips.map(t => `<li>${esc(t.t_en)}</li>`).join("")}</ul>
   </details>` : "";
   $("#body-travel").innerHTML = periods.length ? `
     <div class="card mb">
       <div class="card-b">
         ${curBand}
-        <ul class="t-list">${rows}</ul>
+        <div class="t-carousel" id="t-carousel">
+          <ul class="t-track">${rows}</ul>
+          <div class="t-ctl">
+            <span class="radar-count" id="t-ccount" aria-live="polite"></span>
+            <button class="btn" id="t-prev" aria-label="${T("Previous periods")}">‹</button>
+            <button class="btn" id="t-next" aria-label="${T("Next periods")}">›</button>
+          </div>
+        </div>
         ${tipList}
       </div>
     </div>` : `<div class="card"><div class="card-b"><p class="dim">${T("No upcoming peak periods in the next 8 weeks.")}</p></div></div>`;
+  initTravelCarousel();
   animateCounters($("#body-travel"));
+}
+/* Peak periods as a card deck. Same scroll-snap mechanics as the warnings
+   carousel, minus the autoplay: this sits in the hero next to the copy, and a
+   block that slides on its own while you are reading the briefing beside it is
+   a distraction rather than an invitation. */
+let tCtl = { idx:0 };
+function initTravelCarousel(){
+  const c = $("#t-carousel"); if (!c) return;
+  const track = c.querySelector(".t-track");
+  const slides = track.querySelectorAll(".t-row");
+  const n = slides.length;
+  if (n <= 1){ c.querySelector(".t-ctl").style.display = "none"; return; }
+  const step = () => (slides[0] ? slides[0].offsetWidth : 268) + 12;
+  /* Derived from the measured card, not a hardcoded width: the cards carry a
+     model-written sentence and got wider once those ran long, and a stale
+     constant here silently mis-pages the deck. */
+  const perView = () => Math.max(1, Math.floor((track.clientWidth + 12) / step()));
+  const maxIdx = () => Math.max(0, n - perView());
+  const pageNum = i => { const m = maxIdx(); return m ? Math.round((i / m) * (n - 1)) + 1 : 1; };
+  const sync = () => {
+    $("#t-ccount").textContent = `${pageNum(tCtl.idx)} / ${n}`;
+    $("#t-prev").disabled = tCtl.idx === 0;
+    $("#t-next").disabled = tCtl.idx >= maxIdx();
+  };
+  const render = () => { track.scrollTo({ left: tCtl.idx * step(), behavior:"smooth" }); sync(); };
+  $("#t-prev").onclick = () => { tCtl.idx = Math.max(0, tCtl.idx - 1); render(); };
+  $("#t-next").onclick = () => { tCtl.idx = Math.min(tCtl.idx + 1, maxIdx()); render(); };
+  track.addEventListener("scroll", () => {
+    const st = step();
+    tCtl.idx = Math.min(Math.max(st ? Math.round(track.scrollLeft / st) : 0, 0), maxIdx());
+    sync();
+  }, { passive:true });
+  /* A live peak is the one thing a visitor must not have to scroll to find. */
+  const live = [...slides].findIndex(s => s.classList.contains("t-cur"));
+  tCtl.idx = Math.min(Math.max(live, 0), maxIdx());
+  render();
 }
 
 /* ════════════════════════════ places view (DOSM sub-national) ════════════════════════════
@@ -7416,58 +7468,11 @@ function paintMaps(){
   }
 }
 
-/* ════════════════════════════ KPI summary ════════════════════════════ */
-const kpiState = {};
-function renderKpis(){
-  const host = $("#kpis");
-  const cards = [
-    { k:"hot",   lab:"Hottest today",   ico:"temp",     href:"#weather" },
-    { k:"ron95", lab:"RON 95",          ico:"fuel",     href:"#fuel" },
-    /* The block is titled "Groceries" but its element id comes from the
-       loader id ("prices"), so #groceries-sub matched nothing and the card was
-       a dead link - a missing anchor target scrolls nowhere at all. */
-    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#prices-sub",
-      where:"groceries block" },
-    { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
-    { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
-    { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#hazards",
-      where:"warnings section" },
-    /* `where` is the spoken destination; without it the slug is used, which
-       reads badly for anchors that are not section ids. Keep in sync with
-       KPIS in tools/prerender_shells.py. */
-    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#hazards",
-      where:"warnings section" },
-    { k:"live",  lab:"Vehicles live",   ico:"bus",      href:"#live" },
-  ];
-  /* Pending cards get the same shimmer the sections use. Six cards each
-     spelling out "loading…" was a wall of the same word, and with the
-     inter-request gap they sit that way for a while. */
-  const pending = cards.some(c => !kpiState[c.k]);
-  host.setAttribute("aria-busy", pending ? "true" : "false");
-  host.innerHTML = cards.map(c => {
-    const s = kpiState[c.k];
-    return `<a class="kpi${s ? " fade" : " kpi-load"}" href="${c.href}"
-      aria-label="${esc(T(c.lab))} - go to the ${esc(c.where || c.href.slice(1) + " section")}">
-      <div class="kpi-t"><span class="lab">${ico(c.ico)} ${esc(T(c.lab))}</span>
-        <span class="go" aria-hidden="true">↗</span></div>
-      ${s ? `<div class="val" id="kpi-${c.k}"></div>
-      <div class="sub">${esc(s.sub)}</div>`
-          : `<div class="val" id="kpi-${c.k}"><span class="skel skel-val"></span></div>
-      <div class="sub"><span class="skel skel-sub"></span></div>`}</a>`;
-  }).join("");
-  for (const c of cards){
-    const s = kpiState[c.k]; if (!s) continue;
-    const node = $("#kpi-" + c.k);
-    if (s.text != null) node.textContent = s.text;
-    else countTo(node, s.value, s.dec || 0, s.prefix, s.suffix);
-  }
-}
-
 /* ════════════════════════════ orchestration ════════════════════════════ */
 const META = {
   hazards:{ title:"Warnings & Hazards",
     desc:"Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.",
-    how:"Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.",
+    how:"Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. Warnings and earthquakes share one card carousel - both answer the same question - filterable by weather, earthquakes, your area or marine. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. A hazard with nothing to report shows an all-clear rather than an empty table.",
     eps:["/weather/warning","/weather/warning/earthquake",
          "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)"] },
   weather:{ title:"Weather",
@@ -7550,46 +7555,19 @@ const META = {
     eps:["mycal-api.huijun00100101.workers.dev/v1/holidays","mycal-api.huijun00100101.workers.dev/v1/school/holidays","travel.json (KV)"] },
 };
 const LOADERS = {
-  hazards:  { load:loadHazards,  render:renderHazards,  after:d => {
-      const active = d.warn.filter(w => !w.info).length;
-      kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
-      if (d.flood) kpiState.flood = { value:d.flood.atRisk, dec:0,
-        sub:d.flood.atRisk ? T("stations at risk") : T("all clear") };
-    } },
-  weather:  { load:loadWeather,   render:renderWeather,   after:d => {
-      let hot = null;
-      const first = new Map();
-      for (const r of d.rows){ const c = first.get(r[0]);
-        if (!c || String(r[1]) < String(c[1])) first.set(r[0], r); }
-      for (const [i, r] of first) if (r[3] != null && (!hot || r[3] > hot.t)) hot = { t:r[3], i };
-      if (hot) kpiState.hot = { value:hot.t, dec:0, suffix:"\u00b0C", sub:d.locs[hot.i].name };
+  hazards:  { load:loadHazards,  render:renderHazards },
+  weather:  { load:loadWeather,   render:renderWeather,   after:() => {
       if (geo.status === "waiting") locate();
     }, asOf:d => {   /* the forecast starts today */
       let m = null; for (const r of d.rows){ const x = String(r[1]); if (x && (m === null || x < m)) m = x; }
       return m;
     } },
-  fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
-      if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
-        sub:T("week of ") + ymd(d.latest.date) };
+  fuel:     { load:loadFuel,      render:renderFuel,      after:() => {
       /* Groceries is a sub-block of this section - load it with the fuel
-         (it keeps its own LOADERS entry so caching/KPI/error handling work). */
+         (it keeps its own LOADERS entry so caching and error handling work). */
       if (!loaded.has("prices")) loadSection("prices", false); }, asOf:d => d.latest ? d.latest.date : null },
-  prices:   { load:loadPrices,    render:renderPrices,    after:d => {
-      /* The index level (101.3) means nothing on its own in a hero tile, so
-         the KPI leads with the 12-month change - the same shape as the CPI
-         card next to it - and names the basket underneath. */
-      const nat = d.basket.national || [];
-      const last = nat.length ? nat[nat.length - 1] : null;
-      if (last != null && nat[0])
-        kpiState.basket = { value:(last / nat[0] - 1) * 100, dec:1, suffix:"%",
-          sub:nf(d.basket.n) + " " + T("grocery items · shelf prices") };
-    }, asOf:d => d.asOf },
-  economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
-      const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
-      if (ov.length > 12){
-        const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
-        kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
-      }
+  prices:   { load:loadPrices,    render:renderPrices,    asOf:d => d.asOf },
+  economy:  { load:loadEconomy,   render:renderEconomy,   after:() => {
       /* Tourism is a merged sub-block of this section - one table and one
          chart did not earn a nav entry of its own, and visitor arrivals are
          an economic indicator. Same pattern as Groceries under Household. */
@@ -7610,14 +7588,7 @@ const LOADERS = {
         if (s && s.length){ const x = String(s[s.length-1][0]); if (!m || x > m) m = x; }
       return m;
     } },
-  mobility: { load:loadMobility,  render:renderMobility,  after:d => {
-      const n = d.months.length;
-      const ev = n ? (d.byFuel.electric || [])[n - 1] : null;
-      const tot = n ? d.total[n - 1] : null;
-      if (ev != null) kpiState.ev = { value:ev, dec:0,
-        sub:(tot ? nf(ev / tot * 100, 1) + "% " + T("of new vehicles") + " · " : "") +
-            ymd(d.months[n - 1]) };
-    }, asOf:d => {
+  mobility: { load:loadMobility,  render:renderMobility,  asOf:d => {
       const reg = d.months.length ? String(d.months[d.months.length-1]) : null;
       const rid = d.rid.n ? isoOf(d.rid.t0 + d.rid.n - 1) : null;
       return [reg, rid].filter(Boolean).sort().pop() || null;
@@ -7642,9 +7613,7 @@ const LOADERS = {
          for one operator. Same pattern as Groceries under Household. */
       if (!loaded.has("live")) loadSection("live", false);
     } },
-  live:     { load:loadLive,      render:renderLive,      after:d => {
-      const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
-      kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
+  live:     { load:loadLive,      render:renderLive },
   travel:   { load:loadTravel,    render:renderTravel,    asOf:d => d.generated },
 };
 
@@ -7699,7 +7668,7 @@ async function loadSection(id, force){
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
         dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
         setDot(id, "ok"); setSecTime(id, "cached");
-        tick(); renderKpis();
+        tick();
         return;
       } catch { /* shape drift - refetch */ }
     }
@@ -7719,7 +7688,7 @@ async function loadSection(id, force){
       if (!hasContent) errorBox(id, err, () => loadSection(id, true));
       else setSecTime(id, "error");   // stale content stays visible
     }
-    tick(); renderKpis();
+    tick();
   } finally {
     loading.delete(id);
   }
@@ -7784,28 +7753,7 @@ function primeCached(){
       setSecTime("travel", "cached");
     } catch { /* shape drift - refetch on load */ }
   }
-  tick(); renderKpis();
-}
-
-/* The hero KPI strip is fed by LOADERS' after() hooks, and three of its
-   cards (Inflation, New EVs, Vehicles live) belong to lazy sections that
-   only load once scrolled into view. On a cold visit that left the cards
-   shimmering until the user scrolled past the section. Prefetch exactly
-   those three loaders at boot: fetch the data, run the after() hook so the
-   KPI fills in, and cache the record so the eventual scroll-in render is
-   instant (no double fetch, no skeleton flash). */
-async function primeKpis(){
-  const ids = ["economy", "mobility", "live"];
-  await Promise.all(ids.map(async id => {
-    if (loaded.has(id) || loading.has(id)) return;   // already done/in flight
-    const cfg = LOADERS[id];
-    try {
-      const data = await cfg.load();
-      cacheSet(id, data);                            // scroll-in uses this
-      if (cfg.after) cfg.after(data);                // sets kpiState.*
-    } catch { /* leave the card shimmering; the section shows its own error */ }
-  }));
-  renderKpis();
+  tick();
 }
 
 /* ════════════════════════════ PWA plumbing ════════════════════════════ */
@@ -7843,7 +7791,6 @@ let syncNet = null;
 function boot(){
   loadPrefs();
   buildShell();
-  renderKpis();
   pwa();
   applyTheme(); applyText(); applyLang();
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyTheme(); rerenderAll(); });
@@ -7879,9 +7826,6 @@ function boot(){
   initAnchorNav();
   topbtn.onclick = () => scrollTo({ top:0, behavior:"smooth" });
   primeCached();
-  /* Warm the three hero-KPI-backed lazy sections without waiting for
-     scroll; see primeKpis(). */
-  primeKpis();
   /* Start lazy-loading only after weather + fuel have rendered: while the
      page is still skeletons it is short, so every section looks "near" the
      viewport and IntersectionObserver would fire immediately. Once the eager

@@ -4,7 +4,7 @@
 Turns the holiday + school calendar (already mirrored into slow.json from
 the mycal API) into a forward-looking "Travel Outlook": the upcoming peak
 travel periods of the next 8 weeks, each with a driver (school break,
-public holiday, long weekend), an impact level, and bilingual one-liners
+public holiday, long weekend), an impact level, and an English one-liner
 written by Gemini - plus a handful of general travel tips.
 
 The same governing rule as collect_insights.py applies: **the calendar is
@@ -16,7 +16,7 @@ corrected - a model that invents a peak week is worse than none.
 If Gemini is unavailable (no key, 429s exhausted, bad JSON), a
 deterministic fallback is written instead: school breaks become "high"
 periods and major holidays "extreme", all with dates straight from the
-calendar and neutral bilingual text. The card always renders.
+calendar and neutral English text. The card always renders.
 
 Run:  python3 tools/collect_travel.py
 Deps: stdlib only. GOOGLE_API_KEY or GEMINI_API_KEY env var.
@@ -155,10 +155,6 @@ def fallback(start, hol, breaks):
                      f"full hotels." if lvl != "extreme" else
                      f"{b['name']} and {in_names[0]} coincide - peak season, "
                      f"book early."),
-            "t_ms": (f"{b['name']} - cuti sekolah. Jangkakan lebuh raya sesak "
-                     f"dan hotel penuh." if lvl != "extreme" else
-                     f"{b['name']} dan {in_names[0]} serentak - musim puncak, "
-                     f"tempah awal."),
         })
     for h in hol:
         if any(h["date"] >= p["start"] and h["date"] <= p["end"]
@@ -172,17 +168,12 @@ def fallback(start, hol, breaks):
             "holidays": [h["name"]],
             "t_en": f"{h['name']} - public holiday." if lvl == "high" else
                     f"{h['name']} - a day off; light crowds expected.",
-            "t_ms": f"{h['name']} - cuti umum." if lvl == "high" else
-                    f"{h['name']} - cuti; orang ramai dijangka sederhana.",
         })
     periods.sort(key=lambda p: p["start"])
     tips = [
-        {"t_en": "Travel early morning or late night to beat highway jams.",
-         "t_ms": "Perjalanan awal pagi atau lewat malam untuk elak kesesakan lebuh raya."},
-        {"t_en": "Book hotels and bus/plane tickets 3-4 weeks ahead during peak weeks.",
-         "t_ms": "Tempah hotel dan tiket bas/pesawat 3-4 minggu awal semasa minggu puncak."},
-        {"t_en": "Check the monsoon forecast before island trips on the east coast.",
-         "t_ms": "Semak ramalan monsun sebelum ke pulau di pantai timur."},
+        {"t_en": "Travel early morning or late night to beat highway jams."},
+        {"t_en": "Book hotels and bus/plane tickets 3-4 weeks ahead during peak weeks."},
+        {"t_en": "Check the monsoon forecast before island trips on the east coast."},
     ]
     return {"periods": periods, "tips": tips}
 
@@ -200,15 +191,15 @@ School breaks:
 {breaks}
 
 Return STRICT JSON only, no markdown fence:
-{{"periods": [{{"start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "driver": "what causes this peak (e.g. 'Term 2 school break + Merdeka long weekend')", "impact": "extreme|high|moderate", "t_en": "one English sentence on what travellers can expect", "t_ms": "the same sentence in natural Bahasa Melayu"}}], "tips": [{{"t_en": "...", "t_ms": "..."}}]}}
+{{"periods": [{{"start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "driver": "what causes this peak (e.g. 'Term 2 school break + Merdeka long weekend')", "impact": "extreme|high|moderate", "t_en": "one English sentence on what travellers can expect"}}], "tips": [{{"t_en": "..."}}]}}
 
 Rules:
 - 1 to 4 periods, ordered by start date. Each period's start/end must be dates from the
   lists above (a period may span a break's range or a holiday date).
 - impact: extreme = school break + major festival coincide; high = school break or
   major festival alone; moderate = other holidays / long weekends.
-- 2 to 4 tips, bilingual, actionable (highways, booking, monsoon, rail).
-- Bahasa Melayu must read naturally, not word-for-word translated.
+- 2 to 4 tips, actionable (highways, booking, monsoon, rail).
+- English only - write no other language, and emit no t_ms field.
 - Factual and neutral. Do not invent statistics, prices or travel advisories."""
 
 
@@ -276,18 +267,18 @@ def build_outlook(slow, today):
         if imp not in IMPACT:
             sys.stderr.write(f"  drop period {st}..{en}: bad impact {imp}\n")
             continue
-        en_t, ms_t = str(p.get("t_en", "")).strip(), str(p.get("t_ms", "")).strip()
-        if not en_t or not ms_t:
+        en_t = str(p.get("t_en", "")).strip()
+        if not en_t:
             continue
         periods.append({"start": st, "end": en,
                         "driver": str(p.get("driver", "")).strip() or "Peak period",
-                        "impact": imp, "t_en": en_t, "t_ms": ms_t})
+                        "impact": imp, "t_en": en_t})
     periods.sort(key=lambda p: p["start"])
     tips = []
     for t in (parsed.get("tips") or [])[:4]:
-        en_t, ms_t = str(t.get("t_en", "")).strip(), str(t.get("t_ms", "")).strip()
-        if en_t and ms_t:
-            tips.append({"t_en": en_t, "t_ms": ms_t})
+        en_t = str(t.get("t_en", "")).strip()
+        if en_t:
+            tips.append({"t_en": en_t})
 
     if periods:
         out.update({"periods": periods, "tips": tips, "source": "gemini"})

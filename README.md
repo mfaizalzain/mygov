@@ -25,7 +25,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 
 | Section | Source | Contents |
 | --- | --- | --- |
-| Warnings & Hazards | MET Malaysia, JPS | Everything currently on issue, as a **status strip** of three tiles - severe-weather warnings, earthquakes within 500 km in the last 24 h, and water-level stations at danger / warning / alert from JPS telemetry. A tile expands into its detail (warning carousel, quake table, status-coloured map with per-state counts and station chips) only when that hazard is active, so a quiet day is one row rather than five screens. Live only - nothing here is historical |
+| Warnings & Hazards | MET Malaysia, JPS | Everything currently on issue, as a **status strip** of two tiles. The first merges severe-weather warnings and earthquakes within 500 km in the last 24 h into **one alert carousel** (filter chips: all / weather / earthquakes / my area / marine); the second is water-level stations at danger / warning / alert from JPS telemetry, which keeps its own tile because it mounts a status-coloured map with per-state counts and station chips. A tile expands into its detail only when that hazard is active, so a quiet day is one row rather than five screens. Live only - nothing here is historical |
 | Weather | MET Malaysia | 7-day forecast for all 360 locations, from states down to towns and highland resorts |
 | Household | Ministry of Finance, KPDN | Weekly RON95 / RON97 / diesel ceiling prices, household income, and the PriceCatcher groceries basket (a merged **Groceries sub-block** with per-district price levels) |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
@@ -39,7 +39,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
-| Travel Outlook (hero band) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and bilingual one-liners, plus tips to travel around them |
+| Travel Outlook (hero band) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and a one-line English outlook each, plus tips to travel around them |
 
 ---
 
@@ -95,7 +95,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Insights | `collect_insights.yml`, daily 01:30 UTC | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
 | Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers **and top EV makers** (current + previous year) |
 | Tourism | `collect_tourism.yml`, monthly 2nd 02:30 UTC | `public/tourism.json` | Tourism Malaysia visitor-arrivals PDF - top-51 table with month, y/y vs 2025 and 2019, YTD (May 2026 seeded) |
-| Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and bilingual one-liners (Gemini, deterministic fallback) |
+| Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and one English line each (Gemini, deterministic fallback) |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that
@@ -323,11 +323,14 @@ no key at all.
 school calendar - already mirrored into `slow.json` from the mycal API - into
 the **next 8 weeks of peak travel periods**: school breaks, public holidays and
 long weekends, each with an impact level (`extreme` / `high` / `moderate`) and
-bilingual one-liners written by Gemini. It is rendered as a **hero band above
-the fold**, between the daily briefing and the Trend Radar: a timeline with
-traffic-light impact badges, a `NOW` marker plus amber banner when a visitor
-arrives during a live peak (e.g. the Term 2 break overlapping Merdeka Day),
-and a collapsible tips list.
+one English sentence written by Gemini. (English only, in both UI languages:
+the prompt asks for no other language. A machine-translated second line under
+every card doubled the height of a block whose point is to be compact.) It is
+rendered **in the hero**, in the right-hand column the KPI card strip used to
+occupy (beside the location and daily briefing on desktop, stacked under them
+on mobile): a **scroll-snap card deck** with traffic-light impact badges, a
+`NOW` marker plus amber banner when a visitor arrives during a live peak (e.g.
+the Term 2 break overlapping Merdeka Day), and a collapsible tips list.
 
 The same governing rule as the briefing applies, and it is enforced in code:
 
@@ -727,7 +730,8 @@ const x = await request("data-catalogue", "/data-catalogue", { id: "YOUR_ID" });
 SECTIONS.push({ id:"myid", label:"My Data", icon:"🧭", family:"data-catalogue" })
 META.myid    = { title, desc, how, eps:[...] }
 LOADERS.myid = { load, render, after, asOf }
-// after(data) feeds the top KPI row.
+// after(data) runs side-effects once the section renders (e.g. loading a
+//             merged sub-block).
 // asOf(data)  returns the newest data date the section renders, for the
 //             "data as of …" pill. Omit it and the pill shows the fetch time.
 ```
@@ -746,7 +750,7 @@ controls, keyboard-operable sortable table headers (`Enter`/`Space`),
 `aria-current` on the active nav item, `aria-sort` on sorted columns, and
 real `<button>`s for selectable weather rows with an `aria-live` region
 announcing location changes. `prefers-reduced-motion` is honoured - it disables
-chart animations, the KPI count-up and smooth scrolling. Every chart has a
+chart animations, counter count-ups and smooth scrolling. Every chart has a
 "View data table" alternative for users who can't use tooltips. Body text is
 `#e8ecf4` on `#0a0c10` (~16:1 contrast); the dimmest supporting text stays
 above 4.5:1 in both themes.
