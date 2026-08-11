@@ -35,6 +35,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
 | Live | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
+| Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
 
 ---
 
@@ -75,9 +76,9 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
 
 ---
 
-## KKM health data + slow-data collector (daily)
+## Collectors: how the data gets here
 
-Three collectors pre-fetch everything that changes at most daily, so visitors
+Five collectors pre-fetch everything that changes at most daily, so visitors
 spend zero API budget on it. All run as GitHub Actions and produce a static
 JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
@@ -87,6 +88,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance (incl. payment instruments), mobility, economy (incl. FDI flows), population, public holidays |
 | PriceCatcher | `collect_prices.yml`, daily 13:30 UTC | `public/prices.json` | grocery basket index, per-item prices, 166 districts |
 | Places | `collect_geo.yml`, weekly Mon 14:00 UTC | `public/geo.json` | state/district population + composition, 222 parliament + 600 DUN seats with income, poverty, gini, unemployment per seat |
+| Insights | `collect_insights.yml`, daily 01:30 UTC | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that
@@ -220,6 +222,94 @@ series.
 
 ---
 
+## Forecasts and the daily briefing
+
+`tools/collect_insights.py` writes two files: `forecasts.json` (statistics) and
+`insights.json` (a bilingual "Today in Malaysia" briefing). The governing rule
+is **statistics for numbers, the model only for words**, and it is enforced in
+code rather than requested in a prompt.
+
+### What is deliberately NOT forecast
+
+Every candidate was measured against this repo's own committed data before
+anything was built:
+
+| Series | Measurement | Verdict |
+| --- | --- | --- |
+| RON95 | 26 distinct values in 104 weeks, spanning a subsidy peg at 2.05 and a float at 4.27 | A policy regime break, not a stochastic process |
+| RON97 / diesel | 60 and 67 changes in 104 weeks, but still ceilings set weekly by MOF | A committee decision is not a time series |
+| USD/MYR | One-step MAE over the last 250 obs: naive `tomorrow = today` **0.00991**, drift model **0.01022** | Extrapolation loses to the flat line. Textbook random walk |
+| CPI | Monthly, ~6-week publication lag, ~24 usable points | Too weak, and "predicted inflation" invites misreading |
+| Rice | Price-controlled item | Same objection as fuel |
+
+**Nothing here forecasts a price set by government**, and the workflow's
+validation step fails the build if one ever appears in the output. If a
+forecast is requested for one of these, re-run `backtest_gain()` first: the
+measurement decides, not the request.
+
+### What is forecast
+
+Human-routine count series, where knowing last week's same weekday beats
+knowing yesterday. Measured gain of seasonal-naive over naive:
+
+| Series | Gain |
+| --- | --- |
+| Blood donations (type A) | +55.5% |
+| Blood donations (all) | +55.3% |
+| Shuttle Tebrau ridership | +47.1% |
+| Komuter ridership | +27.2% |
+| Komuter Utara ridership | +9.6% |
+| _ETS rail_ | _-3.0% (rejected)_ |
+| _Intercity_ | _-10.6% (rejected)_ |
+
+A series must beat naive by 5% to be published at all, the gain is computed at
+collect time, and it ships alongside the numbers so a forecast that quietly
+degrades is visible rather than silent.
+
+Method is **seasonal-naive with empirical 10th/90th-percentile bands** over a
+trailing window, so the interval reports the accuracy the estimator actually
+achieved on that series instead of assuming a distribution. `statsforecast` is
+deliberately not a dependency: numba + scipy + llvmlite is a slow, fragile CI
+install for gains no backtest here has demonstrated.
+
+Two details that are easy to get wrong:
+
+- **Holidays are neutralised before fitting.** Chinese New Year roughly doubles
+  Komuter ridership. Left in, it is a 20-sigma false anomaly every year *and*
+  the base the following week gets forecast from. The holiday table in
+  `slow.json` says which days to exclude; the chart still marks them.
+- **Lags are counted in days, not observations.** Compacting the gaps out of a
+  dense series first would make "seven back" mean seven *readings* ago.
+  Komuter's history carries 1,060 leading gaps, so that is not seven days.
+
+### The grounding gate
+
+`ground()` extracts every numeral from the model's output and drops any bullet
+containing one that is not present in the facts handed to it. A prompt saying
+"do not invent data" is a hope; this is the control. Without it the project
+eventually publishes a hallucinated figure under a `.gov.my` attribution, which
+is not a recoverable error for a dashboard whose whole value is being
+trustworthy about official numbers.
+
+It strips currency prefixes so `RM3.77` reads as the quantity `3.77`, and
+ignores digit runs glued to letters so `RON95` and `B40` are read as names
+rather than claims. Both language versions must pass: a number invented in only
+the Malay half is still a number we published.
+
+### Detect first, narrate second
+
+Anomaly detection runs *before* the model sees anything: seasonal residuals
+beyond 2.5 sigma against a 365-day trailing baseline, with public holidays
+excluded because they are explained rather than anomalous. Only what survives
+that filter reaches the prompt, so a quiet day produces a short brief instead
+of filler.
+
+Without a `GOOGLE_API_KEY` the collector writes an empty briefing and exits 0 -
+the band hides and the rest of the site is unaffected. The forecast half needs
+no key at all.
+
+---
+
 ## Architecture
 
 ```
@@ -238,6 +328,7 @@ tools/
   collect_slow.py       slow-data collector → public/slow.json
   collect_prices.py     PriceCatcher basket index → public/prices.json
   collect_geo.py        sub-national population + seat socioeconomics → public/geo.json
+  collect_insights.py   forecasts + daily briefing → public/{forecasts,insights}.json
   embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```

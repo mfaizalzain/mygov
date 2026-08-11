@@ -20,6 +20,8 @@
 
 - [Trend radar JSON](https://mygov.faizalmzain.com/radar.json): Top issues with fact-check status, titles in Bahasa Melayu and English, and source links.
 - [Geography JSON](https://mygov.faizalmzain.com/geo.json): State, district and constituency population and per-seat socioeconomics.
+- [Forecasts JSON](https://mygov.faizalmzain.com/forecasts.json): 14-day projections for the daily count series that measurably beat a naive guess, each with an 80% band and the backtest gain that earned it a place. Prices set by government (fuel, controlled grocery items) and exchange rates are deliberately never forecast.
+- [Insights JSON](https://mygov.faizalmzain.com/insights.json): A short bilingual daily briefing. Every number in it is computed by the statistics layer and machine-checked against the source data before publication; the language model only phrases them.
 - [Site feed](https://mygov.faizalmzain.com/feed.xml): RSS feed of the latest data updates.
 
 All data is from the Malaysian Government Open Data portal (api.data.gov.my) unless otherwise noted on the page.
