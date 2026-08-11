@@ -1076,7 +1076,7 @@ html[data-text="large"] table{font-size:14px}
           <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. On a day with no quakes in the last 24 hours the tile instead shows the last 7 days' nearby events as a carousel, so the section still has content without pretending anything is live. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
+            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. On a day with no quakes in the last 24 hours the tile instead shows the last 30 days' nearby events as a carousel, so the section still has content without pretending anything is live. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
             <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
           </details>
         </div>
@@ -1359,7 +1359,7 @@ const FRESH_YEARS = 2;   // datasets whose last update is older than this are hi
    24 h - a replayed v9 payload carries history under a "last 24 hours" head.
    v11: transport gains rid/holidays (KTMB ridership moved in from Vehicles);
    a v10 transport payload has no rid and the card silently does not render.
-   v12: weather gains eqRecent (7-day near quakes for the quiet-day carousel);
+   v12: weather gains eqRecent (30-day near quakes for the quiet-day carousel);
    a v11 payload has no eqRecent and renderHazards would throw on .length. */
 const CK = "mygov.cache.v12.";
 const LK = "mygov.location.v1";
@@ -1737,7 +1737,7 @@ const I18N = {
   "School on break":"Cuti sekolah", "School in session":"Sekolah bersekolah",
   "extreme peak":"puncak melampau", "peak":"puncak", "quiet":"tenang",
   "now":"kini",
-  "no quakes in 24h · N in the last 7 days":"tiada gempa dalam 24 jam · N dalam 7 hari lepas",
+  "no quakes in 24h · N in the last 30 days":"tiada gempa dalam 24 jam · N dalam 30 hari lepas",
   "Previous earthquakes":"Gempa bumi sebelumnya", "Next earthquakes":"Gempa bumi seterusnya",
   "Peak travel period right now":"Tempoh puncak perjalanan sekarang",
   "plan around the crowds":"rancang perjalanan elak orang ramai",
@@ -2247,7 +2247,7 @@ async function loadHazards(){
     return m ? Number(m[1].replace(/,/g, "")) : null;
   };
   const nowMs = Date.now();
-  const EQ_RECENT_MS = 7 * 24 * 3600 * 1000;   // the "recent activity" window
+  const EQ_RECENT_MS = 30 * 24 * 3600 * 1000;  // the "recent activity" window
   /* Live view only - within 500 km AND within the last 24 h. Malaysia is
      seismically quiet, so this is empty on most days; that is the honest
      answer, not a gap. */
