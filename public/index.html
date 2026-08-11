@@ -368,6 +368,8 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .brief-h h3{margin:0;font-size:15px;font-weight:660;letter-spacing:-.02em}
 .brief p{margin:var(--s1) 0 0;font-size:13px;line-height:1.5;color:var(--fg-2)}
 #wx-prose{margin-top:var(--s1)}
+#wx-prose .brief-h{align-items:center;gap:var(--s2)}
+#wx-prose .sec-ico{width:34px;height:34px;border-radius:10px}
 /* Holiday + school chips: one slim row inside the Travel Outlook band. */
 .hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   margin:var(--s2) 0}
@@ -635,8 +637,12 @@ html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(18
 .wx-today b{font-weight:650;color:var(--fg)}
 .wx-now .dim{margin:var(--s1) 0 0}
 #wx-map{height:230px}
+.wx-hours-wrap{margin-top:var(--s2)}
+.wx-hours-h{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:650;
+  color:var(--fg-2);margin-bottom:6px}
+.wx-hours-h .ico{width:15px;height:15px;color:var(--fg-3)}
 .wx-hours{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
-  margin-top:var(--s2);padding-bottom:2px}
+  padding-bottom:2px}
 .wx-hours::-webkit-scrollbar{display:none}
 .wx-h{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;
   font-family:var(--mono);padding:4px 9px;border-radius:999px;
@@ -995,6 +1001,7 @@ html[data-text="large"] table{font-size:14px}
            location and hourly data exist. -->
       <section class="brief" id="wx-prose" aria-labelledby="wx-prose-h" hidden>
         <div class="brief-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg></div>
           <h3 id="wx-prose-h" data-i18n="Next few hours">Next few hours</h3>
           <span class="brief-note" id="wx-prose-note"></span>
         </div>
@@ -3963,7 +3970,11 @@ function wxHoursHTML(om){
       <b>${wxHourLab(h.time[i0 + i])}</b> ${c.icon} ${nf(h.temperature_2m[i0 + i], 0)}°
       ${pr >= 30 ? `<i>${pr}%</i>` : ""}</span>`);
   }
-  return `<div class="wx-hours" role="list" aria-label="${T("Next 12 hours")}">${chips.join("")}</div>`;
+  return `<div class="wx-hours-wrap">
+    <div class="wx-hours-h"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-temp"/></svg>
+      ${T("Next 12 hours")}</div>
+    <div class="wx-hours" role="list" aria-label="${T("Next 12 hours")}">${chips.join("")}</div>
+  </div>`;
 }
 function initWxMap(coords, live, loc){
   const el = $("#wx-map");
