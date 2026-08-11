@@ -39,6 +39,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
+| Travel Outlook (sub-block of Public Transport) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and bilingual one-liners, plus tips to travel around them |
 
 ---
 
@@ -94,6 +95,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Insights | `collect_insights.yml`, daily 01:30 UTC | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
 | Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers **and top EV makers** (current + previous year) |
 | Tourism | `collect_tourism.yml`, monthly 2nd 02:30 UTC | `public/tourism.json` | Tourism Malaysia visitor-arrivals PDF - top-51 table with month, y/y vs 2025 and 2019, YTD (May 2026 seeded) |
+| Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and bilingual one-liners (Gemini, deterministic fallback) |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that

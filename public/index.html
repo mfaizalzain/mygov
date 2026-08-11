@@ -382,6 +382,59 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 /* Holiday + school chips: one slim row under the hero location bar. */
 .hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   margin:var(--s2) 0 0}
+/* Travel Outlook card: a timeline of peak travel periods. Impact badges
+   are traffic-light colour-coded; the dates column is fixed-width mono so
+   rows line up. The bilingual note sits under the driver line. */
+.t-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.t-row{display:flex;gap:var(--s3);padding:var(--s3) 0;
+  border-bottom:1px solid var(--line-soft)}
+.t-row:last-child{border-bottom:none;padding-bottom:0}
+.t-row:first-child{padding-top:0}
+.t-dates{flex:0 0 118px;font-family:var(--mono);font-size:11.5px;
+  color:var(--fg-3);padding-top:2px;line-height:1.5}
+.t-mid{flex:1;min-width:0}
+.t-driver{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
+  font-size:13.5px;margin-bottom:3px}
+.t-driver b{font-weight:700}
+.t-imp{font-family:var(--mono);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;
+  border-radius:999px;border:1px solid var(--line-soft)}
+.t-imp.t-extreme{color:#f87171;border-color:rgba(248,113,113,.4);
+  background:rgba(248,113,113,.08)}
+.t-imp.t-high{color:#fbbf24;border-color:rgba(251,191,36,.4);
+  background:rgba(251,191,36,.08)}
+.t-imp.t-moderate{color:#34d399;border-color:rgba(52,211,153,.35);
+  background:rgba(52,211,153,.07)}
+.t-note{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:2px}
+.t-note.bm{color:var(--fg-3);font-size:12px}
+/* A period covering today: amber highlight + a NOW marker in the dates
+   column; the band above the list shouts the live peak once. */
+.t-row.t-cur{background:rgba(251,191,36,.05);
+  border:1px solid rgba(251,191,36,.25);border-radius:var(--r);
+  padding:var(--s3) var(--s3)}
+.t-now{font-family:var(--mono);font-size:9.5px;font-weight:700;
+  color:#111;background:#fbbf24;padding:1px 6px;border-radius:999px;
+  margin-right:4px;letter-spacing:.05em}
+.t-curband{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
+  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);
+  border-radius:var(--r);padding:var(--s3) var(--s4);margin-bottom:var(--s3);
+  font-size:13px}
+.t-curband b{display:inline-flex;align-items:center;gap:6px;color:#fbbf24}
+.t-curband span{color:var(--fg-2)}
+.t-curband .ico{width:15px;height:15px}
+.t-tips{margin-top:var(--s3);border:1px solid var(--line-soft);
+  border-radius:var(--r);background:var(--bg-2)}
+.t-tips summary{cursor:pointer;font-size:12.5px;font-weight:650;
+  padding:var(--s3) var(--s4);display:flex;align-items:center;gap:6px;
+  color:var(--fg-1)}
+.t-tips ul{margin:0;padding:0 var(--s4) var(--s3) var(--s4);list-style:disc;
+  padding-left:calc(var(--s4) + 16px)}
+.t-tips li{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:6px}
+.t-tips li .bm{color:var(--fg-3);font-size:12px}
+@media (max-width:620px){
+  .t-row{flex-direction:column;gap:var(--s2)}
+  .t-dates{flex:none}
+}
 .hol-chip{display:inline-flex;align-items:center;gap:6px;
   font-family:var(--mono);font-size:11.5px;line-height:1;
   padding:5px 10px;border-radius:999px;border:1px solid var(--line-soft);
@@ -1196,6 +1249,21 @@ html[data-text="large"] table{font-size:14px}
           <span class="sec-time" id="time-live"></span>
         </div>
         <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      </div>      <!-- Travel Outlook: a merged sub-block of its parent section. -->
+      <div class="sec-sub" id="travel-sub" aria-labelledby="h-travel">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
+          <div><h3 id="h-travel" style="font-size:17px" data-i18n="Travel Outlook">Travel Outlook</h3>
+            <p data-i18n="The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.">The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.">Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.</p>
+              <ul><li><code>GET mycal-api.huijun00100101.workers.dev/v1/holidays</code></li><li><code>GET mycal-api.huijun00100101.workers.dev/v1/school/holidays</code></li><li><code>GET travel.json (KV)</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-travel"></span>
+        </div>
+        <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       </div>
     </section>
     <!-- Static fallback: rendered before the app script runs, and visible to
@@ -1657,6 +1725,12 @@ const I18N = {
      because the key itself carried no unit for T() to fall back on. */
   "in N days":"dalam N hari", "tomorrow":"esok",
   "School on break":"Cuti sekolah", "School in session":"Sekolah bersekolah",
+  "extreme peak":"puncak melampau", "peak":"puncak", "quiet":"tenang",
+  "now":"kini",
+  "Peak travel period right now":"Tempoh puncak perjalanan sekarang",
+  "plan around the crowds":"rancang perjalanan elak orang ramai",
+  "Tips to travel around the peak":"Tips mengelak puncak perjalanan",
+  "No upcoming peak periods in the next 8 weeks.":"Tiada tempoh puncak dalam 8 minggu akan datang.",
   "Affluent vs poorest districts":"Daerah paling makmur vs termiskin",
   "median household income":"pendapatan isi rumah median",
   "Most affluent":"Paling makmur", "Poorest":"Termiskin",
@@ -5462,6 +5536,69 @@ function renderTourism(d){
   animateCounters($("#body-tourism"));
 }
 
+/* ════════════════════════════ travel outlook (Gemini peak-period advice) ════════════════════════════
+   travel.json (tools/collect_travel.py, weekly via KV) carries the next 8
+   weeks of peak travel periods - derived from the official holiday + KPM
+   school calendars, with bilingual one-liners written by Gemini (or a
+   deterministic fallback). Every date in it comes from the calendar; the
+   model never invents one. */
+async function loadTravel(){
+  const r = await fetch("travel.json", { cache:"no-store" });
+  if (!r.ok) throw new Error("travel " + r.status);
+  const d = await r.json();
+  /* Freshness gate: the outlook is regenerated weekly; a month-old outlook
+     is worse than none (the window has moved on). */
+  const fresh = d.generated && (Date.now() - Date.parse(d.generated)) < 14 * DAY_MS;
+  if (!fresh) throw new Error("travel stale");
+  return d;
+}
+function travelImpact(p){
+  const cls = p.impact === "extreme" ? " t-extreme"
+    : p.impact === "high" ? " t-high" : " t-moderate";
+  const lab = p.impact === "extreme" ? T("extreme peak")
+    : p.impact === "high" ? T("peak") : T("quiet");
+  return `<span class="t-imp${cls}">${esc(lab)}</span>`;
+}
+function renderTravel(d){
+  /* Only upcoming periods belong on the page; a stale cached copy could
+     carry last week's window, and past peaks are not advice. A period
+     whose range covers today is a CURRENT peak - the collector clamps
+     ongoing school breaks to start today, so start <= today <= end
+     reliably identifies a live one. */
+  const today = isoOf(Math.floor(Date.now() / DAY_MS));
+  const periods = (d.periods || []).filter(p => p && p.end >= today).slice(0, 5);
+  const tips = (d.tips || []).slice(0, 4);
+  const cur = periods.filter(p => p.start <= today);
+  const rows = periods.map(p => {
+    const live = p.start <= today;
+    return `<li class="t-row${live ? " t-cur" : ""}">
+      <div class="t-dates">${live ? `<span class="t-now">${T("now")}</span> ` : ""}${esc(md(p.start))}${p.end !== p.start ? ` - ${esc(md(p.end))}` : ""}</div>
+      <div class="t-mid">
+        <div class="t-driver">${travelImpact(p)} <b>${esc(p.driver)}</b></div>
+        <div class="t-note">${esc(p.t_en)}</div>
+        <div class="t-note bm">${esc(p.t_ms)}</div>
+      </div>
+    </li>`;
+  }).join("");
+  const curBand = cur.length ? `<div class="t-curband">
+    <b>${ico("warn")} ${T("Peak travel period right now")}</b>
+    <span>${cur.map(c => esc(c.driver)).join(" · ")} - ${T("plan around the crowds")}</span>
+  </div>` : "";
+  const tipList = tips.length ? `<details class="t-tips">
+    <summary>${ico("live")} ${T("Tips to travel around the peak")}</summary>
+    <ul>${tips.map(t => `<li>${esc(t.t_en)}<br><span class="bm">${esc(t.t_ms)}</span></li>`).join("")}</ul>
+  </details>` : "";
+  $("#body-travel").innerHTML = periods.length ? `
+    <div class="card mb">
+      <div class="card-b">
+        ${curBand}
+        <ul class="t-list">${rows}</ul>
+        ${tipList}
+      </div>
+    </div>` : `<div class="card"><div class="card-b"><p class="dim">${T("No upcoming peak periods in the next 8 weeks.")}</p></div></div>`;
+  animateCounters($("#body-travel"));
+}
+
 /* ════════════════════════════ places view (DOSM sub-national) ════════════════════════════
    geo.json is the weekly collector's output (tools/collect_geo.py): state
    trends and composition, districts, and parliament/DUN seats with per-seat
@@ -7407,6 +7544,10 @@ const META = {
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
     how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)"] },
+  travel:{ title:"Travel Outlook",
+    desc:"The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.",
+    how:"Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.",
+    eps:["mycal-api.huijun00100101.workers.dev/v1/holidays","mycal-api.huijun00100101.workers.dev/v1/school/holidays","travel.json (KV)"] },
 };
 const LOADERS = {
   hazards:  { load:loadHazards,  render:renderHazards,  after:d => {
@@ -7500,7 +7641,11 @@ const LOADERS = {
          KTMB ridership and live KTMB trains were three separate nav entries
          for one operator. Same pattern as Groceries under Household. */
       if (!loaded.has("live")) loadSection("live", false);
+      /* Travel Outlook rides along too - peak travel periods are about
+         getting around, and the calendar behind it is already mirrored. */
+      if (!loaded.has("travel")) loadSection("travel", false);
     } },
+  travel:   { load:loadTravel,    render:renderTravel,    asOf:d => d.generated },
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
       kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },

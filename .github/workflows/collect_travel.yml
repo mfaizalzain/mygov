@@ -1,0 +1,42 @@
+name: Update Travel Outlook (Gemini peak-period advice)
+
+on:
+  # Weekly - the holiday/school calendar moves slowly, so a daily run would
+  # burn Gemini quota for the same answer.
+  schedule:
+    - cron: '30 1 * * 1'   # Monday 01:30 UTC (09:30 MYT) - before the week
+  # Manual trigger so a delayed/skipped cron can be caught up instantly
+  workflow_dispatch:
+
+jobs:
+  collect-travel:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        run: pip install pytest
+
+      - name: Syntax check + unit tests
+        run: |
+          python3 -m py_compile tools/collect_travel.py
+          python3 -m pytest tests/test_collect_travel.py -q
+
+      - name: Run collector
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: python3 tools/collect_travel.py
+
+      - name: Upload travel.json to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push travel
