@@ -443,15 +443,25 @@ export default {
       if (!/^[a-zA-Z0-9-]{1,16}$/.test(terminal)) return json({ error: "bad_terminal" }, 400);
       if (!/^[0-9]$/.test(dayKey)) return json({ error: "bad_dayKey" }, 400);
 
-      const upstream = new URL(
-        "https://api.myairports.com.my/passenger-fids/api/flights/search-flights");
-      upstream.searchParams.set("code", code);
-      upstream.searchParams.set("key", "all");
-      upstream.searchParams.set("terminal", terminal);
-      upstream.searchParams.set("dayKey", dayKey);
-      upstream.searchParams.set("live", "true");
-      upstream.searchParams.set("skip", "0");
-      upstream.searchParams.set("take", "200");
+      /* The upstream pages its results and returns them in schedule order, so
+       * a single take=200 did not just "miss some" - on the busy terminals it
+       * always dropped the END of the day. KLIA arrivals run to ~291 flights,
+       * so the board stopped at roughly 17:45 and read as though it had frozen
+       * mid-afternoon. Page until we have the count the upstream reports. */
+      const PAGE = 200, MAX_PAGES = 6;
+      const fidsUrl = skip => {
+        const u = new URL(
+          "https://api.myairports.com.my/passenger-fids/api/flights/search-flights");
+        u.searchParams.set("code", code);
+        u.searchParams.set("key", "all");
+        u.searchParams.set("terminal", terminal);
+        u.searchParams.set("dayKey", dayKey);
+        u.searchParams.set("live", "true");
+        u.searchParams.set("skip", String(skip));
+        u.searchParams.set("take", String(PAGE));
+        return u;
+      };
+      const upstream = fidsUrl(0);
 
       const cacheKey = new Request(
         `${url.origin}/api/fids?code=${code}&terminal=${terminal}&dayKey=${dayKey}`);
@@ -478,10 +488,29 @@ export default {
       try { data = await res.json(); }
       catch { return json({ error: "bad_upstream_payload" }, 502); }
 
+      /* Page 1 tells us the real total; fetch the rest in parallel. A failed
+       * page is skipped rather than failing the board - a partial board beats
+       * no board, and `truncated` says which one the client got. */
+      const statuses = (data.flightStatuses || []).slice();
+      const total = Number(data.count) || statuses.length;
+      if (statuses.length && total > statuses.length) {
+        const pages = Math.min(Math.ceil(total / PAGE), MAX_PAGES);
+        const rest = await Promise.all(
+          Array.from({ length: pages - 1 }, (_, i) =>
+            fetch(fidsUrl((i + 1) * PAGE), {
+              headers: { "x-api-key": env.FIDS_API_KEY, accept: "application/json" },
+              cf: { cacheTtl: 90, cacheEverything: true },
+            })
+              .then(p => (p.ok ? p.json() : null))
+              .catch(() => null)));
+        for (const p of rest)
+          if (p && Array.isArray(p.flightStatuses)) statuses.push(...p.flightStatuses);
+      }
+
       // Slim the payload: the dashboard renders a board, not codeshares and
       // baggage belt metadata. Keeping only the columns the UI needs trims a
       // ~1.5 MB response to a few KB and makes the client simpler.
-      const slim = (data.flightStatuses || []).map(f => ({
+      const slim = statuses.map(f => ({
         flightNumber: f.flightNumber,
         airline: (f.airline && f.airline.name) || f.name || "",
         aircraftOperator: f.aircraftOperator,
@@ -496,7 +525,9 @@ export default {
         codeshares: (f.codeShareFlights || []).map(c => c.flightNumber),
       }));
       const out = json({
-        count: data.count,
+        count: total,
+        returned: slim.length,
+        truncated: slim.length < total,
         flights: slim,
       }, 200, { "cache-control": "public, max-age=90" });
       ctx.waitUntil(cache.put(cacheKey, out.clone()));

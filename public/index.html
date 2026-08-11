@@ -1254,7 +1254,7 @@ const WINDOW = 60000;
 const FRESH_YEARS = 2;   // datasets whose last update is older than this are hidden
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
-const CK = "mygov.cache.v8.";
+const CK = "mygov.cache.v9.";   // v9: weather.eq gains km + eqLive/eqRadius
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -1394,6 +1394,14 @@ const I18N = {
   "Search a district, town or state…":"Cari daerah, bandar atau negeri…",
   "View data table":"Lihat jadual data", "Recent earthquakes":"Gempa bumi terkini",
   "No earthquake records.":"Tiada rekod gempa bumi.", "events":"peristiwa",
+  /* MET's feed is global; the section shows only what is near Malaysia. */
+  "Earthquakes near Malaysia":"Gempa bumi berhampiran Malaysia",
+  "within Nkm":"dalam lingkungan Nkm", "last 24 hours":"24 jam lepas",
+  "no activity in the last 24 hours - showing the most recent":
+    "tiada aktiviti dalam 24 jam lepas - memaparkan yang terkini",
+  "From Malaysia":"Dari Malaysia",
+  "No recorded earthquakes within Nkm of Malaysia.":
+    "Tiada rekod gempa bumi dalam lingkungan Nkm dari Malaysia.",
   "All Malaysia":"Seluruh Malaysia", "My area":"Kawasan saya", "Marine":"Marin",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
@@ -1498,6 +1506,9 @@ const I18N = {
  "growth is vs the same month in the year shown":"pertumbuhan adalah berbanding bulan yang sama pada tahun ditunjukkan",
  "Flight":"Penerbangan", "From":"Dari", "To":"Ke", "Scheduled":"Dijadualkan", "Status":"Status", "Gate":"Gerbang",
   "Loading flights…":"Memuatkan penerbangan…", "No flights match ":"Tiada penerbangan sepadan ",
+  "No more flights scheduled today.":"Tiada lagi penerbangan dijadualkan hari ini.",
+  "upcoming":"akan datang", "Cancelled":"Dibatalkan",
+  "Check-in open":"Daftar masuk dibuka", "First bag":"Beg pertama",
   "All stops - both networks":"Semua perhentian - kedua-dua rangkaian",
   "type to filter or use “Find stops near me”":"taip untuk menapis atau guna “Cari perhentian berdekatan saya”",
   "Search both networks' stops above, or use “Find stops near me” to rank by distance.":"Cari perhentian kedua-dua rangkaian di atas, atau guna “Cari perhentian berdekatan saya” untuk menyusun mengikut jarak.",
@@ -2081,11 +2092,33 @@ async function loadWeather(){
                 key(r.morning_forecast), key(r.afternoon_forecast),
                 key(r.night_forecast), key(r.summary_forecast) ]);
   }
-  const eq = (quakes || []).filter(q => q.visible !== false)
-    .sort((a,b) => String(b.localdatetime).localeCompare(String(a.localdatetime)))
-    .slice(0, 40)
-    .map(q => ({ t:q.localdatetime, lat:q.lat, lon:q.lon, dep:q.depth,
-                 loc:q.location_original || q.location, mag:q.magdefault, near:q.n_distancemas }));
+  /* MET's earthquake feed is a global list - 800 events, most of them nowhere
+     near Malaysia (Aleutians, Chile, Kamchatka). `n_distancemas` is the
+     distance to the nearest point in Malaysia ("613km SE Semporna,Sabah"),
+     which is the same field /api/alerts filters on, so the section and the
+     alerts band use one rule and can never disagree. */
+  const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 24 * 3600 * 1000;
+  const eqKm = q => {
+    const m = String(q.n_distancemas || "").match(/([\d,]+)\s*km/i);
+    return m ? Number(m[1].replace(/,/g, "")) : null;
+  };
+  const nowMs = Date.now();
+  const nearby = (quakes || []).filter(q => q.visible !== false)
+    .map(q => ({ q, km: eqKm(q),
+                 ts: Date.parse(String(q.utcdatetime || "").replace(" ", "T") + "Z") }))
+    .filter(x => x.km != null && x.km <= EQ_RADIUS_KM)
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  const shape = x => ({ t:x.q.localdatetime, lat:x.q.lat, lon:x.q.lon, dep:x.q.depth,
+    loc:x.q.location_original || x.q.location, mag:x.q.magdefault,
+    near:x.q.n_distancemas, km:x.km, ts:x.ts });
+  const fresh = nearby.filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS);
+  /* Malaysia is seismically quiet: of 800 feed events only ~47 fall inside
+     500 km, and they arrive months apart - a strict 24 h view is an empty
+     table almost every day. Show the last 24 h when there is something, and
+     otherwise fall back to the recent nearby history so the card still says
+     something true. `eqLive` tells the renderer which of the two it got. */
+  const eqLive = fresh.length > 0;
+  const eq = (eqLive ? fresh : nearby.slice(0, 20)).map(shape);
 
   const now = Date.now();
   const warn = (warnings || []).filter(w => {
@@ -2104,7 +2137,7 @@ async function loadWeather(){
              dated: real(w.valid_from) && real(w.valid_to) };
   }).sort((a,b) => Number(a.info) - Number(b.info));
 
-  return { locs, rows, dict, warn, eq };
+  return { locs, rows, dict, warn, eq, eqLive, eqRadius:EQ_RADIUS_KM };
 }
 
 async function loadFuel(){
@@ -3164,21 +3197,27 @@ function renderWeather(d){
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><h4>${T("Recent earthquakes")}</h4>
-        <span class="sub">${d.eq.length} ${T("events")} · MET Malaysia</span></div>
+      <div class="card-h"><h4>${T("Earthquakes near Malaysia")}</h4>
+        <span class="sub">${T("within Nkm").replace("N", nf(d.eqRadius))} · ${d.eqLive
+          ? T("last 24 hours") : T("no activity in the last 24 hours - showing the most recent")
+          }${d.eqLive ? " · " + d.eq.length + " " + T("events") : ""} · MET Malaysia</span></div>
       <div class="tw scroll-y"><table>
         <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
-          <th class="num">${T("Depth")}</th><th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
+          <th class="num">${T("Depth")}</th><th class="num">${T("From Malaysia")}</th>
+          <th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
         <tbody>${d.eq.map(q => { const m = Number(q.mag) || 0;
           const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
           return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
             <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
             <td>${txt(q.loc || "-")}</td><td class="num dim">${nf(q.dep,0)} km</td>
+            <td class="num">${q.km == null ? "-" : nf(q.km) + " km"}</td>
             <td class="dim">${txt(q.near || "-")}</td>
             <td><a class="maplink" target="_blank" rel="noopener"
               href="https://www.google.com/maps?q=${q.lat},${q.lon}"
               aria-label="Open earthquake location in Google Maps">map ↗</a></td></tr>`;
-        }).join("") || `<tr><td colspan="6" class="state">${T("No earthquake records.")}</td></tr>`}
+        }).join("") || `<tr><td colspan="7" class="state">${
+          T("No recorded earthquakes within Nkm of Malaysia.").replace("N", nf(d.eqRadius))
+        }</td></tr>`}
       </tbody></table></div>
     </div>`;
 
@@ -5977,7 +6016,10 @@ const F_AIRPORTS = [
 ];
 /* status code → [tone class, label]; unknown codes fall back to the raw text */
 const F_STATUS = {
-  FDP:["ok","Departed"], FCL:["warn","Final call"], CLB:["ok","Last bag"],
+  /* FCL arrives from the FIDS as CANCELLED, not "final call" - the label was
+     telling people to run for a gate for a flight that is not going. */
+  FDP:["ok","Departed"], FCL:["err","Cancelled"], CLB:["ok","Last bag"],
+  COP:["ok","Check-in open"], CFB:["ok","First bag"],
   BDA:["warn","Boarding"], LDG:["warn","Landing"], ARV:["ok","Arrived"],
   DLY:["err","Delayed"], FDL:["err","Delayed"], CNL:["err","Cancelled"],
   SCH:["","On schedule"],
@@ -6007,7 +6049,20 @@ function paintFlights(){
   const d = fids.data;
   if (!d){ host.innerHTML = `<div class="state">${T("Loading flights…")}</div>`; return; }
   const q = fids.q.trim().toLowerCase();
-  const rows = (d.flights || []).filter(f =>
+  /* A board is only useful from now on. The feed covers the whole day from
+     ~00:05 and is returned in schedule order, so rendering the first N rows
+     showed the small hours all day and looked like it had stopped updating.
+     Scheduled times are Malaysian wall-clock ("2026-08-11 17:45:00"), so build
+     the same shape for "now in MYT" and compare as strings - that stays correct
+     for a visitor in any timezone. GRACE keeps a just-departed flight on the
+     board briefly instead of having rows blink out mid-read. */
+  const GRACE_MIN = 15;
+  const cutoff = new Date(Date.now() + (8 * 60 - GRACE_MIN) * 60000)
+    .toISOString().slice(0, 19).replace("T", " ");
+  const upcoming = (d.flights || [])
+    .filter(f => !f.scheduled || String(f.scheduled) >= cutoff)
+    .sort((a, b) => String(a.scheduled || "").localeCompare(String(b.scheduled || "")));
+  const rows = upcoming.filter(f =>
     !q || f.flightNumber.toLowerCase().includes(q) ||
     (f.origin || "").toLowerCase().includes(q) ||
     (f.destination || "").toLowerCase().includes(q) ||
@@ -6026,10 +6081,14 @@ function paintFlights(){
         <td><span class="fs-badge ${tone}">${esc(lab || "-")}</span></td>
         <td class="mono dim">${esc(f.gate || "-")}${f.belt ? ` · B${esc(f.belt)}` : ""}</td>
       </tr>`; }).join("")}
-      ${!rows.length ? `<tr><td colspan="5" class="state">${T("No flights match ")}“${esc(fids.q)}”.</td></tr>` : ""}
+      ${!rows.length ? `<tr><td colspan="5" class="state">${q
+        ? T("No flights match ") + `“${esc(fids.q)}”.`
+        : T("No more flights scheduled today.")}</td></tr>` : ""}
     </tbody></table>`;
   const cnt = $("#fids-count");
-  if (cnt) cnt.textContent = `${nf(Math.min(rows.length, 60))} / ${nf(d.flights ? d.flights.length : 0)}`;
+  /* "next 60 of 91 still to come" - the old label counted the whole day, which
+     no longer matches what the board shows. */
+  if (cnt) cnt.textContent = `${nf(Math.min(rows.length, 60))} / ${nf(rows.length)} ${T("upcoming")}`;
 }
 
 async function initFlights(){
