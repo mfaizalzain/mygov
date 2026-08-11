@@ -398,6 +398,13 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
   overflow:hidden;vertical-align:middle;margin-left:6px;
   background:var(--line-soft)}
 .ethseg{height:100%;display:block;min-width:0}
+/* A whole card collapsed behind its own header (the Places constituency
+   tables). Safari draws its native marker unless it is explicitly removed -
+   `list-style:none` alone leaves a triangle sitting next to our own hint. */
+.acc-sum{cursor:pointer;list-style:none}
+.acc-sum::-webkit-details-marker{display:none}
+.acc-hint::after{content:"\25BE  " attr(data-closed)}
+details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
 /* Affluent-vs-poorest comparison strip (Places view). */
 .cmp-row{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--s3);
   align-items:stretch}
@@ -1498,7 +1505,16 @@ const I18N = {
   "Prev":"Sebelum", "constituency":"kawasan pilihan raya",
   "no district breakdown":"tiada pecahan daerah",
   "federal territories by constituency":"wilayah persekutuan mengikut kawasan pilihan raya",
-  "Expand":"Kembangkan", "seats":"kerusi",
+  "Expand":"Kembangkan", "Collapse":"Kuncupkan", "seats":"kerusi",
+  "socio":"sosioekonomi", "citizens":"warganegara",
+  "Districts":"Daerah", "state seats":"kerusi negeri",
+  "YoY":"T/T", "poverty":"kemiskinan", "vs 2019":"berbanding 2019",
+  "All":"Semua", "countries":"negara",
+  /* ── car sales (JPJ registrations) ── */
+  "Car sales":"Jualan kereta", "new cars by maker":"kereta baharu mengikut pengeluar",
+  "YTD registrations":"Pendaftaran setakat tahun ini", "new cars":"kereta baharu",
+  "Top maker":"Pengeluar teratas", "registered":"didaftarkan",
+  "Top source countries by arrivals":"Negara sumber teratas mengikut ketibaan",
   "Avg trips / route":"Purata perjalanan / laluan", "routes":"laluan", "Stops":"Perhentian",
   "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
@@ -1585,7 +1601,11 @@ const I18N = {
   "public holidays marked":"cuti umum ditanda",
   "forecast":"unjuran", "forecast · 80% band":"unjuran · jalur 80%",
   "Today in brief":"Ringkasan hari ini",
-  "Today":"Hari ini", "Next":"Seterusnya", "in Nd":"dalam Nd hari",
+  "Today":"Hari ini", "Next":"Seterusnya",
+  /* "in N days" is the English source string, so the fallback path reads
+     correctly too - the old "in Nd" key rendered as a bare "in 20" in English
+     because the key itself carried no unit for T() to fall back on. */
+  "in N days":"dalam N hari", "tomorrow":"esok",
   "School on break":"Cuti sekolah", "School in session":"Sekolah bersekolah",
   "Affluent vs poorest districts":"Daerah paling makmur vs termiskin",
   "median household income":"pendapatan isi rumah median",
@@ -1679,6 +1699,10 @@ function rerenderAll(){
   /* The briefing ships both languages in one payload, so a language switch is
      a re-render, not a re-fetch. */
   renderBrief();
+  /* The holiday/school chips are drawn straight from slowData rather than from
+     a registered section, so the loop above never reached them and their
+     "Next"/"in N days" wording stayed in the previous language. */
+  if (slowData) try { renderHolWidget(); } catch {}
 }
 
 /** An <svg> referencing a sprite symbol. Decorative by default - every call
@@ -2452,9 +2476,17 @@ function renderHolWidget(){
     tEl.innerHTML = `🗓 <b>${T("Today")}:</b> ${esc(on[1])}`;
   } else tEl.hidden = true;
   if (next){
-    const days = Math.round((Date.parse(next[0]) - today.getTime()) / DAY_MS);
+    /* Date.parse("2026-08-31") is UTC midnight but today.getTime() is local
+       now, so the difference was a fraction of a day out - a holiday tomorrow
+       evening rounded to "in 0 days". Count whole calendar days instead. */
+    const [hy, hm, hd] = String(next[0]).split("-").map(Number);
+    const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const days = Math.round(
+      (new Date(hy, (hm || 1) - 1, hd || 1).getTime() - midnight.getTime()) / DAY_MS);
+    const when = days <= 1 ? T("tomorrow")
+      : T("in N days").replace("N", nf(days));
     nEl.hidden = false;
-    nEl.innerHTML = `🗓 ${T("Next")}: <b>${esc(next[1])}</b> · ${T("in Nd").replace("Nd", nf(days))}`;
+    nEl.innerHTML = `🗓 ${T("Next")}: <b>${esc(next[1])}</b> · ${esc(when)}`;
   } else nEl.hidden = true;
   /* School break? Group A = Kedah/Kelantan/Terengganu (Fri-Sat weekend),
      B = everywhere else. Match the visitor's state when known. */
@@ -2745,7 +2777,30 @@ function baseOpts(extra){
           ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8 } },
     },
   };
-  return Object.assign(o, extra || {});
+  const out = Object.assign({}, o, extra || {});
+  /* The assign above is shallow, so a caller that names `plugins` or `scales`
+     replaces the whole branch - and with it the design-system colours it never
+     meant to touch. Chart.js then falls back to its own #666, which is 3.4:1 on
+     the dark page. Structural choices (grid, border, stacked, min/max) stay
+     entirely the caller's; only the theme tokens are put back when missing. */
+  if (out.plugins !== o.plugins){
+    /* Callers that name `tooltip` almost always want to add a `callbacks`
+       formatter, not to opt out of the tooltip's colours - so fill in each
+       missing theme key rather than only replacing an absent tooltip. */
+    out.plugins.tooltip = out.plugins.tooltip
+      ? Object.assign({}, o.plugins.tooltip, out.plugins.tooltip)
+      : o.plugins.tooltip;
+    if (!out.plugins.legend) out.plugins.legend = o.plugins.legend;
+  }
+  if (out.scales !== o.scales){
+    for (const ax of Object.values(out.scales)){
+      if (!ax || typeof ax !== "object") continue;
+      if (!ax.ticks) ax.ticks = {};
+      if (ax.ticks.color == null) ax.ticks.color = cssVar("--fg-3");
+      if (ax.ticks.font == null) ax.ticks.font = { size:10 };
+    }
+  }
+  return out;
 }
 
 /* ════════════════════════════ shell ════════════════════════════ */
@@ -4635,42 +4690,38 @@ function renderMobility(d){
 function paintCars(d){
   const cy = d.cars && carsYear ? d.cars.series[carsYear] : null;
   if (!cy) return;
+  /* Canvas text is not HTML - esc() here would draw a literal "&amp;". */
   chart("cars-makers", {
     type:"bar",
-    data:{ labels: cy.topMakers.map(m => esc(m.name)),
+    data:{ labels: cy.topMakers.map(m => m.name),
       datasets:[{ data: cy.topMakers.map(m => m.n), backgroundColor:"#34d399",
         borderRadius:4 }] },
-    options:{ indexAxis:"y", plugins:{ legend:{ display:false } },
-      scales:{ x:{ ticks:{ callback:v => nf(v) }, grid:{ color:"rgba(128,128,128,.12)" } },
-               y:{ ticks:{ font:{ size:11 } }, grid:{ display:false } } },
-      maintainAspectRatio:false } });
+    options: baseOpts({ indexAxis:"y", plugins:{ legend:{ display:false } },
+      scales:{ x:{ ticks:{ callback:v => nf(v) }, grid:{ color:cssVar("--grid") } },
+               y:{ ticks:{ font:{ size:11 } }, grid:{ display:false } } } }) });
   chart("cars-evmakers", {
     type:"bar",
-    data:{ labels: (cy.evMakers || []).map(m => esc(m.name)),
+    data:{ labels: (cy.evMakers || []).map(m => m.name),
       datasets:[{ data: (cy.evMakers || []).map(m => m.n), backgroundColor:"#60a5fa",
         borderRadius:4 }] },
-    options:{ indexAxis:"y", plugins:{ legend:{ display:false } },
-      scales:{ x:{ ticks:{ callback:v => nf(v) }, grid:{ color:"rgba(128,128,128,.12)" } },
-               y:{ ticks:{ font:{ size:11 } }, grid:{ display:false } } },
-      maintainAspectRatio:false } });
+    options: baseOpts({ indexAxis:"y", plugins:{ legend:{ display:false } },
+      scales:{ x:{ ticks:{ callback:v => nf(v) }, grid:{ color:cssVar("--grid") } },
+               y:{ ticks:{ font:{ size:11 } }, grid:{ display:false } } } }) });
   chart("cars-ev", {
     type:"line",
     data:{ labels: cy.months.map(m => md(m)),
       datasets:[{ data: cy.evShare, borderColor:"#34d399", backgroundColor:"rgba(52,211,153,.15)",
         fill:true, borderWidth:2, tension:.3, pointRadius:2.5 }] },
-    options:{ plugins:{ legend:{ display:false } },
+    options: baseOpts({ plugins:{ legend:{ display:false } },
       scales:{ y:{ title:{ display:true, text:"%", font:{ size:10 } },
-        ticks:{ callback:v => v + "%" }, grid:{ color:"rgba(128,128,128,.12)" } },
-        x:{ grid:{ display:false }, ticks:{ maxRotation:0, autoSkip:true } } },
-      maintainAspectRatio:false } });
-  /* Year chips switch the series; only the cars block re-renders. */
+        ticks:{ callback:v => v + "%" }, grid:{ color:cssVar("--grid") } },
+        x:{ grid:{ display:false }, ticks:{ maxRotation:0, autoSkip:true } } } }) });
+  /* Year chips switch the series. The block's KPIs ("YTD registrations", "Top
+     maker") and its "<year> new cars" caption are rendered by renderMobility,
+     so repainting only the canvases left them showing the previous year -
+     re-render the section the way the unit/range toggles above already do. */
   $("#body-mobility").querySelectorAll("[data-carsyear]").forEach(b => {
-    b.onclick = () => {
-      carsYear = b.dataset.carsyear;
-      $("#body-mobility").querySelectorAll("[data-carsyear]").forEach(o =>
-        o.setAttribute("aria-pressed", String(o.dataset.carsyear === carsYear)));
-      paintCars(d);
-    };
+    b.onclick = () => { carsYear = b.dataset.carsyear; renderMobility(d); };
   });
 }
 
@@ -4996,8 +5047,16 @@ function renderTourism(d){
   const t = d.totals || {};
   const isYTD = tourMode === "ytd";
 
+  /* Tourism Malaysia's table ends with an "Others" bucket - every nationality
+     outside the published 51. It carries a rank, so the monthly view (sorted by
+     that rank) keeps it last, but sorting by YTD arrivals floated it to #12,
+     between Chinese Taipei and Japan, presented as if it were a country. Hold
+     it out of the ranking and append it unranked. */
+  const raw = (d.visitor || []).slice();
+  const others = raw.find(r => /^others$/i.test(String(r.country || ""))) || null;
+  const allList = raw.filter(r => r !== others);
+
   /* Sort list: Monthly uses original PDF rank, YTD sorts by ytd26 descending */
-  const allList = (d.visitor || []).slice();
   if (isYTD) {
     allList.sort((a, b) => (b.ytd26 || 0) - (a.ytd26 || 0));
   } else {
@@ -5007,13 +5066,15 @@ function renderTourism(d){
   const top10 = allList.slice(0, 10);
   const rest = allList.slice(10);
   const top1 = allList[0];
+  const yearCol = isYTD ? "YTD " + (d.asOf ? d.asOf.year : "") : T("Arrivals");
+  const lastCol = isYTD ? "YTD " + (d.asOf ? d.asOf.year - 1 : "") : T("YTD");
 
   const mainVal = isYTD ? t.ytd26 : t.cur;
   const mainYoY = isYTD ? t.gy_yoy : t.g_yoy;
   const v2019 = isYTD ? t.gy_2019 : t.g_2019;
 
-  const rowHTML = (r, idx) => {
-    const rank = idx + 1;
+  const rowHTML = (r, idx, rankLabel) => {
+    const rank = rankLabel != null ? rankLabel : idx + 1;
     if (isYTD) {
       const yoy = r.gy_yoy;
       const v19 = r.gy_2019;
@@ -5078,21 +5139,22 @@ function renderTourism(d){
       <div class="card-b"><div class="tw"><table>
         <thead><tr>
           <th class="num">#</th><th>${T("Country")}</th>
-          <th class="num">${isYTD ? T("YTD " + (d.asOf ? d.asOf.year : "2026")) : T("Arrivals")}</th>
+          <th class="num">${esc(yearCol)}</th>
           <th class="num">${T("y/y")}</th>
           <th class="num">${T("vs 2019")}</th>
-          <th class="num">${isYTD ? T("YTD 2025") : T("YTD")}</th>
+          <th class="num">${esc(lastCol)}</th>
         </tr></thead><tbody>${top10.map((r, i) => rowHTML(r, i)).join("")}</tbody></table></div>
-        <details class="meta"><summary>${T("All 51 countries")}</summary>
+        <details class="meta"><summary>${T("All")} ${nf(allList.length)} ${T("countries")}</summary>
           <div class="tw"><table>
             <thead><tr>
               <th class="num">#</th><th>${T("Country")}</th>
-              <th class="num">${isYTD ? T("YTD " + (d.asOf ? d.asOf.year : "2026")) : T("Arrivals")}</th>
+              <th class="num">${esc(yearCol)}</th>
               <th class="num">${T("y/y")}</th>
               <th class="num">${T("vs 2019")}</th>
-              <th class="num">${isYTD ? T("YTD 2025") : T("YTD")}</th>
+              <th class="num">${esc(lastCol)}</th>
             </tr></thead><tbody>
             ${rest.map((r, i) => rowHTML(r, i + 10)).join("")}
+            ${others ? rowHTML(others, 0, "&ndash;") : ""}
             </tbody></table></div>
         </details></div></div>`;
 
@@ -5100,7 +5162,7 @@ function renderTourism(d){
   chart("tourism-chart", {
     type: "bar",
     data: {
-      labels: top10.map(r => esc(r.country)),
+      labels: top10.map(r => r.country),   // canvas text, not HTML - no esc()
       datasets: [{
         data: cData,
         backgroundColor: "#2dd4bf",
@@ -5209,11 +5271,22 @@ function renderPlaces(g){
   const top = Object.entries(eth).sort((a, b) => (b[1] || 0) - (a[1] || 0))[0];
   const dists = national ? g.district.list
     : g.district.list.filter(x => x.s === placesState);
-  const hasWP = g.district.list.some(x => x.s.startsWith("W.P."));
   const parl = national ? g.parlimen.list
     : g.parlimen.list.filter(x => x.s === placesState);
   const duns = national ? g.dun.list
     : g.dun.list.filter(x => x.s === placesState);
+  /* Federal territories have no districts, so placesDistRows swaps their one
+     territory row for that territory's parliament seats. Scope the note and the
+     counts to the current chip - testing the unfiltered list made the note true
+     for every state, and counting `dists` claimed 160 rows for a table that
+     paginates ~192. */
+  const wpDists = dists.filter(x => x.s.startsWith("W.P."));
+  const hasWP = wpDists.length > 0;
+  const wpSeats = wpDists.reduce((a, x) =>
+    a + g.parlimen.list.filter(y => y.s === x.s).length, 0);
+  /* Charts and their aria-labels are scoped to the chip; the national view has
+     no state name, and interpolating "" left a dangling separator. */
+  const scopeLab = national ? T("Malaysia") : placesState;
 
   /* Malaysia chip first; the state chips follow. */
   const chips = `<button class="chip" data-place="" aria-pressed="${national}">${esc(T("Malaysia"))}</button>` +
@@ -5235,14 +5308,14 @@ function renderPlaces(g){
         <div class="sub">${top && ethTot ? nf(top[1] / ethTot * 100, 1) + "%" : ""}</div></div>
       <div class="kpi"><div class="lab">${T("Constituencies")}</div>
         <div class="val" style="font-size:20px">${nf(parl.length + duns.length)}</div>
-        <div class="sub">${nf(parl.length)} ${T("parliament")} · ${nf(dists.length)} ${T("districts")}</div></div>
+        <div class="sub">${nf(parl.length)} ${T("parliament")} · ${nf(duns.length)} ${T("state seats")}</div></div>
     </div>
     <div class="grid g2 mb">
       <div class="card">
         <div class="card-h"><h4>${T("Population growth")}</h4>
-          <span class="sub">${esc(placesState)} · ${T("millions · annual")}</span></div>
+          <span class="sub">${esc(scopeLab)} · ${T("millions · annual")}</span></div>
         <div class="card-b"><div class="chart"><canvas id="places-trend" role="img"
-          aria-label="${esc(placesState)} ${T("population since 1970")}"></canvas></div>
+          aria-label="${esc(scopeLab)} ${T("population since 1970")}"></canvas></div>
           <details class="dt"><summary>${T("View data table")}</summary>
             <div class="dt-body" id="places-trend-dt"></div></details></div>
       </div>
@@ -5250,23 +5323,23 @@ function renderPlaces(g){
         <div class="card-h"><h4>${T("Composition")}</h4>
           <span class="sub">${yr}</span></div>
         <div class="card-b"><div class="chart" style="height:170px"><canvas id="places-eth" role="img"
-          aria-label="${esc(placesState)} ${T("population by ethnic group")}"></canvas></div>
+          aria-label="${esc(scopeLab)} ${T("population by ethnic group")}"></canvas></div>
           <div class="chart" style="height:132px;margin-top:var(--s3)"><canvas id="places-age" role="img"
-            aria-label="${esc(placesState)} ${T("population by age band")}"></canvas></div>
+            aria-label="${esc(scopeLab)} ${T("population by age band")}"></canvas></div>
           <details class="dt"><summary>${T("View data table")}</summary>
             <div class="dt-body" id="places-eth-dt"></div></details></div>
       </div>
     </div>
     <div class="card mb">
       <div class="card-h"><h4>${T("Affluent vs poorest districts")}</h4>
-        <span class="sub">${T("median household income")} · ${yr}</span></div>
+        <span class="sub">${T("median household income")} · ${g.district.year}</span></div>
       <div class="card-b">
         ${placesCompare(dists)}
       </div>
     </div>
     <div class="card mb">
       <div class="card-h"><h4>${T("Districts")}</h4>
-        <span class="sub">${nf(dists.length)} ${T("of")} ${nf(g.district.known)} ${T("districts")} · ${g.district.year}${hasWP ? " · " + T("federal territories by constituency") : ""}</span>
+        <span class="sub">${nf(dists.length - wpDists.length)} ${T("of")} ${nf(g.district.known)} ${T("districts")} · ${g.district.year}${hasWP ? " · " + nf(wpSeats) + " " + T("federal territories by constituency") : ""}</span>
         <span class="right"><label class="sr" for="places-dq">${T("Search districts")}</label>
           <input class="inp" id="places-dq" placeholder="${T("Search districts…")}" value="${esc(placesDQ)}" autocomplete="off" style="max-width:190px"></span></div>
       <div class="card-b"><div class="tw"><table id="places-dist-table">
@@ -5285,10 +5358,11 @@ function renderPlaces(g){
         <div class="pager" id="places-dist-pager"></div></div>
     </div>
     <details class="card mb">
-      <summary class="card-h" style="cursor:pointer;list-style:none">
+      <summary class="card-h acc-sum">
         <h4 style="display:inline">${T("Constituencies")}</h4>
-        <span class="sub" style="margin-left:var(--s2)">${nf(g.parlimen.list.length + g.dun.list.length)} ${T("seats")} · socio 2024</span>
-        <span class="right"><span class="dim">▼ ${T("Expand")}</span></span>
+        <span class="sub" style="margin-left:var(--s2)">${nf(parl.length + duns.length)} ${T("seats")} · ${T("socio")} ${g[placesLevel].year}</span>
+        <span class="right"><span class="dim acc-hint"
+          data-closed="${esc(T("Expand"))}" data-open="${esc(T("Collapse"))}"></span></span>
       </summary>
       <div style="border-top:1px solid var(--line-soft)">
         <div class="card-h" style="border-bottom:none">
@@ -5450,8 +5524,9 @@ function paintPlacesDistricts(g, rows){
         <span class="badge">${T("constituency")}</span></td>
       ${placesState === "" ? `<td>${esc(r.s)}</td>` : ""}
       <td class="num">${r.p == null ? "-" : nf(r.p * 1000)}</td>
-      <td class="num">${r.cz == null ? "-" : nf(r.cz * 1000)}</td>
-      <td colspan="3" class="dim">${T("no district breakdown")}</td>
+      <td class="num dim">-</td>
+      <td colspan="3" class="dim">${T("no district breakdown")}${r.cz == null ? "" :
+        ` · ${nf(r.cz * 1000)} ${T("citizens")}`}</td>
       <td class="num">${r.inc == null ? "-" : "RM " + nf(r.inc, 0)}</td>
       <td class="num">${r.pov == null ? "-" : nf(r.pov, 1) + "%"}</td>
       <td class="num">${r.gini == null ? "-" : nf(r.gini, 3)}</td>
