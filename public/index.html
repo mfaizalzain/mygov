@@ -2063,7 +2063,12 @@ async function loadWeather(){
     .map(q => ({ t:q.localdatetime, lat:q.lat, lon:q.lon, dep:q.depth,
                  loc:q.location_original || q.location, mag:q.magdefault, near:q.n_distancemas }));
 
-  const warn = (warnings || []).map(w => {
+  const now = Date.now();
+  const warn = (warnings || []).filter(w => {
+    if (!w.valid_to) return true;
+    const t = new Date(w.valid_to).getTime();
+    return isNaN(t) || t >= now;
+  }).map(w => {
     const head = w.heading_en || "", text = w.text_en || "";
     // MET publishes "all clear" notices here too, often with null validity.
     const info = /no advisory|no tropical cyclone|tiada/i.test(head + " " + text);
