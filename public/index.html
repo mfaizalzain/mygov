@@ -387,6 +387,27 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
   border-radius:50%;background:var(--accent)}
 .brief-list a{color:inherit;text-decoration:none;border-bottom:1px solid transparent}
 .brief-list a:hover{color:var(--fg);border-bottom-color:var(--line)}
+/* Active-alerts band: same card family as .brief but tinted - it is urgent,
+   not a briefing. Hidden entirely when there is nothing to alert on. */
+.alerts{background:linear-gradient(180deg,var(--surface),var(--bg-2));
+  border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
+  margin:0 0 var(--s2)}
+.alerts-h{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
+  margin-bottom:var(--s3)}
+.alerts-h h3{margin:0;font-size:15px;font-weight:660;letter-spacing:-.02em}
+.alerts-note{font-family:var(--mono);font-size:11px;color:var(--fg-3)}
+.alerts-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
+.alerts-list li{display:flex;align-items:flex-start;gap:var(--s2);font-size:13.5px;
+  line-height:1.5;color:var(--fg-2);flex-wrap:wrap}
+.al-badge{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+  padding:2px 7px;border-radius:999px;margin-top:2px;text-transform:uppercase}
+.al-eq{background:color-mix(in srgb,var(--warn) 16%,transparent);
+  color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+.al-flood{background:color-mix(in srgb,var(--danger) 16%,transparent);
+  color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent)}
+.al-t{font-weight:600;color:var(--fg)}
+.al-s{flex-basis:100%;font-family:var(--mono);font-size:11.5px;color:var(--fg-3);
+  padding-left:2px}
 .radar-band{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);margin:0 0 var(--s2)}
@@ -807,6 +828,15 @@ html[data-text="large"] table{font-size:14px}
           <div class="pos-panel" id="pos-panel" hidden></div>
         </div>
       </div>
+      <!-- Active-alerts band. Hidden unless /api/alerts returns a quake within
+           500 km / 12 h or flood stations at risk; the data decides. -->
+      <section class="alerts" id="alerts-band" aria-labelledby="alerts-h" hidden>
+        <div class="alerts-h">
+          <h3 id="alerts-h" data-i18n="Active alerts">Active alerts</h3>
+          <span class="alerts-note" id="alerts-note"></span>
+        </div>
+        <ul class="alerts-list" id="alerts-list"></ul>
+      </section>
       <!-- Daily briefing. Hidden until insights.json produces grounded bullets;
            a missing, stale or empty file leaves no trace on the page. -->
       <section class="brief" id="brief-band" aria-labelledby="brief-h" hidden>
@@ -1285,6 +1315,7 @@ const I18N = {
   "Flood risk map":"Peta risiko banjir", "Danger red · Warning amber · Alert yellow":"Bahaya merah · Amaran amber · Waspada kuning",
   "Station":"Stesen", "River":"Sungai", "Water level":"Aras air", "Trend":"Trend",
   "Last reading":"Bacaan terakhir", "stations at risk":"stesen berisiko",
+  "Active alerts":"Amaran aktif", "Quake":"Gempa", "danger":"bahaya", "ago":"lalu",
   "Flood":"Banjir", "Flood Risk":"Risiko Banjir",
   "flood-desc":"Stesen aras air yang kini berada pada tahap bahaya, amaran atau waspada - telemetri langsung daripada Jabatan Pengairan dan Saliran.",
   "flood-how":"JPS menerbitkan telemetri tolok langsungnya sebagai suapan JSON statik di laman info banjir awam. Hanya stesen yang toloknya melaporkan dalam 24 jam terakhir dianggap semasa - suapan itu juga membawa tolok mati dengan bacaan berbulan lamanya, dan ia dikecualikan supaya peta menunjukkan risiko hari ini sahaja. Status setiap stesen ialah aras airnya berbanding ambang bahaya/amaran/waspada sendiri.",
@@ -2272,6 +2303,57 @@ function renderBrief(){
   }).join("");
   band.hidden = false;
 }
+
+/* Active alerts: earthquakes within 500 km / 12 h + flood stations at risk,
+   one slim /api/alerts call. The band shows ONLY when the data has something
+   to say - an empty or failed response leaves no trace on the page. */
+let alertsData = null;
+async function loadAlerts(){
+  try {
+    const r = await fetch("/api/alerts", { cache: "no-store" });
+    if (!r.ok) return null;
+    alertsData = await r.json();
+  } catch { alertsData = null; }
+  return alertsData;
+}
+function renderAlerts(){
+  const band = $("#alerts-band"), list = $("#alerts-list");
+  if (!band || !list) return;
+  const d = alertsData;
+  const quakes = (d && Array.isArray(d.earthquakes)) ? d.earthquakes : [];
+  const flood = (d && d.flood) || {};
+  const atRisk = flood.at_risk || 0;
+  if (!quakes.length && !atRisk){ band.hidden = true; return; }
+  const note = $("#alerts-note");
+  if (note) note.textContent = ymd(d.updated);
+  const items = [];
+  for (const q of quakes.slice(0, 3)){
+    const ago = agoTxt(q.ts);
+    items.push(`<li class="al-q">
+      <span class="al-badge al-eq">${esc(T("Quake"))}</span>
+      <span class="al-t">M${fmtNum(q.mag)} ${esc(q.type)} - ${esc(q.place)}</span>
+      <span class="al-s">${esc(q.dist)} · ${ago}</span>
+    </li>`);
+  }
+  if (atRisk){
+    const top = (flood.top || []).slice(0, 3);
+    items.push(`<li class="al-f">
+      <span class="al-badge al-flood">${esc(T("Flood"))}</span>
+      <span class="al-t">${atRisk} ${esc(T("stations at risk"))}
+        ${flood.danger ? ` · ${flood.danger} ${esc(T("danger"))}` : ""}</span>
+      <span class="al-s">${top.map(t => esc(t.name)).join(", ")}</span>
+    </li>`);
+  }
+  list.innerHTML = items.join("");
+  band.hidden = false;
+}
+function agoTxt(ts){
+  const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  if (s < 3600) return `${Math.max(1, Math.floor(s / 60))}m ${esc(T("ago"))}`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ${esc(T("ago"))}`;
+  return `${Math.floor(s / 86400)}d ${esc(T("ago"))}`;
+}
+function fmtNum(v){ return v == null ? "" : String(v); }
 
 let slowData = null;
 async function readSlow(){
@@ -6641,6 +6723,7 @@ function boot(){
     if (loaded.has("health") && dataMap.health) paintDonations(dataMap.health);
   });
   loadBrief().then(renderBrief);
+  loadAlerts().then(renderAlerts);
   setInterval(tick, 30000);
 }
 /* Chart.js is deferred, so it exists only after parsing; wait for both. */

@@ -287,9 +287,16 @@ export default {
       // not today's flood risk - it is a broken gauge. Require a reading
       // within 24h so the map shows today's picture only.
       const FRESH_MS = 24 * 3600 * 1000;
+      // A receding gauge is past its peak: a Warning/Alert station whose water
+      // is going DOWN is not an active warning. Danger always stays - the
+      // station is currently flooded regardless of direction (user rule,
+      // 2026-08-11).
+      const RECEDING = new Set(["Receding", "Falling"]);
       for (const s of Array.isArray(rows) ? rows : []) {
         const status = String(s.n || "");
         if (!WATCH.has(status)) continue;
+        const trend = String(s.s || "");
+        if (status !== "Danger" && RECEDING.has(trend)) continue;
         const ts = parseTs(s.q) ? parseTs(s.q) * 1000 : null;
         if (!ts || now - ts > FRESH_MS) continue;
         const state = String(s.f || "Unknown");
@@ -315,6 +322,102 @@ export default {
           .sort((a, b) => b.count - a.count),
         stations: atRisk,
       }, 200, { "cache-control": "public, max-age=300" });
+      return out;
+    }
+
+    /* Active-alerts band: earthquakes that MATTER to Malaysia + current
+     * flood risk, in one slim call. The MET earthquake feed is a global list
+     * (~427 KB, 800+ events) - most of it is irrelevant (a M6.5 off Chile is
+     * not a Malaysian alert). `n_distancemas` is the distance to the NEAREST
+     * point in Malaysia ("838km S Pontian,Johor"), which makes the "does it
+     * matter" filter exact: keep only events within 500 km AND within the
+     * last 12 h. Flood risk reuses the /api/flood logic inline (status
+     * WATCH + 24 h freshness + receding-Warning/Alert exclusion) so the band
+     * and the flood section can never disagree. */
+    if (url.pathname === "/api/alerts") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      const now = Date.now();
+      const EARTHQUAKE_FEED = "https://api.data.gov.my/weather/warning/earthquake";
+      const EQ_RADIUS_KM = 500;
+      const EQ_FRESH_MS = 12 * 3600 * 1000;
+
+      let quakes = [];
+      try {
+        const res = await fetch(EARTHQUAKE_FEED, {
+          headers: { "user-agent": UA },
+          cf: { cacheTtl: 60, cacheEverything: true },
+        });
+        if (res.ok) quakes = await res.json();
+      } catch { /* quakes stays empty - the band just shows floods */ }
+
+      const relevant = [];
+      for (const q of Array.isArray(quakes) ? quakes : []) {
+        const dist = String(q.n_distancemas || "").match(/([\d,]+)\s*km/i);
+        const km = dist ? Number(dist[1].replace(/,/g, "")) : null;
+        if (km == null || km > EQ_RADIUS_KM) continue;
+        const t = Date.parse(String(q.utcdatetime || "").replace(" ", "T") + "Z");
+        if (!Number.isFinite(t) || now - t > EQ_FRESH_MS) continue;
+        relevant.push({
+          mag: num(q.magdefault),
+          type: String(q.magtypedefault || ""),
+          place: String(q.location_original || q.location || ""),
+          lat: num(q.lat), lon: num(q.lon), depth: num(q.depth),
+          km, dist: String(q.n_distancemas || ""),
+          ts: t,
+        });
+      }
+      relevant.sort((a, b) => b.ts - a.ts);
+
+      /* Flood summary - same rules as /api/flood so both surfaces agree. */
+      const FLOOD_FEED = "https://publicinfobanjir.water.gov.my/wp-content/themes/enlighten/data/latestreadingstrendabc.json";
+      let flood = { at_risk: 0, danger: 0, warning: 0, alert: 0, top: [] };
+      try {
+        const res = await fetch(FLOOD_FEED, {
+          headers: { "user-agent": UA },
+          cf: { cacheTtl: 300, cacheEverything: true },
+        });
+        if (res.ok) {
+          const rows = await res.json();
+          const parseTs = s => {
+            if (!s) return null;
+            const m = String(s).match(/^(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2})/);
+            if (!m) return null;
+            return Math.floor(Date.parse(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:00+08:00`) / 1000);
+          };
+          const WATCH = new Set(["Danger", "Warning", "Alert"]);
+          const RECEDING = new Set(["Receding", "Falling"]);
+          const FRESH_MS = 24 * 3600 * 1000;
+          const num = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+          const top = [];
+          for (const s of Array.isArray(rows) ? rows : []) {
+            const status = String(s.n || "");
+            if (!WATCH.has(status)) continue;
+            const trend = String(s.s || "");
+            if (status !== "Danger" && RECEDING.has(trend)) continue;
+            const ts = parseTs(s.q) ? parseTs(s.q) * 1000 : null;
+            if (!ts || now - ts > FRESH_MS) continue;
+            flood.at_risk++;
+            if (status === "Danger") flood.danger++;
+            else if (status === "Warning") flood.warning++;
+            else flood.alert++;
+            if (top.length < 5)
+              top.push({
+                name: String(s.b || ""), state: String(s.f || ""),
+                level: num(s.m), dangerLevel: num(s.o),
+                status, trend, ts,
+              });
+          }
+          flood.top = top;
+        }
+      } catch { /* flood stays at zeros - the band just shows quakes */ }
+
+      const out = json({
+        updated: new Date(now).toISOString(),
+        earthquakes: relevant,
+        flood,
+      }, 200, { "cache-control": "public, max-age=60" });
       return out;
     }
 
