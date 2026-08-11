@@ -888,7 +888,6 @@ html[data-text="large"] table{font-size:14px}
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Household</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> Population</a></li>
-    <li><a href="#tourism" id="nav-tourism"><span class="dot" id="dot-tourism"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-tourism"/></svg> Tourism</a></li>
     <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
     <li><a href="#finance" id="nav-finance"><span class="dot" id="dot-finance"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg> Finance</a></li>
     <li><a href="#health" id="nav-health"><span class="dot" id="dot-health"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-health"/></svg> Health</a></li>
@@ -1092,22 +1091,6 @@ html[data-text="large"] table{font-size:14px}
       <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       
     </section>
-    <section id="tourism" aria-labelledby="h-tourism">
-      <div class="sec-h">
-        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-tourism"/></svg></div>
-        <div><h3 id="h-tourism">Tourism</h3>
-          <p>Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture.</p>
-          <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Data provided by Tourism Malaysia.</p>
-            <ul><li><code>GET data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf</code></li></ul>
-          </details>
-        </div>
-        <span class="sec-time" id="time-tourism"></span>
-      </div>
-      <div id="body-tourism"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
-    </section>
     <section id="economy" aria-labelledby="h-economy">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg></div>
@@ -1122,7 +1105,22 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-economy"></span>
       </div>
       <div id="body-economy"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      
+            <!-- Tourism: a merged sub-block of its parent section. -->
+      <div class="sec-sub" id="tourism-sub" aria-labelledby="h-tourism">
+        <div class="sec-h">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-tourism"/></svg></div>
+          <div><h3 id="h-tourism" style="font-size:17px" data-i18n="Tourism">Tourism</h3>
+            <p data-i18n="Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture.">Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Data provided by Tourism Malaysia.">Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Data provided by Tourism Malaysia.</p>
+              <ul><li><code>GET data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf</code></li></ul>
+            </details>
+          </div>
+          <span class="sec-time" id="time-tourism"></span>
+        </div>
+        <div id="body-tourism"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      </div>
     </section>
     <section id="finance" aria-labelledby="h-finance">
       <div class="sec-h">
@@ -1287,8 +1285,10 @@ const FRESH_YEARS = 2;   // datasets whose last update is older than this are hi
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
 /* v9: weather.eq gains km + eqRadius. v10: weather.eq is strictly the last
-   24 h - a replayed v9 payload carries history under a "last 24 hours" head. */
-const CK = "mygov.cache.v10.";
+   24 h - a replayed v9 payload carries history under a "last 24 hours" head.
+   v11: transport gains rid/holidays (KTMB ridership moved in from Vehicles);
+   a v10 transport payload has no rid and the card silently does not render. */
+const CK = "mygov.cache.v11.";
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -1767,7 +1767,6 @@ const SECTIONS = [
   { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
   { id:"fuel",      label:"Household",  icon:"fuel",       family:"data-catalogue" },
   { id:"population",label:"Population", icon:"population", family:"opendosm" },
-  { id:"tourism",   label:"Tourism",    icon:"tourism",    family:"tourism" },
   { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
   { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
   { id:"health",    label:"Health",     icon:"health",     family:"data-catalogue" },
@@ -2774,6 +2773,18 @@ async function loadTransport(){
       out[f.key].lines = lines;
     }
   }
+  /* KTMB ridership used to sit in the Vehicles section, next to car
+     registrations - the same operator whose schedules are here and whose
+     trains are in Live, split across three nav entries. It belongs with the
+     rest of public transport. readSlow() is the shared, cached slow-data
+     read, so this costs nothing extra. */
+  try {
+    const slow = await readSlow();
+    if (slow && slow.mobility){
+      out.rid = slow.mobility.rid;
+      out.holidays = slow.holidays || [];
+    }
+  } catch { /* the GTFS half of the section stands on its own */ }
   return out;
 }
 
@@ -3039,7 +3050,10 @@ const stackTop = () =>
   (parseFloat(cssVar("--hdr")) || 61) + (parseFloat(cssVar("--nav")) || 53) + 18;
 
 function goToAnchor(id){
-  const target = document.getElementById(id);
+  /* Sections that became sub-blocks keep their old anchor working: #tourism
+     was a section before it merged into Economy, and links to it are in the
+     sitemap, llms.txt and anywhere anyone has shared one. */
+  const target = document.getElementById(id) || document.getElementById(id + "-sub");
   if (!target) return false;
   /* Load the destination before jumping, so its body is closer to final
      height on arrival instead of growing under the reader afterwards. */
@@ -3363,6 +3377,18 @@ function renderWeather(d){
   sortable($("#wx-table"), () => wxTableRows(), rows => paintWxRows(rows));
   paintWeather();
 }
+
+/* Series chips and a range segmented-control. Module scope because the two
+   sections that use them are no longer one: the ridership card moved to Public
+   Transport while vehicle registrations stayed in Vehicles, and both build
+   these same controls. */
+const seriesChips = (id, list, on) => list.map(([k, label, color]) =>
+  `<button class="chip" data-${id}="${k}" aria-pressed="${on.has(k)}">
+     <span class="swatch" style="background:${color}"></span>${esc(T(label))}</button>`).join("");
+/* Named distinctly: renderHealth has its own local rangeSeg with a different
+   signature, and a module-level name it shadows is a trap waiting to be hit. */
+const dateRangeSeg = (attr, ranges, cur) => `<span class="seg" role="group" aria-label="${T("Date range")}">
+  ${ranges.map(r => `<button data-${attr}="${r}" aria-pressed="${r === cur}">${r.toUpperCase()}</button>`).join("")}</span>`;
 
 /* ══════════════════ hazards: the status strip ══════════════════
    One tile per hazard. A tile is a <details> so the browser owns the
@@ -4845,26 +4871,14 @@ function renderMobility(d){
   const busiest = svcLast.slice().sort((a, b) => b.v - a.v)[0];
   const ridDate = rn ? isoOf(R.t0 + rn - 1) : null;
 
-  const chips = (id, list, on) => list.map(([k, label, color]) =>
-    `<button class="chip" data-${id}="${k}" aria-pressed="${on.has(k)}">
-       <span class="swatch" style="background:${color}"></span>${esc(T(label))}</button>`).join("");
-  const seg = (attr, ranges, cur) => `<span class="seg" role="group" aria-label="${T("Date range")}">
-    ${ranges.map(r => `<button data-${attr}="${r}" aria-pressed="${r === cur}">${r.toUpperCase()}</button>`).join("")}</span>`;
-
   $("#body-mobility").innerHTML = `
-    <div class="grid g4 mb">
+    <div class="grid g2 mb">
       <div class="kpi"><div class="lab">🔌 ${T("New EVs")}</div>
         <div class="val" data-count="${ev || 0}">0</div>
         <div class="sub">${last ? esc(ymd(last)) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("EV share")}</div>
         <div class="val">${share == null ? "-" : nf(share, 1) + "%"}</div>
         <div class="sub">${T("of new vehicles")} · ${nf(tot)}</div></div>
-      <div class="kpi"><div class="lab">${T("KTMB ridership")}</div>
-        <div class="val" data-count="${ridTotal || 0}">0</div>
-        <div class="sub">${ridDate ? esc(ymd(ridDate)) : ""}</div></div>
-      <div class="kpi"><div class="lab">${T("Busiest service")}</div>
-        <div class="val" style="font-size:19px">${busiest ? esc(busiest.label) : "-"}</div>
-        <div class="sub">${busiest ? nf(busiest.v) + " " + T("passengers") : ""}</div></div>
     </div>
     <div class="card mb">
       <div class="card-h"><h4>${T("New vehicle registrations")}</h4>
@@ -4875,10 +4889,10 @@ function renderMobility(d){
             ${[["count", T("Count")], ["share", T("Share")]].map(([k, lab]) =>
               `<button data-regunit="${k}" aria-pressed="${k === regUnit}">${esc(lab)}</button>`).join("")}
           </span>
-          <span style="margin-left:var(--s2)">${seg("regrange", Object.keys(REG_RANGES), regRange)}</span>
+          <span style="margin-left:var(--s2)">${dateRangeSeg("regrange", Object.keys(REG_RANGES), regRange)}</span>
         </span></div>
       <div class="card-b" style="padding-bottom:8px">
-        <div class="chips" id="reg-chips">${chips("fuel", FUELS, regFuels)}</div></div>
+        <div class="chips" id="reg-chips">${seriesChips("fuel", FUELS, regFuels)}</div></div>
       <div class="card-b" style="padding-top:8px">
         <div class="chart tall"><canvas id="reg-chart" role="img"
           aria-label="Monthly vehicle registrations by fuel type"></canvas></div>
@@ -4911,18 +4925,7 @@ function renderMobility(d){
           aria-label="EV share of new registrations by month"></canvas></div>
       </div>
     </div>` : ""}
-    <div class="card">
-      <div class="card-h"><h4>${T("KTMB ridership")}</h4>
-        <span class="sub">${T("passengers per day")} · ${T("7-day average")}${(d.holidays || []).length ? " · " + T("public holidays marked") : ""}</span>
-        <span class="right">${seg("ridrange", Object.keys(H_RANGES), ridRange)}</span></div>
-      <div class="card-b" style="padding-bottom:8px">
-        <div class="chips" id="rid-chips">${chips("svc", KTMB_SERVICES, ridSvc)}</div></div>
-      <div class="card-b" style="padding-top:8px">
-        <div class="chart tall"><canvas id="rid-chart" role="img"
-          aria-label="Daily KTMB ridership by service"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="rid-dt"></div></details></div>
-    </div>`;
+`;
 
   const toggle = (attr, set, fallback, repaint) =>
     $("#body-mobility").querySelectorAll(`[data-${attr}]`).forEach(b => {
@@ -4942,11 +4945,9 @@ function renderMobility(d){
         o.setAttribute("aria-pressed", String(o.dataset[attr] === b.dataset[attr])));
     }; });
   toggle("fuel", regFuels, "electric", () => paintReg(d));
-  toggle("svc",  ridSvc,   "ets",      () => paintRid(d));
   seg2("regunit",  v => { regUnit = v; renderMobility(d); });
   seg2("regrange", v => { regRange = v; paintReg(d); });
-  seg2("ridrange", v => { ridRange = v; paintRid(d); });
-  paintReg(d); paintRid(d);
+  paintReg(d);
   if (d.cars) paintCars(d);
   animateCounters($("#body-mobility"));
 }
@@ -6368,7 +6369,7 @@ async function findStopsNear(){
   }
   tgeo.lat = pos.coords.latitude; tgeo.lon = pos.coords.longitude;
   tgeo.near = {};
-  for (const f of Object.values(tdata || {})){
+  for (const f of trFeeds()){
     tgeo.near[f.key] = f.stopList
       .map(s => ({ s, km:haversine({ lat:tgeo.lat, lon:tgeo.lon }, s) }))
       .sort((a, b) => a.km - b.km).slice(0, 12);
@@ -6377,7 +6378,12 @@ async function findStopsNear(){
   paintTransport();
 }
 
-const trFeed = () => Object.values(tdata || {})
+/* The transport payload is the GTFS feed map plus a couple of siblings (rid,
+   holidays - the ridership series that moved here from Vehicles), so walking
+   Object.values() and treating every entry as a feed reads `.stopList` off an
+   array and throws. FEEDS is the canonical list; index by it. */
+const trFeeds = () => FEEDS.map(f => tdata && tdata[f.key]).filter(Boolean);
+const trFeed = () => trFeeds()
   .filter(f => netFilter === "all" || f.key === netFilter);
 
 function renderTransport(d){
@@ -6422,7 +6428,20 @@ function renderTransport(d){
       </div>
     </div>
     <div id="tr-blocks"></div>
-    <div id="rail-diagram" hidden></div>`;
+    <div id="rail-diagram" hidden></div>
+    ${d.rid ? `<div class="mb"></div>
+    <div class="card">
+      <div class="card-h"><h4>${T("KTMB ridership")}</h4>
+        <span class="sub">${T("passengers per day")} · ${T("7-day average")}${(d.holidays || []).length ? " · " + T("public holidays marked") : ""}</span>
+        <span class="right">${dateRangeSeg("ridrange", Object.keys(H_RANGES), ridRange)}</span></div>
+      <div class="card-b" style="padding-bottom:8px">
+        <div class="chips" id="rid-chips">${seriesChips("svc", KTMB_SERVICES, ridSvc)}</div></div>
+      <div class="card-b" style="padding-top:8px">
+        <div class="chart tall"><canvas id="rid-chart" role="img"
+          aria-label="Daily KTMB ridership by service"></canvas></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="rid-dt"></div></details></div>
+    </div>` : ""}`;
   $("#tr-filters").innerHTML = [["all",T("All networks")],["ktmb","KTMB"],["prasarana","Rapid KL"],["rail","LRT & MRT"]]
     .map(([v, label]) => `<button class="chip" data-net="${v}" aria-pressed="${netFilter === v}">${label}</button>`)
     .join("");
@@ -6436,6 +6455,28 @@ function renderTransport(d){
   sq.value = stopQ;
   sq.oninput = () => { stopQ = sq.value; paintBlocks(); };
   $("#tr-near").onclick = findStopsNear;
+  if (d.rid){
+    const host = $("#body-transport");
+    host.querySelectorAll("[data-svc]").forEach(b => {
+      b.onclick = () => {
+        const k = b.dataset.svc;
+        ridSvc.has(k) ? ridSvc.delete(k) : ridSvc.add(k);
+        if (!ridSvc.size) ridSvc.add("ets");
+        host.querySelectorAll("[data-svc]").forEach(o =>
+          o.setAttribute("aria-pressed", String(ridSvc.has(o.dataset.svc))));
+        paintRid(d);
+      };
+    });
+    host.querySelectorAll("[data-ridrange]").forEach(b => {
+      b.onclick = () => {
+        ridRange = b.dataset.ridrange;
+        host.querySelectorAll("[data-ridrange]").forEach(o =>
+          o.setAttribute("aria-pressed", String(o.dataset.ridrange === ridRange)));
+        paintRid(d);
+      };
+    });
+    paintRid(d);
+  }
   paintTransport();
   initFlights();
 }
@@ -7400,7 +7441,12 @@ const LOADERS = {
       if (ov.length > 12){
         const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
         kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
-      } }, asOf:d => {
+      }
+      /* Tourism is a merged sub-block of this section - one table and one
+         chart did not earn a nav entry of its own, and visitor arrivals are
+         an economic indicator. Same pattern as Groceries under Household. */
+      if (!loaded.has("tourism")) loadSection("tourism", false);
+    }, asOf:d => {
       let m = "";
       const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
       for (const p of ov) if (String(p[0]) > m) m = String(p[0]);
@@ -7686,7 +7732,7 @@ function boot(){
      here and repaint whatever is already on screen when it lands. */
   readForecasts().then(f => {
     if (!f) return;
-    if (loaded.has("mobility") && dataMap.mobility) paintRid(dataMap.mobility);
+    if (loaded.has("transport") && dataMap.transport) paintRid(dataMap.transport);
     if (loaded.has("health") && dataMap.health) paintDonations(dataMap.health);
   });
   loadBrief().then(renderBrief);

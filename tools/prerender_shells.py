@@ -125,7 +125,8 @@ for s in sections:
         <span class="sec-time" id="time-{s["id"]}"></span>
       </div>
       <div id="body-{sid_body}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
-      {sub_block("prices", "basket") if s["id"] == "fuel" else ""}
+      {sub_block("prices", "basket") if s["id"] == "fuel" else
+       sub_block("tourism", "tourism") if s["id"] == "economy" else ""}
     </section>''')
 
 shell_html = "\n".join(shells)

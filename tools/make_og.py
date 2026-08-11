@@ -41,7 +41,7 @@ d.text((64, 285), "Malaysia Open Data", font=f_mid, fill="#2dd4bf")
 d.text((64, 380), "Live weather · fuel prices · economy ·", font=f_small, fill="#9aa4b8")
 d.text((64, 430), "public transport · KKM health data", font=f_small, fill="#9aa4b8")
 
-d.text((64, 540), "mygov.faizalmzain.com", font=f_small, fill="#5f6b80")
+d.text((64, 540), "malaysia-at-a-glance.com", font=f_small, fill="#5f6b80")
 
 img.save(OUT, optimize=True)
 print(f"✅ {OUT} ({os.path.getsize(OUT)//1024} KB)")

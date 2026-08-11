@@ -26,7 +26,7 @@ import xml.sax.saxutils as sax
 
 INDEX = "public/index.html"
 FEED = "public/feed.xml"
-SITE = "https://mygov.faizalmzain.com"
+SITE = "https://malaysia-at-a-glance.com"
 MARK_START = "<!-- SEO:SNAP -->"
 MARK_END = "<!-- /SEO:SNAP -->"
 
