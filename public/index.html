@@ -212,10 +212,6 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 @media (min-width:1100px){
   .hero{display:flex;gap:var(--s8);align-items:flex-start}
   .hero-copy{flex:1 1 0;min-width:0}
-  /* two columns, not three: three would make the cards narrower than the
-     full-width row they replaced, which is the opposite of the point */
-  .hero .kpis{flex:1.15 1 0;min-width:0;margin-top:6px;
-    grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 .hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;min-height:40px}
 .hero-loc .loc-chip{text-decoration:none}
@@ -246,16 +242,9 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .pos-panel tr:last-child td{border-bottom:none}
 .pos-panel tr:hover td{background:var(--surface-3)}
 .pos-panel .state{text-align:center;color:var(--fg-3);padding:var(--s4)}
-/* auto-fit rather than a fixed 6: at 1240px six tracks give 232px cards, which
-   is too narrow for names like "Pusat Konservasi Gajah Kebangsaan" - they wrap
-   to a second line and desynchronise the row's heights */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));
-  gap:var(--s3);margin-top:var(--s6)}
-/* With an odd number of cards the last tile is stranded alone on its row.
-   The hero column is capped by .wrap's max-width, so this grid resolves to
-   exactly two columns at every desktop size and one on mobile - spanning the
-   stray card keeps the block rectangular, and is a no-op single-column. */
-.kpis > :last-child:nth-child(odd){grid-column:1/-1}
+/* In-section KPI cards (fuel, groceries, tourism, health, ...): a labelled
+   value with a sub-line. The hero KPI strip was removed in favour of the
+   daily briefing + Travel Outlook band - these rules serve the sections. */
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
   box-shadow:var(--shadow);transition:var(--t)}
@@ -272,10 +261,6 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
 .kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
 .kpi-t{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
-a.kpi{color:inherit;text-decoration:none}
-a.kpi:hover{text-decoration:none}
-.kpi .go{font-size:13px;color:var(--fg-3);opacity:0;transform:translateX(-3px);transition:var(--t)}
-.kpi:hover .go,.kpi:focus-visible .go{opacity:1;transform:none;color:var(--accent)}
 .up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
 /* ── latest exchange rate (dropdown + hero) ── */
 .fx-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);flex-wrap:wrap}
@@ -828,7 +813,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 .bmc:hover{background:#fcd34d;border-color:#fcd34d;transform:translateY(-1px);text-decoration:none}
 @media (max-width:620px){ .foot{flex-direction:column-reverse;gap:var(--s4)} .bmc{width:100%;justify-content:center} }
 
-@media (max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .g4,.g5{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:1000px){ .g4,.g5{grid-template-columns:repeat(2,1fr)} .vgrid{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:860px){ .g2,.g3{grid-template-columns:1fr} }
 @media (max-width:620px){
   .wrap{padding:0 var(--s4) 64px} .hd{padding:var(--s3) var(--s4)}
@@ -839,7 +824,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .hero-loc-row{min-height:85px}
   .hero-loc{flex:1 1 100%}
   nav.sections ul{padding:var(--s2) var(--s4)}
-  .kpis{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:1fr}
+  .g4{grid-template-columns:1fr}
   .g5{grid-template-columns:repeat(2,1fr)}
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
@@ -944,7 +929,6 @@ html[data-text="large"] table{font-size:14px}
     <li hidden><a href="#radar-band" id="nav-radar-band"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> Trending</a></li>
     <li><a href="#hazards" id="nav-hazards"><span class="dot" id="dot-hazards"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Warnings</a></li>
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
-    <li><a href="#travel" id="nav-travel"><span class="dot" id="dot-travel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-live"/></svg> Travel</a></li>
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Household</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> People</a></li>
     <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
@@ -1001,49 +985,28 @@ html[data-text="large"] table{font-size:14px}
         <ul class="brief-list" id="brief-list"></ul>
       </section>
     </div>
-    <div class="kpis" id="kpis">
-      <a class="kpi kpi-load" href="#weather" aria-label="Hottest today - go to the weather section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-temp"/></svg> Hottest today</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-hot"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#fuel" aria-label="RON 95 - go to the fuel section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> RON 95</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-ron95"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#prices-sub" aria-label="Groceries y/y - go to the groceries block">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-basket"/></svg> Groceries y/y</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-basket"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#economy" aria-label="Inflation y/y - go to the economy section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Inflation y/y</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-cpi"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#mobility" aria-label="New EVs - go to the mobility section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-ev"/></svg> New EVs</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-ev"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#hazards" aria-label="Active warnings - go to the warnings section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Active warnings</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-warn"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#hazards" aria-label="Stations at risk - go to the warnings section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg> Stations at risk</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-flood"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#live" aria-label="Vehicles live - go to the live section">
-        <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bus"/></svg> Vehicles live</span>
-          <span class="go" aria-hidden="true">↗</span></div>
-        <div class="val" id="kpi-live"><span class="skel skel-val"></span></div>
-        <div class="sub"><span class="skel skel-sub"></span></div></a>
-    </div>
-  </div>
+    <!-- Travel Outlook lives here in the hero: the next peak travel periods
+         are planning info, not reference data - the same reason the daily
+         briefing sits above the fold. Fed by travel.json (weekly Gemini
+         summary of the holiday + school calendar) via LOADERS.travel. -->
+    <section class="radar-band travel-band" id="travel-band" aria-labelledby="travel-h">
+      <div class="radar-band-h">
+        <div class="radar-band-t">
+          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
+          <div>
+            <h3 id="travel-h" data-i18n="Travel Outlook">Travel Outlook</h3>
+            <p data-i18n="The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.">The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.</p>
+            <details class="meta">
+              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+              <p data-i18n="Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.">Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.</p>
+              <ul><li><code>GET mycal-api.huijun00100101.workers.dev/v1/holidays</code></li><li><code>GET mycal-api.huijun00100101.workers.dev/v1/school/holidays</code></li><li><code>travel.json (KV)</code></li></ul>
+            </details>
+          </div>
+        </div>
+        <span class="sec-time" id="time-travel"></span>
+      </div>
+      <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+    </section>
 
   <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
@@ -1076,7 +1039,7 @@ html[data-text="large"] table{font-size:14px}
           <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. On a day with no quakes in the last 24 hours the tile instead shows the last 30 days' nearby events as a carousel, so the section still has content without pretending anything is live. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
+            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
             <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
           </details>
         </div>
@@ -1099,22 +1062,6 @@ html[data-text="large"] table{font-size:14px}
         <span class="sec-time" id="time-weather"></span>
       </div>
       <div id="body-weather"><div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div></div></div></div><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div>
-      
-    </section>
-    <section id="travel" aria-labelledby="h-travel">
-      <div class="sec-h">
-        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
-        <div><h3 id="h-travel">Travel Outlook</h3>
-          <p>The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.</p>
-          <details class="meta">
-            <summary>Data source &amp; methodology</summary>
-            <p>Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.</p>
-            <ul><li><code>GET mycal-api.huijun00100101.workers.dev/v1/holidays</code></li><li><code>GET mycal-api.huijun00100101.workers.dev/v1/school/holidays</code></li><li><code>GET travel.json (KV)</code></li></ul>
-          </details>
-        </div>
-        <span class="sec-time" id="time-travel"></span>
-      </div>
-      <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       
     </section>
     <section id="fuel" aria-labelledby="h-fuel">
@@ -1427,6 +1374,8 @@ const I18N = {
   "bmc":"Sokong projek ini di Buy Me a Coffee",
   "Weather":"Cuaca", "Household":"Isi Rumah", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
   "Travel":"Perjalanan",
+  "Travel Outlook":"Tinjauan Perjalanan",
+  "The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.":"Tempoh perjalanan puncak Malaysia yang akan datang - cuti sekolah, cuti umum dan hujung minggu panjang - dengan jangkaan di jalan raya, hotel dan lapangan terbang, serta tip untuk mengelak kesesakan.",
   "Trending":"Trend",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
@@ -1831,7 +1780,6 @@ function rerenderAll(){
     const d = dataMap[id]; if (!d) continue;
     try { LOADERS[id].render(d); if (LOADERS[id].after) LOADERS[id].after(d); } catch {}
   }
-  renderKpis();
   /* The briefing ships both languages in one payload, so a language switch is
      a re-render, not a re-fetch. */
   renderBrief();
@@ -1848,7 +1796,6 @@ const ico = (name, size) =>
 const SECTIONS = [
   { id:"hazards",   label:"Warnings",   icon:"warn",       family:"weather" },
   { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
-  { id:"travel",    label:"Travel",     icon:"live",       family:"travel" },
   { id:"fuel",      label:"Household",  icon:"fuel",       family:"data-catalogue" },
   { id:"population",label:"People",     icon:"population", family:"opendosm" },
   { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
@@ -3120,6 +3067,7 @@ function buildShell(){
   }, { rootMargin:`-${stackH() + 46}px 0px -70% 0px`, threshold:0 });
   SECTIONS.forEach(s => obs.observe(document.getElementById(s.id)));
   const band = document.getElementById("radar-band"); if (band) obs.observe(band);
+  const tband = document.getElementById("travel-band"); if (tband) obs.observe(tband);
 }
 /* ═══════════════════ in-page navigation ═══════════════════
    Anchor jumps used to be left to the browser: href="#health" plus
@@ -7496,52 +7444,6 @@ function paintMaps(){
 }
 
 /* ════════════════════════════ KPI summary ════════════════════════════ */
-const kpiState = {};
-function renderKpis(){
-  const host = $("#kpis");
-  const cards = [
-    { k:"hot",   lab:"Hottest today",   ico:"temp",     href:"#weather" },
-    { k:"ron95", lab:"RON 95",          ico:"fuel",     href:"#fuel" },
-    /* The block is titled "Groceries" but its element id comes from the
-       loader id ("prices"), so #groceries-sub matched nothing and the card was
-       a dead link - a missing anchor target scrolls nowhere at all. */
-    { k:"basket",lab:"Groceries y/y",   ico:"basket",   href:"#prices-sub",
-      where:"groceries block" },
-    { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
-    { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
-    { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#hazards",
-      where:"warnings section" },
-    /* `where` is the spoken destination; without it the slug is used, which
-       reads badly for anchors that are not section ids. Keep in sync with
-       KPIS in tools/prerender_shells.py. */
-    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#hazards",
-      where:"warnings section" },
-    { k:"live",  lab:"Vehicles live",   ico:"bus",      href:"#live" },
-  ];
-  /* Pending cards get the same shimmer the sections use. Six cards each
-     spelling out "loading…" was a wall of the same word, and with the
-     inter-request gap they sit that way for a while. */
-  const pending = cards.some(c => !kpiState[c.k]);
-  host.setAttribute("aria-busy", pending ? "true" : "false");
-  host.innerHTML = cards.map(c => {
-    const s = kpiState[c.k];
-    return `<a class="kpi${s ? " fade" : " kpi-load"}" href="${c.href}"
-      aria-label="${esc(T(c.lab))} - go to the ${esc(c.where || c.href.slice(1) + " section")}">
-      <div class="kpi-t"><span class="lab">${ico(c.ico)} ${esc(T(c.lab))}</span>
-        <span class="go" aria-hidden="true">↗</span></div>
-      ${s ? `<div class="val" id="kpi-${c.k}"></div>
-      <div class="sub">${esc(s.sub)}</div>`
-          : `<div class="val" id="kpi-${c.k}"><span class="skel skel-val"></span></div>
-      <div class="sub"><span class="skel skel-sub"></span></div>`}</a>`;
-  }).join("");
-  for (const c of cards){
-    const s = kpiState[c.k]; if (!s) continue;
-    const node = $("#kpi-" + c.k);
-    if (s.text != null) node.textContent = s.text;
-    else countTo(node, s.value, s.dec || 0, s.prefix, s.suffix);
-  }
-}
-
 /* ════════════════════════════ orchestration ════════════════════════════ */
 const META = {
   hazards:{ title:"Warnings & Hazards",
@@ -7629,46 +7531,24 @@ const META = {
     eps:["mycal-api.huijun00100101.workers.dev/v1/holidays","mycal-api.huijun00100101.workers.dev/v1/school/holidays","travel.json (KV)"] },
 };
 const LOADERS = {
-  hazards:  { load:loadHazards,  render:renderHazards,  after:d => {
-      const active = d.warn.filter(w => !w.info).length;
-      kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
-      if (d.flood) kpiState.flood = { value:d.flood.atRisk, dec:0,
-        sub:d.flood.atRisk ? T("stations at risk") : T("all clear") };
-    } },
+  hazards:  { load:loadHazards,  render:renderHazards },
   weather:  { load:loadWeather,   render:renderWeather,   after:d => {
       let hot = null;
       const first = new Map();
       for (const r of d.rows){ const c = first.get(r[0]);
         if (!c || String(r[1]) < String(c[1])) first.set(r[0], r); }
       for (const [i, r] of first) if (r[3] != null && (!hot || r[3] > hot.t)) hot = { t:r[3], i };
-      if (hot) kpiState.hot = { value:hot.t, dec:0, suffix:"\u00b0C", sub:d.locs[hot.i].name };
       if (geo.status === "waiting") locate();
     }, asOf:d => {   /* the forecast starts today */
       let m = null; for (const r of d.rows){ const x = String(r[1]); if (x && (m === null || x < m)) m = x; }
       return m;
     } },
   fuel:     { load:loadFuel,      render:renderFuel,      after:d => {
-      if (d.latest) kpiState.ron95 = { value:d.latest.ron95, dec:2, prefix:"RM ",
-        sub:T("week of ") + ymd(d.latest.date) };
       /* Groceries is a sub-block of this section - load it with the fuel
          (it keeps its own LOADERS entry so caching/KPI/error handling work). */
       if (!loaded.has("prices")) loadSection("prices", false); }, asOf:d => d.latest ? d.latest.date : null },
-  prices:   { load:loadPrices,    render:renderPrices,    after:d => {
-      /* The index level (101.3) means nothing on its own in a hero tile, so
-         the KPI leads with the 12-month change - the same shape as the CPI
-         card next to it - and names the basket underneath. */
-      const nat = d.basket.national || [];
-      const last = nat.length ? nat[nat.length - 1] : null;
-      if (last != null && nat[0])
-        kpiState.basket = { value:(last / nat[0] - 1) * 100, dec:1, suffix:"%",
-          sub:nf(d.basket.n) + " " + T("grocery items · shelf prices") };
-    }, asOf:d => d.asOf },
+  prices:   { load:loadPrices,    render:renderPrices,    asOf:d => d.asOf },
   economy:  { load:loadEconomy,   render:renderEconomy,   after:d => {
-      const ov = (d.cpi.find(s => s.name === "overall") || { pts:[] }).pts;
-      if (ov.length > 12){
-        const v = (ov[ov.length-1][1] / ov[ov.length-13][1] - 1) * 100;
-        kpiState.cpi = { value:v, dec:1, suffix:"%", sub:T("core CPI, ") + ymd(ov[ov.length-1][0]) };
-      }
       /* Tourism is a merged sub-block of this section - one table and one
          chart did not earn a nav entry of its own, and visitor arrivals are
          an economic indicator. Same pattern as Groceries under Household. */
@@ -7689,14 +7569,7 @@ const LOADERS = {
         if (s && s.length){ const x = String(s[s.length-1][0]); if (!m || x > m) m = x; }
       return m;
     } },
-  mobility: { load:loadMobility,  render:renderMobility,  after:d => {
-      const n = d.months.length;
-      const ev = n ? (d.byFuel.electric || [])[n - 1] : null;
-      const tot = n ? d.total[n - 1] : null;
-      if (ev != null) kpiState.ev = { value:ev, dec:0,
-        sub:(tot ? nf(ev / tot * 100, 1) + "% " + T("of new vehicles") + " · " : "") +
-            ymd(d.months[n - 1]) };
-    }, asOf:d => {
+  mobility: { load:loadMobility,  render:renderMobility,  asOf:d => {
       const reg = d.months.length ? String(d.months[d.months.length-1]) : null;
       const rid = d.rid.n ? isoOf(d.rid.t0 + d.rid.n - 1) : null;
       return [reg, rid].filter(Boolean).sort().pop() || null;
@@ -7722,9 +7595,7 @@ const LOADERS = {
       if (!loaded.has("live")) loadSection("live", false);
     } },
   travel:   { load:loadTravel,    render:renderTravel,    asOf:d => d.generated },
-  live:     { load:loadLive,      render:renderLive,      after:d => {
-      const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
-      kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
+  live:     { load:loadLive,      render:renderLive },
 };
 
 let stamps = {};
@@ -7777,7 +7648,7 @@ async function loadSection(id, force){
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
         dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
         setDot(id, "ok"); setSecTime(id, "cached");
-        tick(); renderKpis();
+        tick();
         return;
       } catch { /* shape drift - refetch */ }
     }
@@ -7797,7 +7668,7 @@ async function loadSection(id, force){
       if (!hasContent) errorBox(id, err, () => loadSection(id, true));
       else setSecTime(id, "error");   // stale content stays visible
     }
-    tick(); renderKpis();
+    tick();
   } finally {
     loading.delete(id);
   }
@@ -7830,6 +7701,9 @@ async function loadAll(force){
      still covers every section so the button means "update everything". */
   for (const s of SECTIONS) if (!LAZY.has(s.id)) await loadSection(s.id, force);
   if (force) for (const s of SECTIONS) if (LAZY.has(s.id)) await loadSection(s.id, force);
+  /* Travel Outlook is a hero band above the fold, not a SECTIONS member -
+     it must load eagerly like weather, and refresh with everything else. */
+  await loadSection("travel", force);
   /* Flood is a sub-block of weather (not in SECTIONS): on a full refresh it
      is normally re-fetched by weather's after-hook, but that hook only fires
      when it is NOT yet loaded - so force the sub-blocks here too. */
@@ -7850,28 +7724,16 @@ function primeCached(){
       setDot(s.id, "ok"); setSecTime(s.id, "cached");
     } catch { /* shape drift - refetch on load */ }
   }
-  tick(); renderKpis();
-}
-
-/* The hero KPI strip is fed by LOADERS' after() hooks, and three of its
-   cards (Inflation, New EVs, Vehicles live) belong to lazy sections that
-   only load once scrolled into view. On a cold visit that left the cards
-   shimmering until the user scrolled past the section. Prefetch exactly
-   those three loaders at boot: fetch the data, run the after() hook so the
-   KPI fills in, and cache the record so the eventual scroll-in render is
-   instant (no double fetch, no skeleton flash). */
-async function primeKpis(){
-  const ids = ["economy", "mobility", "live"];
-  await Promise.all(ids.map(async id => {
-    if (loaded.has(id) || loading.has(id)) return;   // already done/in flight
-    const cfg = LOADERS[id];
+  /* Travel Outlook is a hero band, not a SECTIONS member - prime it too. */
+  const trec = cacheGet("travel");
+  if (trec){
     try {
-      const data = await cfg.load();
-      cacheSet(id, data);                            // scroll-in uses this
-      if (cfg.after) cfg.after(data);                // sets kpiState.*
-    } catch { /* leave the card shimmering; the section shows its own error */ }
-  }));
-  renderKpis();
+      LOADERS.travel.render(trec.d);
+      loaded.add("travel"); stamps.travel = trec.t; dataMap.travel = trec.d;
+      setDot("travel", "ok"); setSecTime("travel", "cached");
+    } catch { /* shape drift - refetch on load */ }
+  }
+  tick();
 }
 
 /* ════════════════════════════ PWA plumbing ════════════════════════════ */
@@ -7909,7 +7771,6 @@ let syncNet = null;
 function boot(){
   loadPrefs();
   buildShell();
-  renderKpis();
   pwa();
   applyTheme(); applyText(); applyLang();
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyTheme(); rerenderAll(); });
@@ -7945,9 +7806,6 @@ function boot(){
   initAnchorNav();
   topbtn.onclick = () => scrollTo({ top:0, behavior:"smooth" });
   primeCached();
-  /* Warm the three hero-KPI-backed lazy sections without waiting for
-     scroll; see primeKpis(). */
-  primeKpis();
   /* Start lazy-loading only after weather + fuel have rendered: while the
      page is still skeletons it is short, so every section looks "near" the
      viewport and IntersectionObserver would fire immediately. Once the eager

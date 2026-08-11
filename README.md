@@ -39,7 +39,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
-| Travel Outlook (sub-block of Public Transport) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and bilingual one-liners, plus tips to travel around them |
+| Travel Outlook (hero band, above the fold) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and bilingual one-liners, plus tips to travel around them |
 
 ---
 
@@ -323,10 +323,13 @@ no key at all.
 school calendar - already mirrored into `slow.json` from the mycal API - into
 the **next 8 weeks of peak travel periods**: school breaks, public holidays and
 long weekends, each with an impact level (`extreme` / `high` / `moderate`) and
-bilingual one-liners written by Gemini. It is rendered as a merged sub-block of
-the Public Transport section: a timeline with traffic-light impact badges, a
-`NOW` marker plus amber banner when a visitor arrives during a live peak (e.g.
-the Term 2 break overlapping Merdeka Day), and a collapsible tips list.
+bilingual one-liners written by Gemini. It is rendered as a **hero band above
+the fold**, between the daily briefing and the Trend Radar: a timeline with
+traffic-light impact badges, a `NOW` marker plus amber banner when a visitor
+arrives during a live peak (e.g. the Term 2 break overlapping Merdeka Day),
+and a collapsible tips list. The hero KPI card strip was removed in the same
+pass - the briefing and the travel band carry the "what matters today"
+summary, and each section keeps its own KPI cards.
 
 The same governing rule as the briefing applies, and it is enforced in code:
 
