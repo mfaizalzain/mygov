@@ -379,6 +379,40 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .brief-h{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
   margin-bottom:var(--s3)}
 .brief-h h3{margin:0;font-size:15px;font-weight:660;letter-spacing:-.02em}
+/* Holiday + school chips: one slim row under the hero location bar. */
+.hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
+  margin:var(--s2) 0 0}
+.hol-chip{display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:11.5px;line-height:1;
+  padding:5px 10px;border-radius:999px;border:1px solid var(--line-soft);
+  background:var(--bg-2);color:var(--fg-2)}
+.hol-chip.hol-next{color:var(--fg-1)}
+.hol-chip.hol-school{color:var(--fg-3)}
+.hol-chip b{font-weight:700}
+.hol-chip.hol-today{border-color:rgba(251,191,36,.45);
+  background:rgba(251,191,36,.08);color:#fbbf24}
+/* Affluent-vs-poorest comparison strip (Places view). */
+.cmp-row{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--s3);
+  align-items:stretch}
+.cmp{border:1px solid var(--line-soft);border-radius:var(--r2);
+  padding:var(--s3) var(--s4);background:var(--bg-2)}
+.cmp-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--fg-3);margin-bottom:6px}
+.cmp-name{font-size:14px;font-weight:650;color:var(--fg-1)}
+.cmp-st{color:var(--fg-3);font-weight:500}
+.cmp-val{font-family:var(--mono);font-size:21px;font-weight:700;
+  margin-top:2px}
+.cmp-aff .cmp-val{color:#34d399}
+.cmp-poor .cmp-val{color:#fbbf24}
+.cmp-sub{font-size:11px;color:var(--fg-3);margin-top:4px}
+.cmp-gap{display:flex;flex-direction:column;justify-content:center;
+  align-items:center;gap:2px;min-width:52px}
+.cmp-gap-v{font-family:var(--mono);font-size:18px;font-weight:700;
+  color:var(--fg-1)}
+.cmp-gap-l{font-size:10px;color:var(--fg-3);text-transform:uppercase;
+  letter-spacing:.06em}
+@media (max-width:620px){ .cmp-row{grid-template-columns:1fr}
+  .cmp-gap{flex-direction:row;min-width:0;padding:4px 0} }
 .brief-note{font-family:var(--mono);font-size:11px;color:var(--fg-3)}
 .brief-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
 .brief-list li{display:flex;align-items:flex-start;gap:var(--s2);font-size:13.5px;
@@ -827,6 +861,15 @@ html[data-text="large"] table{font-size:14px}
           <span class="pos-count" id="pos-count"></span>
           <div class="pos-panel" id="pos-panel" hidden></div>
         </div>
+      </div>
+      <!-- Holiday + school chips. One slim line, shown once slow.json loads;
+           "today" highlights, otherwise the next holiday applying to the
+           visitor's state (fallback: national). School chip reflects the
+           KPM calendar - on break during cuti penggal (travel peak season). -->
+      <div class="hol-row" id="hol-band" hidden>
+        <span class="hol-chip" id="hol-today" hidden></span>
+        <span class="hol-chip hol-next" id="hol-next" hidden></span>
+        <span class="hol-chip hol-school" id="hol-school" hidden></span>
       </div>
       <!-- Active-alerts band. Hidden unless /api/alerts returns a quake within
            500 km / 12 h or flood stations at risk; the data decides. -->
@@ -1505,6 +1548,14 @@ const I18N = {
   "public holidays marked":"cuti umum ditanda",
   "forecast":"unjuran", "forecast · 80% band":"unjuran · jalur 80%",
   "Today in brief":"Ringkasan hari ini",
+  "Today":"Hari ini", "Next":"Seterusnya", "in Nd":"dalam Nd hari",
+  "School on break":"Cuti sekolah", "School in session":"Sekolah bersekolah",
+  "Affluent vs poorest districts":"Daerah paling makmur vs termiskin",
+  "median household income":"pendapatan isi rumah median",
+  "Most affluent":"Paling makmur", "Poorest":"Termiskin",
+  "income gap":"jurang pendapatan", "Top group":"Kumpulan teratas",
+  "Median income":"Pendapatan median", "Poverty":"Kemiskinan", "Gini":"Gini",
+  "Income data not available yet.":"Data pendapatan belum tersedia.",
 } };
 const T = s => (I18N[LANG] && I18N[LANG][s]) || s;
 /* Forecasts arrive only in Bahasa Melayu; map the common phrases to English
@@ -2301,6 +2352,72 @@ function renderBrief(){
     const target = b.sec && document.getElementById(b.sec) ? b.sec : null;
     return `<li>${target ? `<a href="#${esc(target)}">${text}</a>` : text}</li>`;
   }).join("");
+  band.hidden = false;
+}
+
+/* Holiday + school chips (state-aware). Reads slow.json's holidays[] - each
+   entry [date, name, major, states] - and school[] breaks (KPM calendar,
+   Kumpulan A/B). "Today" gets the highlighted chip; otherwise the next
+   holiday that applies to the visitor's state (or nationally). The school
+   chip says whether the KPM calendar has schools on break today - the
+   travel peak seasons. */
+function holSlug(){
+  /* Visitor's state from the location pipeline: geo.osm is "City, State"
+     when located. mycal states are snake_case slugs; map the common
+     OSM spellings. */
+  if (!geo || !geo.osm) return null;
+  const st = String(geo.osm).split(",").pop().trim().toLowerCase();
+  const map = {
+    "kuala lumpur":"kuala-lumpur", "putrajaya":"wp-putrajaya",
+    "labuan":"wp-labuan", "penang":"pulau-pinang",
+    "negeri sembilan":"negeri-sembilan", "melaka":"melaka",
+    "johor":"johor", "kedah":"kedah", "kelantan":"kelantan",
+    "terengganu":"terengganu", "perlis":"perlis", "pahang":"pahang",
+    "perak":"perak", "sabah":"sabah", "sarawak":"sarawak",
+    "selangor":"selangor" };
+  return map[st] || null;
+}
+function renderHolWidget(){
+  const band = $("#hol-band"), tEl = $("#hol-today"),
+        nEl = $("#hol-next"), sEl = $("#hol-school");
+  if (!band || !slowData) return;
+  const hol = (slowData.holidays || []).filter(h => h && h[0]);
+  if (!hol.length){ band.hidden = true; return; }
+  const slug = holSlug();
+  const today = new Date();
+  const todayIso = isoOf(Math.floor(today.getTime() / DAY_MS));
+  const applies = h => {
+    const sts = h[3];
+    /* A holiday applies if it covers the visitor's state; without a state,
+       national entries (federal + most states) qualify. mycal uses ["*"]
+       as an all-states wildcard on some entries. */
+    if (Array.isArray(sts) && sts.includes("*")) return true;
+    if (slug) return Array.isArray(sts) && sts.includes(slug);
+    return Array.isArray(sts) ? sts.length >= 10 : true;
+  };
+  const on = hol.filter(h => applies(h) && h[0] === todayIso)[0];
+  const next = hol.filter(h => applies(h) && h[0] > todayIso)[0];
+  if (on){
+    tEl.hidden = false;
+    tEl.innerHTML = `🗓 <b>${T("Today")}:</b> ${esc(on[1])}`;
+  } else tEl.hidden = true;
+  if (next){
+    const days = Math.round((Date.parse(next[0]) - today.getTime()) / DAY_MS);
+    nEl.hidden = false;
+    nEl.innerHTML = `🗓 ${T("Next")}: <b>${esc(next[1])}</b> · ${T("in Nd").replace("Nd", nf(days))}`;
+  } else nEl.hidden = true;
+  /* School break? Group A = Kedah/Kelantan/Terengganu (Fri-Sat weekend),
+     B = everywhere else. Match the visitor's state when known. */
+  const sch = (slowData.school || []).filter(s => s && s.start && s.end);
+  if (sch.length){
+    const grpA = ["kedah", "kelantan", "terengganu"].includes(slug);
+    const range = sch.filter(s => !s.group || s.group === (grpA ? "A" : "B"));
+    const inBreak = range.some(s => todayIso >= s.start && todayIso <= s.end);
+    sEl.hidden = false;
+    sEl.innerHTML = inBreak
+      ? `🏫 ${T("School on break")}`
+      : `🏫 ${T("School in session")}`;
+  } else sEl.hidden = true;
   band.hidden = false;
 }
 
@@ -4476,6 +4593,31 @@ function paintReg(d){
    Feb 2026 Komuter spike is Chinese New Year, the level shift after it is
    Ramadan. Drawn as a Chart.js plugin so it re-renders with the chart and
    costs nothing when no holiday falls in the visible range. */
+/* School breaks are travel peak seasons (mid-year, year-end), so the
+   ridership chart shades them as faint vertical bands - distinct from the
+   dashed holiday lines, no labels (they run for days, and the tooltip on
+   any day inside a band explains it). */
+function schoolBands(bands, labIdx){
+  return {
+    id:"schoolBands",
+    beforeDatasetsDraw(chart){
+      const { ctx, chartArea, scales } = chart;
+      const x = scales.x;
+      ctx.save();
+      for (const b of bands){
+        const x0 = x.getPixelForValue(labIdx.get(b.startLab));
+        const x1 = x.getPixelForValue(labIdx.get(b.endLab));
+        if (x1 < chartArea.left || x0 > chartArea.right) continue;
+        const lo = Math.max(x0, chartArea.left);
+        const hi = Math.min(x1, chartArea.right);
+        ctx.fillStyle = "rgba(56,189,248,.08)";
+        ctx.fillRect(lo, chartArea.top, hi - lo, chartArea.bottom - chartArea.top);
+      }
+      ctx.restore();
+    },
+  };
+}
+
 function holidayMarkers(hit, labIdx){
   return {
     id:"holidayMarkers",
@@ -4602,6 +4744,34 @@ function paintRid(d){
             return names.get(lab) ? lab + " · " + names.get(lab) : lab;
           } }) });
       plugins.push(holidayMarkers(hit, labIdx));
+    }
+    /* School-break shading - bands whose name explains the dip (travel peak
+       season). Drawn beneath the datasets so the line stays readable. */
+    const sbreak = (d.school || []).filter(s => s && s.start && s.end);
+    if (sbreak.length){
+      const sBands = sbreak.map(s => ({
+          startLab: md(s.start) + " '" + s.start.slice(2, 4),
+          endLab: md(s.end) + " '" + s.end.slice(2, 4),
+          name: String(s.name || "") }))
+        .filter(s => labIdx.has(s.startLab) && labIdx.has(s.endLab));
+      if (sBands.length){
+        plugins.push(schoolBands(sBands, labIdx));
+        /* Hovering any day inside a break appends the break name. */
+        const names = new Map();
+        for (const b of sBands){
+          const i0 = labIdx.get(b.startLab), i1 = labIdx.get(b.endLab);
+          for (let i = i0; i <= i1; i++)
+            names.set(labels[i], (names.get(labels[i]) ? names.get(labels[i]) + " · " : "") + b.name);
+        }
+        const tt = opts.plugins.tooltip;
+        opts.plugins.tooltip = Object.assign({}, tt, {
+          callbacks: Object.assign({}, tt.callbacks, {
+            title: items => {
+              const lab = items[0] && items[0].label;
+              const nm = names.get(lab);
+              return nm ? lab + " · " + nm : (tt.callbacks.title ? tt.callbacks.title(items) : lab);
+            } }) });
+      }
     }
   }
   chart("rid-chart", { type:"line", data:{ labels, datasets:sets },
@@ -4844,6 +5014,13 @@ function renderPlaces(g){
       </div>
     </div>
     <div class="card mb">
+      <div class="card-h"><h4>${T("Affluent vs poorest districts")}</h4>
+        <span class="sub">${T("median household income")} · ${yr}</span></div>
+      <div class="card-b">
+        ${placesCompare(g.district.list)}
+      </div>
+    </div>
+    <div class="card mb">
       <div class="card-h"><h4>${T("Districts")}</h4>
         <span class="sub">${nf(dists.length)} ${T("of")} ${nf(g.district.known)} ${T("districts")} · ${g.district.year}</span>
         <span class="right"><label class="sr" for="places-dq">${T("Search districts")}</label>
@@ -4853,6 +5030,10 @@ function renderPlaces(g){
           <th class="sortable" data-key="n">${T("District")} <span class="arrow">↕</span></th>
           <th class="sortable num" data-key="p" data-num="1" data-desc="1">${T("Population")} <span class="arrow">↕</span></th>
           <th class="sortable num" data-key="g" data-num="1" data-desc="1">${T("YoY")} <span class="arrow">↕</span></th>
+          <th class="sortable" data-key="grp">${T("Top group")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="inc" data-num="1" data-desc="1">${T("Median income")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="pov" data-num="1" data-desc="1">${T("Poverty")} <span class="arrow">↕</span></th>
+          <th class="sortable num" data-key="gini" data-num="1" data-desc="1">${T("Gini")} <span class="arrow">↕</span></th>
         </tr></thead><tbody></tbody></table></div></div>
     </div>
     <div class="card">
@@ -4902,7 +5083,45 @@ function placesDistRows(g){
   const q = placesDQ.trim().toLowerCase();
   return g.district.list
     .filter(x => x.s === placesState && (!q || x.n.toLowerCase().includes(q)))
-    .map(x => ({ n: x.n, p: x.p, g: x.g }));
+    .map(x => ({
+      n: x.n, p: x.p, g: x.g,
+      grp: topGroup(x.eth),
+      inc: x.inc, pov: x.pov, gini: x.gini }));
+}
+
+/* Largest ethnic group + share for a district's eth map, e.g.
+   {bumi_malay: 1300, chinese: 500} -> ["bumi_malay", 72.2]. */
+function topGroup(eth){
+  if (!eth) return null;
+  const tot = Object.values(eth).reduce((a, v) => a + (v || 0), 0);
+  if (!tot) return null;
+  const [k, v] = Object.entries(eth).sort((a, b) => (b[1] || 0) - (a[1] || 0))[0];
+  return [k, (v || 0) / tot * 100];
+}
+
+/* Affluent-vs-poorest comparison strip: two compact panels side by side,
+   computed nationally (not restricted to the selected state), so the gap
+   the whole country lives with is visible at a glance. */
+function placesCompare(list){
+  const withInc = (list || []).filter(r => r.inc != null);
+  if (withInc.length < 2) return `<div class="state">${T("Income data not available yet.")}</div>`;
+  const aff = withInc.slice().sort((a, b) => b.inc - a.inc)[0];
+  const poor = withInc.slice().sort((a, b) => a.inc - b.inc)[0];
+  const ratio = poor.inc ? (aff.inc / poor.inc) : null;
+  const panel = (r, tag, cls) => `<div class="cmp cmp-${cls}">
+    <div class="cmp-tag">${tag}</div>
+    <div class="cmp-name">${esc(r.n)} <span class="cmp-st">${esc(r.s)}</span></div>
+    <div class="cmp-val">RM ${nf(r.inc, 0)}</div>
+    <div class="cmp-sub">${T("median household income")} · ${T("poverty")} ${r.pov == null ? "-" : nf(r.pov, 1) + "%"} · ${T("Gini")} ${r.gini == null ? "-" : nf(r.gini, 3)}</div>
+  </div>`;
+  return `<div class="cmp-row">
+    ${panel(aff, T("Most affluent"), "aff")}
+    <div class="cmp-gap">
+      <div class="cmp-gap-v">${ratio ? nf(ratio, 1) + "×" : "-"}</div>
+      <div class="cmp-gap-l">${T("income gap")}</div>
+    </div>
+    ${panel(poor, T("Poorest"), "poor")}
+  </div>`;
 }
 
 function paintPlacesDistricts(g, rows){
@@ -4913,8 +5132,12 @@ function paintPlacesDistricts(g, rows){
       <td class="num">${r.p == null ? "-" : nf(r.p * 1000)}</td>
       <td class="num">${r.g == null ? "-" :
         `<span class="${r.g > 0 ? "down" : "up"}">${r.g > 0 ? "▲" : "▼"} ${nf(Math.abs(r.g), 2)}%</span>`}</td>
+      <td>${r.grp ? `${esc(ethnicLabel(r.grp[0]))} <span class="dim">${nf(r.grp[1], 0)}%</span>` : "-"}</td>
+      <td class="num">${r.inc == null ? "-" : "RM " + nf(r.inc, 0)}</td>
+      <td class="num">${r.pov == null ? "-" : nf(r.pov, 1) + "%"}</td>
+      <td class="num">${r.gini == null ? "-" : nf(r.gini, 3)}</td>
     </tr>`).join("")
-    || `<tr><td colspan="3" class="state">${T("No districts match.")}</td></tr>`;
+    || `<tr><td colspan="7" class="state">${T("No districts match.")}</td></tr>`;
 }
 
 function placesSeatRows(g){
@@ -6723,6 +6946,10 @@ function boot(){
     if (loaded.has("health") && dataMap.health) paintDonations(dataMap.health);
   });
   loadBrief().then(renderBrief);
+  /* Holiday + school chips need slow.json (same file the weather/fuel
+     loaders share) - render as soon as it lands; slow.json is tiny and
+     cached after the first section loads it. */
+  readSlow().then(() => renderHolWidget());
   loadAlerts().then(renderAlerts);
   setInterval(tick, 30000);
 }

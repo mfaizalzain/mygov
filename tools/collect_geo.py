@@ -133,6 +133,37 @@ def build_state(df):
             "eth": eth, "age": ages, "sex": sex}
 
 
+def district_eth_sx(cur):
+    """Pure: per-district ethnicity + sex split from the newest-year slice.
+
+    cur : DataFrame (or anything itertuples-able) with columns
+          state, district, sex, age, ethnicity, population, restricted to the
+          latest year. Mirrors build_state's composition extraction, but
+          keyed by (state, district) instead of state.
+    Returns {state|district: {"eth": {group: pop}, "sx": {"male": pop, "female": pop}}}
+    for the districts present in `cur`. Values are rounded to 1 decimal
+    (thousands, as published)."""
+    out = {}
+    eth = {}
+    for st, g in cur[(cur.sex == "both") & (cur.age == "overall")].groupby(["state", "district"]):
+        eth[st] = {r.ethnicity: num(r.population)
+                   for r in g.itertuples() if r.ethnicity != "overall"}
+    sx = {}
+    for st, g in cur[(cur.age == "overall") & (cur.ethnicity == "overall")].groupby(["state", "district"]):
+        d = {r.sex: num(r.population) for r in g.itertuples()}
+        sx[st] = {"male": d.get("male"), "female": d.get("female")}
+    for key in set(eth) | set(sx):
+        e, s = eth.get(key), sx.get(key)
+        row = {}
+        if e:
+            row["eth"] = e
+        if s and (s["male"] is not None or s["female"] is not None):
+            row["sx"] = s
+        if row:
+            out[key] = row
+    return out
+
+
 def build_district(df):
     df = df.copy()
     df["y"] = df.date.astype(str).str[:4].astype(int)
@@ -141,11 +172,18 @@ def build_district(df):
     cur = ov[ov.y == latest]
     prev = ov[ov.y == ov[ov.y < latest].y.max()] if (ov.y < latest).any() else None
     pm = {} if prev is None else dict(zip(prev.district, prev.population))
+    # Composition comes from the full latest-year slice (not the overall rows):
+    # ethnicity and sex live in the dimension rows, so they need the
+    # unrestricted dataframe at the same year as the totals.
+    full = df[df.y == latest]
+    comp = district_eth_sx(full)
     rows = []
     for r in cur.itertuples():
         was = pm.get(r.district)
-        rows.append({"n": r.district, "s": r.state, "p": num(r.population),
-                     "g": None if not was else num((r.population / was - 1) * 100, 2)})
+        row = {"n": r.district, "s": r.state, "p": num(r.population),
+               "g": None if not was else num((r.population / was - 1) * 100, 2)}
+        row.update(comp.get((r.state, r.district), {}))
+        rows.append(row)
     rows.sort(key=lambda x: -(x["p"] or 0))
     # 4 of the 164 districts carry no row for the newest year upstream. Ship
     # both counts so the UI can say so instead of quietly showing 160.
@@ -231,6 +269,46 @@ def build_socio(level):
     return out
 
 
+def build_district_socio(district_rows):
+    """Income, poverty and inequality per DISTRICT (OpenAPI). Unlike the
+    constituency socio which keys on seat labels, district datasets carry
+    state + district columns - join on the pair. Returns {state|district:
+    {"inc": median_rm, "pov": abs_pct, "gini": 0-1}} for the newest release
+    year only (2019/2022/2024 - DOSM publishes these in waves)."""
+    jobs = [
+        ("hh_income_district",     lambda r: [("inc", num(r.get("income_median"), 0))]),
+        ("hh_poverty_district",    lambda r: [("pov", num(r.get("poverty_absolute"), 2))]),
+        ("hh_inequality_district", lambda r: [("gini", num(r.get("gini"), 3))]),
+    ]
+    # (state, district) keys as they appear in the population table.
+    want = {(r["s"], r["n"]) for r in district_rows}
+    out = {}
+    for i, (ds, pick) in enumerate(jobs):
+        if i:
+            time.sleep(16)   # same 4-requests/min family as build_socio
+        try:
+            rows = api(ds, sort="-date")
+        except Exception as e:
+            sys.stderr.write(f"  {ds}: {e} - skipped\n")
+            continue
+        if not rows:
+            continue
+        newest = max(str(r.get("date", "")) for r in rows)
+        n = 0
+        for r in rows:
+            if str(r.get("date", "")) != newest:
+                continue
+            key = (str(r.get("state", "")).strip(), str(r.get("district", "")).strip())
+            if key not in want:
+                continue
+            for k, v in pick(r):
+                if v is not None:
+                    out.setdefault(key, {})[k] = v
+            n += 1
+        sys.stderr.write(f"  {ds}: {n} districts @ {newest[:4]}\n")
+    return out
+
+
 def main():
     sys.stderr.write("fetching population parquet\n")
     state = build_state(parquet("population_state"))
@@ -242,6 +320,13 @@ def main():
     socio_p = build_socio("parlimen")
     time.sleep(16)
     socio_d = build_socio("dun")
+
+    # District-level income/poverty/gini - the district table gains these
+    # columns in the same shape as the constituency socio (inc/pov/gini).
+    time.sleep(16)
+    dist_socio = build_district_socio(district["list"])
+    for row in district["list"]:
+        row.update(dist_socio.get((row["s"], row["n"]), {}))
 
     if len(parlimen["list"]) < MIN_SEATS or len(district["list"]) < MIN_SEATS:
         raise SystemExit("geo: too few seats/districts, refusing to write")
