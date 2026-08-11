@@ -3,7 +3,7 @@
 A dashboard for Malaysia's Government Open API - weather, fuel prices, economic
 statistics and public transport, in one page.
 
-**Live:** https://mygov.faizalmzain.com
+**Live:** https://malaysia-at-a-glance.com
 
 No build step, no framework, no npm dependencies at runtime. The whole app is a
 single HTML file plus a service worker, served by a Cloudflare Worker that also
@@ -62,7 +62,7 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
   python3 tools/collect_radar.py            sends top-5 to Telegram
   GOOGLE_API_KEY secret → Gemini cluster    (no collecting - read-only)
   commit + push radar.json
-  Cloudflare auto-deploy → mygov.faizalmzain.com/radar.json
+  Cloudflare auto-deploy → malaysia-at-a-glance.com/radar.json
 ```
 
 - **Collector:** `tools/collect_radar.py` - RSS fetch, Gemini clustering with

@@ -375,7 +375,7 @@ deliberately not, and why**. Plain hyphens only; verify with
 
 1. `git push` -> auto-deploy (~40-90s).
 2. `gh workflow run collect_insights.yml` -> `gh run list` -> `completed success`.
-3. `curl "https://mygov.faizalmzain.com/forecasts.json?cb=$(date +%s)"` -> real JSON.
+3. `curl "https://malaysia-at-a-glance.com/forecasts.json?cb=$(date +%s)"` -> real JSON.
 4. Browser: band visible, BM works, forecast overlay on both charts, no console errors.
 5. **Grounding spot-check:** every numeral in every bullet appears in that day's data.
 6. Lighthouse: perf stays >= 95.

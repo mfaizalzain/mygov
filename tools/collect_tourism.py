@@ -29,7 +29,7 @@ import urllib.error
 from datetime import date, timedelta
 
 BASE = "https://data.tourism.gov.my/frontend/pdf"
-UA = {"User-Agent": "mygov-tourism/1.0 (+https://mygov.faizalmzain.com)"}
+UA = {"User-Agent": "mygov-tourism/1.0 (+https://malaysia-at-a-glance.com)"}
 
 MONTHS = ["jan", "feb", "mac", "apr", "may", "jun", "jul", "ogo", "sep", "okt", "nov", "dis"]
 # Filename month slugs: all Malay abbreviations EXCEPT May, which is the

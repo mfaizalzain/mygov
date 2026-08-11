@@ -43,7 +43,7 @@ FIDS = "https://api.myairports.com.my/passenger-fids/api/flights/search-flights"
 
 
 def ua():
-    return {"User-Agent": "mygov/1.0 (+https://mygov.faizalmzain.com)"}
+    return {"User-Agent": "mygov/1.0 (+https://malaysia-at-a-glance.com)"}
 
 
 def fetch(url, headers=None):

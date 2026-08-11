@@ -117,7 +117,7 @@ def mycal(path, params):
     qs = "&".join(f"{k}={urllib.parse.quote(str(v))}" for k, v in params.items())
     req = urllib.request.Request(f"{MYCAL}/{path}?{qs}",
                                  headers={"Accept": "application/json",
-                                          "User-Agent": "mygov/1.0 (+https://mygov.faizalmzain.com)"})
+                                          "User-Agent": "mygov/1.0 (+https://malaysia-at-a-glance.com)"})
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read().decode("utf-8"))
 

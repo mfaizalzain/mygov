@@ -23,7 +23,7 @@ from datetime import date
 import pandas as pd
 
 OUT = "public/cars.json"
-UA = {"User-Agent": "mygov-mcp/1.0 (+https://mygov.faizalmzain.com)"}
+UA = {"User-Agent": "mygov-mcp/1.0 (+https://malaysia-at-a-glance.com)"}
 YEAR = date.today().year
 
 # Kept compact: what the dashboard actually charts. "overall" is the total;

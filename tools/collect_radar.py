@@ -18,7 +18,7 @@ from collections import Counter
 OUT = "public/radar.json"
 HISTORY = "tools/radar_history.json"
 HISTORY_DAYS = 7
-UA = {"User-Agent": "mygov-radar/0.1 (+https://mygov.faizalmzain.com)"}
+UA = {"User-Agent": "mygov-radar/0.1 (+https://malaysia-at-a-glance.com)"}
 GEMINI_MODEL = "gemini-flash-latest"
 
 NEWS_FEEDS = [

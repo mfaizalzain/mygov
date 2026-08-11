@@ -89,7 +89,7 @@ def find_latest(base_url, year, months_back=3):
 ```
 - Try the current year's `visitor_arrivals` pattern for each month from `dis` backwards (or from the current month backwards); first 200 wins.
 - If none in the current year, try the previous year's `tourist_arrivals` pattern.
-- Use a custom `User-Agent: mygov-tourism/1.0 (+https://mygov.faizalmzain.com)` (the Cloudflare 403-on-default-UA lesson from the flood collector applies here too).
+- Use a custom `User-Agent: mygov-tourism/1.0 (+https://malaysia-at-a-glance.com)` (the Cloudflare 403-on-default-UA lesson from the flood collector applies here too).
 - 3 attempts with 5/10s backoff on transient errors; a 404 is a definitive "not published yet" (no retry).
 
 **Step 3: Download + cache**
@@ -248,9 +248,9 @@ function renderTourism(d){
   readOnlyHint: true, openWorldHint: false, destructiveHint: false
 }
 ```
-- Dispatch: fetch `https://mygov.faizalmzain.com/tourism.json?cb=${t}` (same-origin KV-backed, like `mygov_flood_risk`), filter + shape, TTL 3600 (monthly data - long cache fine).
+- Dispatch: fetch `https://malaysia-at-a-glance.com/tourism.json?cb=${t}` (same-origin KV-backed, like `mygov_flood_risk`), filter + shape, TTL 3600 (monthly data - long cache fine).
 
-**Step 2: Python stdio** - `get_tourism_arrivals(country, min_rank)` with `urllib.request` + custom UA (`mygov-mcp/1.0 (+https://mygov.faizalmzain.com)` - the Cloudflare 403 lesson), TOOLS entry, dispatch branch. Sync all three copies.
+**Step 2: Python stdio** - `get_tourism_arrivals(country, min_rank)` with `urllib.request` + custom UA (`mygov-mcp/1.0 (+https://malaysia-at-a-glance.com)` - the Cloudflare 403 lesson), TOOLS entry, dispatch branch. Sync all three copies.
 
 **Step 3: Validate + deploy**
 - `claude plugin validate ./claude-mygov --strict` → passes.
@@ -280,7 +280,7 @@ function renderTourism(d){
 1. Push all repos → auto-deploy (~40-90s).
 2. Seed KV once: `npx wrangler kv key put tourism --namespace-id=40812fc5fedb4e1fb66d70f75e707f90 --path=public/tourism.json --remote`.
 3. Fire the workflow: `gh workflow run collect_tourism.yml` → `completed success`.
-4. `curl "https://mygov.faizalmzain.com/tourism.json?cb=$(date +%s)"` → real JSON, 51+ rows.
+4. `curl "https://malaysia-at-a-glance.com/tourism.json?cb=$(date +%s)"` → real JSON, 51+ rows.
 5. Browser: Tourism section renders (nav item present, 10-row table, BM toggle).
 6. MCP: `curl -s "https://mygov-mcp.faizalmzain.com/mcp"` tools/list contains `mygov_tourism_arrivals`; live call returns SINGAPORE rank 1.
 
