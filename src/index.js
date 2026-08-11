@@ -544,6 +544,7 @@ export default {
       "/geo.json":    { key: "geo",    type: "json" },
       "/insights.json":  { key: "insights",  type: "json" },
       "/forecasts.json": { key: "forecasts", type: "json" },
+      "/transport_history.json": { key: "transport", type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {
