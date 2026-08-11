@@ -55,15 +55,32 @@ def fetch(url, headers=None):
         return r.read()
 
 
-def scheduled_bus_trips(day):
-    """Count Rapid KL bus trips scheduled to run on `day` (ISO date).
+def count_trips_for_day(cal, dates, trip_services, day):
+    """Pure core of scheduled_bus_trips - no I/O, fully deterministic.
 
-    GTFS frequencies.txt gives per-trip headways; a trip with a frequency
-    entry runs for its whole service span, so 'trip runs today' is
-    determined by the calendar (weekday vs weekend service) plus any
-    calendar_dates exception. Deterministic: same feed, same answer."""
-    raw = fetch(GTFS)
-    zf = zipfile.ZipFile(io.BytesIO(raw))
+    cal      : {service_id: {"days": [7x0/1], "start": YYYY-MM-DD, "end": ...}}
+    dates    : {service_id: {YYYY-MM-DD: True/False}} exceptions (calendar_dates)
+    trip_services : [service_id, ...] one per trip (trips.txt)
+    day      : ISO date to count for
+    Returns the number of trips whose service runs that day."""
+    wd = dt.date.fromisoformat(day)
+    weekday_idx = wd.weekday()  # 0=Mon..6=Sun
+
+    def active(sid):
+        if sid in dates and day in dates[sid]:
+            return dates[sid][day]
+        c = cal.get(sid)
+        if not c:
+            return False
+        if not (c["start"] <= day <= c["end"]):
+            return False
+        return c["days"][weekday_idx] == "1"
+
+    return sum(1 for sid in trip_services if active(sid))
+
+
+def parse_gtfs(zf):
+    """Extract (cal, dates, trip_services) from an open GTFS zipfile."""
     cal = {}
     for line in zf.read("calendar.txt").decode().splitlines()[1:]:
         p = line.split(",")
@@ -76,25 +93,25 @@ def scheduled_bus_trips(day):
             p = line.split(",")
             if len(p) >= 3:
                 dates.setdefault(p[0], {})[p[1]] = p[2] == "1"
-
-    wd = dt.date.fromisoformat(day)
-    weekday_idx = wd.weekday()  # 0=Mon..6=Sun
-    def active(sid):
-        if sid in dates and day in dates[sid]:
-            return dates[sid][day]
-        c = cal.get(sid)
-        if not c:
-            return False
-        if not (c["start"] <= day <= c["end"]):
-            return False
-        return c["days"][weekday_idx] == "1"
-
-    trips = 0
+    trip_services = []
     for line in zf.read("trips.txt").decode().splitlines()[1:]:
         p = line.split(",")
-        if len(p) >= 3 and active(p[1]):   # trip_id, route_id, service_id...
-            trips += 1
-    return trips
+        if len(p) >= 3:
+            trip_services.append(p[1])
+    return cal, dates, trip_services
+
+
+def scheduled_bus_trips(day):
+    """Count Rapid KL bus trips scheduled to run on `day` (ISO date).
+
+    GTFS frequencies.txt gives per-trip headways; a trip with a frequency
+    entry runs for its whole service span, so 'trip runs today' is
+    determined by the calendar (weekday vs weekend service) plus any
+    calendar_dates exception. Deterministic: same feed, same answer."""
+    raw = fetch(GTFS)
+    zf = zipfile.ZipFile(io.BytesIO(raw))
+    cal, dates, trip_services = parse_gtfs(zf)
+    return count_trips_for_day(cal, dates, trip_services, day)
 
 
 def kul_flights_today(api_key):

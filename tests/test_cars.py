@@ -49,6 +49,15 @@ def test_top_makers_ordered():
     assert names[:4] == ["Perodua", "Proton", "BYD", "Chery"]
 
 
+def test_ev_makers_ranked():
+    d = aggregate(_df())
+    # BYD (Jan) + Chery (Feb) = 1 EV each; both ranked, BYD first by month
+    assert d["evMakers"][0]["name"] in ("BYD", "Chery")
+    names = [m["name"] for m in d["evMakers"]]
+    assert "BYD" in names and "Chery" in names
+    assert all(m["n"] == 1 for m in d["evMakers"])
+
+
 def test_fuel_mix_and_state_split():
     d = aggregate(_df())
     assert d["fuelMix"]["petrol"] == 3

@@ -122,6 +122,29 @@ def mycal(path, params):
         return json.loads(r.read().decode("utf-8"))
 
 
+def parse_mycal_holidays(data):
+    """Pure: filter + shape a mycal /holidays payload into slow.json rows.
+
+    data : list of mycal holiday dicts ({"date", "name":{"en",..}, "states":[...]})
+    Returns [[YYYY-MM-DD, name, major, [states]], ...] sorted by date."""
+    out = []
+    for h in data or []:
+        name = str(h.get("name", {}).get("en", "")).strip()
+        if not name or name in NOT_HOLIDAYS:
+            continue
+        date = str(h.get("date", ""))
+        if not date or date < f"{HOL_FROM}-01-01":
+            continue
+        states = [str(s) for s in h.get("states", []) if s]
+        if not states:
+            continue
+        out.append([date, name,
+                    1 if any(k in name for k in MAJOR) else 0,
+                    states])
+    out.sort(key=lambda r: r[0])
+    return out
+
+
 def holidays():
     """[[YYYY-MM-DD, name, major, [states]], …] - state-aware holidays from
     the mycal API. Each entry carries the snake_case state list it applies to
@@ -134,19 +157,7 @@ def holidays():
         except Exception as e:
             sys.stderr.write(f"  holidays {year}: {e} - skipped\n")
             continue
-        for h in (d or {}).get("data", []):
-            name = str(h.get("name", {}).get("en", "")).strip()
-            if not name or name in NOT_HOLIDAYS:
-                continue
-            date = str(h.get("date", ""))
-            if not date or date < f"{HOL_FROM}-01-01":
-                continue
-            states = [str(s) for s in h.get("states", []) if s]
-            if not states:
-                continue
-            out.append([date, name,
-                        1 if any(k in name for k in MAJOR) else 0,
-                        states])
+        out.extend(parse_mycal_holidays((d or {}).get("data", [])))
     out.sort(key=lambda r: r[0])
     sys.stderr.write(f"  holidays: {len(out)} entries "
                      f"({sum(h[2] for h in out)} major) from {HOL_FROM}\n")

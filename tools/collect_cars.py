@@ -60,6 +60,10 @@ def aggregate(df):
     makers = df["maker"].value_counts().head(12)
     top = [{"name": str(k), "n": int(v)} for k, v in makers.items()]
 
+    ev_df = df[df["fuel"] == "electric"]
+    ev_makers = ev_df["maker"].value_counts().head(8)
+    ev_top = [{"name": str(k), "n": int(v)} for k, v in ev_makers.items()]
+
     fuel_mix = {str(k): int(v) for k, v in df["fuel"].value_counts().items()}
 
     states = df["state"].value_counts().head(8)
@@ -73,6 +77,7 @@ def aggregate(df):
         "byFuel": by_fuel,
         "evShare": ev_share,
         "topMakers": top,
+        "evMakers": ev_top,
         "fuelMix": fuel_mix,
         "stateSplit": state_split,
         "rows": int(len(df)),

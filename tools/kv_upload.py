@@ -42,6 +42,7 @@ FILES = {
     "forecasts": "public/forecasts.json",
     "transport": "public/transport_history.json",
     "cars": "public/cars.json",
+    "tourism": "public/tourism.json",
     "feed": "public/feed.xml",
 }
 

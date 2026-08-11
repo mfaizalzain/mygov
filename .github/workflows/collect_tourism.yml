@@ -1,0 +1,41 @@
+name: Update Tourism (monthly visitor arrivals)
+
+on:
+  schedule:
+    # Tourism Malaysia publishes ~1 month behind; run on the 2nd of each month.
+    - cron: "30 2 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pymupdf
+
+      - name: Syntax
+        run: python3 -m py_compile tools/collect_tourism.py tools/kv_upload.py
+
+      - name: Unit tests
+        run: python3 -m pytest tests/test_tourism.py -q
+
+      - name: Collect tourism data
+        run: python3 tools/collect_tourism.py
+
+      - name: Validate output
+        run: python3 -c "import json; d=json.load(open('public/tourism.json')); rows=d.get('visitor') or []; assert len(rows)>=50, 'only %d rows - layout drift?'%len(rows); assert d.get('totals') and d['totals'].get('cur'), 'missing totals'; assert d['asOf']['year']>=2024, 'asOf year odd'; print('OK:', d['asOf']['label'], len(rows), 'rows, total', d['totals']['cur'])"
+
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py --only tourism
