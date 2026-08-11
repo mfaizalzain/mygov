@@ -11,7 +11,8 @@ Output: public/radar.json  (fetched by the dashboard's Trend Radar section)
 Gemini key: read from GOOGLE_API_KEY in ~/.hermes/.env (or env).
 Fallback: keyword-frequency clustering if the API call fails — never crash.
 """
-import json, os, re, html, sys, datetime, urllib.request, xml.etree.ElementTree as ET
+import json, os, re, html, sys, time, datetime, urllib.request, urllib.error
+import xml.etree.ElementTree as ET
 from collections import Counter
 
 OUT = "public/radar.json"
@@ -29,6 +30,34 @@ NEWS_FEEDS = [
 
 TRENDS_RSS = "https://trends.google.com/trending/rss?geo=MY"  # curl-able, no browser needed
 
+
+
+def gemini_post(url, body, timeout=90, tries=3):
+    """POST to Gemini, retrying transient failures.
+
+    The project runs on a free-tier key, which is exactly where 429s happen,
+    and a rate-limited call should cost a retry rather than the day's radar.
+    4xx other than 429 are permanent - a bad key or a malformed request will
+    not fix itself - so those raise immediately instead of burning attempts
+    and burying the real error."""
+    last = None
+    for attempt in range(tries):
+        try:
+            req = urllib.request.Request(
+                url, data=body, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            last = e
+            if e.code != 429 and e.code < 500:
+                raise
+            sys.stderr.write(f"  gemini {e.code}, attempt {attempt + 1}/{tries}\n")
+        except Exception as e:
+            last = e
+            sys.stderr.write(f"  gemini {type(e).__name__}, attempt {attempt + 1}/{tries}\n")
+        if attempt < tries - 1:
+            time.sleep(10 * (attempt + 1))
+    raise last or RuntimeError("gemini failed")
 
 def fetch(url, timeout=20):
     req = urllib.request.Request(url, headers=UA)
@@ -154,9 +183,7 @@ Rules:
     body = json.dumps({"contents": [{"parts": [{"text": prompt}]}],
                        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192}}).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=90) as r:
-        d = json.load(r)
+    d = gemini_post(url, body, timeout=90)
     text = d["candidates"][0]["content"]["parts"][0]["text"]
     # strip markdown fences if present
     text = re.sub(r"^```(json)?\s*|\s*```$", "", text.strip())
@@ -280,9 +307,7 @@ If it is a verified true claim, verdict TRUE. If it is a false/fake claim or rum
     }).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     try:
-        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            d = json.load(r)
+        d = gemini_post(url, body, timeout=60)
         text = d["candidates"][0]["content"]["parts"][0]["text"]
         text = re.sub(r"^```(json)?\s*|\s*```$", "", text.strip())
         parsed = json.loads(text)
