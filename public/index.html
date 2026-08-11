@@ -5099,19 +5099,44 @@ function paintDonations(d){
     labels.push(md(hIso(d.don, i)) + " '" + hIso(d.don, i).slice(2, 4));
     daily.push(all[i]); mean.push(avg[i] == null ? null : Math.round(avg[i] * 10) / 10);
   }
-  chart("don-chart", {
-    type:"line",
-    data:{ labels, datasets:[
-      /* Daily donations are spiky - weekday drives run into the thousands, weekends
-         near zero - so the raw series is drawn faintly and the average on top of it. */
-      { label:T("Daily donors"), data:daily, borderColor:"rgba(248,113,113,.5)", borderWidth:1,
-        pointRadius:0, tension:.2, fill:true,
-        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#f87171") },
-      { label:T("7-day average"), data:mean, borderColor:"#2dd4bf", borderWidth:2.4,
-        pointRadius:0, tension:.3, spanGaps:true },
-    ] },
-    options: hLineOpts(labels.length),
-  });
+  /* Donations are the strongest weekly cycle in the whole dataset (seasonal
+     naive beats naive by 55%), so the projection is the one worth drawing. */
+  const F = fcData && fcData.blood && fcData.blood.all;
+  const sets = [
+    /* Daily donations are spiky - weekday drives run into the thousands, weekends
+       near zero - so the raw series is drawn faintly and the average on top of it. */
+    { label:T("Daily donors"), data:daily, borderColor:"rgba(248,113,113,.5)", borderWidth:1,
+      pointRadius:0, tension:.2, fill:true,
+      backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#f87171") },
+    { label:T("7-day average"), data:mean, borderColor:"#2dd4bf", borderWidth:2.4,
+      pointRadius:0, tension:.3, spanGaps:true },
+  ];
+  if (F && F.fc && F.fc.length){
+    for (let i = 0; i < F.fc.length; i++)
+      labels.push(md(hIso(d.don, all.length + i)) + " '" +
+                  hIso(d.don, all.length + i).slice(2, 4));
+    const pad = new Array(labels.length - F.fc.length).fill(null);
+    const anchor = a => { const o = [...pad, ...a];
+      o[pad.length - 1] = daily[daily.length - 1]; return o; };
+    sets.push({ label:"", data:anchor(F.fc.map(r => r.lo)), borderColor:"transparent",
+      pointRadius:0, fill:false, tension:.3 });
+    sets.push({ label:"", data:anchor(F.fc.map(r => r.hi)), borderColor:"transparent",
+      pointRadius:0, fill:"-1", backgroundColor:"#f8717122", tension:.3 });
+    sets.push({ label:T("forecast"), data:anchor(F.fc.map(r => r.mid)),
+      borderColor:"#f87171", borderWidth:1.8, borderDash:[5, 3], pointRadius:0, tension:.3 });
+  }
+  const dopts = hLineOpts(labels.length);
+  if (F){
+    const tt = dopts.plugins.tooltip || {};
+    dopts.plugins.legend = Object.assign({}, dopts.plugins.legend, {
+      labels: Object.assign({}, (dopts.plugins.legend || {}).labels,
+        { filter: it => !!it.text }) });
+    dopts.plugins.tooltip = Object.assign({}, tt, {
+      callbacks: Object.assign({}, tt.callbacks, {
+        label: it => it.dataset.label
+          ? ` ${it.dataset.label}: ${nf(it.parsed.y)}` : null }) });
+  }
+  chart("don-chart", { type:"line", data:{ labels, datasets:sets }, options: dopts });
   const dt = $("#don-dt");
   if (dt) dt.innerHTML = hTable([T("Date"), T("Daily donors"), T("7-day average")],
     labels, [daily, mean]);
@@ -6604,7 +6629,9 @@ function boot(){
      appeared or not depending on how recently you had visited. Fetch once
      here and repaint whatever is already on screen when it lands. */
   readForecasts().then(f => {
-    if (f && loaded.has("mobility") && dataMap.mobility) paintRid(dataMap.mobility);
+    if (!f) return;
+    if (loaded.has("mobility") && dataMap.mobility) paintRid(dataMap.mobility);
+    if (loaded.has("health") && dataMap.health) paintDonations(dataMap.health);
   });
   loadBrief().then(renderBrief);
   setInterval(tick, 30000);
