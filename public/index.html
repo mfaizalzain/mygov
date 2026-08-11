@@ -1254,7 +1254,9 @@ const WINDOW = 60000;
 const FRESH_YEARS = 2;   // datasets whose last update is older than this are hidden
 /* BUMP when a loader's returned shape changes, or a stale cache is replayed
    into a renderer that expects different fields. */
-const CK = "mygov.cache.v9.";   // v9: weather.eq gains km + eqLive/eqRadius
+/* v9: weather.eq gains km + eqRadius. v10: weather.eq is strictly the last
+   24 h - a replayed v9 payload carries history under a "last 24 hours" head. */
+const CK = "mygov.cache.v10.";
 const LK = "mygov.location.v1";
 
 /* ═══════════ preferences: language · theme · text size ═══════════ */
@@ -1397,11 +1399,9 @@ const I18N = {
   /* MET's feed is global; the section shows only what is near Malaysia. */
   "Earthquakes near Malaysia":"Gempa bumi berhampiran Malaysia",
   "within Nkm":"dalam lingkungan Nkm", "last 24 hours":"24 jam lepas",
-  "no activity in the last 24 hours - showing the most recent":
-    "tiada aktiviti dalam 24 jam lepas - memaparkan yang terkini",
   "From Malaysia":"Dari Malaysia",
-  "No recorded earthquakes within Nkm of Malaysia.":
-    "Tiada rekod gempa bumi dalam lingkungan Nkm dari Malaysia.",
+  "No earthquakes within Nkm of Malaysia in the last 24 hours.":
+    "Tiada gempa bumi dalam lingkungan Nkm dari Malaysia dalam 24 jam lepas.",
   "All Malaysia":"Seluruh Malaysia", "My area":"Kawasan saya", "Marine":"Marin",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
@@ -2108,17 +2108,15 @@ async function loadWeather(){
                  ts: Date.parse(String(q.utcdatetime || "").replace(" ", "T") + "Z") }))
     .filter(x => x.km != null && x.km <= EQ_RADIUS_KM)
     .sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  const shape = x => ({ t:x.q.localdatetime, lat:x.q.lat, lon:x.q.lon, dep:x.q.depth,
-    loc:x.q.location_original || x.q.location, mag:x.q.magdefault,
-    near:x.q.n_distancemas, km:x.km, ts:x.ts });
-  const fresh = nearby.filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS);
-  /* Malaysia is seismically quiet: of 800 feed events only ~47 fall inside
-     500 km, and they arrive months apart - a strict 24 h view is an empty
-     table almost every day. Show the last 24 h when there is something, and
-     otherwise fall back to the recent nearby history so the card still says
-     something true. `eqLive` tells the renderer which of the two it got. */
-  const eqLive = fresh.length > 0;
-  const eq = (eqLive ? fresh : nearby.slice(0, 20)).map(shape);
+  /* Live view only - within 500 km AND within the last 24 h. Malaysia is
+     seismically quiet, so this is empty on most days; that is the honest
+     answer, not a gap. The card renders an explicit all-clear rather than a
+     blank table, and no historical fallback creeps in behind it. */
+  const eq = nearby
+    .filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS)
+    .map(x => ({ t:x.q.localdatetime, lat:x.q.lat, lon:x.q.lon, dep:x.q.depth,
+      loc:x.q.location_original || x.q.location, mag:x.q.magdefault,
+      near:x.q.n_distancemas, km:x.km, ts:x.ts }));
 
   const now = Date.now();
   const warn = (warnings || []).filter(w => {
@@ -2137,7 +2135,7 @@ async function loadWeather(){
              dated: real(w.valid_from) && real(w.valid_to) };
   }).sort((a,b) => Number(a.info) - Number(b.info));
 
-  return { locs, rows, dict, warn, eq, eqLive, eqRadius:EQ_RADIUS_KM };
+  return { locs, rows, dict, warn, eq, eqRadius:EQ_RADIUS_KM };
 }
 
 async function loadFuel(){
@@ -3198,9 +3196,8 @@ function renderWeather(d){
     </div>
     <div class="card">
       <div class="card-h"><h4>${T("Earthquakes near Malaysia")}</h4>
-        <span class="sub">${T("within Nkm").replace("N", nf(d.eqRadius))} · ${d.eqLive
-          ? T("last 24 hours") : T("no activity in the last 24 hours - showing the most recent")
-          }${d.eqLive ? " · " + d.eq.length + " " + T("events") : ""} · MET Malaysia</span></div>
+        <span class="sub">${T("within Nkm").replace("N", nf(d.eqRadius))} · ${T("last 24 hours")}${
+          d.eq.length ? " · " + d.eq.length + " " + T("events") : ""} · MET Malaysia</span></div>
       <div class="tw scroll-y"><table>
         <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
           <th class="num">${T("Depth")}</th><th class="num">${T("From Malaysia")}</th>
@@ -3216,7 +3213,8 @@ function renderWeather(d){
               href="https://www.google.com/maps?q=${q.lat},${q.lon}"
               aria-label="Open earthquake location in Google Maps">map ↗</a></td></tr>`;
         }).join("") || `<tr><td colspan="7" class="state">${
-          T("No recorded earthquakes within Nkm of Malaysia.").replace("N", nf(d.eqRadius))
+          T("No earthquakes within Nkm of Malaysia in the last 24 hours.")
+            .replace("N", nf(d.eqRadius))
         }</td></tr>`}
       </tbody></table></div>
     </div>`;
