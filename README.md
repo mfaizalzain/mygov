@@ -317,6 +317,35 @@ no key at all.
 
 ---
 
+## Travel Outlook
+
+`tools/collect_travel.py` (weekly, Monday 01:30 UTC) turns the holiday + KPM
+school calendar - already mirrored into `slow.json` from the mycal API - into
+the **next 8 weeks of peak travel periods**: school breaks, public holidays and
+long weekends, each with an impact level (`extreme` / `high` / `moderate`) and
+bilingual one-liners written by Gemini. It is rendered as a merged sub-block of
+the Public Transport section: a timeline with traffic-light impact badges, a
+`NOW` marker plus amber banner when a visitor arrives during a live peak (e.g.
+the Term 2 break overlapping Merdeka Day), and a collapsible tips list.
+
+The same governing rule as the briefing applies, and it is enforced in code:
+
+- **The calendar is the ground truth, the model writes words.** Gemini only
+  ever receives dates `>= today` - holidays in the past are dropped, ongoing
+  school breaks are clamped to start today, and fully-finished breaks are
+  removed - so it cannot emit a past date. Every period it returns is
+  cross-checked against the calendar facts; a period whose start or end is not
+  in that set is discarded, never corrected.
+- **No key, rate limit or bad JSON falls back to a deterministic outlook**
+  built from the same calendar (school break + major festival = extreme,
+  break alone = high, other holidays = moderate), so the card always renders.
+- The client filters `end >= today` again, so even a stale cached copy never
+  shows a past peak.
+
+KV key `travel`, workflow `collect_travel.yml`, sw.js exclusion list updated.
+
+---
+
 ## Architecture
 
 ```
