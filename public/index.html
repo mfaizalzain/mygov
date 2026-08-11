@@ -205,16 +205,16 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .hero{padding:var(--s8) 0 var(--s6)}
 .hero h2{margin:0 0 var(--s2);font-size:30px;font-weight:720;letter-spacing:-.035em;line-height:1.15}
 .hero p{margin:0;color:var(--fg-2);font-size:14.5px;max-width:62ch}
-/* Above 1100px the copy caps out at 62ch and leaves the right half of the
-   hero empty down to the KPI row, so the KPIs move up beside it into a 2x3
-   block. Below that they go back to a full-width band under the copy. */
+/* Above 1100px the copy caps out at 62ch and would leave the right half of
+   the hero empty, so the KPIs move up beside it into a 2x4 block and the
+   daily brief fills the space under the copy. Below that both go back to a
+   full-width stack under the copy. */
 @media (min-width:1100px){
-  .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
-    column-gap:var(--s8);align-items:start}
-  .hero h2,.hero p,.hero-loc-row{grid-column:1}
+  .hero{display:flex;gap:var(--s8);align-items:flex-start}
+  .hero-copy{flex:1 1 0;min-width:0}
   /* two columns, not three: three would make the cards narrower than the
      full-width row they replaced, which is the opposite of the point */
-  .hero .kpis{grid-column:2;grid-row:1 / span 3;margin-top:6px;
+  .hero .kpis{flex:1.15 1 0;min-width:0;margin-top:6px;
     grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 .hero-loc{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;min-height:40px}
@@ -226,6 +226,9 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .hero-loc-row{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;
   margin-top:var(--s4)}
 .hero-loc-row .pos-util{margin-top:0}
+/* The brief lives in the hero's copy column on desktop (filling the space
+   under the location row) and directly under the KPI row on small screens. */
+.hero .brief{margin-top:var(--s4)}
 /* compact postcode utility */
 .pos-util{position:relative;display:flex;align-items:center;gap:var(--s2);max-width:420px;flex:1;min-width:240px}
 .pos-util .pos-ico{font-size:13px;color:var(--fg-3)}
@@ -787,21 +790,32 @@ html[data-text="large"] table{font-size:14px}
 
 <div class="wrap">
   <div class="hero">
-    <h2 data-i18n="Today in Malaysia">Today in Malaysia</h2>
-    <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area - fetched live
-       from the Malaysian Government Open API.</p>
-    <div class="hero-loc-row">
-      <div class="hero-loc" id="hero-loc" role="status" aria-label="Your selected location">
-        <button class="btn btn-a" id="hero-loc-try"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-live"/></svg> <span data-i18n="use my location">use my location</span></button>
+    <div class="hero-copy">
+      <h2 data-i18n="Today in Malaysia">Today in Malaysia</h2>
+      <p data-i18n="hero">Weather, fuel prices, warnings and transport updates for your area - fetched live
+         from the Malaysian Government Open API.</p>
+      <div class="hero-loc-row">
+        <div class="hero-loc" id="hero-loc" role="status" aria-label="Your selected location">
+          <button class="btn btn-a" id="hero-loc-try"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-live"/></svg> <span data-i18n="use my location">use my location</span></button>
+        </div>
+        <div class="pos-util">
+          <label class="sr" for="pos-q" data-i18n="Postcode lookup">Postcode lookup</label>
+          <span class="pos-ico" aria-hidden="true"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-search"/></svg></span>
+          <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off"
+                 role="combobox" aria-haspopup="listbox" aria-controls="pos-panel" aria-expanded="false">
+          <span class="pos-count" id="pos-count"></span>
+          <div class="pos-panel" id="pos-panel" hidden></div>
+        </div>
       </div>
-      <div class="pos-util">
-        <label class="sr" for="pos-q" data-i18n="Postcode lookup">Postcode lookup</label>
-        <span class="pos-ico" aria-hidden="true"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-search"/></svg></span>
-        <input class="inp" id="pos-q" placeholder="Postcode, city or state…" autocomplete="off"
-               role="combobox" aria-haspopup="listbox" aria-controls="pos-panel" aria-expanded="false">
-        <span class="pos-count" id="pos-count"></span>
-        <div class="pos-panel" id="pos-panel" hidden></div>
-      </div>
+      <!-- Daily briefing. Hidden until insights.json produces grounded bullets;
+           a missing, stale or empty file leaves no trace on the page. -->
+      <section class="brief" id="brief-band" aria-labelledby="brief-h" hidden>
+        <div class="brief-h">
+          <h3 id="brief-h" data-i18n="Today in brief">Today in brief</h3>
+          <span class="brief-note" id="brief-note"></span>
+        </div>
+        <ul class="brief-list" id="brief-list"></ul>
+      </section>
     </div>
     <div class="kpis" id="kpis">
       <a class="kpi kpi-load" href="#weather" aria-label="Hottest today - go to the weather section">
@@ -846,16 +860,6 @@ html[data-text="large"] table{font-size:14px}
         <div class="sub"><span class="skel skel-sub"></span></div></a>
     </div>
   </div>
-
-  <!-- Daily briefing. Hidden until insights.json produces grounded bullets;
-       a missing, stale or empty file leaves no trace on the page. -->
-  <section class="brief" id="brief-band" aria-labelledby="brief-h" hidden>
-    <div class="brief-h">
-      <h3 id="brief-h" data-i18n="Today in brief">Today in brief</h3>
-      <span class="brief-note" id="brief-note"></span>
-    </div>
-    <ul class="brief-list" id="brief-list"></ul>
-  </section>
 
   <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
