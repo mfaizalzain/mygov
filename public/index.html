@@ -151,6 +151,11 @@ header{position:sticky; top:0; z-index:40; background:rgba(10,12,16,.86);
   #install{display:inline-flex;visibility:hidden}
   #install.show{visibility:visible}
 }
+/* Touch sizing (see the pointer:coarse block further down) puts the wrapped
+   control row at 44px, so the reserve above under-shoots by ~9px and the CLS
+   it exists to prevent comes back. 12px padding x2 + 36px brand + 16px gap
+   + 44px controls = 124. Keep this in step with .btn's min-height. */
+@media (max-width:620px) and (pointer:coarse){ .hd{min-height:124px} }
 .brand{display:flex;align-items:center;gap:var(--s3);min-width:0}
 .mark{width:36px;height:36px;border-radius:11px;flex:none;box-shadow:var(--shadow)}
 .brand h1{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
@@ -200,6 +205,14 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .dot.ok{background:var(--ok)} .dot.err{background:var(--danger)}
 .dot.load{background:var(--warn);animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+/* Active-alert count on a nav item. Only Warnings uses it today; it is set
+   from renderHazards()'s own alertN, so the nav and the tile can never
+   disagree. Hidden at zero - a "0" badge reads as an alert at a glance. */
+.nav-badge{min-width:17px;height:17px;padding:0 5px;border-radius:99px;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--danger);color:#fff;font-size:10.5px;font-weight:700;
+  font-family:var(--mono);line-height:1}
+.nav-badge[hidden]{display:none}
 
 /* ═══════════════════════════ hero ═══════════════════════════ */
 .hero{padding:var(--s8) 0 var(--s6)}
@@ -868,8 +881,20 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   #lang,#textsize,#theme{padding:8px 10px}
   #install span{display:none}
 }
+/* Touch sizing below takes both stacked children of .hero-loc-row to 44px
+   (44 + 12px gap + 44), so the 85px reserve set above under-shoots by 15 and
+   the wrap it exists to absorb shifts the hero copy anyway. Keep in step with
+   .hero-loc/.inp in the coarse block. */
+@media (max-width:620px) and (pointer:coarse){ .hero-loc-row{min-height:100px} }
 @media (pointer:coarse){
-  .btn{padding:11px 16px}
+  .btn{padding:11px 16px;min-height:44px;min-width:44px}
+  /* .btn-ico is a fixed square, so the padding bump above cannot reach it -
+     it stayed at 36px while every other control here was already sized. */
+  .btn-ico{width:44px;height:44px}
+  /* The nav is the primary way around the page on a phone and its rows were
+     ~31px; the sticky offsets read --nav from a ResizeObserver, so growing
+     it re-measures rather than desyncing scroll-padding. */
+  nav.sections a{min-height:44px}
   .inp{min-height:44px}
   .seg button{min-height:40px;padding:6px 14px}
   .chip{min-height:40px;padding:9px 14px;display:inline-flex;align-items:center}
@@ -879,6 +904,16 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
      24px tall at their type size, so the hit area comes from padding. */
   a.maplink{min-height:36px;padding:8px 12px}
   .link-btn{min-height:36px;padding:7px 8px;display:inline-flex;align-items:center}
+  /* The location controls are the exception to the 36px above. They are the
+     page's primary CTA - and they render as .link-btn precisely in the
+     denied/unavailable states, i.e. the moment the user has to hit one to
+     recover - so they get the full 44px. The 36px compromise stays for the
+     genuinely secondary text links (table map links, disclosure summaries),
+     where inflating every row would cost more than it buys.
+     .hero-loc's own reserve moves with them, or the taller control reflows
+     the hero copy below it. */
+  .hero-loc{min-height:44px}
+  .hero-loc .link-btn, #wx-loc .link-btn{min-height:44px;padding:9px 10px}
   details.meta summary,details.dt summary,.wx-other summary{min-height:36px;
     padding:9px 0;align-items:center}
   details.dt summary,.wx-other summary{display:inline-flex}
@@ -956,7 +991,7 @@ html[data-text="large"] table{font-size:14px}
 <nav class="sections" aria-label="Sections">
   <ul id="navlist">
     <li hidden><a href="#radar-band" id="nav-radar-band"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> Trending</a></li>
-    <li><a href="#hazards" id="nav-hazards"><span class="dot" id="dot-hazards"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Warnings</a></li>
+    <li><a href="#hazards" id="nav-hazards"><span class="dot" id="dot-hazards"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Warnings<span class="nav-badge" id="badge-hazards" hidden></span></a></li>
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Household</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> People</a></li>
@@ -1423,7 +1458,9 @@ const I18N = {
   "Trains and buses currently reporting their position, straight from the operators' live feeds.":"Kereta api dan bas yang kini melaporkan kedudukan mereka, terus daripada suapan langsung pengendali.",
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
   "Data source & methodology":"Sumber data & kaedah",
-  "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · fetched ":"cache · diambil ",
+  "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · ":"cache · ",
+  "fetched ":"diambil ", "just now":"sebentar tadi", "min ago":"min lalu",
+  "h ago":"j lalu", "d ago":"h lalu",
   "Population":"Penduduk", "People":"Penduduk",
   "Who lives in Malaysia and how they are doing - DOSM population estimates from 1970 to now, broken down by state, district and constituency with per-seat income, poverty, inequality and unemployment, plus the Health block below on blood donations, organ pledges and PeKa B40 screenings.":"Siapa yang tinggal di Malaysia dan bagaimana keadaan mereka - anggaran penduduk DOSM dari 1970 hingga kini, dipecahkan mengikut negeri, daerah dan kawasan pilihan raya dengan pendapatan, kemiskinan, ketaksamaan dan pengangguran setiap kerusi, serta blok Kesihatan di bawah tentang derma darah, ikrar organ dan saringan PeKa B40.", "Population growth":"Pertumbuhan penduduk",
   "How many people live in Malaysia - the national total every year since 1970, then the same DOSM estimates broken down by state, district and constituency, with per-seat income, poverty, inequality and unemployment.":"Berapa ramai penduduk Malaysia - jumlah kebangsaan setiap tahun sejak 1970, kemudian anggaran DOSM yang sama dipecahkan mengikut negeri, daerah dan kawasan pilihan raya, dengan pendapatan, kemiskinan, ketaksamaan dan pengangguran bagi setiap kerusi.",
@@ -1810,7 +1847,14 @@ function applyLang(){
   SECTIONS.forEach(s => {
     const a = $("#nav-" + s.id); if (a){
       const dot = a.querySelector(".dot");
-      a.innerHTML = (dot ? dot.outerHTML : "") + ico(s.icon) + " " + esc(T(s.label));
+      /* The status dot and the alert badge are state, not copy - a language
+         switch must not clear them, so both are carried across the rebuild
+         and the badge's accessible name is re-stated in the new language. */
+      const bdg = a.querySelector(".nav-badge");
+      a.innerHTML = (dot ? dot.outerHTML : "") + ico(s.icon) + " " + esc(T(s.label)) +
+                    (bdg ? bdg.outerHTML : "");
+      const st = navBadges[s.id];
+      if (st) setNavBadge(s.id, st.n, st.keyOne, st.keyMany);
     }
     const h = $("#h-" + s.id); if (h) h.textContent = T(META[s.id].title);
     const sec = document.getElementById(s.id);
@@ -1991,6 +2035,19 @@ const dow = d => { const t = new Date(d); return isNaN(t) ? ""
 const hhmm = ts => new Date(ts).toLocaleTimeString("en-MY", { hour:"2-digit", minute:"2-digit" });
 const hms = ts => new Date(ts).toLocaleTimeString("en-MY",
   { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+/* "just now" / "4 min ago" / "2 h ago". Freshness is the question a section
+   pill actually answers, and a bare clock time makes the reader do the
+   subtraction. Past an hour the absolute time is the more useful of the two,
+   so the pill keeps a title with it either way (see setSecTime). */
+function relTime(ts){
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  if (s < 90) return T("just now");
+  const m = Math.round(s / 60);
+  if (m < 60) return m + " " + T("min ago");
+  const h = Math.round(m / 60);
+  if (h < 24) return h + " " + T("h ago");
+  return Math.round(h / 24) + " " + T("d ago");
+}
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 /* Canvas colours must be concrete hex/rgba - Chart.js can't resolve var().
    Resolve the design tokens at render time so charts follow the theme. */
@@ -3154,6 +3211,26 @@ function initAnchorNav(){
 }
 
 const setDot = (id, st) => { const d = $("#dot-" + id); if (d) d.className = "dot " + st; };
+/* Count badge on a nav item. The badge itself is aria-hidden and the count is
+   folded into the link's accessible name instead - otherwise the link reads
+   as "Warnings 2", which is a label and a number rather than a statement.
+   Translation keys are stored rather than the built string, so applyLang()
+   can re-render the badge in the new language from the same state. */
+const navBadges = {};
+function setNavBadge(id, n, keyOne, keyMany){
+  const st = navBadges[id] = { n, keyOne, keyMany };
+  const b = $("#badge-" + id); if (!b) return;
+  b.textContent = n > 99 ? "99+" : String(n);
+  b.hidden = !n;
+  b.setAttribute("aria-hidden", "true");
+  const a = $("#nav-" + id);
+  if (a){
+    const base = T((SECTIONS.find(s => s.id === id) || {}).label || id);
+    if (n) a.setAttribute("aria-label",
+      `${base} - ${n} ${T(n === 1 ? st.keyOne : st.keyMany)}`);
+    else a.removeAttribute("aria-label");
+  }
+}
 /* Sections whose body element has a different id than the section (the
    Places explorer merged into Population renders in #body-places). */
 const BODY_MAP = { population: "places" };
@@ -3503,6 +3580,7 @@ function renderHazards(d){
         atRisk ? `<div id="body-flood"></div>` : "");
 
   host.innerHTML = `<div class="hz-strip">${wxTile}${fTile}</div>`;
+  setNavBadge("hazards", alertN, "active alert", "active alerts");
 
   if (wxBody) paintAlerts();
   /* Leaflet needs a laid-out container, so the map waits for the disclosure
@@ -7864,11 +7942,26 @@ function setSecTime(id, mode){
   if (mode === "loading"){ text = "loading…"; cls = " loading"; }
   else if (mode === "updated" || mode === "cached"){
     if (dd){ text = T("data as of ") + md(dd); if (stale){ text += " ⚠️ " + T("may be delayed"); cls = " warn"; } }
-    else text = (mode === "cached" ? T("cached · fetched ") : T("updated ")) + at;
+    else text = (mode === "cached" ? T("cached · ") : T("updated ")) + relTime(stamps[id]);
   }
   else if (mode === "error"){ text = T("refresh failed - showing last data"); cls = " error"; }
   n.textContent = text; n.className = "sec-time" + cls;
+  /* The pill shows whichever of the two timestamps is more useful; the hover
+     title carries the pair, so "data as of" sections still expose when they
+     were last fetched and relative times still expose the wall clock. */
+  const tip = [
+    dd ? T("data as of ") + md(dd) : "",
+    at ? T("fetched ") + at : "",
+  ].filter(Boolean).join(" · ");
+  if (tip) n.title = tip; else n.removeAttribute("title");
   secMode[id] = mode;
+}
+/* Relative strings drift, so every pill showing one is rewritten on the
+   30s tick. Sections stamped with a data date render a fixed string and are
+   left alone; re-applying the stored mode is otherwise a no-op. */
+function refreshSecTimes(){
+  for (const id in secMode)
+    if (secMode[id] === "updated" || secMode[id] === "cached") setSecTime(id, secMode[id]);
 }
 async function loadSection(id, force){
   if (loading.has(id)) return;
@@ -7911,6 +8004,7 @@ async function loadSection(id, force){
 }
 function tick(){
   syncTrackFades();   // a section that just rendered may contain a new track
+  refreshSecTimes();
   const bar = $("#bar i");
   /* Count only stamps belonging to real sections: flood is a sub-block of
      weather (loaded via LOADERS.weather.after) so it has a stamp but no
