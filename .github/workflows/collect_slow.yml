@@ -35,11 +35,12 @@ jobs:
       - name: Build SEO snapshot + feed
         run: python3 tools/embed_seo.py
 
-      # Data goes to KV, NOT git - the Worker serves slow.json/feed.xml and
-      # splices the SEO snapshot into index.html at request time. No commit,
-      # no push, no race with manual edits.
+      # Only the keys this job regenerated (slow.json, feed.xml, seo_snap) -
+      # an unfiltered push would re-upload the git-committed copies of the
+      # other collectors' files over fresher KV. The Worker serves
+      # slow.json/feed.xml and splices the SEO snapshot at request time.
       - name: Upload data to Cloudflare KV
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: python3 tools/kv_upload.py push --snap
+        run: python3 tools/kv_upload.py push slow feed --snap

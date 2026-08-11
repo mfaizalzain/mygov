@@ -40,14 +40,16 @@ jobs:
         run: |
           python3 tools/collect_radar.py
 
-      # Data goes to KV, NOT git. radar.json feeds the dashboard; the merged
-      # history goes back to KV for next run.
+      # Only the `radar` key (plus history below) - an unfiltered push would
+      # re-upload the git-committed copies of the other collectors' files
+      # over fresher KV. radar.json feeds the dashboard; the merged history
+      # goes back to KV for next run.
       - name: Upload data to Cloudflare KV
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          python3 tools/kv_upload.py push
+          python3 tools/kv_upload.py push radar
           python3 - <<'EOF'
           import os, sys
           sys.path.insert(0, "tools")
