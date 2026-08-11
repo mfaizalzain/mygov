@@ -3,7 +3,8 @@
 A dashboard for Malaysia's Government Open API - weather, fuel prices, economic
 statistics and public transport, in one page.
 
-**Live:** https://malaysia-at-a-glance.com
+**Production:** https://malaysia-at-a-glance.com  
+**Staging / Dev:** https://mygov.faizalmzain.com
 
 No build step, no framework, no npm dependencies at runtime. The whole app is a
 single HTML file plus a service worker, served by a Cloudflare Worker that also
