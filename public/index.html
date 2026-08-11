@@ -1442,6 +1442,7 @@ const I18N = {
   "No seats match.":"Tiada kerusi sepadan.",
   "The constituency tables carry no age bands, so citizen count is a proxy for the electorate - it still includes everyone under 18. Income, poverty and inequality come from the Household Income Survey; unemployment and participation from the Labour Force Survey.":"Jadual kawasan pilihan raya tidak mengandungi kumpulan umur, jadi bilangan warganegara ialah proksi untuk pengundi - ia masih termasuk semua yang berumur bawah 18 tahun. Pendapatan, kemiskinan dan ketaksamaan daripada Survei Pendapatan Isi Rumah; pengangguran dan penyertaan daripada Survei Tenaga Buruh.",
   "public holidays marked":"cuti umum ditanda",
+  "forecast":"unjuran", "forecast · 80% band":"unjuran · jalur 80%",
 } };
 const T = s => (I18N[LANG] && I18N[LANG][s]) || s;
 /* Forecasts arrive only in Bahasa Melayu; map the common phrases to English
@@ -2074,6 +2075,7 @@ const KTMB_SERVICES = [
 
 async function loadMobility(){
   const slow = await readSlow();
+  await readForecasts();          // additive; null is a fine outcome
   if (slow && slow.mobility)
     return Object.assign({}, slow.mobility, { holidays: slow.holidays || [] });
   /* One server-side filter is allowed; "all_types" collapses the per-body-type
@@ -2182,6 +2184,25 @@ const BLOOD_TYPES = [["a","A","#f87171"], ["b","B","#60a5fa"],
    GitHub Action into slow.json (same-origin). Loaders below try the static
    file first and only fall back to the live API when it is missing or older
    than a few days (e.g. on plain static hosting without the Action). */
+/* Forecasts are strictly additive: every chart that uses them renders
+   correctly with fcData still null, so a missing or stale forecasts.json
+   costs the reader nothing. Fetched once, alongside the section that needs
+   it, and never retried - a forecast is not worth a second request. */
+let fcData = null, fcTried = false;
+async function readForecasts(){
+  if (fcTried) return fcData;
+  fcTried = true;
+  try {
+    const r = await fetch("forecasts.json", { cache:"no-store" });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const fresh = j.generated &&
+      (Date.now() - Date.parse(j.generated + "T00:00:00Z")) < 6 * DAY_MS;
+    fcData = fresh ? j : null;
+  } catch { fcData = null; }
+  return fcData;
+}
+
 let slowData = null;
 async function readSlow(){
   if (slowData) return slowData;
@@ -4350,6 +4371,14 @@ function paintRid(d){
   const labels = [];
   for (let i = from; i < R.n; i++)
     labels.push(md(isoOf(R.t0 + i)) + " '" + isoOf(R.t0 + i).slice(2, 4));
+  /* Forecast days extend the label axis past the last observation. Only the
+     selected services that actually passed their backtest get a projection -
+     forecasts.json omits the rest, so absence here is the honest answer. */
+  const FC = (fcData && fcData.ridership) || {};
+  const fcSel = KTMB_SERVICES.filter(s => ridSvc.has(s[0]) && FC[s[0]]);
+  const fcLen = fcSel.length ? Math.min(...fcSel.map(s => FC[s[0]].fc.length)) : 0;
+  for (let i = 0; i < fcLen; i++)
+    labels.push(md(isoOf(R.t0 + R.n + i)) + " '" + isoOf(R.t0 + R.n + i).slice(2, 4));
   const sel = KTMB_SERVICES.filter(s => ridSvc.has(s[0]) && R.series[s[0]]);
   /* One service gets its raw daily line behind the average; several would turn
      the plot into noise, so those show the smoothed series only. */
@@ -4366,7 +4395,40 @@ function paintRid(d){
       borderColor:color, borderWidth:2.2, pointRadius:0, tension:.3, spanGaps:true });
     cols.push(rounded);
   }
+  /* Dashed continuation + shaded band per forecast series. The band is two
+     datasets (lo, then hi filling back to it) because Chart.js fills between
+     datasets, not within one. Both are hidden from the legend - six extra
+     entries for three lines would swamp it. */
+  for (const [k, label, color] of fcSel){
+    const f = FC[k].fc.slice(0, fcLen);
+    const pad = new Array(labels.length - fcLen).fill(null);
+    // Anchor on THIS service's own last observed point so the dashed line
+    // joins its own solid line. Indexing cols[0] would peg every forecast to
+    // whichever service happened to be selected first.
+    const ci = sel.findIndex(s => s[0] === k);
+    const own = ci >= 0 ? cols[ci] : null;
+    const last = own && own.length ? own[own.length - 1] : null;
+    const anchor = a => { const o = [...pad, ...a]; o[pad.length - 1] = last; return o; };
+    sets.push({ label:"", data:anchor(f.map(r => r.lo)), borderColor:"transparent",
+      pointRadius:0, fill:false, tension:.3 });
+    sets.push({ label:"", data:anchor(f.map(r => r.hi)), borderColor:"transparent",
+      pointRadius:0, fill:"-1", backgroundColor:color + "22", tension:.3 });
+    sets.push({ label:T(label) + " · " + T("forecast"), data:anchor(f.map(r => r.mid)),
+      borderColor:color, borderWidth:1.8, borderDash:[5, 3], pointRadius:0, tension:.3 });
+  }
+
   const opts = hLineOpts(labels.length);
+  if (fcLen){
+    const tt0 = opts.plugins.tooltip || {};
+    opts.plugins.legend = Object.assign({}, opts.plugins.legend, {
+      labels: Object.assign({}, (opts.plugins.legend || {}).labels,
+        { filter: it => !!it.text } ) });
+    opts.plugins.tooltip = Object.assign({}, tt0, {
+      callbacks: Object.assign({}, tt0.callbacks, {
+        // Suppress the two invisible band datasets from the tooltip body.
+        label: it => it.dataset.label
+          ? ` ${it.dataset.label}: ${nf(it.parsed.y)}` : null }) });
+  }
   const plugins = [];
   const hol = (d.holidays || []).filter(h => h && h[0]);
   if (hol.length){
@@ -6472,6 +6534,14 @@ function boot(){
     }, { rootMargin:"0px 0px 45% 0px", threshold:0 });
     for (const s of SECTIONS) if (LAZY.has(s.id) && !loaded.has(s.id))
       obs.observe(document.getElementById(s.id));
+  });
+  /* Forecasts are fetched independently of the section loaders.
+     loadSection() serves a cached section without calling its loader at all,
+     so a hook inside loadMobility() only fired on a cache miss - the overlay
+     appeared or not depending on how recently you had visited. Fetch once
+     here and repaint whatever is already on screen when it lands. */
+  readForecasts().then(f => {
+    if (f && loaded.has("mobility") && dataMap.mobility) paintRid(dataMap.mobility);
   });
   setInterval(tick, 30000);
 }

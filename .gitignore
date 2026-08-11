@@ -6,3 +6,6 @@ node_modules/
 
 # Internal build prompt — not part of the public project
 tools/build-prompt.md
+
+# Hermes agent scratch (plans live in docs/)
+.hermes/

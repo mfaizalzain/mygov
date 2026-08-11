@@ -438,6 +438,8 @@ export default {
       "/radar.json":  { key: "radar",  type: "json" },
       "/prices.json": { key: "prices", type: "json" },
       "/geo.json":    { key: "geo",    type: "json" },
+      "/insights.json":  { key: "insights",  type: "json" },
+      "/forecasts.json": { key: "forecasts", type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {

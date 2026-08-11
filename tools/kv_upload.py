@@ -8,7 +8,7 @@ fallback.
 
 Modes:
   push [keys...] [--snap]
-                  Upload public/{slow,health,radar,prices,geo}.json + feed.xml to
+                  Upload public/{slow,health,radar,prices,geo,insights,forecasts}.json + feed.xml to
                   KV. Naming one or more keys restricts the upload to those.
                   Do that whenever a workflow regenerates only part of the set:
                   an unfiltered push also re-uploads the *git-committed* copies
@@ -38,6 +38,8 @@ FILES = {
     "radar": "public/radar.json",
     "prices": "public/prices.json",
     "geo": "public/geo.json",
+    "insights": "public/insights.json",
+    "forecasts": "public/forecasts.json",
     "feed": "public/feed.xml",
 }
 

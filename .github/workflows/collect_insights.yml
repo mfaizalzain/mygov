@@ -1,0 +1,77 @@
+name: Update Insights + Forecasts
+
+on:
+  # 01:30 UTC, after the radar collector at 01:00 so the brief can cite the
+  # day's top issues.
+  schedule:
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  collect-insights:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Deliberately no statsforecast: the forecast is seasonal-naive with
+      # empirical bands, which needs nothing beyond the stdlib. numba + scipy +
+      # llvmlite is a slow, fragile install for gains no backtest here has
+      # demonstrated. Revisit only if one does.
+      - name: Syntax check + unit tests
+        run: |
+          python3 -m py_compile tools/collect_insights.py
+          python3 -m pip install --quiet --disable-pip-version-check pytest
+          python3 -m pytest tests/test_forecast.py -q
+
+      # The collector reads the other collectors' committed output. Those are
+      # refreshed to KV twice daily; the committed copies are the cold-start
+      # fallback and are what this job sees.
+      - name: Run collector (forecasts + brief)
+        run: python3 tools/collect_insights.py
+
+      - name: Validate output
+        run: |
+          python3 - <<'PY'
+          import json, re, sys
+          fc = json.load(open('public/forecasts.json'))
+          ins = json.load(open('public/insights.json'))
+          errs = []
+          n = len(fc.get('ridership', {})) + len(fc.get('blood', {}))
+          if n == 0:
+              errs.append('no forecast series survived the backtest gate')
+          for bucket in ('ridership', 'blood'):
+              for k, v in (fc.get(bucket) or {}).items():
+                  if v['gain'] <= 0.05:
+                      errs.append(f'{bucket}/{k} shipped with gain {v["gain"]}')
+                  if not all(r['lo'] <= r['mid'] <= r['hi'] for r in v['fc']):
+                      errs.append(f'{bucket}/{k} has an unordered band')
+          # Nothing forecast here may be a government-set price. If one ever
+          # appears, someone bypassed the backtest gate.
+          banned = {'ron95', 'ron97', 'diesel', 'usd', 'cpi', 'rice'}
+          if banned & (set(fc.get('ridership', {})) | set(fc.get('blood', {}))):
+              errs.append('an administered price or FX series was forecast')
+          if not isinstance(ins.get('bullets'), list):
+              errs.append('insights.bullets is not a list')
+          if errs:
+              sys.exit('insights: validation failed -> ' + '; '.join(errs))
+          print(f"ok: {n} forecast series, {len(ins['bullets'])} bullets, "
+                f"{len(ins.get('anomalies', []))} anomalies")
+          PY
+
+      # Only these two keys - an unfiltered push would re-upload the
+      # git-committed copies of the other collectors' files over fresher KV.
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push insights forecasts
