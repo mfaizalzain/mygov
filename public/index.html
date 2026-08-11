@@ -1478,6 +1478,12 @@ const I18N = {
  "Tourism":"Pelancongan", "visitors this month":"pelawat bulan ini",
  "vs same month last year":"berbanding bulan sama tahun lepas",
  "year to date":"setakat tahun ini", "vs 2019:":"berbanding 2019:",
+ "Year to date":"Setakat tahun ini", "YTD y/y growth":"Pertumbuhan t/t YTD",
+ "top source market":"pasaran sumber teratas", "of YTD total":"daripada jumlah YTD",
+ "Top source countries":"Negara sumber teratas", "Arrivals by country":"Ketibaan mengikut negara",
+ "ranked by YTD visitor arrivals":"disusun mengikut ketibaan setakat tahun ini",
+ "ranked by monthly arrivals":"disusun mengikut ketibaan bulanan",
+ "Tourism mode":"Mod pelancongan",
  "vs 2025:":"berbanding 2025:", "Top 10 countries":"10 negara teratas",
  "Country":"Negara", "y/y":"t/t", "YTD":"YTD",
  "All 51 countries":"Semua 51 negara",
@@ -1492,6 +1498,7 @@ const I18N = {
   "Prev":"Sebelum", "constituency":"kawasan pilihan raya",
   "no district breakdown":"tiada pecahan daerah",
   "federal territories by constituency":"wilayah persekutuan mengikut kawasan pilihan raya",
+  "Expand":"Kembangkan", "seats":"kerusi",
   "Avg trips / route":"Purata perjalanan / laluan", "routes":"laluan", "Stops":"Perhentian",
   "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
@@ -4481,6 +4488,7 @@ function paintIr(d){
 let regFuels = new Set(FUELS.map(f => f[0]));
 let regRange = "5y", ridRange = "1y";
 let carsYear = null;   // selected year in the car-sales block
+let tourMode = "month"; // "month" | "ytd" in the tourism section
 /* Absolute counts are ~90% petrol, which squeezes the EV curve this section
    is named after into an invisible sliver at the base of every bar. "Share"
    normalises each month to 100% so the transition is actually legible. */
@@ -4981,56 +4989,136 @@ async function loadTourism(){
 }
 function renderTourism(d){
   const t = d.totals || {};
-  const rows = (d.visitor || []).slice(0, 10);
-  const top = (d.visitor || [])[0];
-  const cur = t.cur, yoy = t.g_yoy;
-  const rowsHTML = rows.map(r => `
-      <tr>
-        <td class="num">${r.rank}</td>
+  const isYTD = tourMode === "ytd";
+
+  /* Sort list: Monthly uses original PDF rank, YTD sorts by ytd26 descending */
+  const allList = (d.visitor || []).slice();
+  if (isYTD) {
+    allList.sort((a, b) => (b.ytd26 || 0) - (a.ytd26 || 0));
+  } else {
+    allList.sort((a, b) => (a.rank || 0) - (b.rank || 0));
+  }
+
+  const top10 = allList.slice(0, 10);
+  const rest = allList.slice(10);
+  const top1 = allList[0];
+
+  const mainVal = isYTD ? t.ytd26 : t.cur;
+  const mainYoY = isYTD ? t.gy_yoy : t.g_yoy;
+  const v2019 = isYTD ? t.gy_2019 : t.g_2019;
+
+  const rowHTML = (r, idx) => {
+    const rank = idx + 1;
+    if (isYTD) {
+      const yoy = r.gy_yoy;
+      const v19 = r.gy_2019;
+      return `<tr>
+        <td class="num">${rank}</td>
+        <td>${esc(r.country)}</td>
+        <td class="num">${nf(r.ytd26)}</td>
+        <td class="num">${yoy == null ? "-" :
+          `<span class="${yoy < 0 ? "up" : "down"}">${yoy < 0 ? "▼" : "▲"} ${nf(Math.abs(yoy), 1)}%</span>`}</td>
+        <td class="num">${v19 == null ? "-" :
+          `<span class="${v19 < 0 ? "up" : "down"}">${v19 < 0 ? "▼" : "▲"} ${nf(Math.abs(v19), 1)}%</span>`}</td>
+        <td class="num dim">${nf(r.ytd25)}</td>
+      </tr>`;
+    } else {
+      const yoy = r.g_yoy;
+      const v19 = r.g_2019;
+      return `<tr>
+        <td class="num">${rank}</td>
         <td>${esc(r.country)}</td>
         <td class="num">${nf(r.cur)}</td>
-        <td class="num">${r.g_yoy == null ? "-" :
-          `<span class="${r.g_yoy < 0 ? "up" : "down"}">${r.g_yoy < 0 ? "▼" : "▲"} ${nf(Math.abs(r.g_yoy), 1)}%</span>`}</td>
-        <td class="num">${nf(r.ytd26)}</td>
-      </tr>`).join("");
+        <td class="num">${yoy == null ? "-" :
+          `<span class="${yoy < 0 ? "up" : "down"}">${yoy < 0 ? "▼" : "▲"} ${nf(Math.abs(yoy), 1)}%</span>`}</td>
+        <td class="num">${v19 == null ? "-" :
+          `<span class="${v19 < 0 ? "up" : "down"}">${v19 < 0 ? "▼" : "▲"} ${nf(Math.abs(v19), 1)}%</span>`}</td>
+        <td class="num dim">${nf(r.ytd26)}</td>
+      </tr>`;
+    }
+  };
+
   $("#body-tourism").innerHTML = `
     <div class="grid g3 mb">
-      <div class="kpi"><div class="kpi-t"><span class="lab">${T("visitors this month")}</span></div>
-        <div class="val">${cur == null ? "-" : nf(cur)}</div>
-        <div class="sub">${d.asOf ? esc(d.asOf.label) : ""}</div></div>
-      <div class="kpi"><div class="kpi-t"><span class="lab">${T("vs same month last year")}</span></div>
-        <div class="val">${yoy == null ? "-" :
-          `<span class="${yoy < 0 ? "up" : "down"}">${yoy < 0 ? "▼" : "▲"} ${nf(Math.abs(yoy), 1)}%</span>`}</div>
-        <div class="sub">${T("vs 2019:")} ${t.g_2019 == null ? "-" :
-          `<span class="${t.g_2019 < 0 ? "up" : "down"}">${nf(t.g_2019, 1)}%</span>`}</div></div>
-      <div class="kpi"><div class="kpi-t"><span class="lab">${T("year to date")}</span></div>
-        <div class="val">${t.ytd26 == null ? "-" : nf(t.ytd26)}</div>
-        <div class="sub">${T("vs 2025:")} ${t.gy_yoy == null ? "-" :
-          `<span class="${t.gy_yoy < 0 ? "up" : "down"}">${nf(t.gy_yoy, 1)}%</span>`}</div></div>
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T(isYTD ? "year to date" : "visitors this month")}</span></div>
+        <div class="val">${mainVal == null ? "-" : nf(mainVal)}</div>
+        <div class="sub">${isYTD ? (d.asOf ? "Jan–" + esc(d.asOf.label) : "") : (d.asOf ? esc(d.asOf.label) : "")}</div></div>
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T(isYTD ? "YTD y/y growth" : "vs same month last year")}</span></div>
+        <div class="val">${mainYoY == null ? "-" :
+          `<span class="${mainYoY < 0 ? "up" : "down"}">${mainYoY < 0 ? "▼" : "▲"} ${nf(Math.abs(mainYoY), 1)}%</span>`}</div>
+        <div class="sub">${T("vs 2019:")} ${v2019 == null ? "-" :
+          `<span class="${v2019 < 0 ? "up" : "down"}">${nf(v2019, 1)}%</span>`}</div></div>
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T(isYTD ? "top source market" : "year to date")}</span></div>
+        <div class="val" style="${isYTD ? 'font-size:20px' : ''}">${isYTD ? (top1 ? esc(top1.country) : "-") : (t.ytd26 == null ? "-" : nf(t.ytd26))}</div>
+        <div class="sub">${isYTD ? (top1 && t.ytd26 ? nf(top1.ytd26 / t.ytd26 * 100, 1) + "% " + T("of YTD total") : "") : (T("vs 2025:") + " " + (t.gy_yoy == null ? "-" : nf(t.gy_yoy, 1) + "%"))}</div></div>
     </div>
-    <div class="card"><div class="card-h"><h4>${T("Top 10 countries")} · ${esc(d.asOf.label)}</h4>
-      <span class="sub">${T("Data provided by Tourism Malaysia")}</span></div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Top source countries")} · ${isYTD ? "YTD " + (d.asOf ? d.asOf.year : "2026") : esc(d.asOf ? d.asOf.label : "")}</h4>
+        <span class="sub">${T("Data provided by Tourism Malaysia")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="${T("Tourism mode")}">
+            <button data-tourmode="month" aria-pressed="${!isYTD}">${T("Monthly")}</button>
+            <button data-tourmode="ytd" aria-pressed="${isYTD}">${T("Year to date")}</button>
+          </span>
+        </span>
+      </div>
+      <div class="card-b">
+        <div class="chart" style="height:210px"><canvas id="tourism-chart" role="img"
+          aria-label="${T("Top source countries by arrivals")}"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>${T("Arrivals by country")} · ${isYTD ? "YTD " + (d.asOf ? d.asOf.year : "2026") : esc(d.asOf ? d.asOf.label : "")}</h4>
+        <span class="sub">${isYTD ? T("ranked by YTD visitor arrivals") : T("ranked by monthly arrivals")}</span></div>
       <div class="card-b"><div class="tw"><table>
         <thead><tr>
           <th class="num">#</th><th>${T("Country")}</th>
-          <th class="num">${T("Arrivals")}</th>
+          <th class="num">${isYTD ? T("YTD " + (d.asOf ? d.asOf.year : "2026")) : T("Arrivals")}</th>
           <th class="num">${T("y/y")}</th>
-          <th class="num">${T("YTD")}</th>
-        </tr></thead><tbody>${rowsHTML}</tbody></table></div>
+          <th class="num">${T("vs 2019")}</th>
+          <th class="num">${isYTD ? T("YTD 2025") : T("YTD")}</th>
+        </tr></thead><tbody>${top10.map((r, i) => rowHTML(r, i)).join("")}</tbody></table></div>
         <details class="meta"><summary>${T("All 51 countries")}</summary>
           <div class="tw"><table>
-            <thead><tr><th class="num">#</th><th>${T("Country")}</th>
-              <th class="num">${T("Arrivals")}</th><th class="num">${T("y/y")}</th>
-              <th class="num">${T("YTD")}</th></tr></thead><tbody>
-            ${(d.visitor || []).slice(10).map(r => `
-              <tr><td class="num">${r.rank}</td><td>${esc(r.country)}</td>
-                <td class="num">${nf(r.cur)}</td>
-                <td class="num">${r.g_yoy == null ? "-" :
-                  `<span class="${r.g_yoy < 0 ? "up" : "down"}">${r.g_yoy < 0 ? "▼" : "▲"} ${nf(Math.abs(r.g_yoy), 1)}%</span>`}</td>
-                <td class="num">${nf(r.ytd26)}</td></tr>`).join("")}
+            <thead><tr>
+              <th class="num">#</th><th>${T("Country")}</th>
+              <th class="num">${isYTD ? T("YTD " + (d.asOf ? d.asOf.year : "2026")) : T("Arrivals")}</th>
+              <th class="num">${T("y/y")}</th>
+              <th class="num">${T("vs 2019")}</th>
+              <th class="num">${isYTD ? T("YTD 2025") : T("YTD")}</th>
+            </tr></thead><tbody>
+            ${rest.map((r, i) => rowHTML(r, i + 10)).join("")}
             </tbody></table></div>
-          <p class="note">${T("vs 2019")}: ${top && top.g_2019 != null ? nf(top.g_2019, 1) + "%" : "-"} · ${T("growth is vs the same month in the year shown")}</p>
         </details></div></div>`;
+
+  const cData = top10.map(r => isYTD ? r.ytd26 : r.cur);
+  chart("tourism-chart", {
+    type: "bar",
+    data: {
+      labels: top10.map(r => esc(r.country)),
+      datasets: [{
+        data: cData,
+        backgroundColor: "#2dd4bf",
+        borderRadius: 4,
+      }]
+    },
+    options: baseOpts({
+      indexAxis: "y",
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { callback: v => nf(v) }, grid: { color: "rgba(128,128,128,.12)" } },
+        y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    })
+  });
+
+  $("#body-tourism").querySelectorAll("[data-tourmode]").forEach(b => {
+    b.onclick = () => {
+      tourMode = b.dataset.tourmode;
+      renderTourism(d);
+    };
+  });
+
   animateCounters($("#body-tourism"));
 }
 
@@ -5191,32 +5279,39 @@ function renderPlaces(g){
         </tr></thead><tbody></tbody></table></div>
         <div class="pager" id="places-dist-pager"></div></div>
     </div>
-    <div class="card">
-      <div class="card-h"><h4>${T("Constituencies")}</h4>
-        <span class="sub">${placesLevel === "parlimen" ? T("Parliament") : T("State seats")} · ${g[placesLevel].year} · ${T("citizens = electorate proxy")}</span>
-        <span class="right">
-          <span class="seg" role="group" aria-label="${T("Seat level")}">
-            ${[["parlimen", T("Parliament")], ["dun", T("State seats")]].map(([k, lab]) =>
-              `<button data-places-lvl="${k}" aria-pressed="${k === placesLevel}">${esc(lab)}</button>`).join("")}
-          </span>
-          <label class="sr" for="places-sq">${T("Search seats")}</label>
-          <input class="inp" id="places-sq" placeholder="${T("Search seats…")}" value="${esc(placesSQ)}" autocomplete="off" style="max-width:170px;margin-left:var(--s2)"></span></div>
-      <div class="card-b"><div class="tw"><table id="places-seat-table">
-        <thead><tr>
-          <th class="sortable" data-key="c"># <span class="arrow">↕</span></th>
-          <th class="sortable" data-key="n">${T("Seat")} <span class="arrow">↕</span></th>
-          <th class="sortable" data-key="s">${T("State")} <span class="arrow">↕</span></th>
-          <th class="sortable num" data-key="p" data-num="1" data-desc="1">${T("Population")} <span class="arrow">↕</span></th>
-          <th class="sortable num" data-key="cz" data-num="1" data-desc="1">${T("Citizens")} <span class="arrow">↕</span></th>
-          <th class="sortable num" data-key="inc" data-num="1" data-desc="1">${T("Median income")} <span class="arrow">↕</span></th>
-          <th class="sortable num" data-key="pov" data-num="1" data-desc="1">${T("Poverty")} <span class="arrow">↕</span></th>
-          <th class="sortable num" data-key="gini" data-num="1" data-desc="1">${T("Gini")} <span class="arrow">↕</span></th>
-          <th class="sortable num" data-key="u" data-num="1" data-desc="1">${T("Unemployment")} <span class="arrow">↕</span></th>
-          <th class="sortable num" data-key="pr" data-num="1" data-desc="1">${T("Participation")} <span class="arrow">↕</span></th>
-        </tr></thead><tbody></tbody></table></div>
-        <div class="pager" id="places-seat-pager"></div>
-        <p class="note">${T("The constituency tables carry no age bands, so citizen count is a proxy for the electorate - it still includes everyone under 18. Income, poverty and inequality come from the Household Income Survey; unemployment and participation from the Labour Force Survey.")}</p></div>
-    </div>`;
+    <details class="card mb">
+      <summary class="card-h" style="cursor:pointer;list-style:none">
+        <h4 style="display:inline">${T("Constituencies")}</h4>
+        <span class="sub" style="margin-left:var(--s2)">${nf(g.parlimen.list.length + g.dun.list.length)} ${T("seats")} · socio 2024</span>
+        <span class="right"><span class="dim">▼ ${T("Expand")}</span></span>
+      </summary>
+      <div style="border-top:1px solid var(--line-soft)">
+        <div class="card-h" style="border-bottom:none">
+          <span class="sub">${placesLevel === "parlimen" ? T("Parliament") : T("State seats")} · ${g[placesLevel].year} · ${T("citizens = electorate proxy")}</span>
+          <span class="right">
+            <span class="seg" role="group" aria-label="${T("Seat level")}">
+              ${[["parlimen", T("Parliament")], ["dun", T("State seats")]].map(([k, lab]) =>
+                `<button data-places-lvl="${k}" aria-pressed="${k === placesLevel}">${esc(lab)}</button>`).join("")}
+            </span>
+            <label class="sr" for="places-sq">${T("Search seats")}</label>
+            <input class="inp" id="places-sq" placeholder="${T("Search seats…")}" value="${esc(placesSQ)}" autocomplete="off" style="max-width:170px;margin-left:var(--s2)"></span></div>
+        <div class="card-b" style="padding-top:0"><div class="tw"><table id="places-seat-table">
+          <thead><tr>
+            <th class="sortable" data-key="c"># <span class="arrow">↕</span></th>
+            <th class="sortable" data-key="n">${T("Seat")} <span class="arrow">↕</span></th>
+            <th class="sortable" data-key="s">${T("State")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="p" data-num="1" data-desc="1">${T("Population")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="cz" data-num="1" data-desc="1">${T("Citizens")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="inc" data-num="1" data-desc="1">${T("Median income")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="pov" data-num="1" data-desc="1">${T("Poverty")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="gini" data-num="1" data-desc="1">${T("Gini")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="u" data-num="1" data-desc="1">${T("Unemployment")} <span class="arrow">↕</span></th>
+            <th class="sortable num" data-key="pr" data-num="1" data-desc="1">${T("Participation")} <span class="arrow">↕</span></th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pager" id="places-seat-pager"></div>
+          <p class="note">${T("The constituency tables carry no age bands, so citizen count is a proxy for the electorate - it still includes everyone under 18. Income, poverty and inequality come from the Household Income Survey; unemployment and participation from the Labour Force Survey.")}</p></div>
+      </div>
+    </details>`;
 
   $("#places-chips").querySelectorAll("[data-place]").forEach(b => {
     b.onclick = () => { placesState = b.dataset.place; placesDPage = 0; placesSPage = 0; renderPlaces(g); };
