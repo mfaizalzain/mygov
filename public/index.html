@@ -6851,6 +6851,27 @@ function primeCached(){
   tick(); renderKpis();
 }
 
+/* The hero KPI strip is fed by LOADERS' after() hooks, and three of its
+   cards (Inflation, New EVs, Vehicles live) belong to lazy sections that
+   only load once scrolled into view. On a cold visit that left the cards
+   shimmering until the user scrolled past the section. Prefetch exactly
+   those three loaders at boot: fetch the data, run the after() hook so the
+   KPI fills in, and cache the record so the eventual scroll-in render is
+   instant (no double fetch, no skeleton flash). */
+async function primeKpis(){
+  const ids = ["economy", "mobility", "live"];
+  await Promise.all(ids.map(async id => {
+    if (loaded.has(id) || loading.has(id)) return;   // already done/in flight
+    const cfg = LOADERS[id];
+    try {
+      const data = await cfg.load();
+      cacheSet(id, data);                            // scroll-in uses this
+      if (cfg.after) cfg.after(data);                // sets kpiState.*
+    } catch { /* leave the card shimmering; the section shows its own error */ }
+  }));
+  renderKpis();
+}
+
 /* ════════════════════════════ PWA plumbing ════════════════════════════ */
 function pwa(){
   if ("serviceWorker" in navigator)
@@ -6921,6 +6942,9 @@ function boot(){
   onScroll();
   topbtn.onclick = () => scrollTo({ top:0, behavior:"smooth" });
   primeCached();
+  /* Warm the three hero-KPI-backed lazy sections without waiting for
+     scroll; see primeKpis(). */
+  primeKpis();
   /* Start lazy-loading only after weather + fuel have rendered: while the
      page is still skeletons it is short, so every section looks "near" the
      viewport and IntersectionObserver would fire immediately. Once the eager
