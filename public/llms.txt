@@ -8,7 +8,8 @@
 
 ## Sections
 
-- [Weather & Warnings](https://mygov.faizalmzain.com/#weather): Seven-day forecast, severe weather warnings, air temperature and rainfall for Malaysian districts.
+- [Warnings & Hazards](https://mygov.faizalmzain.com/#hazards): Everything currently on issue - MET severe-weather warnings, earthquakes within 500 km in the last 24 hours, and JPS river gauges above their flood thresholds. Live only, no history.
+- [Weather](https://mygov.faizalmzain.com/#weather): Seven-day forecast, air temperature and rainfall for 360 Malaysian locations.
 - [Household](https://mygov.faizalmzain.com/#fuel): Weekly retail fuel prices (RON95, RON97, diesel), the PriceCatcher groceries basket and household income.
 - [Population](https://mygov.faizalmzain.com/#population): National totals since 1970, then by state, district and constituency - median income, poverty, inequality and unemployment per parliamentary and state seat.
 - [Economy](https://mygov.faizalmzain.com/#economy): Consumer Price Index, inflation, unemployment and real GDP.

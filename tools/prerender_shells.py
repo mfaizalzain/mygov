@@ -68,29 +68,14 @@ SKEL_FUEL = ('<div class="grid g2 mb">'
       '</div>'
       '<div class="card"><div class="card-h"><div class="skel" style="width:28%"></div></div>'
       '<div class="card-b">' + bars(3) + '<div class="skel skel-table"></div></div></div>')
-SHELL_SKELS = {"weather": SKEL_WEATHER, "fuel": SKEL_FUEL}
-# Flood risk is a warning-type feed, so it renders inside the Weather section
-# (loaded by LOADERS.weather.after -> loadSection("flood")). It must be emitted
-# here too or the idempotent shell regeneration would wipe the sub-block.
-FLOOD_SUB = '''      <!-- Flood risk: a warning-type feed, so it sits under Weather & Warnings.
-           Rendered by loadSection("flood") which the weather loader fires. -->
-      <div class="sec-sub" id="flood-sub" aria-labelledby="h-flood">
-        <div class="sec-h">
-          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg></div>
-          <div><h3 id="h-flood" style="font-size:17px" data-i18n="Flood Risk">Flood Risk</h3>
-            <p data-i18n="flood-desc">Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.</p>
-            <details class="meta">
-              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
-              <p data-i18n="flood-how">JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.</p>
-              <ul><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
-            </details>
-          </div>
-          <span class="sec-time" id="time-flood"></span>
-        </div>
-        <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      </div>'''
-
-
+# The hazards strip is three short tiles, so its skeleton must be three short
+# tiles - the generic card skeleton would reserve five screens for a section
+# that is normally one row, and the page would visibly collapse on load.
+SKEL_HAZARDS = ('<div class="hz-strip">' + (
+      '<div class="hz-tile"><div class="card-b">'
+      '<div class="skel" style="width:70%"></div>'
+      '<div class="skel" style="width:46%"></div></div></div>') * 3 + '</div>')
+SHELL_SKELS = {"weather": SKEL_WEATHER, "fuel": SKEL_FUEL, "hazards": SKEL_HAZARDS}
 def sub_block(sid, icon):
     """A merged sub-block, the same pattern as FLOOD_SUB: groceries rides in
     the Household section and the Places explorer rides in Population. The
@@ -140,8 +125,7 @@ for s in sections:
         <span class="sec-time" id="time-{s["id"]}"></span>
       </div>
       <div id="body-{sid_body}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
-      {FLOOD_SUB if s["id"] == "weather" else
-       sub_block("prices", "basket") if s["id"] == "fuel" else ""}
+      {sub_block("prices", "basket") if s["id"] == "fuel" else ""}
     </section>''')
 
 shell_html = "\n".join(shells)
@@ -153,10 +137,10 @@ KPIS = [
     ("basket", "Groceries y/y", "basket", "#groceries-sub", "groceries block"),
     ("cpi", "Inflation y/y", "economy", "#economy"),
     ("ev", "New EVs", "ev", "#mobility"),
-    ("warn", "Active warnings", "warn", "#weather"),
+    ("warn", "Active warnings", "warn", "#hazards", "warnings section"),
     # 5th field is the spoken destination; defaults to the href slug, which
-    # reads badly for anchors that are not section ids ("flood-sub section").
-    ("flood", "Stations at risk", "flood", "#flood-sub", "flood risk block"),
+    # reads badly for anchors that are not section ids.
+    ("flood", "Stations at risk", "flood", "#hazards", "warnings section"),
     ("live", "Vehicles live", "bus", "#live"),
 ]
 def kpi_aria(lab, href, rest):

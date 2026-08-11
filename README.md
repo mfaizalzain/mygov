@@ -24,7 +24,8 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 
 | Section | Source | Contents |
 | --- | --- | --- |
-| Weather | MET Malaysia, JPS | 7-day forecast for all 360 locations, severe-weather warnings, recent earthquakes - plus a **flood risk sub-block** with live water-level stations at danger / warning / alert from JPS telemetry (status-coloured map, per-state counts, station chips) |
+| Warnings & Hazards | MET Malaysia, JPS | Everything currently on issue, as a **status strip** of three tiles - severe-weather warnings, earthquakes within 500 km in the last 24 h, and water-level stations at danger / warning / alert from JPS telemetry. A tile expands into its detail (warning carousel, quake table, status-coloured map with per-state counts and station chips) only when that hazard is active, so a quiet day is one row rather than five screens. Live only - nothing here is historical |
+| Weather | MET Malaysia | 7-day forecast for all 360 locations, from states down to towns and highland resorts |
 | Household | Ministry of Finance, KPDN | Weekly RON95 / RON97 / diesel ceiling prices, household income, and the PriceCatcher groceries basket (a merged **Groceries sub-block** with per-district price levels) |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
 | Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
@@ -393,7 +394,7 @@ upstream poll. The page aggregates those buses into route chips and grid
 clusters on the map (dissolving into individual markers as you zoom), so 800+
 points never freeze the browser.
 
-The fifth route, `/api/flood`, backs the flood risk sub-block in the Weather
+The fifth route, `/api/flood`, backs the flood tile in the Warnings & Hazards
 section. JPS's public info
 banjir site publishes its live gauge telemetry as a ~1.3 MB static JSON file
 (`latestreadingstrendabc.json`) on the WordPress theme path - the old

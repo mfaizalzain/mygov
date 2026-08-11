@@ -667,6 +667,35 @@ tr.sel .pick{color:var(--chip-fg)}
 .tag{display:inline-block;padding:1px 6px;border-radius:5px;font-size:9.5px;font-weight:700;
   letter-spacing:.05em;text-transform:uppercase;background:var(--surface-3);color:var(--fg-3)}
 
+/* Hazard status strip: one tile per live hazard (weather / earthquake /
+   flood). The three used to be two cards plus a whole sub-section, each
+   rendering a full body even when clear - which on a normal day is all three.
+   A tile is a <details>, so the quiet state is one short row and the detail
+   only exists once you ask for it. */
+.hz-strip{display:grid;gap:var(--s3);
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:start}
+.hz-tile{background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r2);padding:var(--s3) var(--s4)}
+.hz-tile.hz-ok{background:linear-gradient(180deg,rgba(52,211,153,.05),var(--surface) 60%)}
+.hz-tile.hz-on{background:linear-gradient(180deg,rgba(251,191,36,.08),var(--surface) 60%);
+  border-color:rgba(251,191,36,.4)}
+/* An open tile spans the strip - the flood map and the warning carousel need
+   the full width, and a tall tile in one column would strand the other two. */
+.hz-strip details.hz-tile[open]{grid-column:1/-1}
+.hz-sum{cursor:pointer;list-style:none}
+.hz-sum::-webkit-details-marker{display:none}
+.hz-top{display:flex;align-items:center;gap:var(--s2);color:var(--fg-3)}
+.hz-top .ico{width:15px;height:15px}
+.hz-lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:650}
+.hz-mark{margin-left:auto;font-size:13px}
+.hz-ok .hz-mark{color:var(--ok)} .hz-on .hz-mark{color:var(--warn)}
+.hz-val{font-size:21px;font-weight:700;letter-spacing:-.01em;margin-top:6px}
+.hz-sub{font-size:11.5px;color:var(--fg-3);margin-top:2px}
+.hz-hint{color:var(--accent);font-weight:600;white-space:nowrap}
+.hz-hint::after{content:"\00b7  " attr(data-closed) "  \25BE"}
+details.hz-tile[open] .hz-hint::after{content:"\00b7  " attr(data-open) "  \25B4"}
+.hz-body{margin-top:var(--s3);padding-top:var(--s3);border-top:1px solid var(--line-soft)}
+.hz-body .lvmap{border-radius:var(--r2)}
 /* alerts - weather warnings strip */
 .alert{border:1px solid var(--line-soft);border-left:4px solid var(--warn);
   border-radius:var(--r);background:var(--surface);padding:var(--s4);box-shadow:var(--shadow)}
@@ -816,6 +845,7 @@ html[data-text="large"] table{font-size:14px}
   <symbol id="i-mobility" viewBox="0 0 24 24"><path d="M5 13.6l1.5-4.5a2 2 0 0 1 1.9-1.4h7.2a2 2 0 0 1 1.9 1.4l1.5 4.5"/><path d="M4.6 13.6h14.8a1.6 1.6 0 0 1 1.6 1.6V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-1.8a1.6 1.6 0 0 1 1.6-1.6Z"/><circle cx="7.4" cy="18" r="1.5"/><circle cx="16.6" cy="18" r="1.5"/></symbol>
   <symbol id="i-transport" viewBox="0 0 24 24"><rect x="5" y="3.2" width="14" height="13" rx="3"/><path d="M5 10.2h14"/><path d="M9 13.3h.01M15 13.3h.01"/><path d="M7.5 20l1.8-3.8M16.5 20l-1.8-3.8"/></symbol>
   <symbol id="i-live" viewBox="0 0 24 24"><path d="M20 10.5c0 5.2-6.3 10.4-7.4 11.3a1 1 0 0 1-1.2 0C10.3 20.9 4 15.7 4 10.5a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10.3" r="2.8"/></symbol>
+  <symbol id="i-quake" viewBox="0 0 24 24"><path d="M2 12h3l2.5-7 3.5 14 3-10 2 3h6"/></symbol>
   <symbol id="i-flood" viewBox="0 0 24 24"><path d="M3 13.5c2.5-1.2 4.5-1.2 7 0s4.5 1.2 7 0 2.5-1.2 4 0"/><path d="M3 18c2.5-1.2 4.5-1.2 7 0s4.5 1.2 7 0 2.5-1.2 4 0"/><path d="M12 3.5 7.2 8.3a3.4 3.4 0 0 0 6.8 0Z"/></symbol>
   <symbol id="i-temp" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4.5 4.5 0 1 0 4 0Z"/><path d="M12 9.5v5.8"/></symbol>
   <symbol id="i-ev" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4H11l-.9 8.1 8.4-10.9H12.3l.9-8.1Z"/></symbol>
@@ -854,6 +884,7 @@ html[data-text="large"] table{font-size:14px}
 <nav class="sections" aria-label="Sections">
   <ul id="navlist">
     <li hidden><a href="#radar-band" id="nav-radar-band"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> Trending</a></li>
+    <li><a href="#hazards" id="nav-hazards"><span class="dot" id="dot-hazards"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Warnings</a></li>
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Household</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> Population</a></li>
@@ -940,12 +971,12 @@ html[data-text="large"] table{font-size:14px}
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-ev"><span class="skel skel-val"></span></div>
         <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#weather" aria-label="Active warnings - go to the weather section">
+      <a class="kpi kpi-load" href="#hazards" aria-label="Active warnings - go to the warnings section">
         <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Active warnings</span>
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-warn"><span class="skel skel-val"></span></div>
         <div class="sub"><span class="skel skel-sub"></span></div></a>
-      <a class="kpi kpi-load" href="#flood-sub" aria-label="Stations at risk - go to the flood risk block">
+      <a class="kpi kpi-load" href="#hazards" aria-label="Stations at risk - go to the warnings section">
         <div class="kpi-t"><span class="lab"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg> Stations at risk</span>
           <span class="go" aria-hidden="true">↗</span></div>
         <div class="val" id="kpi-flood"><span class="skel skel-val"></span></div>
@@ -982,37 +1013,37 @@ html[data-text="large"] table{font-size:14px}
   </section>
 
   <main id="main">
+    <section id="hazards" aria-labelledby="h-hazards">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg></div>
+        <div><h3 id="h-hazards">Warnings &amp; Hazards</h3>
+          <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
+            <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-hazards"></span>
+      </div>
+      <div id="body-hazards"><div class="hz-strip"><div class="hz-tile"><div class="card-b"><div class="skel" style="width:70%"></div><div class="skel" style="width:46%"></div></div></div><div class="hz-tile"><div class="card-b"><div class="skel" style="width:70%"></div><div class="skel" style="width:46%"></div></div></div><div class="hz-tile"><div class="card-b"><div class="skel" style="width:70%"></div><div class="skel" style="width:46%"></div></div></div></div></div>
+      
+    </section>
     <section id="weather" aria-labelledby="h-weather">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg></div>
-        <div><h3 id="h-weather">Weather &amp; Warnings</h3>
-          <p>Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.</p>
+        <div><h3 id="h-weather">Weather</h3>
+          <p>Seven-day forecast for every state, district and town in Malaysia.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.</p>
-            <ul><li><code>GET /weather/forecast</code></li><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li></ul>
+            <p>Forecasts come from MET Malaysia, covering 360 locations from states down to individual towns and highland resorts. Warnings and earthquakes moved to the Warnings &amp; Hazards section above.</p>
+            <ul><li><code>GET /weather/forecast</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-weather"></span>
       </div>
       <div id="body-weather"><div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div></div></div></div><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div>
-            <!-- Flood risk: a warning-type feed, so it sits under Weather & Warnings.
-           Rendered by loadSection("flood") which the weather loader fires. -->
-      <div class="sec-sub" id="flood-sub" aria-labelledby="h-flood">
-        <div class="sec-h">
-          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flood"/></svg></div>
-          <div><h3 id="h-flood" style="font-size:17px" data-i18n="Flood Risk">Flood Risk</h3>
-            <p data-i18n="flood-desc">Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.</p>
-            <details class="meta">
-              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
-              <p data-i18n="flood-how">JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.</p>
-              <ul><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
-            </details>
-          </div>
-          <span class="sec-time" id="time-flood"></span>
-        </div>
-        <div id="body-flood"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      </div>
+      
     </section>
     <section id="fuel" aria-labelledby="h-fuel">
       <div class="sec-h">
@@ -1196,7 +1227,8 @@ html[data-text="large"] table{font-size:14px}
 <!-- /SEO:SNAP -->
             <h3>Sections</h3>
             <ul>
-              <li><strong>Weather</strong> - seven-day forecast for every state, district and town in Malaysia, plus severe-weather warnings and recent earthquakes.</li>
+              <li><strong>Warnings &amp; Hazards</strong> - everything currently on issue: severe-weather warnings, earthquakes within 500 km in the last 24 hours, and river gauges above their flood thresholds.</li>
+              <li><strong>Weather</strong> - seven-day forecast for every state, district and town in Malaysia.</li>
               <li><strong>Household</strong> - weekly RON95/RON97/diesel pump prices, the PriceCatcher groceries basket and household income statistics.</li>
               <li><strong>Population</strong> - national totals by year and composition, plus state, district and constituency population and living standards.</li>
               <li><strong>Economy</strong> - CPI inflation, unemployment, GDP and EPF contributions.</li>
@@ -1399,6 +1431,16 @@ const I18N = {
   /* MET's feed is global; the section shows only what is near Malaysia. */
   "Earthquakes near Malaysia":"Gempa bumi berhampiran Malaysia",
   "within Nkm":"dalam lingkungan Nkm", "last 24 hours":"24 jam lepas",
+  /* ── warnings & hazards ── */
+  "Warnings & Hazards":"Amaran & Bahaya", "Warnings":"Amaran",
+  "Weather warnings":"Amaran cuaca", "Earthquakes":"Gempa bumi",
+  "Flood risk":"Risiko banjir", "All clear":"Semua selamat",
+  "active warning":"amaran aktif", "active warnings":"amaran aktif",
+  "all-clear notices":"notis semua selamat", "nothing on issue":"tiada amaran dikeluarkan",
+  "event":"peristiwa", "within Nkm - last 24h":"dalam lingkungan Nkm - 24 jam lepas",
+  "no station above threshold":"tiada stesen melebihi ambang",
+  "warning":"amaran", "alert":"waspada", "Unavailable":"Tidak tersedia",
+  "Details":"Butiran", "Hide":"Sembunyi",
   "From Malaysia":"Dari Malaysia",
   "No earthquakes within Nkm of Malaysia in the last 24 hours.":
     "Tiada gempa bumi dalam lingkungan Nkm dari Malaysia dalam 24 jam lepas.",
@@ -1721,6 +1763,7 @@ function rerenderAll(){
 const ico = (name, size) =>
   `<svg class="ico" aria-hidden="true" focusable="false"${size ? ` style="width:${size};height:${size}"` : ""}><use href="#i-${name}"/></svg>`;
 const SECTIONS = [
+  { id:"hazards",   label:"Warnings",   icon:"warn",       family:"weather" },
   { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
   { id:"fuel",      label:"Household",  icon:"fuel",       family:"data-catalogue" },
   { id:"population",label:"Population", icon:"population", family:"opendosm" },
@@ -2073,8 +2116,6 @@ const TYPE_RANK = { Ds:0, Tn:1, Dv:2, Rc:3, St:4 };   // district > town > … >
 
 async function loadWeather(){
   const forecast = await request("weather", "/weather/forecast");
-  const warnings = await request("weather", "/weather/warning");
-  const quakes   = await request("weather", "/weather/warning/earthquake");
 
   // Dictionary-compress the repeated forecast strings before caching.
   const dict = [], idx = new Map();
@@ -2092,37 +2133,57 @@ async function loadWeather(){
                 key(r.morning_forecast), key(r.afternoon_forecast),
                 key(r.night_forecast), key(r.summary_forecast) ]);
   }
+  return { locs, rows, dict };
+}
+
+/* ══════════════════════ warnings & hazards ══════════════════════
+   Three live hazard feeds behind one section: MET severe-weather warnings,
+   MET earthquakes and JPS flood telemetry. They used to live in three places
+   - two cards inside Weather plus a flood sub-block - each with its own
+   section header, and each rendering a full body even on the (usual) day when
+   everything is clear. All three answer one question, "is anything wrong right
+   now", so they share one loader and one section that stays compact until
+   something is actually happening.
+
+   Nothing here is historical: warnings expire, earthquakes are capped at 24 h
+   and JPS gauges at 24 h. An empty hazard is an all-clear, not a gap. */
+const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 24 * 3600 * 1000;
+
+async function loadHazards(){
+  const warnings = await request("weather", "/weather/warning");
+  const quakes   = await request("weather", "/weather/warning/earthquake");
+  /* Flood is same-origin and unmetered by the API rate limiter, and a failure
+     there must not take the other two hazards down with it. */
+  let flood = null;
+  try { flood = await loadFlood(); } catch { flood = null; }
+
   /* MET's earthquake feed is a global list - 800 events, most of them nowhere
      near Malaysia (Aleutians, Chile, Kamchatka). `n_distancemas` is the
      distance to the nearest point in Malaysia ("613km SE Semporna,Sabah"),
      which is the same field /api/alerts filters on, so the section and the
      alerts band use one rule and can never disagree. */
-  const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 24 * 3600 * 1000;
   const eqKm = q => {
     const m = String(q.n_distancemas || "").match(/([\d,]+)\s*km/i);
     return m ? Number(m[1].replace(/,/g, "")) : null;
   };
   const nowMs = Date.now();
-  const nearby = (quakes || []).filter(q => q.visible !== false)
+  /* Live view only - within 500 km AND within the last 24 h. Malaysia is
+     seismically quiet, so this is empty on most days; that is the honest
+     answer, not a gap. */
+  const eq = (quakes || []).filter(q => q.visible !== false)
     .map(q => ({ q, km: eqKm(q),
                  ts: Date.parse(String(q.utcdatetime || "").replace(" ", "T") + "Z") }))
     .filter(x => x.km != null && x.km <= EQ_RADIUS_KM)
-    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  /* Live view only - within 500 km AND within the last 24 h. Malaysia is
-     seismically quiet, so this is empty on most days; that is the honest
-     answer, not a gap. The card renders an explicit all-clear rather than a
-     blank table, and no historical fallback creeps in behind it. */
-  const eq = nearby
     .filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS)
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0))
     .map(x => ({ t:x.q.localdatetime, lat:x.q.lat, lon:x.q.lon, dep:x.q.depth,
       loc:x.q.location_original || x.q.location, mag:x.q.magdefault,
       near:x.q.n_distancemas, km:x.km, ts:x.ts }));
 
-  const now = Date.now();
   const warn = (warnings || []).filter(w => {
     if (!w.valid_to) return true;
     const t = new Date(w.valid_to).getTime();
-    return isNaN(t) || t >= now;
+    return isNaN(t) || t >= nowMs;
   }).map(w => {
     const head = w.heading_en || "", text = w.text_en || "";
     // MET publishes "all clear" notices here too, often with null validity.
@@ -2135,7 +2196,7 @@ async function loadWeather(){
              dated: real(w.valid_from) && real(w.valid_to) };
   }).sort((a,b) => Number(a.info) - Number(b.info));
 
-  return { locs, rows, dict, warn, eq, eqRadius:EQ_RADIUS_KM };
+  return { warn, eq, flood, eqRadius:EQ_RADIUS_KM };
 }
 
 async function loadFuel(){
@@ -3166,7 +3227,6 @@ function renderWeather(d){
   }
   $("#body-weather").innerHTML = `
     <div class="sr" id="wx-live" aria-live="polite"></div>
-    <div id="wx-warn" class="mb"></div>
     <div class="grid g2 mb">
       <div class="card">
         <div class="card-h"><h4>${T("7-day outlook")}</h4>
@@ -3193,38 +3253,104 @@ function renderWeather(d){
           </tr></thead><tbody id="wx-rows"></tbody>
         </table></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-h"><h4>${T("Earthquakes near Malaysia")}</h4>
-        <span class="sub">${T("within Nkm").replace("N", nf(d.eqRadius))} · ${T("last 24 hours")}${
-          d.eq.length ? " · " + d.eq.length + " " + T("events") : ""} · MET Malaysia</span></div>
-      <div class="tw scroll-y"><table>
-        <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
-          <th class="num">${T("Depth")}</th><th class="num">${T("From Malaysia")}</th>
-          <th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
-        <tbody>${d.eq.map(q => { const m = Number(q.mag) || 0;
-          const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
-          return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
-            <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
-            <td>${txt(q.loc || "-")}</td><td class="num dim">${nf(q.dep,0)} km</td>
-            <td class="num">${q.km == null ? "-" : nf(q.km) + " km"}</td>
-            <td class="dim">${txt(q.near || "-")}</td>
-            <td><a class="maplink" target="_blank" rel="noopener"
-              href="https://www.google.com/maps?q=${q.lat},${q.lon}"
-              aria-label="Open earthquake location in Google Maps">map ↗</a></td></tr>`;
-        }).join("") || `<tr><td colspan="7" class="state">${
-          T("No earthquakes within Nkm of Malaysia in the last 24 hours.")
-            .replace("N", nf(d.eqRadius))
-        }</td></tr>`}
-      </tbody></table></div>
     </div>`;
 
-  paintWarnings();
   const q = $("#wx-q");
   q.value = wx.q;
   q.oninput = () => { wx.q = q.value; paintWxRows(); };
   sortable($("#wx-table"), () => wxTableRows(), rows => paintWxRows(rows));
   paintWeather();
+}
+
+/* ══════════════════ hazards: the status strip ══════════════════
+   One tile per hazard. A tile is a <details> so the browser owns the
+   open/closed state and it works with no JS; the detail body is only built
+   when that hazard has something to show, which is what keeps a quiet day to
+   a single row instead of five screens. Anything active starts open. */
+let hzData = null;
+
+function hzTile(key, ico, label, active, headline, sub, body){
+  const tone = active ? "hz-on" : "hz-ok";
+  const mark = active ? "&#9888;" : "&#10003;";
+  if (!body)
+    return `<div class="hz-tile ${tone}">
+      <div class="hz-top"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-${ico}"/></svg>
+        <span class="hz-lab">${esc(label)}</span><span class="hz-mark">${mark}</span></div>
+      <div class="hz-val">${headline}</div>
+      <div class="hz-sub">${sub}</div>
+    </div>`;
+  return `<details class="hz-tile ${tone}" id="hz-${key}"${active ? " open" : ""}>
+    <summary class="hz-sum">
+      <div class="hz-top"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-${ico}"/></svg>
+        <span class="hz-lab">${esc(label)}</span><span class="hz-mark">${mark}</span></div>
+      <div class="hz-val">${headline}</div>
+      <div class="hz-sub">${sub} <span class="hz-hint" data-closed="${esc(T("Details"))}"
+        data-open="${esc(T("Hide"))}"></span></div>
+    </summary>
+    <div class="hz-body">${body}</div>
+  </details>`;
+}
+
+function renderHazards(d){
+  hzData = d;
+  const host = $("#body-hazards"); if (!host) return;
+  const active = d.warn.filter(w => !w.info);
+  const notices = d.warn.filter(w => w.info);
+  const f = d.flood;
+  const atRisk = f ? f.atRisk : null;
+
+  /* Weather - the filter chips and carousel are the existing paintWarnings(),
+     mounted into this tile instead of into the Weather section. */
+  const wxBody = (active.length || notices.length) ? `<div id="wx-warn"></div>` : "";
+  const wxTile = hzTile("wx", "warn", T("Weather warnings"), active.length > 0,
+    active.length ? `${active.length} ${T(active.length === 1 ? "active warning" : "active warnings")}`
+                  : T("All clear"),
+    active.length ? T("issued by MET")
+      : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue")),
+    wxBody);
+
+  /* Earthquakes - within 500 km and 24 h, or an explicit all-clear. */
+  const eqBody = d.eq.length ? `<div class="tw scroll-y"><table>
+      <thead><tr><th>${T("Local time")}</th><th class="num">Mag</th><th>${T("Location")}</th>
+        <th class="num">${T("Depth")}</th><th class="num">${T("From Malaysia")}</th>
+        <th>${T("Nearest Malaysian town")}</th><th></th></tr></thead>
+      <tbody>${d.eq.map(q => { const m = Number(q.mag) || 0;
+        const c = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--fg-2)";
+        return `<tr><td class="mono dim">${esc(String(q.t).replace("T"," "))}</td>
+          <td class="num" style="color:${c};font-weight:700">${nf(q.mag,1)}</td>
+          <td>${txt(q.loc || "-")}</td><td class="num dim">${nf(q.dep,0)} km</td>
+          <td class="num">${q.km == null ? "-" : nf(q.km) + " km"}</td>
+          <td class="dim">${txt(q.near || "-")}</td>
+          <td><a class="maplink" target="_blank" rel="noopener"
+            href="https://www.google.com/maps?q=${q.lat},${q.lon}"
+            aria-label="Open earthquake location in Google Maps">map &#8599;</a></td></tr>`;
+      }).join("")}</tbody></table></div>` : "";
+  const eqTile = hzTile("eq", "quake", T("Earthquakes"), d.eq.length > 0,
+    d.eq.length ? `${d.eq.length} ${T(d.eq.length === 1 ? "event" : "events")}` : T("All clear"),
+    T("within Nkm - last 24h").replace("N", nf(d.eqRadius)), eqBody);
+
+  /* Flood - the map is expensive, so it is only mounted when the tile opens. */
+  const fTile = !f
+    ? hzTile("fl", "flood", T("Flood risk"), false, T("Unavailable"), T("JPS telemetry"), "")
+    : hzTile("fl", "flood", T("Flood risk"), atRisk > 0,
+        atRisk ? `${nf(atRisk)} ${T("stations at risk")}` : T("All clear"),
+        atRisk ? `${f.stations.filter(x => x.status === "Danger").length} ${T("danger")} · ${
+          f.stations.filter(x => x.status === "Warning").length} ${T("warning")} · ${
+          f.stations.filter(x => x.status === "Alert").length} ${T("alert")}`
+               : T("no station above threshold"),
+        atRisk ? `<div id="body-flood"></div>` : "");
+
+  host.innerHTML = `<div class="hz-strip">${wxTile}${eqTile}${fTile}</div>`;
+
+  if (wxBody) paintWarnings();
+  /* Leaflet needs a laid-out container, so the map waits for the disclosure
+     to actually open - drawing it into a display:none body gives a grey box. */
+  const fd = $("#hz-fl");
+  if (fd && atRisk){
+    const draw = () => { if (fd.open && $("#body-flood")) renderFlood(f); };
+    fd.addEventListener("toggle", draw);
+    draw();
+  }
 }
 
 /** Guess a short severity label from the warning's own text. */
@@ -3271,7 +3397,7 @@ const WARN_FILTERS = {
   marine: x => MARINE_RE.test(x.head + " " + x.text + " " + (x.instr || "")),
 };
 function paintWarnings(){
-  const d = wx.data; const w = $("#wx-warn"); if (!w) return;
+  const d = hzData; const w = $("#wx-warn"); if (!d || !w) return;
   const active = d.warn.filter(x => !x.info && WARN_FILTERS[wxFilter](x));
   const notices = d.warn.filter(x => x.info);
   const total = d.warn.filter(x => !x.info).length;
@@ -3288,7 +3414,7 @@ function paintWarnings(){
       ? `<div class="wx-carousel" id="wx-carousel">
           <div class="wx-track">${active.map(warnCard).join("")}</div>
           <div class="wx-ctl">
-            <span class="radar-count" id="wx-count" aria-live="polite"></span>
+            <span class="radar-count" id="wx-ccount" aria-live="polite"></span>
             <button class="btn" id="wx-prev" aria-label="${T("Previous warnings")}">‹</button>
             <button class="btn" id="wx-next" aria-label="${T("Next warnings")}">›</button>
           </div>
@@ -3323,7 +3449,7 @@ function initWxCarousel(){
   };
   const render = () => {
     track.scrollTo({ left: wxCtl.idx * step(), behavior: "smooth" });
-    $("#wx-count").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
+    $("#wx-ccount").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
     $("#wx-prev").disabled = wxCtl.idx === 0;
     $("#wx-next").disabled = wxCtl.idx >= maxIdx();
   };
@@ -3340,7 +3466,7 @@ function initWxCarousel(){
     const st = step();
     const n0 = st ? Math.round(track.scrollLeft / st) : 0;
     wxCtl.idx = Math.min(Math.max(n0, 0), maxIdx());
-    $("#wx-count").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
+    $("#wx-ccount").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
     $("#wx-prev").disabled = wxCtl.idx === 0;
     $("#wx-next").disabled = wxCtl.idx >= maxIdx();
   }, { passive:true });
@@ -7014,12 +7140,13 @@ function renderKpis(){
       where:"groceries block" },
     { k:"cpi",   lab:"Inflation y/y",   ico:"economy",  href:"#economy" },
     { k:"ev",    lab:"New EVs",         ico:"ev",       href:"#mobility" },
-    { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#weather" },
+    { k:"warn",  lab:"Active warnings", ico:"warn",     href:"#hazards",
+      where:"warnings section" },
     /* `where` is the spoken destination; without it the slug is used, which
        reads badly for anchors that are not section ids. Keep in sync with
        KPIS in tools/prerender_shells.py. */
-    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#flood-sub",
-      where:"flood risk block" },
+    { k:"flood", lab:"Stations at risk",ico:"flood",    href:"#hazards",
+      where:"warnings section" },
     { k:"live",  lab:"Vehicles live",   ico:"bus",      href:"#live" },
   ];
   /* Pending cards get the same shimmer the sections use. Six cards each
@@ -7048,10 +7175,15 @@ function renderKpis(){
 
 /* ════════════════════════════ orchestration ════════════════════════════ */
 const META = {
-  weather:{ title:"Weather & Warnings",
-    desc:"Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.",
-    how:"Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.",
-    eps:["/weather/forecast","/weather/warning","/weather/warning/earthquake"] },
+  hazards:{ title:"Warnings & Hazards",
+    desc:"Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.",
+    how:"Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours, the same rule the alerts band at the top of the page uses. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours. A hazard with nothing to report shows an all-clear rather than an empty table.",
+    eps:["/weather/warning","/weather/warning/earthquake",
+         "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)"] },
+  weather:{ title:"Weather",
+    desc:"Seven-day forecast for every state, district and town in Malaysia.",
+    how:"Forecasts come from MET Malaysia, covering 360 locations from states down to individual towns and highland resorts. Warnings and earthquakes moved to the Warnings & Hazards section above.",
+    eps:["/weather/forecast"] },
   fuel:{ title:"Household",
     desc:"What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.",
     how:"Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.",
@@ -7122,25 +7254,22 @@ const META = {
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
     how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)"] },
-  flood:{ title:"Flood Risk",
-    desc:"Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.",
-    how:"JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.",
-    eps:["publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)"] },
 };
 const LOADERS = {
+  hazards:  { load:loadHazards,  render:renderHazards,  after:d => {
+      const active = d.warn.filter(w => !w.info).length;
+      kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
+      if (d.flood) kpiState.flood = { value:d.flood.atRisk, dec:0,
+        sub:d.flood.atRisk ? T("stations at risk") : T("all clear") };
+    } },
   weather:  { load:loadWeather,   render:renderWeather,   after:d => {
       let hot = null;
       const first = new Map();
       for (const r of d.rows){ const c = first.get(r[0]);
         if (!c || String(r[1]) < String(c[1])) first.set(r[0], r); }
       for (const [i, r] of first) if (r[3] != null && (!hot || r[3] > hot.t)) hot = { t:r[3], i };
-      if (hot) kpiState.hot = { value:hot.t, dec:0, suffix:"°C", sub:d.locs[hot.i].name };
-      const active = d.warn.filter(w => !w.info).length;
-      kpiState.warn = { value:active, dec:0, sub:active ? T("issued by MET") : T("all clear") };
+      if (hot) kpiState.hot = { value:hot.t, dec:0, suffix:"\u00b0C", sub:d.locs[hot.i].name };
       if (geo.status === "waiting") locate();
-      /* Flood risk is a sub-block of this section - load it with the weather
-         (it keeps its own LOADERS entry so caching/KPI/error handling work). */
-      if (!loaded.has("flood")) loadSection("flood", false);
     }, asOf:d => {   /* the forecast starts today */
       let m = null; for (const r of d.rows){ const x = String(r[1]); if (x && (m === null || x < m)) m = x; }
       return m;
@@ -7208,9 +7337,6 @@ const LOADERS = {
   live:     { load:loadLive,      render:renderLive,      after:d => {
       const n = Object.values(d).reduce((a, f) => a + f.vehicles.length, 0);
       kpiState.live = { value:n, dec:0, sub:n ? T("trains + buses") : T("none reporting now") }; } },
-  flood:    { load:loadFlood,     render:renderFlood,     after:d => {
-      kpiState.flood = { value:d.atRisk, dec:0,
-        sub:d.atRisk ? T("stations at risk") : T("all clear") }; } },
 };
 
 let stamps = {};
