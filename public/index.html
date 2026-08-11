@@ -1041,23 +1041,8 @@ html[data-text="large"] table{font-size:14px}
         </div>
         <span class="sec-time" id="time-population"></span>
       </div>
-      <div id="body-population"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-            <!-- Places: a merged sub-block of its parent section. -->
-      <div class="sec-sub" id="places-sub" aria-labelledby="h-places">
-        <div class="sec-h">
-          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-map"/></svg></div>
-          <div><h3 id="h-places" style="font-size:17px" data-i18n="Places">Places</h3>
-            <p data-i18n="Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.">Population and living standards for every state, district and constituency - DOSM's sub-national estimates, down to median income, poverty, inequality and unemployment per parliamentary and state seat.</p>
-            <details class="meta">
-              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
-              <p data-i18n="State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.">State, district and constituency population estimates are Parquet-only on DOSM's storage host - the OpenAPI stops at the national level - so a weekly GitHub Action reads the Parquet tables into geo.json. The constituency tables carry no age bands, so the citizen count is a proxy for an electorate, not a voting-age population. Income, poverty, inequality and labour-force figures per seat come from the Household Income Survey and Labour Force Survey through the OpenAPI.</p>
-              <ul><li><code>GET storage.dosm.gov.my/population/population_state.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_district.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_parlimen.parquet</code></li><li><code>GET storage.dosm.gov.my/population/population_dun.parquet</code></li><li><code>GET /data-catalogue?id=hh_income_parlimen</code></li><li><code>GET /data-catalogue?id=hh_income_dun</code></li><li><code>GET /data-catalogue?id=hh_poverty_parlimen</code></li><li><code>GET /data-catalogue?id=hh_poverty_dun</code></li><li><code>GET /data-catalogue?id=hh_inequality_parlimen</code></li><li><code>GET /data-catalogue?id=hh_inequality_dun</code></li><li><code>GET /data-catalogue?id=lfs_parlimen</code></li><li><code>GET /data-catalogue?id=lfs_dun</code></li></ul>
-            </details>
-          </div>
-          <span class="sec-time" id="time-places"></span>
-        </div>
-        <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      </div>
+      <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
     </section>
     <section id="economy" aria-labelledby="h-economy">
       <div class="sec-h">
@@ -2811,6 +2796,10 @@ function buildShell(){
   const band = document.getElementById("radar-band"); if (band) obs.observe(band);
 }
 const setDot = (id, st) => { const d = $("#dot-" + id); if (d) d.className = "dot " + st; };
+/* Sections whose body element has a different id than the section (the
+   Places explorer merged into Population renders in #body-places). */
+const BODY_MAP = { population: "places" };
+const bodyId = id => BODY_MAP[id] || id;
 const skeleton = (id, n = 4) => {
   /* Most section bodies lead with a 250-300px chart, and the two eager
      sections (weather, fuel) have a tall multi-card layout. The skeleton
@@ -2844,11 +2833,11 @@ const skeleton = (id, n = 4) => {
   else {
     inner = `<div class="card"><div class="card-b">${bars(n)}<div class="skel skel-chart"></div><div class="skel skel-details"></div></div></div>`;
   }
-  $("#body-" + id).innerHTML = inner;
+  $("#body-" + bodyId(id)).innerHTML = inner;
 };
 function errorBox(id, err, retry){
   const rate = err && err.kind === "rate";
-  $("#body-" + id).innerHTML = `<div class="card"><div class="state err">
+  $("#body-" + bodyId(id)).innerHTML = `<div class="card"><div class="state err">
       <div class="big">${rate ? "⏱" : "⚠"}</div>
       <strong>${esc(err.message || "Couldn't load this section")}</strong>
       <div>${rate ? T("Rate limited - cached data is reused for 15 minutes, so this usually clears on its own.")
@@ -4924,63 +4913,9 @@ const ethnicLabel = k => T((ETHNIC.find(e => e[0] === k) || [, k])[1]);
 function renderPopulation(d){
   /* Merged into the Places explorer: the national view (Malaysia chip)
      already covers trend, composition, districts and seats - a superset of
-     these two cards - so nothing renders here. Kept as a function so the
-     LOADERS entry and its after-hook (which triggers places) stay intact. */
-  if (document.getElementById("body-population"))
-    document.getElementById("body-population").hidden = true;
-}
-
-function paintPopulation(d){
-  const mil = d.trend.map(r => r[1] / 1000);
-  chart("pop-chart", {
-    type:"line",
-    data:{ labels: d.trend.map(r => String(r[0]).slice(0, 4)),
-      datasets:[{ label:T("Population"), data:mil, borderColor:"#2dd4bf", borderWidth:2,
-        pointRadius:0, tension:.25, fill:true,
-        backgroundColor:ctx => grad(ctx.chart.ctx, ctx.chart.chartArea, "#2dd4bf") }] },
-    options: baseOpts({ plugins:{ legend:{ display:false },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
-          callbacks:{ label: it => ` ${nf(it.parsed.y * 1e6)} ${T("people")}` } } },
-      scales:{
-        x:{ grid:{ display:false }, border:{ color:cssVar("--line") },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, maxTicksLimit:10, maxRotation:0 } },
-        y:{ grid:{ color:cssVar("--grid"), drawTicks:false }, border:{ display:false },
-            ticks:{ color:cssVar("--fg-3"), font:{ size:10 }, padding:8,
-                    callback:v => nf(v, 0) + "M" } } } }),
-  });
-  const dt = $("#pop-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Year"), T("Population")],
-    d.trend.slice().reverse().map(r => [String(r[0]).slice(0, 4), nf(r[1] * 1000)]), [1]);
-}
-
-function paintEthnicity(d){
-  const rows = d.ethnicity.filter(r => ETHNIC.some(e => e[0] === r[0]));
-  const total = rows.reduce((a, r) => a + r[1], 0);
-  chart("eth-chart", {
-    type:"doughnut",
-    data:{ labels: rows.map(r => ethnicLabel(r[0])),
-      datasets:[{ data: rows.map(r => r[1]),
-        backgroundColor: rows.map(r => (ETHNIC.find(e => e[0] === r[0]) || [,, "#60a5fa"])[2]),
-        borderColor: cssVar("--surface"), borderWidth: 2, hoverOffset: 6 }] },
-    options:{
-      responsive:true, maintainAspectRatio:false, cutout:"58%",
-      animation: reduceMotion() ? false : undefined,
-      plugins:{
-        legend:{ position:"right", labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8,
-          usePointStyle:true, pointStyle:"circle", font:{ size:11 }, padding:12 } },
-        tooltip:{ backgroundColor:cssVar("--surface-2"), borderColor:cssVar("--line"), borderWidth:1,
-          titleColor:cssVar("--fg"), bodyColor:cssVar("--fg-2"), padding:11, cornerRadius:10,
-          usePointStyle:true, boxWidth:8, boxHeight:8, boxPadding:4,
-          callbacks:{ label: it => ` ${nf(it.parsed * 1000)} · ` +
-            (total ? nf(it.parsed / total * 100, 1) + "%" : "-") } },
-      },
-    },
-  });
-  const dt = $("#eth-dt");
-  if (dt) dt.innerHTML = dataTableHTML([T("Group"), T("Population"), T("Share")],
-    rows.map(r => [ethnicLabel(r[0]), nf(r[1] * 1000),
-      total ? nf(r[1] / total * 100, 1) + "%" : "-"]), [1, 2]);
+     the two cards this function used to draw - so nothing renders here.
+     Kept as a function so the LOADERS entry and its after-hook (which
+     triggers the places explorer) stay intact. */
 }
 
 /* ════════════════════════════ places view (DOSM sub-national) ════════════════════════════

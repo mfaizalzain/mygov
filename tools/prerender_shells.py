@@ -122,6 +122,9 @@ def sub_block(sid, icon):
 shells = []
 for s in sections:
     meta_s = meta.get(s["id"], {})
+    # The Places explorer merged INTO the Population section: its body is
+    # #body-places, not #body-population (the old national cards are gone).
+    sid_body = "places" if s["id"] == "population" else s["id"]
     eps = "".join(f'<li><code>GET {esc(e)}</code></li>' for e in meta_s.get("eps", []))
     shells.append(f'''    <section id="{s["id"]}" aria-labelledby="h-{s["id"]}">
       <div class="sec-h">
@@ -136,10 +139,9 @@ for s in sections:
         </div>
         <span class="sec-time" id="time-{s["id"]}"></span>
       </div>
-      <div id="body-{s["id"]}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
+      <div id="body-{sid_body}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
       {FLOOD_SUB if s["id"] == "weather" else
-       sub_block("prices", "basket") if s["id"] == "fuel" else
-       sub_block("places", "map") if s["id"] == "population" else ""}
+       sub_block("prices", "basket") if s["id"] == "fuel" else ""}
     </section>''')
 
 shell_html = "\n".join(shells)
