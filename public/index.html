@@ -2943,6 +2943,33 @@ addEventListener("scroll", e => {
   if (t && t.nodeType === 1 && t.matches && t.matches(TRACKS)) syncTrackFades();
 }, true);
 addEventListener("resize", syncTrackFades);
+/* The section nav and the metro diagram scroll horizontally and hide their
+   scrollbar, which leaves a mouse user with no way to reach the clipped end:
+   there is no bar to drag, and a vertical wheel over a horizontal container
+   does nothing. A trackpad swipe or shift-wheel works, so the problem is
+   invisible on a laptop and total on a desktop - and the section nav grew to
+   twelve items, so the last two sit past the edge. Translate a vertical wheel
+   into horizontal scroll, and hand the page back the moment the track reaches
+   either end so the wheel is never trapped.
+
+   Deliberately NOT the radar and warnings carousels: their controllers own
+   scrollLeft (autoplay plus the prev/next buttons re-assert it on a timer),
+   so a wheel write there is overwritten a frame later - and those two already
+   give a mouse user visible controls. */
+const WHEEL_TRACKS = "nav.sections ul,.metro-scroll";
+addEventListener("wheel", e => {
+  const t = e.target.closest && e.target.closest(WHEEL_TRACKS);
+  if (!t) return;
+  const max = t.scrollWidth - t.clientWidth;
+  if (max <= 1) return;                                    // nothing to scroll
+  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;     // real sideways gesture
+  /* deltaY is pixels, lines or pages depending on the device. */
+  const d = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? t.clientWidth : 1);
+  if ((d < 0 && t.scrollLeft <= 0) || (d > 0 && t.scrollLeft >= max - 1)) return;
+  e.preventDefault();
+  t.scrollLeft = Math.max(0, Math.min(max, t.scrollLeft + d));
+  syncTrackFades();
+}, { passive:false });
 
 function buildShell(){
   const nav = $("#navlist"), main = $("#main");
