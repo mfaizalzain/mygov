@@ -367,7 +367,7 @@ regenerates only when the data moves.
 Document `insights.json` / `forecasts.json`, the grounding gate, and - important
 for anyone reading the numbers - **which series are forecast and which are
 deliberately not, and why**. Plain hyphens only; verify with
-`grep -c "—\|–" README.md` -> 0.
+`grep -c "-\|-" README.md` -> 0.
 
 ---
 

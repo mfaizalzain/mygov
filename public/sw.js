@@ -1,4 +1,4 @@
-/* mygov service worker — app shell precache + offline API fallback.
+/* mygov service worker - app shell precache + offline API fallback.
  *
  * Caching strategy, and why it is not textbook stale-while-revalidate:
  *   api.data.gov.my enforces 4 requests per minute per API family. A true SWR
@@ -29,7 +29,7 @@ const SHELL_ASSETS = [
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL);
-    // addAll is atomic — one bad URL fails the whole install, so add
+    // addAll is atomic - one bad URL fails the whole install, so add
     // individually and tolerate a CDN hiccup.
     await Promise.all(SHELL_ASSETS.map(async url => {
       try { await cache.add(new Request(url, { cache: "reload" })); }
@@ -84,7 +84,7 @@ self.addEventListener("fetch", event => {
       try {
         const fresh = await fetch(request);
         // Only cache successes, and never buffer the large GTFS ZIPs (either
-        // upstream or via our proxy) — an 8 MB archive per agency would blow
+        // upstream or via our proxy) - an 8 MB archive per agency would blow
         // through the Cache Storage quota for data the page immediately
         // reduces to a small summary anyway.
         const isZip = url.pathname.startsWith("/gtfs-static") ||
@@ -94,7 +94,7 @@ self.addEventListener("fetch", event => {
       } catch (err) {
         const hit = await cache.match(request);
         if (hit) {
-          // Tag it so the page can show an "offline — showing cached" state.
+          // Tag it so the page can show an "offline - showing cached" state.
           const headers = new Headers(hit.headers);
           headers.set("x-mygov-cache", "offline");
           return new Response(await hit.blob(), { status: hit.status, headers });
@@ -108,13 +108,13 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  /* Cross-origin sub-resources — map tiles — are left to the browser.
+  /* Cross-origin sub-resources - map tiles - are left to the browser.
    *
    * A worker that calls respondWith() re-issues the request as its own
    * fetch(), and a fetch() from a worker is policed by `connect-src`, not by
    * the `img-src` that governs the <img> the page actually made. The tile
    * host is deliberately on img-src only, so every tile was blocked inside
-   * the worker, and the catch below turned each one into an empty 503 — a
+   * the worker, and the catch below turned each one into an empty 503 - a
    * blank basemap on every visit. Nothing here wants to cache them anyway:
    * the branch below only stores same-origin responses. */
   if (url.origin !== self.location.origin) return;

@@ -3568,7 +3568,7 @@ const mlab = ym => {
 /** Signed percentage with the same up/down colouring the fuel card uses. */
 const pctBadge = (v, dp = 1) => v == null ? `<span class="neutral">-</span>` :
   `<span class="${v > 0.05 ? "up" : v < -0.05 ? "down" : "neutral"}">` +
-  `${v > 0.05 ? "▲" : v < -0.05 ? "▼" : "–"} ${nf(Math.abs(v), dp)}%</span>`;
+  `${v > 0.05 ? "▲" : v < -0.05 ? "▼" : "·"} ${nf(Math.abs(v), dp)}%</span>`;
 
 /** Best-effort district guess from the reverse-geocoded place, reusing the
  *  weather section's normaliser so "Majlis Perbandaran Kajang" still lands on
@@ -5055,7 +5055,7 @@ function placesPager(cur, total, size, onGo){
   const wrap = document.createElement("span");
   wrap.className = "pager-inner";
   wrap.innerHTML = `<button class="pg" data-dir="-1" ${cur === 0 ? "disabled" : ""}>‹ ${T("Prev")}</button>
-    <span class="pg-count">${nf(from)}–${nf(to)} ${T("of")} ${nf(total)}</span>
+    <span class="pg-count">${nf(from)}-${nf(to)} ${T("of")} ${nf(total)}</span>
     <button class="pg" data-dir="1" ${cur >= pages - 1 ? "disabled" : ""}>${T("Next")} ›</button>`;
   wrap.querySelectorAll(".pg").forEach(b => {
     if (b.disabled) return;

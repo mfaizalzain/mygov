@@ -80,7 +80,7 @@ export default {
       try { data = await res.json(); }
       catch { return json({ error: "bad_upstream_payload" }, 502); }
 
-      // Return only what the client actually matches on — no need to hand back
+      // Return only what the client actually matches on - no need to hand back
       // the full Nominatim record.
       const a = data.address || {};
       const out = {
@@ -100,7 +100,7 @@ export default {
      *
      * /gtfs-static/* on the upstream API answers 302 to an S3 bucket. A
      * browser then has to pass CORS on the *redirect target*, which is
-     * fragile — any network layer that intercepts that hop surfaces it as an
+     * fragile - any network layer that intercepts that hop surfaces it as an
      * opaque "CORS error" with no way for the page to distinguish it from
      * being offline. Fetching it server-side removes the cross-origin hop
      * entirely, and edge-caching means the government API sees a handful of
@@ -111,7 +111,7 @@ export default {
 
       const agency = url.searchParams.get("agency") || "";
       const category = url.searchParams.get("category") || "";
-      // Strict allowlist — never interpolate user input into the upstream URL.
+      // Strict allowlist - never interpolate user input into the upstream URL.
       if (!/^[a-z0-9-]{1,32}$/.test(agency) || (category && !/^[a-z0-9-]{1,32}$/.test(category)))
         return json({ error: "bad_agency" }, 400);
 
@@ -426,7 +426,7 @@ export default {
      * The official live arrivals/departures board on malaysiaairports.com.my
      * calls api.myairports.com.my with a public x-api-key embedded in its JS
      * bundle. The API sends no `access-control-allow-origin`, so browsers
-     * cannot call it directly — same story as Nominatim above. Proxying here
+     * cannot call it directly - same story as Nominatim above. Proxying here
      * keeps the key server-side (it is public, but living in one place makes
      * rotation trivial) and edge-caches the board so upstream sees one
      * request per TTL regardless of visitors. Boards refresh roughly every
@@ -438,7 +438,7 @@ export default {
       const code = url.searchParams.get("code") || "A";
       const terminal = url.searchParams.get("terminal") || "KLIA";
       const dayKey = url.searchParams.get("dayKey") || "0";
-      // Strict allowlist — never interpolate user input into the upstream URL.
+      // Strict allowlist - never interpolate user input into the upstream URL.
       if (!/^[AD]$/.test(code)) return json({ error: "bad_code" }, 400);
       if (!/^[a-zA-Z0-9-]{1,16}$/.test(terminal)) return json({ error: "bad_terminal" }, 400);
       if (!/^[0-9]$/.test(dayKey)) return json({ error: "bad_dayKey" }, 400);
@@ -505,7 +505,7 @@ export default {
 
     /* IP-based location fallback.
      *
-     * Browser geolocation (getCurrentPosition) is unreliable on desktops —
+     * Browser geolocation (getCurrentPosition) is unreliable on desktops -
      * no GPS, and Chrome/Firefox depend on Google's network-location service
      * which is often blocked or slow. Cloudflare populates request.cf with
      * the visitor's IP-derived location (city, region, country, lat/lon), so
@@ -599,7 +599,7 @@ export default {
     }
 
     // Everything else is a static asset. Security headers for those come from
-    // public/_headers — the asset router serves them without running this
+    // public/_headers - the asset router serves them without running this
     // Worker, so setting headers here would have no effect.
     return env.ASSETS.fetch(request);
   },

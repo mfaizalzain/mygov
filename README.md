@@ -13,8 +13,8 @@ proxies the reverse-geocoding, GTFS archive, flight-board and live-bus calls.
 
 The same data is available to AI coding agents through an official MCP plugin -
 **[mfaizalzain/mygov-mcp](https://github.com/mfaizalzain/mygov-mcp)** - exposing
-weather, fuel prices, CPI/OpenDOSM, GTFS transit and live Rapid bus positions as
-seven read-only tools.
+weather, fuel prices, CPI/OpenDOSM, GTFS transit, live Rapid bus positions, flood
+risk, groceries and monthly tourism arrivals as **ten read-only tools**.
 Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 (universal plugin directory). No API key, same rate-limit rules as the app.
 
@@ -28,8 +28,9 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Household | Ministry of Finance, KPDN | Weekly RON95 / RON97 / diesel ceiling prices, household income, and the PriceCatcher groceries basket (a merged **Groceries sub-block** with per-district price levels) |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
 | Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
-| Vehicles & Ridership | JPJ, KTMB | Monthly new-vehicle registrations stacked by fuel type (the EV adoption curve), daily KTMB ridership per service, and a **Car sales** sub-block - YTD registrations, top makers and EV share from JPJ's granular registration data |
-| Population | DOSM (OpenDOSM + storage) | National population 1970-present and ethnic composition, then the same estimates by state, district and constituency (a merged **Places explorer** with a Malaysia-wide default chip) - per-district ethnicity, sex split, age structure, median income, poverty and inequality, and per-seat income, poverty, gini and unemployment |
+| Vehicles & Ridership | JPJ, KTMB | Monthly new-vehicle registrations stacked by fuel type (the EV adoption curve), daily KTMB ridership per service, and a **Car sales** sub-block - YTD registrations, top makers, **top EV makers** and EV share from JPJ's granular registration data |
+| Population | DOSM (OpenDOSM + storage) | National population 1970-present and ethnic composition, then the same estimates by state, district and constituency (a merged **Places explorer** with a Malaysia-wide default chip, **paginated tables** and **federal territories shown by constituency** - KL/Putrajaya/Labuan have no districts) - per-district ethnicity, sex split, age structure, median income, poverty and inequality, and per-seat income, poverty, gini and unemployment |
+| Tourism | Tourism Malaysia | Monthly international visitor arrivals by country of nationality (top 51) - the month's total, month-on-month and year-on-year growth vs 2025 and 2019, plus year-to-date, from Tourism Malaysia's published PDFs |
 | Health | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
@@ -89,7 +90,8 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | PriceCatcher | `collect_prices.yml`, daily 13:30 UTC | `public/prices.json` | grocery basket index, per-item prices, 166 districts |
 | Places | `collect_geo.yml`, weekly Mon 14:00 UTC | `public/geo.json` | state/district population + composition (ethnicity, sex, age), 222 parliament + 600 DUN seats with income, poverty, gini, unemployment per seat; district-level median income, poverty and gini from the OpenAPI |
 | Insights | `collect_insights.yml`, daily 01:30 UTC | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
-| Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers (current + previous year) |
+| Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers **and top EV makers** (current + previous year) |
+| Tourism | `collect_tourism.yml`, monthly 2nd 02:30 UTC | `public/tourism.json` | Tourism Malaysia visitor-arrivals PDF - top-51 table with month, y/y vs 2025 and 2019, YTD (May 2026 seeded) |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that

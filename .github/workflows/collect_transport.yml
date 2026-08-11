@@ -24,6 +24,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install test runner
+        run: pip install pytest
+
       - name: Syntax check collector
         run: |
           python3 -m py_compile tools/collect_transport.py
