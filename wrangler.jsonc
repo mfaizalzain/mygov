@@ -15,8 +15,11 @@
     "directory": "./public",
     "binding": "ASSETS",
     // The Worker runs first and handles /api/*; anything else falls through
-    // to a static file, and unknown paths return the SPA shell.
-    "not_found_handling": "single-page-application"
+    // to a static file, and unknown paths return the SPA shell. run_worker_first
+    // is required: without it the asset router serves existing files directly
+    // and the Worker's KV + SEO-splice branches never run.
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
   },
   "observability": {
     "enabled": true

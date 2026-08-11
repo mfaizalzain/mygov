@@ -1,8 +1,8 @@
 # Cloudflare static-asset headers.
 #
-# Static assets are served by the asset router without invoking the Worker, so
-# these cannot be set in src/index.js — that code only runs for non-asset
-# routes like /api/reverse.
+# The Worker runs first (assets.run_worker_first), but static files it falls
+# through to are served by the asset router with these headers, so security
+# headers belong here rather than in src/index.js.
 #
 # The CSP is tight: the app has one inline <script> and one inline <style>
 # (both authored in index.html), two locally-hosted vendor scripts pinned with
