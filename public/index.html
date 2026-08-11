@@ -367,7 +367,7 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
   margin-bottom:var(--s3)}
 .brief-h h3{margin:0;font-size:15px;font-weight:660;letter-spacing:-.02em}
 .brief p{margin:var(--s1) 0 0;font-size:13px;line-height:1.5;color:var(--fg-2)}
-#wx-prose{margin-top:var(--s1)}
+#wx-prose{margin-top:var(--s2)}
 #wx-prose .brief-h{align-items:center;gap:var(--s2)}
 #wx-prose .sec-ico{width:34px;height:34px;border-radius:10px}
 /* Holiday + school chips: one slim row inside the Travel Outlook band. */
@@ -986,18 +986,10 @@ html[data-text="large"] table{font-size:14px}
           <div class="pos-panel" id="pos-panel" hidden></div>
         </div>
       </div>
-      <!-- Daily briefing. Hidden until insights.json produces grounded bullets;
-           a missing, stale or empty file leaves no trace on the page. -->
-      <section class="brief" id="brief-band" aria-labelledby="brief-h" hidden>
-        <div class="brief-h">
-          <h3 id="brief-h" data-i18n="Today in brief">Today in brief</h3>
-          <span class="brief-note" id="brief-note"></span>
-        </div>
-        <ul class="brief-list" id="brief-list"></ul>
-      </section>
-      <!-- Next-hours weather prose for the detected area. A slim card under the
-           brief, composed deterministically from the Open-Meteo hourly data
-           (rain probability, WMO code, temperature); hidden until both a
+      <!-- Next-hours weather prose for the detected area. Slim card right under
+           the location row and above the brief - right-now weather before the
+           daily digest. Composed deterministically from the Open-Meteo hourly
+           data (rain probability, WMO code, temperature); hidden until both a
            location and hourly data exist. -->
       <section class="brief" id="wx-prose" aria-labelledby="wx-prose-h" hidden>
         <div class="brief-h">
@@ -1006,6 +998,15 @@ html[data-text="large"] table{font-size:14px}
           <span class="brief-note" id="wx-prose-note"></span>
         </div>
         <p id="wx-prose-body"></p>
+      </section>
+      <!-- Daily briefing. Hidden until insights.json produces grounded bullets;
+           a missing, stale or empty file leaves no trace on the page. -->
+      <section class="brief" id="brief-band" aria-labelledby="brief-h" hidden>
+        <div class="brief-h">
+          <h3 id="brief-h" data-i18n="Today in brief">Today in brief</h3>
+          <span class="brief-note" id="brief-note"></span>
+        </div>
+        <ul class="brief-list" id="brief-list"></ul>
       </section>
     </div>
     <!-- Travel Outlook occupies the hero's right column - the slot the 8-card
