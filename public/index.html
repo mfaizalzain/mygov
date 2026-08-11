@@ -366,6 +366,8 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 .brief-h{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
   margin-bottom:var(--s3)}
 .brief-h h3{margin:0;font-size:15px;font-weight:660;letter-spacing:-.02em}
+.brief p{margin:var(--s1) 0 0;font-size:13px;line-height:1.5;color:var(--fg-2)}
+#wx-prose{margin-top:var(--s1)}
 /* Holiday + school chips: one slim row inside the Travel Outlook band. */
 .hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   margin:var(--s2) 0}
@@ -633,6 +635,17 @@ html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(18
 .wx-today b{font-weight:650;color:var(--fg)}
 .wx-now .dim{margin:var(--s1) 0 0}
 #wx-map{height:230px}
+.wx-hours{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  margin-top:var(--s2);padding-bottom:2px}
+.wx-hours::-webkit-scrollbar{display:none}
+.wx-h{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;
+  font-family:var(--mono);padding:4px 9px;border-radius:999px;
+  border:1px solid var(--line-soft);background:var(--bg-2);color:var(--fg-2);white-space:nowrap}
+.wx-h b{font-weight:700;color:var(--fg-1)}
+.wx-h i{font-style:normal;font-weight:700;color:var(--info)}
+.wx-h.wx-rain{border-color:color-mix(in srgb,var(--info) 45%,transparent);
+  background:color-mix(in srgb,var(--info) 10%,transparent)}
+.wx-h.wx-maybe{border-color:color-mix(in srgb,var(--info) 25%,transparent)}
 .wxp{font-size:12.5px;line-height:1.5;min-width:150px}
 .wxp b{display:block;margin-bottom:2px}
 .wxp-cond{display:block;font-weight:650}
@@ -975,6 +988,17 @@ html[data-text="large"] table{font-size:14px}
           <span class="brief-note" id="brief-note"></span>
         </div>
         <ul class="brief-list" id="brief-list"></ul>
+      </section>
+      <!-- Next-hours weather prose for the detected area. A slim card under the
+           brief, composed deterministically from the Open-Meteo hourly data
+           (rain probability, WMO code, temperature); hidden until both a
+           location and hourly data exist. -->
+      <section class="brief" id="wx-prose" aria-labelledby="wx-prose-h" hidden>
+        <div class="brief-h">
+          <h3 id="wx-prose-h" data-i18n="Next few hours">Next few hours</h3>
+          <span class="brief-note" id="wx-prose-note"></span>
+        </div>
+        <p id="wx-prose-body"></p>
       </section>
     </div>
     <!-- Travel Outlook occupies the hero's right column - the slot the 8-card
@@ -1494,6 +1518,13 @@ const I18N = {
   "Location":"Lokasi", "Type":"Jenis", "Min":"Min", "Max":"Maks", "Today":"Hari Ini",
   "Morning":"Pagi", "Afternoon":"Petang", "Night":"Malam", "Day":"Hari",
   "Now":"Sekarang", "Feels like":"Rasa seperti", "Humidity":"Kelembapan", "Wind":"Angin",
+  "Next few hours":"Beberapa jam akan datang", "Next few hours in":"Beberapa jam akan datang di",
+  "Next 12 hours":"12 jam akan datang",
+  "sunny":"cerah", "partly cloudy":"sebahagian cerah", "cloudy":"mendung", "foggy":"berkabus",
+  "drizzling":"gerimis", "raining":"hujan", "showery":"hujan setempat", "snowing":"salji",
+  "thundery":"ribut petir", "Showers likely":"Hujan mungkin", "Heavy showers likely":"Hujan lebat mungkin",
+  "Possible showers":"Hujan berkemungkinan", "No rain expected":"Tiada hujan dijangka",
+  "up to":"sehingga",
   "Today (forecast)":"Hari ini (ramalan)", "Live conditions unavailable":"Keadaan semasa tidak tersedia",
   "clear":"Cerah", "partly":"Sebahagian cerah", "overcast":"Mendung", "fog":"Kabus",
   "drizzle":"Gerimis", "rain":"Hujan", "showers":"Hujan setempat", "snow":"Salji",
@@ -1796,6 +1827,7 @@ function rerenderAll(){
   /* The briefing ships both languages in one payload, so a language switch is
      a re-render, not a re-fetch. */
   renderBrief();
+  wxProse();
   /* The holiday/school chips are drawn straight from slowData rather than from
      a registered section, so the loop above never reached them and their
      "Next"/"in N days" wording stayed in the previous language. */
@@ -3716,6 +3748,7 @@ function pickLoc(id){
 function paintWeather(){
   if (!wx.data) return;
   paintWxRows(); paintNow(); paintLocChip(); paintHeroLoc();
+  wxProse();
 }
 function paintHeroLoc(){
   const host = $("#hero-loc"); if (!host) return;
@@ -3826,19 +3859,29 @@ async function wxCoords(){
   } catch {}
   return null;
 }
-async function loadCurrentWx(lat, lon){
+/* One shared Open-Meteo call for the Now card AND the hero prose: current
+   conditions + 48 h hourly (temp, rain probability, WMO code). Cached per
+   coordinate so the two surfaces never double-fetch. */
+const wxOMCache = new Map();
+async function fetchOpenMeteo(lat, lon){
+  const key = `${lat},${lon}`;
+  if (wxOMCache.has(key)) return wxOMCache.get(key);
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
       `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
-      `&timezone=Asia%2FKuala_Lumpur`);
+      `&hourly=temperature_2m,precipitation_probability,weather_code` +
+      `&forecast_days=2&timezone=Asia%2FKuala_Lumpur`);
     if (!r.ok) return null;
     const d = await r.json();
     const c = d && d.current;
     if (!c) return null;
-    return { temp:c.temperature_2m, feels:c.apparent_temperature,
+    const out = { current:{ temp:c.temperature_2m, feels:c.apparent_temperature,
       hum:c.relative_humidity_2m, wind:c.wind_speed_10m,
-      code:c.weather_code, time:c.time };
+      code:c.weather_code, time:c.time },
+      hourly: d.hourly || null };
+    wxOMCache.set(key, out);
+    return out;
   } catch { return null; }
 }
 /* MET day-0 row for the selected location: min/max + summary_forecast. */
@@ -3862,8 +3905,8 @@ async function paintNow(){
     ? `<div class="wx-today"><b>${T("Today")}:</b> ${nf(row[2])}°-${nf(row[3])}° · ${esc(sum)}</div>`
     : "";
   const coords = await wxCoords();
-  let live = null;
-  if (coords) live = await loadCurrentWx(coords[0], coords[1]);
+  let live = null, om = null;
+  if (coords){ om = await fetchOpenMeteo(coords[0], coords[1]); live = om ? om.current : null; }
   const locEl = $("#wx-loc");
   if (locEl) locEl.textContent = live && live.time ? live.time.slice(11, 16) : "";
   if (!host) return;   // a re-render raced us
@@ -3890,7 +3933,37 @@ async function paintNow(){
   } else {
     host.innerHTML = `<p class="dim">${T("Live conditions unavailable")}</p>`;
   }
+  const hrs = wxHoursHTML(om);
+  if (hrs) host.insertAdjacentHTML("beforeend", hrs);
   initWxMap(coords, live, loc);
+}
+/* Next 12 hours as a scrollable chip strip: hour, condition icon, temp, and
+   rain probability (shown once >=30%). Same hourly payload as the prose. */
+function wxHourLab(t){
+  const hh = Number(String(t).slice(11, 13));
+  if (isNaN(hh)) return t;
+  if (LANG === "ms")
+    return hh < 12 ? `${hh}pg` : hh === 12 ? "12tg" : `${hh - 12}ptg`;
+  return hh === 0 ? "12am" : hh < 12 ? `${hh}am` : hh === 12 ? "12pm" : `${hh - 12}pm`;
+}
+function wxHoursHTML(om){
+  const h = om && om.hourly;
+  if (!h || !h.time || !h.time.length) return "";
+  const nowMs = Date.now();
+  let i0 = h.time.findIndex(t => Date.parse(String(t) + "+08:00") >= nowMs - 30 * 60 * 1000);
+  if (i0 < 0) i0 = 0;
+  const n = Math.min(12, h.time.length - i0);
+  if (n < 2) return "";
+  const chips = [];
+  for (let i = 0; i < n; i++){
+    const c = wxCond(h.weather_code[i0 + i]);
+    const pr = h.precipitation_probability[i0 + i] || 0;
+    const cls = pr >= 50 ? " wx-rain" : pr >= 30 ? " wx-maybe" : "";
+    chips.push(`<span class="wx-h${cls}">
+      <b>${wxHourLab(h.time[i0 + i])}</b> ${c.icon} ${nf(h.temperature_2m[i0 + i], 0)}°
+      ${pr >= 30 ? `<i>${pr}%</i>` : ""}</span>`);
+  }
+  return `<div class="wx-hours" role="list" aria-label="${T("Next 12 hours")}">${chips.join("")}</div>`;
 }
 function initWxMap(coords, live, loc){
   const el = $("#wx-map");
@@ -3924,6 +3997,75 @@ function initWxMap(coords, live, loc){
     }, { threshold: 0.05 });
     io.observe(el);
   }
+}
+/* "Next few hours in {area}" - one or two plain sentences built
+   deterministically from the Open-Meteo hourly data (rain probability, WMO
+   code, temperature). Fresh at page load, no LLM involved. */
+const WMO_PROSE = { clear:"sunny", partly:"partly cloudy", overcast:"cloudy",
+  fog:"foggy", drizzle:"drizzling", rain:"raining", showers:"showery",
+  snow:"snowing", storm:"thundery" };
+function wxHourTxt(iso, ms){
+  const hh = Number(String(iso).slice(11, 13));
+  if (isNaN(hh)) return iso;
+  if (LANG === "ms"){
+    if (hh < 12) return `${hh} pagi`;
+    if (hh === 12) return "12 tengah hari";
+    const h12 = hh - 12;
+    return `${h12} ${hh < 19 ? "petang" : "malam"}`;
+  }
+  return hh === 0 ? "12am" : hh < 12 ? `${hh}am` : hh === 12 ? "12pm" : `${hh - 12}pm`;
+}
+/* The strongest rain window in the next N hours: the longest run of hours at
+   >=50% rain probability, else the single peak 30-49% hour. */
+function wxRainClause(h, i0, n){
+  let best = null, run = null;
+  for (let i = 0; i < n; i++){
+    const pr = h.precipitation_probability[i0 + i] || 0;
+    if (pr >= 50){ if (!run) run = { s:i, e:i, m:pr }; else { run.e = i; run.m = Math.max(run.m, pr); } }
+    else if (run){ if (!best || run.m > best.m) best = run; run = null; }
+  }
+  if (run && (!best || run.m > best.m)) best = run;
+  if (best && best.e - best.s >= 1){
+    const t1 = wxHourTxt(h.time[i0 + best.s]), t2 = wxHourTxt(h.time[i0 + best.e]);
+    return best.m >= 80
+      ? `${T("Heavy showers likely")} ${t1}-${t2} (${T("up to")} ${best.m}%)`
+      : `${T("Showers likely")} ${t1}-${t2} (${T("up to")} ${best.m}%)`;
+  }
+  if (best)
+    return best.m >= 70
+      ? `${T("Showers likely")} ${wxHourTxt(h.time[i0 + best.s])} (${T("up to")} ${best.m}%)`
+      : `${T("Possible showers")} ${wxHourTxt(h.time[i0 + best.s])} (${T("up to")} ${best.m}%)`;
+  let peak = -1, pi = -1;
+  for (let i = 0; i < n; i++){
+    const pr = h.precipitation_probability[i0 + i] || 0;
+    if (pr >= 30 && pr > peak){ peak = pr; pi = i; }
+  }
+  if (pi >= 0) return `${T("Possible showers")} ${wxHourTxt(h.time[i0 + pi])} (${T("up to")} ${peak}%)`;
+  return T("No rain expected");
+}
+async function wxProse(){
+  const host = $("#wx-prose");
+  if (!host || !wx.data){ if (host) host.hidden = true; return; }
+  const l = wx.data.locs.find(x => x.id === wx.pick);
+  const name = l ? l.name : (geo.label || "");
+  const coords = await wxCoords();
+  if (!name || !coords){ host.hidden = true; return; }
+  const om = await fetchOpenMeteo(coords[0], coords[1]);
+  if (!om || !om.hourly || !om.hourly.time){ host.hidden = true; return; }
+  const h = om.hourly;
+  const nowMs = Date.now();
+  let i0 = h.time.findIndex(t => Date.parse(String(t) + "+08:00") >= nowMs - 30 * 60 * 1000);
+  if (i0 < 0) i0 = 0;
+  const n = Math.min(12, h.time.length - i0);
+  if (n < 1){ host.hidden = true; return; }
+  const cls = WMO_CLASS[h.weather_code[i0]] || "clear";
+  const adj = T(WMO_PROSE[cls]);
+  const temp = nf(h.temperature_2m[i0], 0);
+  const body = $("#wx-prose-body"), note = $("#wx-prose-note");
+  if (body) body.textContent =
+    `${T("Next few hours in")} ${name}: ${adj} ${T("now")}, ${temp}°. ${wxRainClause(h, i0, n)}.`;
+  if (note) note.textContent = om.current.time ? om.current.time.slice(11, 16) : "";
+  host.hidden = false;
 }
 
 /* ════════════════════════════ fuel view ════════════════════════════ */
