@@ -939,6 +939,7 @@ html[data-text="large"] table{font-size:14px}
     <li hidden><a href="#radar-band" id="nav-radar-band"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> Trending</a></li>
     <li><a href="#hazards" id="nav-hazards"><span class="dot" id="dot-hazards"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg> Warnings</a></li>
     <li><a href="#weather" id="nav-weather"><span class="dot" id="dot-weather"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> Weather</a></li>
+    <li><a href="#travel" id="nav-travel"><span class="dot" id="dot-travel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-live"/></svg> Travel</a></li>
     <li><a href="#fuel" id="nav-fuel"><span class="dot" id="dot-fuel"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg> Household</a></li>
     <li><a href="#population" id="nav-population"><span class="dot" id="dot-population"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-population"/></svg> People</a></li>
     <li><a href="#economy" id="nav-economy"><span class="dot" id="dot-economy"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-economy"/></svg> Economy</a></li>
@@ -1095,6 +1096,22 @@ html[data-text="large"] table{font-size:14px}
       <div id="body-weather"><div class="mb"><div class="card"><div class="card-h"><div class="skel" style="width:32%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div></div></div></div><div class="grid g2 mb"><div class="card"><div class="card-h"><div class="skel" style="width:38%"></div></div><div class="card-b"><div class="skel skel-chart"></div><div class="skel skel-table"></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:42%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div><div class="card"><div class="card-h"><div class="skel" style="width:30%"></div></div><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel skel-table"></div></div></div></div>
       
     </section>
+    <section id="travel" aria-labelledby="h-travel">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
+        <div><h3 id="h-travel">Travel Outlook</h3>
+          <p>The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.</p>
+          <details class="meta">
+            <summary>Data source &amp; methodology</summary>
+            <p>Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.</p>
+            <ul><li><code>GET mycal-api.huijun00100101.workers.dev/v1/holidays</code></li><li><code>GET mycal-api.huijun00100101.workers.dev/v1/school/holidays</code></li><li><code>GET travel.json (KV)</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-travel"></span>
+      </div>
+      <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+      
+    </section>
     <section id="fuel" aria-labelledby="h-fuel">
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-fuel"/></svg></div>
@@ -1249,21 +1266,6 @@ html[data-text="large"] table{font-size:14px}
           <span class="sec-time" id="time-live"></span>
         </div>
         <div id="body-live"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-      </div>      <!-- Travel Outlook: a merged sub-block of its parent section. -->
-      <div class="sec-sub" id="travel-sub" aria-labelledby="h-travel">
-        <div class="sec-h">
-          <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
-          <div><h3 id="h-travel" style="font-size:17px" data-i18n="Travel Outlook">Travel Outlook</h3>
-            <p data-i18n="The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.">The next peak travel periods for Malaysia - school breaks, public holidays and long weekends - with what to expect on the roads, in hotels and at the airports, plus tips to travel around them.</p>
-            <details class="meta">
-              <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
-              <p data-i18n="Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.">Peak periods are derived from the official holiday calendar (JPM BKPP gazette via the mycal API, mirrored into slow.json) and the KPM school calendar. The dates themselves are never guessed: a weekly collector sends only the upcoming holidays and school breaks to Gemini, which writes the plain-language outlook and tips; if the model is unavailable a deterministic fallback from the same calendar is served instead, so the card always renders.</p>
-              <ul><li><code>GET mycal-api.huijun00100101.workers.dev/v1/holidays</code></li><li><code>GET mycal-api.huijun00100101.workers.dev/v1/school/holidays</code></li><li><code>GET travel.json (KV)</code></li></ul>
-            </details>
-          </div>
-          <span class="sec-time" id="time-travel"></span>
-        </div>
-        <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
       </div>
     </section>
     <!-- Static fallback: rendered before the app script runs, and visible to
@@ -1417,6 +1419,7 @@ const I18N = {
   "footerC":" penyumbang. Data diambil terus oleh pelayar anda dan dicache setempat selama 15 minit bagi menghormati had 4-permintaan-seminit API. Tiada analitik, tiada penjejakan.",
   "bmc":"Sokong projek ini di Buy Me a Coffee",
   "Weather":"Cuaca", "Household":"Isi Rumah", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
+  "Travel":"Perjalanan",
   "Trending":"Trend",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
@@ -1836,6 +1839,7 @@ const ico = (name, size) =>
 const SECTIONS = [
   { id:"hazards",   label:"Warnings",   icon:"warn",       family:"weather" },
   { id:"weather",   label:"Weather",    icon:"weather",    family:"weather" },
+  { id:"travel",    label:"Travel",     icon:"live",       family:"travel" },
   { id:"fuel",      label:"Household",  icon:"fuel",       family:"data-catalogue" },
   { id:"population",label:"People",     icon:"population", family:"opendosm" },
   { id:"economy",   label:"Economy",    icon:"economy",    family:"opendosm" },
@@ -7641,9 +7645,6 @@ const LOADERS = {
          KTMB ridership and live KTMB trains were three separate nav entries
          for one operator. Same pattern as Groceries under Household. */
       if (!loaded.has("live")) loadSection("live", false);
-      /* Travel Outlook rides along too - peak travel periods are about
-         getting around, and the calendar behind it is already mirrored. */
-      if (!loaded.has("travel")) loadSection("travel", false);
     } },
   travel:   { load:loadTravel,    render:renderTravel,    asOf:d => d.generated },
   live:     { load:loadLive,      render:renderLive,      after:d => {
@@ -7667,7 +7668,7 @@ const dataDate = {};         // latest data date per section, for the "data as o
  * trips the warning while a normal cadence never does. Sections with no
  * asOf (transport, live) never reach this - `dd` is undefined for them. */
 const MAX_AGE_DAYS = {
-  flood:1, live:1, weather:3, health:14, fuel:21, transport:30,
+  flood:1, live:1, weather:3, health:14, travel:14, fuel:21, transport:30,
   prices:45, finance:60, mobility:75, economy:120, population:430, places:430,
 };
 function setSecTime(id, mode){
