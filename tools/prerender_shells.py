@@ -126,7 +126,9 @@ for s in sections:
       </div>
       <div id="body-{sid_body}">{SHELL_SKELS.get(s["id"], SKEL)}</div>
       {sub_block("prices", "basket") if s["id"] == "fuel" else
-       sub_block("tourism", "tourism") if s["id"] == "economy" else ""}
+       sub_block("tourism", "tourism") if s["id"] == "economy" else
+       sub_block("live", "live") if s["id"] == "transport" else
+       sub_block("health", "health") if s["id"] == "population" else ""}
     </section>''')
 
 shell_html = "\n".join(shells)

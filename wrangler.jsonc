@@ -5,8 +5,8 @@
   "compatibility_date": "2026-08-01",
   // Attaching the custom domain here makes wrangler create/maintain the DNS
   // record and certificate on deploy, so it is reproducible from the repo.
-  // Staging serves the dev URL; production (main branch) serves
-  // malaysia-at-a-glance.com.
+  // Staging (this branch) serves the dev URL; production (main branch)
+  // serves malaysia-at-a-glance.com.
   "routes": [
     { "pattern": "mygov.faizalmzain.com", "custom_domain": true }
   ],
