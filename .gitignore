@@ -9,3 +9,6 @@ tools/build-prompt.md
 
 # Hermes agent scratch (plans live in docs/)
 .hermes/
+
+# Claude Code local config (machine-specific: local settings, preview server)
+.claude/
