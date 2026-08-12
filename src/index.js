@@ -462,6 +462,157 @@ export default {
       return out;
     }
 
+    /* Rapid KL service alerts (PULSE) - the latest post only.
+     *
+     * myrapid.com.my sits behind Incapsula (a JS-challenge WAF), so every
+     * plain HTTP request - page, RSS, wp-json (which additionally returns
+     * 401 rest_forbidden for anonymous reads) - fails. The r.jina.ai reader
+     * proxy renders the page server-side and returns clean markdown, which
+     * we parse for the newest alert (title, excerpt, timestamp, link). We
+     * keep only the LATEST item - the dashboard shows one card, not a feed.
+     *
+     * Fetch strategy: the collect_rapid GitHub Action runs every 10 min from
+     * GitHub's IP pool (jina's free tier rate-limits Cloudflare Worker
+     * egress to null) and stores the result in KV under "rapid". This route
+     * prefers that KV copy and only falls back to a live jina fetch on cold
+     * start / KV cleared - where it may legitimately come back null, which
+     * the deck simply omits. */
+    if (url.pathname === "/api/rapid-alerts") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      /* KV copy first - fresh, reliable, unmetered by jina. */
+      try {
+        const kv = await env.MYGOV_DATA.get("rapid");
+        if (kv != null) {
+          const parsed = JSON.parse(kv);
+          if (parsed && parsed.latest) {
+            const out = json(parsed, 200, { "cache-control": "public, max-age=300" });
+            return out;
+          }
+        }
+      } catch { /* fall through to the live fetch */ }
+
+      const JINA = "https://r.jina.ai/https://myrapid.com.my/pulse/service-alerts-on-pulse/";
+      let latest = null;
+      try {
+        const res = await fetch(JINA, {
+          headers: { "user-agent": UA },
+          cf: { cacheTtl: 600, cacheEverything: true },
+        });
+        if (res.ok) {
+          const md = await res.text();
+          const MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December";
+          /* The reader renders each alert as:
+           *   ### [Title](https://myrapid.com.my/.../)
+           *   Excerpt text…
+           *   [Read More »](url)
+           *   August 11, 2026  11:00 am
+           * Newest first - take the first block. */
+          const head = String(md).split(/^### \[/m)[1];
+          if (head) {
+            const tm = head.match(/^([^\]]+)\]\((https?:\/\/[^)]+)\)/);
+            if (tm) {
+              const rest = head.split(/\[Read More/i)[0];
+              const excerpt = rest.split("\n").slice(1).join(" ").replace(/\s+/g, " ").trim().slice(0, 240);
+              const dm = head.match(new RegExp(
+                "(" + MONTHS + ")\\s+(\\d{1,2}),\\s+(\\d{4})\\s+(\\d{1,2}):(\\d{2})\\s*(am|pm)", "i"));
+              let ts = null;
+              if (dm) {
+                const MON = { january:0, february:1, march:2, april:3, may:4, june:5,
+                  july:6, august:7, september:8, october:9, november:10, december:11 };
+                let hh = Number(dm[4]);
+                if (/pm/i.test(dm[6]) && hh < 12) hh += 12;
+                if (/am/i.test(dm[6]) && hh === 12) hh = 0;
+                /* Posted times are MYT (UTC+8, no DST). */
+                ts = Math.floor(Date.UTC(Number(dm[3]), MON[dm[1].toLowerCase()],
+                  Number(dm[2]), hh - 8, Number(dm[5])) / 1000);
+              }
+              latest = {
+                title: tm[1].trim(),
+                url: tm[2].trim(),
+                excerpt,
+                ts,
+              };
+            }
+          }
+        }
+      } catch { /* latest stays null - the deck simply omits the card */ }
+
+      const out = json({ updated: new Date().toISOString(), latest }, 200,
+        { "cache-control": "public, max-age=600" });
+      return out;
+    }
+
+    /* Air quality index for Malaysia's cities (Open-Meteo, free + keyless).
+     *
+     * The official APIMS feed (eqms.doe.gov.my) resets connections for
+     * non-browser clients, so the dashboard uses Open-Meteo's air-quality
+     * model instead - the same provider already approved for the weather
+     * section. We poll one reading per major city and return the lot plus
+     * the WORST and CLEANEST of the set, which is what the alert card shows
+     * side by side. All timestamps are the model's hourly snapshot time
+     * (Asia/Kuala_Lumpur). Edge-caches 10 min; the model updates hourly. */
+    if (url.pathname === "/api/aqi") {
+      const origin = request.headers.get("origin");
+      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      const CITIES = [
+        ["Kuala Lumpur", 3.1390, 101.6869],
+        ["Petaling Jaya", 3.1073, 101.6067],
+        ["Shah Alam", 3.0733, 101.5185],
+        ["Putrajaya", 2.9264, 101.6964],
+        ["Penang", 5.4141, 100.3288],
+        ["Johor Bahru", 1.4927, 103.7414],
+        ["Ipoh", 4.5975, 101.0901],
+        ["Kuching", 1.5535, 110.3593],
+        ["Kota Kinabalu", 5.9804, 116.0735],
+        ["Melaka", 2.1896, 102.2501],
+        ["Kuantan", 3.8077, 103.3260],
+        ["Seremban", 2.7246, 101.9343],
+        ["Alor Setar", 6.1244, 100.3678],
+        ["Kota Bharu", 6.1256, 102.2383],
+        ["Kuala Terengganu", 5.3302, 103.1408],
+        ["Miri", 4.3995, 113.9914],
+        ["Bintulu", 3.1733, 113.0335],
+        ["Langkawi", 6.3508, 99.8039],
+      ];
+
+      const stations = [];
+      await Promise.all(CITIES.map(async ([name, lat, lon]) => {
+        try {
+          const q = new URLSearchParams({
+            latitude: String(lat), longitude: String(lon),
+            current: "us_aqi,pm2_5", timezone: "Asia/Kuala_Lumpur",
+          });
+          const res = await fetch(
+            `https://air-quality-api.open-meteo.com/v1/air-quality?${q}`,
+            { headers: { "user-agent": UA }, cf: { cacheTtl: 600, cacheEverything: true } });
+          if (!res.ok) return;
+          const d = await res.json();
+          const cur = d.current || {};
+          const aqi = cur.us_aqi;
+          if (aqi == null) return;
+          stations.push({
+            name,
+            aqi: Math.round(Number(aqi)),
+            pm25: cur.pm2_5 == null ? null : Number(cur.pm2_5).toFixed(1),
+            time: cur.time || null,
+          });
+        } catch { /* one bad city must not sink the whole route */ }
+      }));
+
+      stations.sort((a, b) => b.aqi - a.aqi);
+      const out = json({
+        updated: new Date().toISOString(),
+        reading_time: stations.length && stations[0].time ? stations[0].time : null,
+        stations,
+        worst: stations[0] || null,
+        cleanest: stations.length ? stations[stations.length - 1] : null,
+      }, 200, { "cache-control": "public, max-age=600" });
+      return out;
+    }
+
     /* Malaysia Airports FIDS (flight information display) proxy.
      *
      * The official live arrivals/departures board on malaysiaairports.com.my
@@ -620,6 +771,7 @@ export default {
       "/cars.json": { key: "cars", type: "json" },
       "/tourism.json": { key: "tourism", type: "json" },
       "/travel.json":  { key: "travel",  type: "json" },
+      "/rapid_alerts.json": { key: "rapid", type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {
