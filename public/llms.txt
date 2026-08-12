@@ -1,28 +1,30 @@
 # mygov
 
-> Malaysia government open-data dashboard: weather, fuel prices, economic statistics, public transport, flights and the trend radar - all sourced live from api.data.gov.my and displayed in a single-page app.
+> Malaysia government open-data dashboard: weather, air quality, fuel prices, economic statistics, public transport, flights and the trend radar - all sourced live from api.data.gov.my and displayed in a single-page app.
 
 ## mygov
 
-- [mygov dashboard](https://mygov.faizalmzain.com/): Live weather and warnings by location, weekly retail fuel prices, consumer price index and GDP, public transport (KTMB trains, LRT/MRT), flight boards for 13 Malaysian airports, and the Trend Radar - the hottest issues and viral claims in Malaysia right now, each verified against real sources.
+- [mygov dashboard](https://malaysia-at-a-glance.com/): Live weather, air quality and warnings by location, weekly retail fuel prices, consumer price index and GDP, public transport (KTMB trains, LRT/MRT), flight boards for 13 Malaysian airports, and the Trend Radar - the hottest issues and viral claims in Malaysia right now, each verified against real sources.
 
 ## Sections
 
-- [Warnings & Hazards](https://mygov.faizalmzain.com/#hazards): Everything currently on issue - MET severe-weather warnings, earthquakes within 500 km in the last 24 hours, and JPS river gauges above their flood thresholds. Live only, no history.
-- [Weather](https://mygov.faizalmzain.com/#weather): Seven-day forecast, air temperature and rainfall for 360 Malaysian locations.
-- [Household](https://mygov.faizalmzain.com/#fuel): Weekly retail fuel prices (RON95, RON97, diesel), the PriceCatcher groceries basket and household income.
-- [Population](https://mygov.faizalmzain.com/#population): National totals since 1970, then by state, district and constituency - median income, poverty, inequality and unemployment per parliamentary and state seat.
-- [Economy](https://mygov.faizalmzain.com/#economy): Consumer Price Index, inflation, unemployment and real GDP.
-- [Public Transport](https://mygov.faizalmzain.com/#transport): KTMB live train positions, LRT/MRT network diagrams and station data.
-- [Flights](https://mygov.faizalmzain.com/#flights): Live flight boards for 13 Malaysian airports.
-- [Trend Radar](https://mygov.faizalmzain.com/#radar-band): Trending issues and fact-checked claims in Malaysia.
+- [Warnings & Hazards](https://malaysia-at-a-glance.com/#hazards): Everything currently on issue - MET severe-weather warnings, earthquakes within 500 km in the last 24 hours, JPS river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality (US AQI for 18 major cities, worst-first with the cleanest for comparison; an alert card only appears when the worst city is Unhealthy, AQI 101+). Live only, no history.
+- [Weather](https://malaysia-at-a-glance.com/#weather): Current conditions at your location plus the seven-day MET outlook, air temperature and rainfall for 360 Malaysian locations.
+- [Household](https://malaysia-at-a-glance.com/#fuel): Weekly retail fuel prices (RON95, RON97, diesel), the PriceCatcher groceries basket and household income.
+- [Population](https://malaysia-at-a-glance.com/#population): National totals since 1970, then by state, district and constituency - median income, poverty, inequality and unemployment per parliamentary and state seat.
+- [Economy](https://malaysia-at-a-glance.com/#economy): Consumer Price Index, inflation, unemployment and real GDP.
+- [Public Transport](https://malaysia-at-a-glance.com/#transport): KTMB live train positions, LRT/MRT network diagrams and station data.
+- [Flights](https://malaysia-at-a-glance.com/#flights): Live flight boards for 13 Malaysian airports.
+- [Trend Radar](https://malaysia-at-a-glance.com/#radar-band): Trending issues and fact-checked claims in Malaysia.
 
 ## Data files
 
-- [Trend radar JSON](https://mygov.faizalmzain.com/radar.json): Top issues with fact-check status, titles in Bahasa Melayu and English, and source links.
-- [Geography JSON](https://mygov.faizalmzain.com/geo.json): State, district and constituency population and per-seat socioeconomics.
-- [Forecasts JSON](https://mygov.faizalmzain.com/forecasts.json): 14-day projections for the daily count series that measurably beat a naive guess, each with an 80% band and the backtest gain that earned it a place. Prices set by government (fuel, controlled grocery items) and exchange rates are deliberately never forecast.
-- [Insights JSON](https://mygov.faizalmzain.com/insights.json): A short bilingual daily briefing. Every number in it is computed by the statistics layer and machine-checked against the source data before publication; the language model only phrases them.
-- [Site feed](https://mygov.faizalmzain.com/feed.xml): RSS feed of the latest data updates.
+- [Trend radar JSON](https://malaysia-at-a-glance.com/radar.json): Top issues with fact-check status, titles in Bahasa Melayu and English, and source links.
+- [Geography JSON](https://malaysia-at-a-glance.com/geo.json): State, district and constituency population and per-seat socioeconomics.
+- [Forecasts JSON](https://malaysia-at-a-glance.com/forecasts.json): 14-day projections for the daily count series that measurably beat a naive guess, each with an 80% band and the backtest gain that earned it a place. Prices set by government (fuel, controlled grocery items) and exchange rates are deliberately never forecast.
+- [Insights JSON](https://malaysia-at-a-glance.com/insights.json): A short bilingual daily briefing. Every number in it is computed by the statistics layer and machine-checked against the source data before publication; the language model only phrases them.
+- [Rapid KL alerts JSON](https://malaysia-at-a-glance.com/rapid_alerts.json): The latest myRapid PULSE service alert (LRT/MRT/monorail/bus disruption) - title, excerpt, link and MYT timestamp, refreshed every 10 minutes.
+- [Air quality API](https://malaysia-at-a-glance.com/api/aqi): Live US AQI and PM2.5 for 18 major Malaysian cities, sorted worst-first, plus the worst and cleanest stations.
+- [Site feed](https://malaysia-at-a-glance.com/feed.xml): RSS feed of the latest data updates.
 
 All data is from the Malaysian Government Open Data portal (api.data.gov.my) unless otherwise noted on the page.
