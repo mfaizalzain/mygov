@@ -1,6 +1,6 @@
 {
-  "name": "mygov — Malaysia Open Data",
-  "short_name": "mygov",
+  "name": "Malaysia at a Glance — Live Government Open Data",
+  "short_name": "At a Glance",
   "description": "Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.",
   "start_url": "/",
   "scope": "/",

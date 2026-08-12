@@ -186,7 +186,7 @@ def make_feed(radar):
     feed = f"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>mygov - Malaysia Trend Radar</title>
+    <title>Malaysia at a Glance - Malaysia Trend Radar</title>
     <link>{SITE}</link>
     <description>Today's trending topics and fact-checked claims circulating in Malaysia, verified against real sources.</description>
     <language>ms-MY</language>

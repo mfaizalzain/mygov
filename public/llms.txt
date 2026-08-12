@@ -1,10 +1,10 @@
-# mygov
+# Malaysia at a Glance
 
 > Malaysia government open-data dashboard: weather, air quality, fuel prices, economic statistics, public transport, flights and the trend radar - all sourced live from api.data.gov.my and displayed in a single-page app.
 
-## mygov
+## Malaysia at a Glance
 
-- [mygov dashboard](https://malaysia-at-a-glance.com/): Live weather, air quality and warnings by location, weekly retail fuel prices, consumer price index and GDP, public transport (KTMB trains, LRT/MRT), flight boards for 13 Malaysian airports, and the Trend Radar - the hottest issues and viral claims in Malaysia right now, each verified against real sources.
+- [Malaysia at a Glance dashboard](https://malaysia-at-a-glance.com/): Live weather, air quality and warnings by location, weekly retail fuel prices, consumer price index and GDP, public transport (KTMB trains, LRT/MRT), flight boards for 13 Malaysian airports, and the Trend Radar - the hottest issues and viral claims in Malaysia right now, each verified against real sources.
 
 ## Sections
 

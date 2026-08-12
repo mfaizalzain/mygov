@@ -15,8 +15,11 @@
    cache name changes. v16: rapidCard href hardening + the summariser.
    v17: itemGeo / "Where it's cheapest".
    v18: animated weather sky, radar collection stamp, themed election
-   seat search + state filter. */
-const VERSION    = "mygov-v18";
+   seat search + state filter.
+   v19: on-demand Chart.js/Leaflet, series.json split, "Malaysia at a Glance"
+   rename, per-condition weather icons. The cache name keeps the mygov- prefix
+   deliberately: it is an internal key, and renaming it only orphans caches. */
+const VERSION    = "mygov-v19";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

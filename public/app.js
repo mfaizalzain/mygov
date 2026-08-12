@@ -3002,6 +3002,13 @@ function initWxMap(coords, live, loc){
 /* "Next few hours in {area}" - one or two plain sentences built
    deterministically from the Open-Meteo hourly data (rain probability, WMO
    code, temperature). Fresh at page load, no LLM involved. */
+/* Sprite symbol per WMO class for the "Next few hours" card icon, so the
+   icon, the prose and the animated sky all key off one condition value.
+   Unknown codes keep the generic section icon. */
+const WMO_SPRITE = { clear:"i-wx-clear", partly:"i-wx-partly",
+  overcast:"i-wx-overcast", fog:"i-wx-fog", drizzle:"i-wx-drizzle",
+  rain:"i-wx-rain", showers:"i-wx-showers", snow:"i-wx-snow",
+  storm:"i-wx-storm" };
 const WMO_PROSE = { clear:"sunny", partly:"partly cloudy", overcast:"cloudy",
   fog:"foggy", drizzle:"drizzling", rain:"raining", showers:"showery",
   snow:"snowing", storm:"thundery" };
@@ -3064,6 +3071,9 @@ async function wxProse(){
   /* animated sky keyed to the same WMO class the prose uses (styles.css) */
   [...host.classList].forEach(c => { if (c.startsWith("wx-")) host.classList.remove(c); });
   host.classList.add("wx-" + cls);
+  /* …and the card icon, so a rainy hour does not sit behind a sunny glyph */
+  const use = host.querySelector(".sec-ico use");
+  if (use) use.setAttribute("href", "#" + (WMO_SPRITE[cls] || "i-weather"));
   const temp = nf(h.temperature_2m[i0], 0);
   const body = $("#wx-prose-body"), note = $("#wx-prose-note");
   if (body) body.textContent =
