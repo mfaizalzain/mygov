@@ -318,6 +318,9 @@ const I18N = {
  "Winner":"Pemenang", "Majority":"Majoriti", "Vote share":"Kongsi undi",
  "each seat's vote share by party colour":"kongsi undi setiap kerusi mengikut warna parti",
  "No results yet":"Tiada keputusan lagi",
+ "latest state election per state":"pilihan raya negeri terkini setiap negeri",
+ "All states":"Semua negeri", "Search":"Cari",
+ "Search constituency, winner, party…":"Cari kawasan, pemenang, parti…",
  "Tourism mode":"Mod pelancongan",
  "vs 2025:":"berbanding 2025:", "Top 10 countries":"10 negara teratas",
  "Country":"Negara", "y/y":"t/t", "YTD":"YTD",
@@ -4764,7 +4767,7 @@ function renderHotel(d){
    votes and party colours from mysprsemak.spr.gov.my's JSON API. Results are
    static once published, so the section is a one-time crawl per election. */
 let electionData = null, electionCat = "pru";
-let electionPage = 0;            // seat-table pagination (PRU has 208 rows)
+let electionPage = 0, electionState = "", electionQuery = "";  // page + state filter + search
 const ELECTION_PAGE = 20;
 async function loadElection(){
   if (electionData) return electionData;
@@ -4780,11 +4783,27 @@ function renderElection(d){
   host.hidden = false;
   const seats = (d.seats || []).filter(s => s.category === electionCat);
   const cat = d.categories && d.categories[electionCat];
-  const label = cat ? cat.name : "";
+  const label = electionCat === "dun"
+    ? T("latest state election per state") + " · " + nf(new Set(seats.map(s => s.state)).size) + " " + T("states")
+    : (cat ? cat.name : "");
+  const statesList = [...new Set(seats.map(s => s.state))].sort();
+  /* State filter (PRU and DUN both segregate by state) + free-text search
+     over constituency / winner / party names. */
+  const stateFilter = electionState;
+  const q = electionQuery.trim().toLowerCase();
+  let viewSeats = stateFilter ? seats.filter(s => s.state === stateFilter) : seats;
+  if (q){
+    viewSeats = viewSeats.filter(s => {
+      const w = (s.candidates || []).find(c => c.isWinner);
+      const hay = [s.name, s.state, s.election, w ? w.name : "",
+        w ? (w.partyShort || w.party) : ""].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }
   /* Party totals: group seats by the winner's party short name (colour from
      the winning candidate). BEBAS stays its own bucket. */
   const byParty = {};
-  for (const s of seats){
+  for (const s of viewSeats){
     const w = (s.candidates || []).find(c => c.isWinner) || (s.candidates || [])[0];
     if (!w) continue;
     const key = w.partyShort || "BEBAS";
@@ -4793,9 +4812,9 @@ function renderElection(d){
   }
   const partyRows = Object.entries(byParty).sort((a, b) => b[1].n - a[1].n);
   const maxN = partyRows.length ? partyRows[0][1].n : 1;
-  const pages = Math.max(1, Math.ceil(seats.length / ELECTION_PAGE));
+  const pages = Math.max(1, Math.ceil(viewSeats.length / ELECTION_PAGE));
   if (electionPage >= pages) electionPage = 0;
-  const slice = seats.slice(electionPage * ELECTION_PAGE, (electionPage + 1) * ELECTION_PAGE);
+  const slice = viewSeats.slice(electionPage * ELECTION_PAGE, (electionPage + 1) * ELECTION_PAGE);
   const seatHTML = (s) => {
     const w = (s.candidates || []).find(c => c.isWinner);
     const run = (s.candidates || []).slice().sort((a, b) => (b.votes||0) - (a.votes||0));
@@ -4806,6 +4825,7 @@ function renderElection(d){
     }).join("");
     return `<tr>
       <td>${esc(s.name || "")}</td>
+      <td>${esc(s.state || "")}</td>
       <td class="num">${esc(s.date || "")}</td>
       <td>${w ? `<span class="wchip"><i style="background:${esc(w.colour || "#888")}"></i>${esc(w.name)}</span>
         <span class="dim">${esc(w.partyShort || w.party || "BEBAS")}</span>` : "-"}</td>
@@ -4814,7 +4834,7 @@ function renderElection(d){
     </tr>`;
   };
   const first = seats[0] || {};
-  const total = seats.length;
+  const total = viewSeats.length;
   host.innerHTML = `
     <div class="grid g3 mb">
       <div class="kpi"><div class="kpi-t"><span class="lab">${T("election")}</span></div>
@@ -4848,14 +4868,22 @@ function renderElection(d){
     </div>
     <div class="card">
       <div class="card-h"><h4>${T("Seats")} · ${esc(label || "")}</h4>
-        <span class="sub">${T("each seat's vote share by party colour")}</span></div>
+        <span class="sub">${T("each seat's vote share by party colour")}</span>
+        <span class="right">
+          <input id="election-q" type="search" placeholder="${T("Search constituency, winner, party…")}" value="${esc(electionQuery)}" aria-label="${T("Search")}">
+          <select id="election-state" aria-label="${T("State")}">
+            <option value="">${T("All states")}</option>
+            ${statesList.map(st => `<option value="${esc(st)}" ${st === electionState ? "selected" : ""}>${esc(st)}</option>`).join("")}
+          </select>
+        </span></div>
       <div class="card-b"><div class="tw"><table>
         <thead><tr>
-          <th>${T("Constituency")}</th><th class="num">${T("Polling day")}</th>
+          <th>${T("Constituency")}</th><th>${T("State")}</th><th class="num">${T("Polling day")}</th>
           <th>${T("Winner")}</th><th class="num">${T("Majority")}</th>
           <th class="num">${T("Vote share")}</th>
         </tr></thead><tbody>
         ${slice.map(seatHTML).join("")}
+        ${slice.length === 0 ? `<tr><td colspan="6" class="num dim">${esc(T("No results yet"))}</td></tr>` : ""}
         </tbody></table></div>
         <div class="pager"><span id="election-pager"></span></div>
       </div>
@@ -4864,9 +4892,23 @@ function renderElection(d){
     b.onclick = () => {
       electionCat = b.dataset.eleccat;
       electionPage = 0;
+      electionState = "";
+      electionQuery = "";
       renderElection(d);
     };
   });
+  const qSel = host.querySelector("#election-q");
+  if (qSel) qSel.oninput = () => {
+    electionQuery = qSel.value;
+    electionPage = 0;
+    renderElection(d);
+  };
+  const stSel = host.querySelector("#election-state");
+  if (stSel) stSel.onchange = () => {
+    electionState = stSel.value;
+    electionPage = 0;
+    renderElection(d);
+  };
   const pgHost = host.querySelector("#election-pager");
   if (pgHost) pgHost.appendChild(placesPager(electionPage, total, ELECTION_PAGE,
     p => { electionPage = p; renderElection(d); }));

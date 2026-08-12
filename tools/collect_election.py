@@ -148,6 +148,7 @@ def main():
     fails = 0
     seats = []
     states = []
+    pru_id = None  # set by the PRU crawl; needed for PRU-embedded DUN seats
     meta = {"pru": None, "dun": None, "prk": None}
     meta.setdefault("pru"); meta.setdefault("dun"); meta.setdefault("prk")
 
@@ -186,39 +187,93 @@ def main():
     except Exception as e:
         sys.stderr.write(f"PRU crawl failed: {e}\n")
 
-    # ── DUN (latest state election) ────────────────────────────────────
+    # ── DUN (latest state election for EVERY state) ───────────────────
     try:
         html = get(op, "/semakan/keputusan/pru-dun")
         token = token_of(html)
+        # The #PruDun dropdown lists every state election with its state id,
+        # newest first per state - take the FIRST option per state. Perlis,
+        # Perak and Pahang are absent because their state elections rode
+        # PRU-15 (Nov 2022); their DUN seats come from getParDun's dun
+        # payload on the PRU page (same keputusanPru endpoint).
         dun_opts = re.findall(r'<option class="font-bold" data-negeri="([A-F0-9-]{36})" value="([A-F0-9-]{36})">([^<]+)</option>', html)
         if not dun_opts:
             raise ValueError("DUN election options not found")
-        nid, did, dname = dun_opts[0]
-        meta["dun"] = {"id": did, "name": dname, "stateId": nid}
-        # resolve the state name from the state select on the pru page states map
-        state_name = "Negeri Sembilan"
-        for s_id, s_name in states:
-            if s_id == nid:
-                state_name = s_name.strip()
-                break
-        d = json.loads(post(op, "/semakan/keputusan/senaraiDunPruDun",
-                            {"_token": token, "PilihanrayaId": did, "RefNegeriId": nid},
-                            "/semakan/keputusan/pru-dun"))
-        duns = d.get("dun") or []
-        if LIMIT and LIMIT > 0:
-            duns = duns[:LIMIT]
-        sys.stderr.write(f"DUN: {dname} ({len(duns)} seats)\n")
-        for dun in duns:
-            r = json.loads(post(op, "/semakan/keputusan/keputusanPruDun",
-                                {"_token": token, "kategori": "PRU_DUN",
-                                 "PilihanrayaId": did, "RefNegeriId": nid,
-                                 "kodbahagian": dun.get("AppendKod")},
-                                "/semakan/keputusan/pru-dun"))
-            seat = parse_result(r, "dun")
-            seat["state"] = state_name
-            seat["name"] = f"N.{dun.get('KodBahagianPilihanRaya', '')} {dun.get('NamaBahagianPilihanRaya', '')}".strip()
-            seats.append(seat)
-            time.sleep(POLL)
+        # state id -> (election id, name) for the newest election of that state
+        latest_dun = {}
+        for nid, did, dname in dun_opts:
+            if nid not in latest_dun:
+                latest_dun[nid] = (did, dname)
+        sys.stderr.write(f"DUN: {len(latest_dun)} states with dropdown elections\n")
+        meta["dun"] = {"name": f"latest state election per state ({len(latest_dun)} dropdown + PRU-embedded)",
+                       "states": len(states)}
+        for nid, (did, dname) in latest_dun.items():
+            state_name = next((s.strip() for s_id, s in states if s_id == nid), nid)
+            try:
+                d = json.loads(post(op, "/semakan/keputusan/senaraiDunPruDun",
+                                    {"_token": token, "PilihanrayaId": did, "RefNegeriId": nid},
+                                    "/semakan/keputusan/pru-dun"))
+                duns = (d.get("dun") or [])
+                if LIMIT and LIMIT > 0:
+                    duns = duns[:LIMIT]
+            except Exception as e:
+                sys.stderr.write(f"DUN {state_name}: senaraiDunPruDun failed: {e}\n")
+                continue
+            for dun in duns:
+                try:
+                    r = json.loads(post(op, "/semakan/keputusan/keputusanPruDun",
+                                        {"_token": token, "kategori": "PRU_DUN",
+                                         "PilihanrayaId": did, "RefNegeriId": nid,
+                                         "kodbahagian": dun.get("AppendKod")},
+                                        "/semakan/keputusan/pru-dun"))
+                    seat = parse_result(r, "dun")
+                    seat["state"] = state_name
+                    seat["name"] = f"N.{dun.get('KodBahagianPilihanRaya', '')} {dun.get('NamaBahagianPilihanRaya', '')}".strip()
+                    seats.append(seat)
+                    time.sleep(POLL)
+                except Exception as e:
+                    sys.stderr.write(f"DUN {state_name} {dun.get('NamaBahagianPilihanRaya')}: {e}\n")
+                    fails += 1
+                    if fails > MAX_FAILS:
+                        raise RuntimeError("too many consecutive DUN failures")
+        # PRU-embedded state elections: Perlis, Perak, Pahang rode PRU-15.
+        # getParDun carries their DUN seats; the label reads "PRU KE-15", so
+        # rename it to a state-election label.
+        pru_html = get(op, "/semakan/keputusan/pru")
+        pru_token = token_of(pru_html)
+        for state_id, state_name in states:
+            sn = state_name.strip()
+            if state_id in latest_dun or not pru_id:
+                continue   # already covered by the dropdown, or no PRU id
+            try:
+                d = json.loads(post(op, "/semakan/keputusan/pru/getParDun",
+                                    {"_token": pru_token, "RefNegeriId": state_id,
+                                     "PilihanrayaId": pru_id},
+                                    "/semakan/keputusan/pru"))
+                dun_payload = d.get("dun")
+                duns = []
+                if isinstance(dun_payload, dict):
+                    inner = dun_payload.get("dun")
+                    if isinstance(inner, list):
+                        duns = inner
+                if not duns:
+                    continue   # no state election rode that PRU
+                sys.stderr.write(f"DUN {sn}: {len(duns)} seats via PRU-{pru_id[:8]}\n")
+                for dun in duns:
+                    r = json.loads(post(op, "/semakan/keputusan/keputusanPru",
+                                        {"_token": pru_token, "kategori": "PRU",
+                                         "PilihanrayaId": pru_id,
+                                         "RefNegeriId": state_id,
+                                         "kodbahagian": dun.get("AppendKod")},
+                                        "/semakan/keputusan/pru"))
+                    seat = parse_result(r, "dun")
+                    seat["state"] = sn
+                    seat["name"] = f"N.{dun.get('KodBahagianPilihanRaya', '')} {dun.get('NamaBahagianPilihanRaya', '')}".strip()
+                    seat["election"] = f"PRU DEWAN NEGERI {sn} KE-15 (2022)"
+                    seats.append(seat)
+                    time.sleep(POLL)
+            except Exception as e:
+                sys.stderr.write(f"DUN {sn} (PRU-embedded): {e}\n")
     except Exception as e:
         sys.stderr.write(f"DUN crawl failed: {e}\n")
 
@@ -250,9 +305,15 @@ def main():
         "generated": date.today().isoformat(),
         "source": "Suruhanjaya Pilihan Raya (SPR) MySPRSemak",
         "note": "Latest election per category - results are static once published. "
-                "SPR's getParDun omits Kedah P.017 Padang Serai (2023 by-election seat), "
-                "and the 13 federal-territory seats (KL/Putrajaya/Labuan) have no state "
-                "entry in SPR's dropdown, so PRU-15 is 208 seats here vs 222 nationally.",
+                "DUN = the latest state election for EVERY state: 10 states come "
+                "from the pru-dun dropdown (Negeri Sembilan KE-16, Johor KE-16, "
+                "Sabah KE-17, Sarawak KE-12, Melaka KE-15, and 2023 elections in "
+                "Kedah/Kelantan/Penang/Selangor/Terengganu); Perlis, Perak and "
+                "Pahang held their state elections with PRU-15 and come from its "
+                "DUN payload. SPR's getParDun omits Kedah P.017 Padang Serai (2023 "
+                "by-election seat), and the 13 federal-territory seats "
+                "(KL/Putrajaya/Labuan) have no state entry in SPR's dropdown, so "
+                "PRU-15 is 208 seats here vs 222 nationally.",
         "categories": meta,
         "seats": seats,
     }

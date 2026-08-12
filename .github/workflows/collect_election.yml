@@ -29,12 +29,17 @@ jobs:
           import json
           d = json.load(open('public/election.json'))
           seats = d.get('seats') or []
-          assert len(seats) >= 200, f'only {len(seats)} seats - crawl incomplete?'
+          assert len(seats) >= 600, f'only {len(seats)} seats - crawl incomplete?'
           cats = d.get('categories') or {}
           assert cats.get('pru') and cats.get('dun') and cats.get('prk'), 'missing a category'
-          assert all(s.get('candidates') for s in seats), 'seat with no candidates'
-          assert all(any(c.get('isWinner') for c in s['candidates']) for s in seats), 'seat with no winner'
-          print('OK:', len(seats), 'seats |', cats['pru']['name'], '/', cats['dun']['name'], '/', cats['prk']['name'])
+          dun_states = set(s['state'] for s in seats if s['category'] == 'dun')
+          assert len(dun_states) == 13, f'{len(dun_states)} states with DUN results, expected 13'
+          # Allow seats whose election was postponed (Pahang N.42 Tioman, 2022 -
+          # candidate died; SPR returns no candidates at all)
+          empty = [s['name'] for s in seats if not s.get('candidates')]
+          noresult = [s['name'] for s in seats if s.get('candidates') and not any(c.get('isWinner') for c in s['candidates'])]
+          assert len(empty) + len(noresult) <= 2, f'bad seats: {empty + noresult}'
+          print('OK:', len(seats), 'seats |', cats['pru']['name'], '/', len(dun_states), 'states DUN /', cats['prk']['name'])
           PY
 
       - name: Upload data to Cloudflare KV
