@@ -1,0 +1,43 @@
+name: Collect FIDS Boards
+
+on:
+  schedule:
+    # Every 10 minutes - flight boards change continuously
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect all FIDS boards
+        env:
+          FIDS_API_KEY: ${{ secrets.FIDS_API_KEY }}
+        run: |
+          python3 tools/collect_fids.py || true
+          # Fail soft: a partial board (some airports erroring) is still
+          # better than none - the Worker falls back to live fetch per-board.
+
+      - name: Validate output
+        run: |
+          python3 - <<'PY'
+          import json
+          d = json.load(open('public/fids.json'))
+          boards = d.get('boards') or {}
+          assert boards, 'no boards collected'
+          klia = boards.get('A|KLIA') or boards.get('D|KLIA')
+          assert klia and klia.get('flights'), 'KLIA board missing'
+          print('OK:', len(boards), 'boards | KLIA A:', len(boards.get('A|KLIA', {}).get('flights', [])), 'flights')
+          PY
+
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          python3 tools/kv_upload.py push fids

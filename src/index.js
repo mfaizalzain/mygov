@@ -635,6 +635,29 @@ export default {
       if (!/^[a-zA-Z0-9-]{1,16}$/.test(terminal)) return json({ error: "bad_terminal" }, 400);
       if (!/^[0-9]$/.test(dayKey)) return json({ error: "bad_dayKey" }, 400);
 
+      /* KV-first: the collect_fids workflow (GitHub IPs) uploads every board
+         to the "fids" key every 10 min, because the upstream rate-limits
+         Cloudflare Worker egress (429s - same as jina/myRapid). Serve the
+         matching board from KV when present (today only - the collector
+         fetches dayKey=0); live fetch is the fallback for other days. */
+      const kvKey = `${code}|${terminal}`;
+      const kvRaw = await env.MYGOV_DATA.get("fids");
+      if (dayKey === "0" && kvRaw != null) {
+        try {
+          const kv = JSON.parse(kvRaw);
+          const board = (kv.boards || {})[kvKey];
+          if (board && Array.isArray(board.flights)) {
+            return json({
+              count: board.count != null ? board.count : board.flights.length,
+              returned: board.flights.length,
+              truncated: board.count != null && board.flights.length < board.count,
+              flights: board.flights,
+              updated: kv.updated || null,
+            }, 200, { "cache-control": "public, max-age=300" });
+          }
+        } catch { /* corrupt KV value - fall through to live fetch */ }
+      }
+
       /* The upstream pages its results and returns them in schedule order, so
        * a single take=200 did not just "miss some" - on the busy terminals it
        * always dropped the END of the day. KLIA arrivals run to ~291 flights,
