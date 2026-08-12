@@ -564,7 +564,6 @@ const SECTIONS = [
   { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
   { id:"mobility",  label:"Vehicles",   icon:"mobility",   family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"transport",  family:"gtfs-static" },
-  { id:"election",  label:"Election",   icon:"vote",       family:"spr" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
@@ -4765,6 +4764,8 @@ function renderHotel(d){
    votes and party colours from mysprsemak.spr.gov.my's JSON API. Results are
    static once published, so the section is a one-time crawl per election. */
 let electionData = null, electionCat = "pru";
+let electionPage = 0;            // seat-table pagination (PRU has 208 rows)
+const ELECTION_PAGE = 20;
 async function loadElection(){
   if (electionData) return electionData;
   const r = await fetch("election.json", { cache:"no-store" });
@@ -4792,6 +4793,9 @@ function renderElection(d){
   }
   const partyRows = Object.entries(byParty).sort((a, b) => b[1].n - a[1].n);
   const maxN = partyRows.length ? partyRows[0][1].n : 1;
+  const pages = Math.max(1, Math.ceil(seats.length / ELECTION_PAGE));
+  if (electionPage >= pages) electionPage = 0;
+  const slice = seats.slice(electionPage * ELECTION_PAGE, (electionPage + 1) * ELECTION_PAGE);
   const seatHTML = (s) => {
     const w = (s.candidates || []).find(c => c.isWinner);
     const run = (s.candidates || []).slice().sort((a, b) => (b.votes||0) - (a.votes||0));
@@ -4851,16 +4855,21 @@ function renderElection(d){
           <th>${T("Winner")}</th><th class="num">${T("Majority")}</th>
           <th class="num">${T("Vote share")}</th>
         </tr></thead><tbody>
-        ${seats.map(seatHTML).join("")}
+        ${slice.map(seatHTML).join("")}
         </tbody></table></div>
+        <div class="pager"><span id="election-pager"></span></div>
       </div>
     </div>`;
   host.querySelectorAll("[data-eleccat]").forEach(b => {
     b.onclick = () => {
       electionCat = b.dataset.eleccat;
+      electionPage = 0;
       renderElection(d);
     };
   });
+  const pgHost = host.querySelector("#election-pager");
+  if (pgHost) pgHost.appendChild(placesPager(electionPage, total, ELECTION_PAGE,
+    p => { electionPage = p; renderElection(d); }));
   animateCounters(host);
 }
 
@@ -6923,9 +6932,12 @@ const LOADERS = {
          the same way flood rides along with the weather. Health joins it:
          donations, organ pledges and PeKa screenings are population data,
          and the section is three static-file loaders plus three requests -
-         no throttle pressure from putting them together. */
+         no throttle pressure from putting them together. Election results
+         ride along too: constituencies are already here in the Places
+         explorer, and SPR seats are the same seat geography. */
       if (!loaded.has("places")) loadSection("places", false);
       if (!loaded.has("health")) loadSection("health", false);
+      if (!loaded.has("election")) loadSection("election", false);
     }, asOf:d => d.latest },
   places:   { load:loadPlaces,    render:renderPlaces,    asOf:d => d.asOf },
   tourism:  { load:loadTourism,   render:renderTourism,   after:() => {
