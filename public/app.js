@@ -1616,14 +1616,101 @@ async function loadFlood(){
   };
 }
 
+/* ═══════════════════════ on-demand vendor libraries ═══════════════════════
+   Chart.js (69 KB) and Leaflet (43 KB, plus its stylesheet) are only needed
+   once a chart or a map is actually painted, and every such surface sits
+   below the fold. Loading them in <head> - even deferred - put both inside
+   the initial load window; injecting them on first use keeps them out of it.
+
+   The SRI hashes move here verbatim from index.html: same-origin subresource
+   integrity needs no crossorigin attribute, and if either file were ever
+   altered the browser refuses to execute it exactly as before. Each kind
+   resolves once and is memoised, so N charts trigger one fetch, and the
+   service worker has already precached both by the time anything asks. */
+const VENDOR = {
+  chart:{ js:"/vendor/chart.umd.min.js",
+    jsSri:"sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt",
+    ready:() => !!window.Chart },
+  leaflet:{ js:"/vendor/leaflet.min.js",
+    jsSri:"sha384-u5N8qJeJOO2iqNjIKTdl6KeKsEikMAmCUBPc6sC6uGpgL34aPJ4VgNhuhumedpEk",
+    css:"/vendor/leaflet.min.css",
+    cssSri:"sha384-b8ANgTJvdlAnWM5YGMpKn7Kodm+1k7NYNG9zdjTCcZcKatzYHwZ0RLdWarbJJVzU",
+    ready:() => !!window.L },
+};
+/* Is a node close enough to the viewport to be worth painting now? A node
+   with no box at all (display:none - a closed <details>, an inactive tab) is
+   deliberately "not near": it waits for the observer, which fires when the
+   container is opened. */
+const nearViewport = (n, margin = 600) => {
+  const r = n.getBoundingClientRect();
+  if (!r.width && !r.height) return false;
+  return r.top < innerHeight + margin && r.bottom > -margin;
+};
+/* Defer fn until node approaches the viewport. Returns true if the caller
+   should return (a wait is pending or was just armed), false to proceed now.
+   `key` is a data-attribute name that dedupes repeat calls, so a section that
+   re-renders on every 30 s tick arms exactly one observer. */
+function whenVisible(node, key, fn){
+  if (!node) return false;
+  if (node.dataset[key]) return true;
+  if (!("IntersectionObserver" in window) || nearViewport(node)) return false;
+  node.dataset[key] = "1";
+  const io = new IntersectionObserver(entries => {
+    if (!entries.some(e => e.isIntersecting)) return;
+    io.disconnect();
+    delete node.dataset[key];
+    fn();
+  }, { rootMargin: "600px 0px" });
+  io.observe(node);
+  return true;
+}
+const vendorPromises = {};
+function loadVendor(kind){
+  const v = VENDOR[kind];
+  if (!v) return Promise.reject(new Error("unknown vendor: " + kind));
+  if (v.ready()) return Promise.resolve();
+  if (vendorPromises[kind]) return vendorPromises[kind];
+  vendorPromises[kind] = new Promise((resolve, reject) => {
+    if (v.css && !document.querySelector(`link[href="${v.css}"]`)){
+      const link = el("link");
+      link.rel = "stylesheet"; link.href = v.css; link.integrity = v.cssSri;
+      document.head.appendChild(link);
+    }
+    const s = el("script");
+    s.src = v.js; s.integrity = v.jsSri; s.async = true;
+    s.onload = () => resolve();
+    /* A failed vendor load must not wedge the section forever: drop the
+       memoised promise so a later interaction can retry. */
+    s.onerror = () => { delete vendorPromises[kind]; reject(new Error(kind + " failed to load")); };
+    document.head.appendChild(s);
+  });
+  return vendorPromises[kind];
+}
+
 /* ════════════════════════════ charts ════════════════════════════ */
 const charts = {};
 const PALETTE = ["#2dd4bf","#22d3ee","#fbbf24","#34d399","#f87171","#a78bfa",
                  "#f472b6","#60a5fa","#fb923c","#e879f9","#facc15","#4ade80",
                  "#38bdf8","#fca5a5"];
+const chartPending = new Map();   // id → newest cfg awaiting an on-screen paint
 function chart(id, cfg){
   let cv = document.getElementById(id);
-  if (!cv || !window.Chart) return;
+  if (!cv) return;
+  /* Every chart on this page sits below the fold - several screens below it.
+     Painting one off-screen costs a Chart.js fetch plus a full render for
+     something the visitor may never scroll to, so hold the newest config and
+     paint when the canvas comes near. Charts already on screen are unaffected. */
+  if (!cv.dataset.charted){
+    chartPending.set(id, cfg);
+    if (whenVisible(cv, "chartWait", () => {
+      const next = chartPending.get(id);
+      chartPending.delete(id);
+      if (next) chart(id, next);
+    })) return;
+    chartPending.delete(id);
+  }
+  /* Chart.js is fetched on first use; re-enter once it is in. */
+  if (!window.Chart){ loadVendor("chart").then(() => chart(id, cfg)).catch(() => {}); return; }
   if (charts[id]) charts[id].destroy();
   /* Chart.js v4 leaves a canvas that has hosted a chart in a state where a
      brand-new chart on the SAME element never paints its first frame (the
@@ -2856,7 +2943,9 @@ function wxHoursHTML(om){
 }
 function initWxMap(coords, live, loc){
   const el = $("#wx-map");
-  if (!el || !window.L) return;
+  if (!el) return;
+  if (whenVisible(el, "mapWait", () => initWxMap(coords, live, loc))) return;
+  if (!window.L){ loadVendor("leaflet").then(() => initWxMap(coords, live, loc)).catch(() => {}); return; }
   if (wxMapInst){ wxMapInst.remove(); wxMapInst = null; }
   const c = coords || [4.2105, 101.9758];   // fallback: peninsular centre
   const map = L.map(el, { attributionControl:true, zoomControl:true });
@@ -6185,7 +6274,7 @@ function paintRailDiagram(){
    "Network map" click because Leaflet cannot measure hidden containers. */
 let railMapInst = null;
 function paintRailMap(rail, el){
-  if (!window.L) return;
+  if (!window.L){ loadVendor("leaflet").then(() => paintRailMap(rail, el)).catch(() => {}); return; }
   if (railMapInst){ railMapInst.invalidateSize(); return; }
   const map = L.map(el, { scrollWheelZoom:false }).setView([3.12, 101.68], 11);
   const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -6683,8 +6772,9 @@ function fchip(s){
     </span></span>`;
 }
 function paintFloodMap(d){
-  if (!window.L) return;
   const el = document.getElementById("flood-map"); if (!el) return;
+  if (whenVisible(el, "mapWait", () => paintFloodMap(d))) return;
+  if (!window.L){ loadVendor("leaflet").then(() => paintFloodMap(d)).catch(() => {}); return; }
   if (floodMap){ floodMap.remove(); floodMap = null; }
   const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 6);
   const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -6764,9 +6854,20 @@ function clusterPts(pts, zoom){
   }));
 }
 function paintMaps(){
-  if (!window.L || !lvdata) return;
+  if (!lvdata) return;
+  /* Work out which of the live-vehicle maps are actually near the viewport
+     before pulling Leaflet in: each off-screen one arms its own observer and
+     re-enters here when scrolled to, so a visitor who never reaches the
+     transport section never downloads the library. */
+  const due = [];
   for (const f of Object.values(lvdata)){
     const el = document.getElementById("lvmap-" + f.key); if (!el) continue;
+    if (whenVisible(el, "mapWait", paintMaps)) continue;
+    due.push([f, el]);
+  }
+  if (!due.length) return;
+  if (!window.L){ loadVendor("leaflet").then(paintMaps).catch(() => {}); return; }
+  for (const [f, el] of due){
     if (lvMaps[f.key]){ lvMaps[f.key].remove(); delete lvMaps[f.key]; }
     const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 7);
     const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -7481,14 +7582,12 @@ function boot(){
   mountAI().catch(() => {});
   setInterval(tick, 30000);
 }
-/* Chart.js is deferred, so it exists only after parsing; wait for both. */
+/* boot() used to wait for the deferred Chart.js global before running - up to
+   8 s of polling. Chart.js is now fetched on first use by loadVendor(), so
+   that wait would never be satisfied at startup and would delay every boot to
+   the timeout. chart() re-enters itself once the library lands, so boot only
+   needs the DOM. */
 (function ready(fn){
-  const go = () => {
-    if (window.Chart) return fn();
-    let waited = 0;
-    const t = setInterval(() => {
-      if (window.Chart || (waited += 50) > 8000){ clearInterval(t); fn(); }
-    }, 50);
-  };
-  if (document.readyState === "loading") addEventListener("DOMContentLoaded", go); else go();
+  if (document.readyState === "loading") addEventListener("DOMContentLoaded", fn);
+  else fn();
 })(boot);

@@ -64,19 +64,13 @@
 {"@type":"Dataset","name":"Rapid KL service alerts","description":"Latest myRapid PULSE LRT, MRT, monorail and bus disruption alert with title, excerpt, link and MYT timestamp.","url":"https://malaysia-at-a-glance.com/#hazards","sourceOrganization":{"@type":"Organization","name":"Rapid Rail"},"distribution":{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://malaysia-at-a-glance.com/rapid_alerts.json"}}
 ]}
 </script>
-<!-- Self-hosted + subresource-integrity checked: if the files were ever
-     altered the browser refuses to execute them rather than running them.
-     (Serving locally also removes the CDN as a single point of failure and
-     keeps the app working fully offline.) -->
-<script src="/vendor/chart.umd.min.js"
-        integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt"
-        defer></script>
-<link rel="stylesheet" href="/vendor/leaflet.min.css"
-      integrity="sha384-b8ANgTJvdlAnWM5YGMpKn7Kodm+1k7NYNG9zdjTCcZcKatzYHwZ0RLdWarbJJVzU"
-      >
-<script src="/vendor/leaflet.min.js"
-        integrity="sha384-u5N8qJeJOO2iqNjIKTdl6KeKsEikMAmCUBPc6sC6uGpgL34aPJ4VgNhuhumedpEk"
-        defer></script>
+<!-- Chart.js and Leaflet used to load here, deferred. Deferred still means
+     downloaded during load and executed before DOMContentLoaded, so 112 KB
+     compressed (~344 KB parsed) landed inside the window Lighthouse measures
+     as blocking time - for a chart and a map that are always below the fold.
+     They are now injected on first use by loadVendor() in app.js, which keeps
+     the SRI hashes; the service worker still precaches both in SHELL_ASSETS,
+     so the on-demand load is a cache hit and offline use is unaffected. -->
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
