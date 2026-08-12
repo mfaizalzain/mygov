@@ -353,6 +353,8 @@ const I18N = {
   "Avg trips / route":"Purata perjalanan / laluan", "routes":"laluan", "Stops":"Perhentian",
   "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
+  "Intercity / ETS":"Antara bandar / ETS", "Komuter":"Komuter", "Service":"Perkhidmatan",
+  "unclassified":"tidak diklasifikasikan",
   "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
   "among live ":"antara ", "Live map - ":"Peta langsung - ", "positions as broadcast":"kedudukan seperti disiarkan",
   "route":"laluan", "buses":"bas", "more buses":"bas lagi", "buses here":"bas di sini",
@@ -1593,6 +1595,11 @@ async function fetchGtfsZip(f){
 
 async function loadTransport(){
   const out = {};
+  /* trip_id -> { intercity, route } for the KTMB feed: the live GTFS-RT
+     feed carries only trip ids, so the static trips.txt/routes.txt the
+     browser already has is the only way to tell an Intercity/ETS train
+     from a Komuter one. Populated below; consumed by loadLive. */
+  let ktmbTrips = null;
   for (const f of FEEDS){
     const buf = await fetchGtfsZip(f);
     const want = ["routes.txt","trips.txt","stops.txt","agency.txt"];
@@ -1617,6 +1624,19 @@ async function loadTransport(){
         trips: per.get(r.route_id) || 0,
       })).sort((a,b) => b.trips - a.trips),
     };
+    if (f.key === "ktmb"){
+      /* Map every trip to its route and whether that route is intercity
+         (route_type 2 = rail; the KTMB feed uses 0 for Komuter/ETS local
+         and 2 for Intercity/ETS long-distance). Live vehicles only carry
+         trip_id, so this is the link. */
+      const routeType = new Map(routes.map(r => [r.route_id, r.route_type]));
+      const routeName = new Map(routes.map(r => [r.route_id, r.route_long_name || r.route_short_name || r.route_id]));
+      ktmbTrips = new Map();
+      for (const t of trips){
+        const rt = routeType.get(t.route_id);
+        ktmbTrips.set(t.trip_id, { intercity: rt === "2", route: routeName.get(t.route_id) || "" });
+      }
+    }
     /* The rail feed carries stop_times and shapes, so build the metro-style
        line diagrams here: each route gets its ordered station list (from the
        outbound trip) plus the stations' coordinates. */
@@ -1659,8 +1679,13 @@ async function loadTransport(){
     if (series && series.mobility) out.rid = series.mobility.rid;
     if (slow) out.holidays = slow.holidays || [];
   } catch { /* the GTFS half of the section stands on its own */ }
+  ktmbTripInfo = ktmbTrips;
   return out;
 }
+/* KTMB trip_id -> { intercity, route } lookup for the Live section. Filled
+   by loadTransport (the static GTFS is parsed there), read by loadLive,
+   which loads after transport via the section's after() hook. */
+let ktmbTripInfo = null;
 
 const RT = [
   { key:"ktmb", label:"KTMB trains", noun:"trains", path:"/gtfs-realtime/vehicle-position/ktmb", params:null },
@@ -1684,9 +1709,20 @@ async function loadLive(){
     } else {
       const buf = await request("gtfs-realtime", f.path, f.params, "buffer");
       const d = decodeVehiclePositions(buf);
+      const vehicles = d.vehicles.filter(v => v.lat != null && v.lon != null)
+        .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+      if (f.key === "ktmb" && ktmbTripInfo){
+        /* The live feed only names trips; the static GTFS (parsed in
+           loadTransport) maps trip -> route, so tag Intercity/ETS trains
+           vs Komuter for the chips and tooltip. */
+        for (const v of vehicles){
+          const info = ktmbTripInfo.get(v.tripId);
+          if (info) v.intercity = info.intercity;
+          if (info) v.route = info.route;
+        }
+      }
       out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
-        vehicles: d.vehicles.filter(v => v.lat != null && v.lon != null)
-                            .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)) };
+        vehicles };
     }
   }
   return out;
@@ -6752,6 +6788,8 @@ function vcard(f, v){
 function vchip(f, v){
   const rows = [
     [T("Network"), esc(f.label)],
+    [T("Service"), v.intercity == null ? "-" : esc(v.intercity ? T("Intercity / ETS") : T("Komuter"))],
+    [T("Route"), esc(v.route || "-")],
     [T("Trip"), `<span class="mono">${esc(v.tripId || "-")}</span>`],
     [T("Speed"), v.speed == null ? "-" : nf(v.speed, 1) + " km/h"],
     [T("Last seen"), v.timestamp ? ago(v.timestamp) : "-"],
@@ -6759,6 +6797,7 @@ function vchip(f, v){
   ].map(([k, val]) => `<div class="vrow"><span>${k}</span><span>${val}</span></div>`).join("");
   return `<span class="vchip mono" tabindex="0" role="button" aria-label="${esc(v.vehicleId || v.entityId || "train")}">
     ${esc(v.vehicleId || v.entityId || "-")}
+    ${v.intercity == null ? "" : `<span class="pill" style="background:${v.intercity ? "var(--warn-dim)" : "var(--accent-dim)"};color:${cssVar("--chip-fg")}">${esc(v.intercity ? T("Intercity / ETS") : T("Komuter"))}</span>`}
     ${v.routeId ? `<span class="pill" style="background:var(--accent-dim);color:${cssVar("--chip-fg")}">${esc(v.routeId)}</span>` : ""}
     <span class="tip">${rows}
       ${v.lat == null ? "" : `<a class="link-btn" target="_blank" rel="noopener"
@@ -6797,6 +6836,12 @@ function renderLive(d){
           <div class="val" data-count="${routes.length}">0</div>
           <div class="sub">${T("among live ")}${esc(f.noun)}</div></div>
       </div>
+      ${f.key === "ktmb" && n ? (() => {
+        const ic = f.vehicles.filter(v => v.intercity === true).length;
+        const ko = f.vehicles.filter(v => v.intercity === false).length;
+        const un = n - ic - ko;
+        return ic || ko ? `<p class="note" style="margin:var(--s2) 0 var(--s4)">🚆 ${nf(ic)} ${T("Intercity / ETS")} · ${nf(ko)} ${T("Komuter")}${un ? ` · ${nf(un)} ${T("unclassified")}` : ""}</p>` : "";
+      })() : ""}
       <div class="card mb">
         <div class="card-h"><h4>${T("Live map - ")}${esc(f.label)}</h4>
           <span class="sub">${T("positions as broadcast")}${filtered}</span></div>
