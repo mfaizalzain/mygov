@@ -1018,6 +1018,7 @@ async function loadHazards(){
   return { warn, eq, flood, rapid, aqi, eqRadius:EQ_RADIUS_KM };
 }
 
+const RAPID_MAX_AGE_H = 5;
 async function loadRapid(){
   /* Same pattern as the other collectors: the collect_rapid workflow pushes
      KV key "rapid" (served as /rapid_alerts.json, 10-min cron). A live
@@ -1026,8 +1027,16 @@ async function loadRapid(){
   const r = await fetch("rapid_alerts.json", { cache:"no-store" });
   if (!r.ok) return null;
   const j = await r.json();
-  /* One card, latest post only - the whole point of the collector. */
-  return j && j.latest ? j.latest : null;
+  /* One card, latest post only - the whole point of the collector. Anything
+     older than RAPID_MAX_AGE_H is dropped: a service alert from yesterday
+     sits in the hazards deck looking like it is happening now. Note myrapid
+     often stamps posts to the top of the hour, so this window is strict -
+     with no fresh post the card simply does not appear. */
+  const a = j && j.latest ? j.latest : null;
+  if (!a) return null;
+  const ts = Number(a.ts) * 1000;
+  if (isFinite(ts) && ts > 0 && Date.now() - ts > RAPID_MAX_AGE_H * 3600e3) return null;
+  return a;
 }
 
 async function loadAQI(){
@@ -6867,19 +6876,61 @@ function renderLive(d){
    clock (collected to KV every 5 min); the strip shows the newest reports
    as one continuous ticker, pausing on hover. Hidden until data arrives. */
 const TRAFFIC_URL_RE = /(https?:\/\/[^\s<>"']+)/g;
+/* The channel's sign-off ("Info Lebuhraya MEX", "Info KESAS Lebuhraya Shah
+   Alam"). It names the highway, so it stays on screen - but a post that is
+   only a link plus this line has no report in it, so the emptiness test below
+   discounts it. */
+const TRAFFIC_SIGNOFF_RE = /\s*Info\s+[A-Za-z0-9 ()]*Lebuhraya[A-Za-z0-9 ()]*$|\s*Info\s+Lebuhraya[A-Za-z0-9 ()]*$/i;
+/* Channel boilerplate that carries no traffic information: the @llminfotrafik
+   style handles the concessionaires tag each other with, hashtags (#kltu),
+   the "1) TARIKH : ... 2) MASA :" form-field numbering, and the stray asterisks
+   left over from Telegram bold markers. Several posts also run fields together
+   ("...KIRITarikh : 12/08/2026Masa : 8.00pm"), so the field words get a space
+   put back in front of them. Cleaning runs per non-URL segment: an @ or # is
+   only boilerplate outside a link. */
+function trafficClean(s){
+  return String(s || "").split(TRAFFIC_URL_RE).map((seg, i) => {
+    if (i % 2) return seg;                       // odd indices are the URLs
+    return seg
+      .replace(/[@#][A-Za-z0-9_]+/g, " ")
+      .replace(/\*+/g, " ")
+      .replace(/(^|[^\d.,])\d\)\s*/g, "$1 ")     // "1) ", but never "Km 5.3)"
+      .replace(/([A-Za-z0-9])(Tarikh|Masa|Lokasi|Cuaca)\b/g, "$1 $2");
+  }).join("")
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[\s:,-]+|[\s:,–-]+$/g, "");
+}
 async function loadTrafficMarquee(){
   const band = $("#traffic-band");
   if (!band) return;
   const d = await fetch("/traffic.json", { cache:"no-store" })
     .then(r => { if (!r.ok) throw new Error("traffic unavailable"); return r.json(); });
-  const posts = (d.posts || []).slice(0, 12);
+  /* Only the last 3 hours: an old jam is worse than no jam, and the ticker
+     has no room to say "this is stale". p.time carries a real UTC offset, so
+     Date.parse is exact - p.ts is MYT wall-clock stored as an epoch and is
+     8h off a true instant, so it must not be used for this. */
+  const cutoff = Date.now() - 3 * 3600e3;
+  const posts = (d.posts || [])
+    .filter(p => { const t = Date.parse(p.time); return isFinite(t) && t >= cutoff; })
+    .map(p => ({ ...p, text: trafficClean(p.text) }))
+    /* A few posts are nothing but a link and the channel's sign-off; once the
+       boilerplate is gone there is no report left to scroll. */
+    .filter(p => p.text.replace(TRAFFIC_URL_RE, "")
+      .replace(TRAFFIC_SIGNOFF_RE, "").trim().length > 12)
+    .slice(0, 12);
   if (!posts.length) return;
   /* One <span class="traffic-item"> per post, with the embedded t.co link
      extracted and made clickable (safe: esc() everywhere, url-encoded).
      Items are separated by a diamond so the ticker reads as a list, not a
      blob of text. */
   const items = posts.map(p => {
-    const t = p.time ? p.time.slice(11,16) : "";
+    /* Shown in MYT, not the raw +00:00 hour the channel stamps - a slice of
+       the ISO string put every report 8 hours in the reader's past. */
+    const ms = Date.parse(p.time);
+    const t = isFinite(ms)
+      ? new Date(ms).toLocaleTimeString("en-GB",
+          { hour:"2-digit", minute:"2-digit", timeZone:"Asia/Kuala_Lumpur" })
+      : "";
     const text = esc(p.text).replace(TRAFFIC_URL_RE,
       m => `<a href="${encodeURI(m)}" target="_blank" rel="noopener" class="traffic-link">↗</a>`);
     return `<span class="traffic-item"><b>${t}</b> ${text}</span>`;

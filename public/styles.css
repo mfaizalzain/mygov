@@ -58,7 +58,13 @@ html[data-theme="light"] .btn-a:hover:not(:disabled){background:#0b5f58;border-c
    trackStickyHeights). They must not be hardcoded: the header wraps to two or
    three rows on narrow screens, and a fixed offset there parks the section nav
    underneath it - invisible, since the header sits one z-index higher. */
-html{scroll-behavior:smooth; scroll-padding-top:calc(var(--hdr,61px) + var(--nav,53px) + 18px)}
+/* text-size-adjust: iOS Safari auto-inflates text inside wide, non-wrapping
+   blocks, which is exactly what the traffic ticker is - it rendered a couple
+   of points larger than the body copy around it on iPhone and nowhere else.
+   100% pins text to its declared size; the user's own zoom and Dynamic Type
+   still apply, so this costs no accessibility. */
+html{scroll-behavior:smooth; scroll-padding-top:calc(var(--hdr,61px) + var(--nav,53px) + 18px);
+  -webkit-text-size-adjust:100%; text-size-adjust:100%}
 body{
   margin:0; background:var(--bg); color:var(--fg); font-family:var(--sans);
   font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;
@@ -169,7 +175,8 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   border:1px solid color-mix(in srgb,var(--warn) 30%,transparent)}
 .traffic-mq{flex:1;overflow:hidden;white-space:nowrap;font-size:12.5px;color:var(--fg-2);
   mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.traffic-run{display:inline-block;padding-right:3.2em;animation:mq 90s linear infinite;
+.traffic-tag .ico{width:15px;height:15px}
+.traffic-run{display:inline-block;padding-right:3.2em;animation:mq 130s linear infinite;
   will-change:transform}
 .traffic-item{display:inline-block;padding:2px 0}
 .traffic-item b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums;margin-right:.35em}
@@ -179,6 +186,18 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .traffic-link:hover{text-decoration:underline;color:var(--fg)}
 .traffic-band:hover .traffic-run,.traffic-band:focus-within .traffic-run{animation-play-state:paused}
 @keyframes mq{to{transform:translateX(-50%)}}
+/* On phones the ticker sat a notch above the surrounding body text and used the
+   desktop gutter, so it read as the loudest thing on the page. Drop it to the
+   small-print size, match .wrap's narrower padding, and shrink the tag/separator
+   to suit. The loop is shortened because half as much text fits per screen. */
+@media (max-width:620px){
+  .traffic-band{padding:6px var(--s4);gap:var(--s2)}
+  .traffic-tag{width:18px;height:18px}
+  .traffic-tag .ico{width:11px;height:11px}
+  .traffic-mq{font-size:11px}
+  .traffic-run{animation-duration:110s;padding-right:2.4em}
+  .traffic-sep{margin:0 .7em;font-size:8px}
+}
 /* Active-alert count on a nav item. Only Warnings uses it today; it is set
    from renderHazards()'s own alertN, so the nav and the tile can never
    disagree. Hidden at zero - a "0" badge reads as an alert at a glance. */
@@ -432,8 +451,11 @@ html[data-theme="light"] #wx-prose{--wx-drop:rgba(37,99,235,.4)}
   background-size:26px 34px;animation:wxSnow 6s linear infinite}
 @keyframes wxSnow{to{background-position:12px 34px}}
 /* Holiday + school chips: one slim row inside the Travel Outlook band. */
+/* Positioned so the narrow-viewport panel (which drops .hol-pop out of the
+   flow) still has a containing block here rather than falling through to the
+   page and opening at the very top. */
 .hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
-  margin:var(--s2) 0}
+  margin:var(--s2) 0;position:relative}
 /* Travel Outlook: peak travel periods as a scroll-snap carousel, the same
    interaction as the radar and hazard-alert decks. It was a five-row stacked
    list, which in the hero column ran taller than the copy beside it; one row
@@ -540,10 +562,12 @@ html[data-theme="light"] .hol-panel{box-shadow:0 12px 30px rgba(17,21,29,.12)}
   color:var(--fg-3);white-space:nowrap}
 .hol-empty{margin:0;padding:6px;font-size:12px;color:var(--fg-3)}
 /* Near the right edge the panel would hang off-screen; on narrow viewports
-   pin it to the row's left edge instead of the chip's. */
+   pin it across the row instead of to the chip. .hol-pop goes static so the
+   panel measures against .hol-row (which is position:relative) - it used to
+   land against the page instead and open at the top of the document. */
 @media (max-width:560px){
   .hol-pop{position:static}
-  .hol-panel{left:var(--s4);right:var(--s4);max-width:none;min-width:0}
+  .hol-panel{left:0;right:0;max-width:none;min-width:0}
 }
 /* District ethnicity mini-bar: a stacked 6-segment bar, one per ETHNIC
    group, width = share of the district's population. 160 rows render as
