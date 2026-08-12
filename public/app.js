@@ -2851,7 +2851,7 @@ function pickLoc(id){
     try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
     const live = $("#wx-live"); if (live) live.textContent = T("Showing forecast for ") + l.name;
   }
-  paintWxRows(); paintNow(); paintHeroLoc(); paintLocChip();
+  paintWxRows(); paintNow(); paintHeroLoc(); paintLocChip(); wxProse();
 }
 function paintWeather(){
   if (!wx.data) return;
@@ -3179,7 +3179,8 @@ async function wxProse(){
   if (i0 < 0) i0 = 0;
   const n = Math.min(12, h.time.length - i0);
   if (n < 1){ host.hidden = true; return; }
-  const cls = WMO_CLASS[h.weather_code[i0]] || "clear";
+  const code = om.current ? om.current.code : h.weather_code[i0];
+  const cls = WMO_CLASS[code] || "clear";
   const adj = T(WMO_PROSE[cls]);
   /* animated sky keyed to the same WMO class the prose uses (styles.css) */
   [...host.classList].forEach(c => { if (c.startsWith("wx-")) host.classList.remove(c); });

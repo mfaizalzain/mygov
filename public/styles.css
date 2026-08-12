@@ -428,15 +428,22 @@ html[data-theme="light"] #wx-prose{--wx-drop:rgba(37,99,235,.4)}
   background-image:radial-gradient(circle at 84% 16%,rgba(253,224,71,.35),transparent 42%);
   animation:wxGlow 9s ease-in-out infinite}
 @keyframes wxGlow{0%,100%{opacity:.45}50%{opacity:.85}}
-/* overcast / fog: grey wash with a cloud band drifting sideways. The 50%-wide
-   repeating layer means a 0→50% position shift loops seamlessly. */
+/* overcast / fog: grey wash with a soft cloud bank drifting sideways. Fixed
+   pixel tiles (rather than viewport percentages) keep the cloud size and
+   speed identical on phone and desktop; the keyframe travels exactly one
+   tile width, so the loop has no seam or blocky repeat on narrow screens. */
 #wx-prose.wx-overcast{--wx-a:rgba(148,163,184,.28);--wx-b:rgba(100,116,139,.2);--wx-wash:.6}
 #wx-prose.wx-fog{--wx-a:rgba(203,213,225,.3);--wx-b:rgba(148,163,184,.22);--wx-wash:.6}
-#wx-prose.wx-overcast::after,#wx-prose.wx-fog::after{opacity:.55;background-size:50% 100%;
-  background-image:radial-gradient(60% 45% at 30% 40%,rgba(226,232,240,.3),transparent 70%),
-    radial-gradient(45% 35% at 75% 65%,rgba(226,232,240,.22),transparent 70%);
+#wx-prose.wx-overcast::after,#wx-prose.wx-fog::after{inset:0;opacity:.55;
+  background-size:560px 100%;
+  background-image:
+    radial-gradient(120px 72px at 70px 62%,rgba(226,232,240,.4),transparent 70%),
+    radial-gradient(168px 90px at 190px 40%,rgba(226,232,240,.32),transparent 70%),
+    radial-gradient(110px 68px at 340px 68%,rgba(226,232,240,.28),transparent 70%),
+    radial-gradient(130px 80px at 470px 42%,rgba(226,232,240,.34),transparent 70%);
   animation:wxCloud 26s linear infinite}
-@keyframes wxCloud{to{background-position:50% 0}}
+#wx-prose.wx-fog::after{opacity:.42}
+@keyframes wxCloud{to{background-position:560px 0}}
 /* drizzle / rain / showers / storm: falling drops. Two layers at different
    tile sizes and speeds give depth; each tile height equals its travel per
    cycle, so the loop has no seam. */
