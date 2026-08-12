@@ -213,6 +213,7 @@ const I18N = {
   "Morning":"Pagi", "Afternoon":"Petang", "Night":"Malam", "Day":"Hari",
   "Now":"Sekarang", "Feels like":"Rasa seperti", "Humidity":"Kelembapan", "Wind":"Angin",
   "Next few hours":"Beberapa jam akan datang", "Next few hours in":"Beberapa jam akan datang di",
+  "Data collected":"Data dikumpul",
   "Next 12 hours":"12 jam akan datang",
   "sunny":"cerah", "partly cloudy":"sebahagian cerah", "cloudy":"mendung", "foggy":"berkabus",
   "drizzling":"gerimis", "raining":"hujan", "showery":"hujan setempat", "snowing":"salji",
@@ -2948,6 +2949,9 @@ async function wxProse(){
   if (n < 1){ host.hidden = true; return; }
   const cls = WMO_CLASS[h.weather_code[i0]] || "clear";
   const adj = T(WMO_PROSE[cls]);
+  /* animated sky keyed to the same WMO class the prose uses (styles.css) */
+  [...host.classList].forEach(c => { if (c.startsWith("wx-")) host.classList.remove(c); });
+  host.classList.add("wx-" + cls);
   const temp = nf(h.temperature_2m[i0], 0);
   const body = $("#wx-prose-body"), note = $("#wx-prose-note");
   if (body) body.textContent =
@@ -4870,8 +4874,9 @@ function renderElection(d){
       <div class="card-h"><h4>${T("Seats")} · ${esc(label || "")}</h4>
         <span class="sub">${T("each seat's vote share by party colour")}</span>
         <span class="right">
-          <input id="election-q" type="search" placeholder="${T("Search constituency, winner, party…")}" value="${esc(electionQuery)}" aria-label="${T("Search")}">
-          <select id="election-state" aria-label="${T("State")}">
+          <input class="inp" id="election-q" type="search" autocomplete="off"
+            placeholder="${T("Search constituency, winner, party…")}" value="${esc(electionQuery)}" aria-label="${T("Search")}">
+          <select class="fx-select" id="election-state" aria-label="${T("State")}">
             <option value="">${T("All states")}</option>
             ${statesList.map(st => `<option value="${esc(st)}" ${st === electionState ? "selected" : ""}>${esc(st)}</option>`).join("")}
           </select>
@@ -4901,7 +4906,16 @@ function renderElection(d){
   if (qSel) qSel.oninput = () => {
     electionQuery = qSel.value;
     electionPage = 0;
+    /* renderElection replaces the whole host, so the input the user is typing
+       into is destroyed on every keystroke. Put the caret back afterwards or
+       the field silently loses focus after the first character. */
+    const caret = qSel.selectionStart;
     renderElection(d);
+    const again = host.querySelector("#election-q");
+    if (again){
+      again.focus();
+      try { again.setSelectionRange(caret, caret); } catch { /* type=search */ }
+    }
   };
   const stSel = host.querySelector("#election-state");
   if (stSel) stSel.onchange = () => {
@@ -6437,6 +6451,14 @@ async function initRadarCarousel(){
     return;
   }
   band.hidden = false;
+  /* When the radar was collected. Every other band on the page carries its
+     own fetch stamp; this one was reading as undated. */
+  const when = $("#radar-when");
+  if (when && d.generated_at){
+    const t = new Date(d.generated_at);
+    when.textContent = isNaN(t) ? "" : `${ymd(d.generated_at)} · ${hhmm(d.generated_at)}`;
+    when.title = `${T("Data collected")} ${when.textContent}`;
+  }
   /* the nav entry ships hidden and only appears once the band has content,
      so it never points at an empty destination */
   const navItem = $("#nav-radar-band");

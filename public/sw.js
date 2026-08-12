@@ -13,8 +13,10 @@
    SHELL_ASSETS served cache-first, so without a bump a returning visitor keeps
    running the previous build indefinitely - the shell only refetches when the
    cache name changes. v16: rapidCard href hardening + the summariser.
-   v17: itemGeo / "Where it's cheapest". */
-const VERSION    = "mygov-v17";
+   v17: itemGeo / "Where it's cheapest".
+   v18: animated weather sky, radar collection stamp, themed election
+   seat search + state filter. */
+const VERSION    = "mygov-v18";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
