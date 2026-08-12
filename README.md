@@ -46,6 +46,31 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 
 ---
 
+## Festive themes
+
+The dashboard carries a low-key seasonal layer that appears for everyone
+nationwide. It changes only the accent tokens, a soft body glow, and one large
+offset header motif; the layout and data presentation stay unchanged. Dark and
+light themes, the user's reduced-motion preference, and the visitor's theme
+toggle are all respected.
+
+| Season | Window | Header motif |
+| --- | --- | --- |
+| Kaamatan | 25-31 May | Rice stalk |
+| Hari Gawai | 1-4 June | Woven diamond |
+| Merdeka / Malaysia Day | 1 August-16 September | Offset Jalur Gemilang |
+| Hari Raya | 7 days before / 7 days after | Ketupat |
+| Chinese New Year | 7 days before / 3 days after | Lantern |
+| Deepavali | 7 days before / 3 days after | Diya |
+| Christmas | 20-27 December | Star |
+
+Movable holidays (Hari Raya, Chinese New Year and Deepavali) are resolved from
+the public-holiday calendar already mirrored into `public/slow.json`; the
+fixed-date seasons are calendar windows in `public/app.js`. The visual tokens
+and animated header treatments live in `public/styles.css`.
+
+---
+
 ## Trend Radar (hot issues)
 
 A daily scoop of Malaysia's hot issues and trends, fed by:
