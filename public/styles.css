@@ -492,6 +492,37 @@ html[data-theme="light"] #wx-prose{--wx-drop:rgba(37,99,235,.4)}
 .hol-chip b{font-weight:700}
 .hol-chip.hol-today{border-color:rgba(251,191,36,.45);
   background:rgba(251,191,36,.08);color:#fbbf24}
+/* Chips that open a list. They are <button>, so reset the inherited control
+   styling and mark them as pressable; the caret is the only affordance that
+   separates them from the static "Today" chip. */
+button.hol-chip{font-family:var(--mono);cursor:pointer;transition:var(--t)}
+button.hol-chip:hover{border-color:var(--line);color:var(--fg)}
+button.hol-chip:focus-visible{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-dim)}
+button.hol-chip::after{content:"▾";font-size:9px;opacity:.6;margin-left:1px}
+button.hol-chip[aria-expanded="true"]::after{content:"▴"}
+.hol-pop{position:relative;display:inline-flex}
+.hol-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:40;
+  min-width:250px;max-width:min(340px,86vw);padding:var(--s2);
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-sm);box-shadow:0 12px 30px rgba(0,0,0,.28)}
+html[data-theme="light"] .hol-panel{box-shadow:0 12px 30px rgba(17,21,29,.12)}
+.hol-panel-h{margin:0 0 4px;padding:0 6px;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--fg-3)}
+.hol-panel ul{list-style:none;margin:0;padding:0}
+.hol-panel li{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s3);padding:6px;border-radius:6px;font-size:12px}
+.hol-panel li+li{border-top:1px solid var(--line-soft)}
+.hol-panel .hol-n{color:var(--fg-1);line-height:1.35}
+.hol-panel .hol-m{flex:none;font-family:var(--mono);font-size:10.5px;
+  color:var(--fg-3);white-space:nowrap}
+.hol-empty{margin:0;padding:6px;font-size:12px;color:var(--fg-3)}
+/* Near the right edge the panel would hang off-screen; on narrow viewports
+   pin it to the row's left edge instead of the chip's. */
+@media (max-width:560px){
+  .hol-pop{position:static}
+  .hol-panel{left:var(--s4);right:var(--s4);max-width:none;min-width:0}
+}
 /* District ethnicity mini-bar: a stacked 6-segment bar, one per ETHNIC
    group, width = share of the district's population. 160 rows render as
    plain spans - no canvas, no layout thrash. */

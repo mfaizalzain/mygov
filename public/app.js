@@ -442,6 +442,10 @@ const I18N = {
      because the key itself carried no unit for T() to fall back on. */
   "in N days":"dalam N hari", "tomorrow":"esok",
   "School on break":"Cuti sekolah", "School in session":"Sekolah bersekolah",
+  "Next public holidays":"Cuti umum akan datang", "School breaks":"Cuti sekolah",
+  "on now":"sedang berlangsung", "today":"hari ini",
+  "No upcoming holidays on record":"Tiada cuti akan datang dalam rekod",
+  "No school breaks on record":"Tiada cuti sekolah dalam rekod",
   "extreme peak":"puncak melampau", "peak":"puncak", "quiet":"tenang",
   "now":"kini",
   "Peak travel period right now":"Tempoh puncak perjalanan sekarang",
@@ -1396,37 +1400,100 @@ function renderHolWidget(){
     return sts.length >= 10;
   };
   const on = hol.filter(h => applies(h) && h[0] === todayIso)[0];
-  const next = hol.filter(h => applies(h) && h[0] > todayIso)[0];
+  const upcoming = hol.filter(h => applies(h) && h[0] > todayIso);
+  const next = upcoming[0];
+  /* Whole calendar days from today to an ISO date. Date.parse() on a bare
+     date is UTC midnight while today.getTime() is local now, so subtracting
+     them lands a fraction of a day out and "tomorrow evening" rounds to
+     "in 0 days"; build both ends as local midnight instead. */
+  const daysTo = iso => {
+    const [y, m, d] = String(iso).split("-").map(Number);
+    const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return Math.round((new Date(y, (m || 1) - 1, d || 1).getTime() - midnight.getTime()) / DAY_MS);
+  };
+  const whenTxt = n => n <= 0 ? T("today") : n === 1 ? T("tomorrow")
+    : T("in N days").replace("N", nf(n));
   if (on){
     tEl.hidden = false;
     tEl.innerHTML = `🗓 <b>${T("Today")}:</b> ${esc(on[1])}`;
   } else tEl.hidden = true;
   if (next){
-    /* Date.parse("2026-08-31") is UTC midnight but today.getTime() is local
-       now, so the difference was a fraction of a day out - a holiday tomorrow
-       evening rounded to "in 0 days". Count whole calendar days instead. */
-    const [hy, hm, hd] = String(next[0]).split("-").map(Number);
-    const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const days = Math.round(
-      (new Date(hy, (hm || 1) - 1, hd || 1).getTime() - midnight.getTime()) / DAY_MS);
-    const when = days <= 1 ? T("tomorrow")
-      : T("in N days").replace("N", nf(days));
     nEl.hidden = false;
-    nEl.innerHTML = `🗓 ${T("Next")}: <b>${esc(next[1])}</b> · ${esc(when)}`;
-  } else nEl.hidden = true;
+    nEl.innerHTML = `🗓 ${T("Next")}: <b>${esc(next[1])}</b> · ${esc(whenTxt(daysTo(next[0])))}`;
+    /* The next five that apply here - the chip already names the first, so
+       the list repeats it as row one for context rather than starting at the
+       second and looking like it skipped one. */
+    holPanel("#hol-next-panel", T("Next public holidays"),
+      upcoming.slice(0, 5).map(h => ({
+        name: h[1], meta: `${md(h[0])} · ${whenTxt(daysTo(h[0]))}`,
+      })), T("No upcoming holidays on record"));
+  } else { nEl.hidden = true; holPanel("#hol-next-panel", "", [], ""); }
   /* School break? Group A = Kedah/Kelantan/Terengganu (Fri-Sat weekend),
      B = everywhere else. Match the visitor's state when known. */
   const sch = (slowData.school || []).filter(s => s && s.start && s.end);
   if (sch.length){
     const grpA = ["kedah", "kelantan", "terengganu"].includes(slug);
     const range = sch.filter(s => !s.group || s.group === (grpA ? "A" : "B"));
-    const inBreak = range.some(s => todayIso >= s.start && todayIso <= s.end);
+    const current = range.find(s => todayIso >= s.start && todayIso <= s.end);
     sEl.hidden = false;
-    sEl.innerHTML = inBreak
+    sEl.innerHTML = current
       ? `🏫 ${T("School on break")}`
       : `🏫 ${T("School in session")}`;
-  } else sEl.hidden = true;
+    /* The break running now (if any) first, then the next three ahead. */
+    const ahead = range.filter(s => s.start > todayIso)
+      .sort((a, b) => a.start < b.start ? -1 : 1).slice(0, 3);
+    /* Several KPM entries are single-day, where "09 Nov-09 Nov" reads as a
+       formatting slip rather than a one-day break. */
+    const span = s => s.start === s.end ? md(s.start) : `${md(s.start)}-${md(s.end)}`;
+    holPanel("#hol-school-panel", T("School breaks"),
+      (current ? [{ name: current.name,
+        meta: `${span(current)} · ${T("on now")}` }] : [])
+        .concat(ahead.map(s => ({
+          name: s.name, meta: `${span(s)} · ${whenTxt(daysTo(s.start))}`,
+        }))), T("No school breaks on record"));
+  } else { sEl.hidden = true; holPanel("#hol-school-panel", "", [], ""); }
   band.hidden = false;
+}
+/* Fill one chip dropdown. Rows are {name, meta}; an empty list still renders
+   the panel with its empty line, so a chip never opens onto nothing. */
+function holPanel(sel, title, rows, empty){
+  const p = $(sel); if (!p) return;
+  p.innerHTML = `<p class="hol-panel-h">${esc(title)}</p>` + (rows.length
+    ? `<ul>${rows.map(r =>
+        `<li><span class="hol-n">${esc(r.name)}</span>
+           <span class="hol-m">${esc(r.meta)}</span></li>`).join("")}</ul>`
+    : `<p class="hol-empty">${esc(empty)}</p>`);
+}
+/* One document-level listener for both chips: toggle the panel a chip owns,
+   close the other, and close everything on an outside click or Escape. */
+function initHolPanels(){
+  if (initHolPanels.done) return;
+  initHolPanels.done = true;
+  const close = except => {
+    for (const b of document.querySelectorAll(".hol-chip[aria-controls]")){
+      if (b === except) continue;
+      b.setAttribute("aria-expanded", "false");
+      const p = document.getElementById(b.getAttribute("aria-controls"));
+      if (p) p.hidden = true;
+    }
+  };
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".hol-chip[aria-controls]");
+    if (!btn){ close(null); return; }
+    const panel = document.getElementById(btn.getAttribute("aria-controls"));
+    if (!panel) return;
+    const open = btn.getAttribute("aria-expanded") === "true";
+    close(btn);
+    btn.setAttribute("aria-expanded", String(!open));
+    panel.hidden = open;
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    const open = document.querySelector('.hol-chip[aria-expanded="true"]');
+    if (!open) return;
+    close(null);
+    open.focus();
+  });
 }
 
 /* The heavy series (finance, mobility, economy) moved out of slow.json into
@@ -7609,6 +7676,7 @@ function boot(){
   /* Holiday + school chips need slow.json (same file the weather/fuel
      loaders share) - render as soon as it lands; slow.json is tiny and
      cached after the first section loads it. */
+  initHolPanels();
   readSlow().then(() => renderHolWidget());
   /* Fire-and-forget: availability() can block on a disk check, and nothing
      else in boot() depends on the result. */

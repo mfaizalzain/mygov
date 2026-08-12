@@ -230,10 +230,22 @@
          the outlook is built from. Shown once slow.json loads; "today"
          highlights, otherwise the next holiday applying to the visitor's
          state (fallback: national), and whether KPM schools are on break. -->
+    <!-- The "next holiday" and school chips open a small list: the chip
+         answers "when is the next one", the panel answers "and after that?"
+         without sending anyone to a calendar. Buttons, not spans, so they are
+         keyboard reachable and announce their expanded state. -->
     <div class="hol-row" id="hol-band" hidden>
       <span class="hol-chip" id="hol-today" hidden></span>
-      <span class="hol-chip hol-next" id="hol-next" hidden></span>
-      <span class="hol-chip hol-school" id="hol-school" hidden></span>
+      <span class="hol-pop">
+        <button type="button" class="hol-chip hol-next" id="hol-next" hidden
+                aria-expanded="false" aria-controls="hol-next-panel"></button>
+        <div class="hol-panel" id="hol-next-panel" hidden></div>
+      </span>
+      <span class="hol-pop">
+        <button type="button" class="hol-chip hol-school" id="hol-school" hidden
+                aria-expanded="false" aria-controls="hol-school-panel"></button>
+        <div class="hol-panel" id="hol-school-panel" hidden></div>
+      </span>
     </div>
     <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div>
     </section>

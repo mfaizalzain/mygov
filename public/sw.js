@@ -18,8 +18,9 @@
    seat search + state filter.
    v19: on-demand Chart.js/Leaflet, series.json split, "Malaysia at a Glance"
    rename, per-condition weather icons. The cache name keeps the mygov- prefix
-   deliberately: it is an internal key, and renaming it only orphans caches. */
-const VERSION    = "mygov-v19";
+   deliberately: it is an internal key, and renaming it only orphans caches.
+   v20: brief icon, holiday/school chip dropdowns. */
+const VERSION    = "mygov-v20";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
