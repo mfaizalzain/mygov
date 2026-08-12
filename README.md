@@ -35,7 +35,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
 | Vehicles & Ridership | JPJ, KTMB | Monthly new-vehicle registrations stacked by fuel type (the EV adoption curve), and a **Car sales** sub-block - YTD registrations, top makers, **top EV makers** and EV share from JPJ's granular registration data |
 | People | DOSM (OpenDOSM + storage) | National population 1970-present and ethnic composition, then the same estimates by state, district and constituency (a merged **Places explorer** with a Malaysia-wide default chip, **paginated tables** and **federal territories shown by constituency** - KL/Putrajaya/Labuan have no districts) - per-district ethnicity, sex split, age structure, median income, poverty and inequality, and per-seat income, poverty, gini and unemployment |
-| Tourism (sub-block of Economy) | Tourism Malaysia | Monthly international visitor arrivals by country of nationality (top 51) - the month's total, month-on-month and year-on-year growth vs 2025 and 2019, plus year-to-date, from Tourism Malaysia's published PDFs |
+| Tourism (sub-block of Economy) | Tourism Malaysia | Monthly international visitor arrivals by country of nationality (top 51) - the month's total, month-on-month and year-on-year growth vs 2025 and 2019, plus year-to-date, from Tourism Malaysia's published PDFs. A merged **Hotels sub-block** shows quarterly **hotel performance by state** from the Paid Accommodation Survey - occupancy rate, average room rate and hotel guests (domestic/international split) for all 16 states, current quarter vs a year earlier |
 | Health (sub-block of People) | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
@@ -98,6 +98,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Insights | `collect_insights.yml`, daily 01:30 UTC | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
 | Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers **and top EV makers** (current + previous year) |
 | Tourism | `collect_tourism.yml`, monthly 2nd 02:30 UTC | `public/tourism.json` | Tourism Malaysia visitor-arrivals PDF - top-51 table with month, y/y vs 2025 and 2019, YTD (May 2026 seeded) |
+| Hotels | `collect_hotel.yml`, quarterly 3rd 02:30 UTC (Jan/Apr/Jul/Oct) | `public/hotel.json` | Paid Accommodation Survey infographic - occupancy rate (AOR), average room rate (ARR) and hotel guests (domestic/international) for all 16 states, current quarter vs a year earlier. Only the latest quarter is public on the portal, so the collector probes newest-first (same pattern as tourism) and the dashboard shows the current quarter only |
 | Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and one English line each (Gemini, deterministic fallback) |
 | Rapid KL alerts | `collect_rapid.yml`, every 10 min | `public/rapid_alerts.json` | the **latest** myRapid PULSE service alert (title, excerpt, link, MYT timestamp). The source is behind Incapsula (a JS-challenge WAF; its wp-json also returns 401 for anonymous reads), so the collector scrapes it through the **r.jina.ai reader proxy** - run from GitHub's IP pool because jina's free tier rate-limits Cloudflare Worker egress to null |
 
@@ -379,6 +380,7 @@ tools/
   collect_geo.py        sub-national population + seat socioeconomics → public/geo.json
   collect_insights.py   forecasts + daily briefing → public/{forecasts,insights}.json
   collect_rapid.py      latest Rapid KL PULSE alert via r.jina.ai → public/rapid_alerts.json
+  collect_hotel.py      quarterly Paid Accommodation Survey infographic → public/hotel.json
   embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```

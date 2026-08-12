@@ -13,6 +13,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="mygov">
+<!-- Origin trial: "Prompt API Sampling Parameters" (AIPromptAPIParams),
+     Chrome 148-153, expires 2026-10-06.
+     The Prompt API itself (globalThis.LanguageModel) is on by default in
+     desktop Chrome 148+ and needs no token; this trial only unlocks the
+     temperature/topK options on LanguageModel.create(). Without it those two
+     options are rejected, so aiSummarise() reads LanguageModel.params() and
+     omits them when the call fails - the feature degrades to model defaults
+     rather than breaking.
+     Token is bound to https://malaysia-at-a-glance.com:443 with NO subdomain
+     match, so it is inert on www. and on the mygov.faizalmzain.com staging
+     deploy. Origin-trial tokens are public by design (they ship in the page);
+     this is not a secret. -->
+<meta http-equiv="origin-trial" content="As7xLgBxGDGODg+jDdPoHV7+oIAtmTFPN8Ld4HJCRf0nYQkcEHL39SkkCblSzsEpsFNjPS+VWYyCps3S4Yp5TAUAAABjeyJvcmlnaW4iOiJodHRwczovL21hbGF5c2lhLWF0LWEtZ2xhbmNlLmNvbTo0NDMiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElQYXJhbXMiLCJleHBpcnkiOjE3OTEyNDQ4MDB9">
 <!-- SEO: canonical + social sharing (OG/Twitter) -->
 <link rel="canonical" href="https://malaysia-at-a-glance.com/">
 <meta property="og:type" content="website">
@@ -329,16 +342,18 @@
         <div class="sec-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-tourism"/></svg></div>
           <div><h3 id="h-tourism" style="font-size:17px" data-i18n="Tourism">Tourism</h3>
-            <p data-i18n="Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture.">Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture.</p>
+            <p data-i18n="Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture - plus quarterly hotel performance by state (occupancy rate, average room rate, guests).">Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture - plus quarterly hotel performance by state (occupancy rate, average room rate, guests).</p>
             <details class="meta">
               <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
-              <p data-i18n="Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Data provided by Tourism Malaysia.">Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Data provided by Tourism Malaysia.</p>
-              <ul><li><code>GET data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf</code></li></ul>
+              <p data-i18n="Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Hotel data comes from the quarterly Paid Accommodation Survey infographic (occupancy rate, room rate and guests for all 16 states, current quarter vs a year earlier), extracted by a quarterly collector into hotel.json. Data provided by Tourism Malaysia.">Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Hotel data comes from the quarterly Paid Accommodation Survey infographic (occupancy rate, room rate and guests for all 16 states, current quarter vs a year earlier), extracted by a quarterly collector into hotel.json. Data provided by Tourism Malaysia.</p>
+              <ul><li><code>GET data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf</code></li>
+              <li><code>GET data.tourism.gov.my/frontend/pdf/{year}/hotel_survey/paid_accommodation/infografik_hotel_Q{q}_{year}.pdf</code></li></ul>
             </details>
           </div>
           <span class="sec-time" id="time-tourism"></span>
         </div>
         <div id="body-tourism"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+        <div id="body-hotel" hidden><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div>
       </div>
     </section>
     <section id="finance" aria-labelledby="h-finance">

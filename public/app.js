@@ -300,6 +300,12 @@ const I18N = {
  "Top source countries":"Negara sumber teratas", "Arrivals by country":"Ketibaan mengikut negara",
  "ranked by YTD visitor arrivals":"disusun mengikut ketibaan setakat tahun ini",
  "ranked by monthly arrivals":"disusun mengikut ketibaan bulanan",
+ "Hotels by state":"Hotel mengikut negeri", "Occupancy":"Kedudukan",
+ "Room rate":"Kadar bilik", "Guests":"Tetamu", "Hotel metric":"Metrik hotel",
+ "top occupancy":"kadar penghunian tertinggi", "second highest":"kedua tertinggi",
+ "hotel guests":"tetamu hotel", "latest":"terkini", "prev":"sebelum ini",
+ "change":"perubahan", "domestic":"domestik", "international":"antarabangsa",
+ "State":"Negeri",
  "Tourism mode":"Mod pelancongan",
  "vs 2025:":"berbanding 2025:", "Top 10 countries":"10 negara teratas",
  "Country":"Negara", "y/y":"t/t", "YTD":"YTD",
@@ -530,6 +536,7 @@ function rerenderAll(){
      a registered section, so the loop above never reached them and their
      "Next"/"in N days" wording stayed in the previous language. */
   if (slowData) try { renderHolWidget(); } catch {}
+  relabelAI();
 }
 
 /** An <svg> referencing a sprite symbol. Decorative by default - every call
@@ -4611,6 +4618,93 @@ function renderTourism(d){
   animateCounters($("#body-tourism"));
 }
 
+/* ═══════════════════ hotels (quarterly paid-accommodation survey) ═══════════════════
+   hotel.json is the quarterly collector's output (tools/collect_hotel.py):
+   state-level occupancy rate (AOR), average room rate (ARR) and hotel guests
+   from data.tourism.gov.my's Paid Accommodation Survey infographics. A
+   merged sub-block of Tourism (same provider, same portal). */
+let hotelData = null, hotelMode = "aor";
+async function loadHotel(){
+  if (hotelData) return hotelData;
+  const r = await fetch("hotel.json", { cache:"no-store" });
+  if (!r.ok) throw new Error("hotel " + r.status);
+  const d = await r.json();
+  if (!d.aor || !d.aor.length) throw new Error("hotel: empty");
+  hotelData = d;
+  return d;
+}
+function renderHotel(d){
+  const host = $("#body-hotel"); if (!host) return;
+  host.hidden = false;
+  const label = d.asOf ? d.asOf.label : "";
+  const rows = hotelMode === "arr" ? d.arr
+    : hotelMode === "guests" ? d.guests : d.aor;
+  const top = rows[0] || {};
+  const top2 = rows[1] || {};
+  const pct = hotelMode === "aor" ? "%" : "";
+  /* All dynamic text (state names) passes through esc(); the deltas are
+     computed numbers. Same pattern as every renderer in this app. */
+  const val = (r, k) => r[k] == null ? "-" : nf(r[k], hotelMode === "aor" ? 1 : 0) + pct;
+  const delta = (r) => {
+    const c = r.cur, p = r.prev;
+    if (c == null || p == null || hotelMode === "guests") return "";
+    const dlt = c - p;
+    /* down is green elsewhere in this app (prices falling = good); for
+       hotels a falling occupancy/rate is bad, so flip the colouring. */
+    return `<span class="${dlt < 0 ? "up" : "down"}">${dlt < 0 ? "▼" : "▲"} ${nf(Math.abs(dlt), 1)}${pct}</span>`;
+  };
+  const totalGuests = d.guests ? d.guests.reduce((s, r) => s + (r.dom || 0) + (r.intl || 0), 0) : null;
+  host.innerHTML = `
+    <div class="grid g3 mb">
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T("top occupancy")}</span></div>
+        <div class="val">${top.state ? esc(top.state) : "-"} <span class="dim">${top.cur == null ? "" : nf(top.cur, 1) + "%"}</span></div>
+        <div class="sub">${delta(top)}</div></div>
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T("second highest")}</span></div>
+        <div class="val">${top2.state ? esc(top2.state) : "-"} <span class="dim">${top2.cur == null ? "" : nf(top2.cur, 1) + (hotelMode === "aor" ? "%" : "")}</span></div>
+        <div class="sub">${delta(top2)}</div></div>
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T("hotel guests")}</span></div>
+        <div class="val">${totalGuests == null ? "-" : nf(totalGuests)}</div>
+        <div class="sub">${label ? esc(label) : ""}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>${T("Hotels by state")} · ${label ? esc(label) : ""}</h4>
+        <span class="sub">${T("Data provided by Tourism Malaysia")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="${T("Hotel metric")}">
+            <button data-hotelmode="aor" aria-pressed="${hotelMode === "aor"}">${T("Occupancy")}</button>
+            <button data-hotelmode="arr" aria-pressed="${hotelMode === "arr"}">${T("Room rate")}</button>
+            <button data-hotelmode="guests" aria-pressed="${hotelMode === "guests"}">${T("Guests")}</button>
+          </span>
+        </span>
+      </div>
+      <div class="card-b"><div class="tw"><table>
+        <thead><tr>
+          <th class="num">#</th><th>${T("State")}</th>
+          <th class="num">${T("latest")}</th>
+          <th class="num">${T("prev")}</th>
+          <th class="num">${T("change")}</th>
+          ${hotelMode === "guests" ? `<th class="num">${T("domestic")}</th><th class="num">${T("international")}</th>` : ""}
+        </tr></thead><tbody>
+        ${rows.map((r, i) => `<tr>
+          <td class="num">${i + 1}</td>
+          <td>${esc(r.state)}</td>
+          <td class="num">${hotelMode === "guests" ? nf((r.dom || 0) + (r.intl || 0)) : val(r, "cur")}</td>
+          <td class="num dim">${hotelMode === "guests" ? "" : val(r, "prev")}</td>
+          <td class="num">${hotelMode === "guests" ? "" : delta(r)}</td>
+          ${hotelMode === "guests" ? `<td class="num dim">${nf(r.dom)}</td><td class="num dim">${nf(r.intl)}</td>` : ""}
+        </tr>`).join("")}
+        </tbody></table></div>
+      </div>
+    </div>`;
+  host.querySelectorAll("[data-hotelmode]").forEach(b => {
+    b.onclick = () => {
+      hotelMode = b.dataset.hotelmode;
+      renderHotel(d);
+    };
+  });
+  animateCounters(host);
+}
+
 async function loadTravel(){
   const r = await fetch("travel.json", { cache:"no-store" });
   if (!r.ok) throw new Error("travel " + r.status);
@@ -6554,9 +6648,10 @@ const META = {
          "storage.data.gov.my/pricecatcher/lookup_item.parquet",
          "storage.data.gov.my/pricecatcher/lookup_premise.parquet"] },
   tourism:{ title:"Tourism",
-    desc:"Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture.",
-    how:"Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Data provided by Tourism Malaysia.",
-    eps:["data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf"] },
+    desc:"Monthly international visitor arrivals to Malaysia - the top 51 countries of nationality, with year-on-year growth and the year-to-date picture - plus quarterly hotel performance by state (occupancy rate, average room rate, guests).",
+    how:"Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Hotel data comes from the quarterly Paid Accommodation Survey infographic (occupancy rate, room rate and guests for all 16 states, current quarter vs a year earlier), extracted by a quarterly collector into hotel.json. Data provided by Tourism Malaysia.",
+    eps:["data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf",
+         "data.tourism.gov.my/frontend/pdf/{year}/hotel_survey/paid_accommodation/infografik_hotel_Q{q}_{year}.pdf"] },
   economy:{ title:"Economy",
     desc:"Department of Statistics Malaysia - headline and core inflation, inflation by state, the monthly unemployment rate, quarterly real GDP, and foreign direct investment.",
     how:"Headline and core CPI are monthly national indices; the state series is each state's overall index, shown here as year-on-year inflation. Labour-force figures are monthly, real GDP and FDI flows are quarterly - all from OpenDOSM. The EPF dividend card comes from the general data catalogue.",
@@ -6668,8 +6763,15 @@ const LOADERS = {
       if (!loaded.has("health")) loadSection("health", false);
     }, asOf:d => d.latest },
   places:   { load:loadPlaces,    render:renderPlaces,    asOf:d => d.asOf },
-  tourism:  { load:loadTourism,   render:renderTourism,   asOf:d =>
+  tourism:  { load:loadTourism,   render:renderTourism,   after:() => {
+      /* Hotels (quarterly occupancy/room rate/guests by state) is a merged
+         sub-block of Tourism: same provider, same portal, same quarterly
+         PDF family. Renders under the arrivals cards in #body-hotel. */
+      if (!loaded.has("hotel")) loadSection("hotel", false);
+    }, asOf:d =>
     d.asOf ? `${d.asOf.year}-${String(d.asOf.month).padStart(2,"0")}-01` : null },
+  hotel:    { load:loadHotel,     render:renderHotel,    asOf:d =>
+    d.asOf ? `${d.asOf.year}-${String((d.asOf.quarter - 1) * 3 + 1).padStart(2,"0")}-01` : null },
   health:   { load:loadHealth,    render:renderHealth,    asOf:d => d.updated },
   transport:{ load:loadTransport, render:renderTransport, after:() => {
       /* Live vehicles are a merged sub-block of this section: KTMB schedules,
@@ -6868,6 +6970,190 @@ function pwa(){
 let syncNet = null;
 
 /* ════════════════════════════ boot ════════════════════════════ */
+/* ══════════ on-device summary (Chrome Prompt API / Gemini Nano) ══════════
+   EXPERIMENTAL, and deliberately invisible unless it can actually run:
+   globalThis.LanguageModel ships on by default in desktop Chrome 148+, is
+   absent in every other engine (Mozilla, Apple, Microsoft and the W3C all
+   objected to it shipping), and needs ~22 GB free storage plus 16 GB RAM or
+   4 GB VRAM. mountAI() therefore builds no DOM at all when availability()
+   reports "unavailable", which for this site's mostly-mobile audience is the
+   overwhelmingly common case.
+
+   The model paraphrases the prose already on screen. It is never given the
+   rendered figures to restate: a ~3B on-device model will confidently mangle
+   a fuel price, and every number here is a published government statistic. */
+Object.assign(I18N.ms, {
+  "Summarise":"Ringkaskan", "Summarising…":"Meringkaskan…",
+  "Preparing the model…":"Menyediakan model…",
+  "Hide summary":"Sembunyikan ringkasan",
+  "Generated on your device. May be inaccurate - the figures above are the source of truth.":
+    "Dijana pada peranti anda. Mungkin tidak tepat - angka di atas ialah sumber rujukan.",
+  "Summary failed. The on-device model may have run out of memory.":
+    "Ringkasan gagal. Model pada peranti mungkin kehabisan memori.",
+});
+const AI_SYS = "You summarise Malaysian public-data dashboards for a general " +
+  "audience. Use only the supplied text. Never invent, restate or round any " +
+  "number, date or place name that is not present in it. If the text carries " +
+  "no substantive content, say so in one line. Reply with at most three short " +
+  "bullet points, each starting with '- ', and no preamble or closing remark.";
+
+let aiParams, aiParamsRead = false;
+/* LanguageModel.params() resolves only where the sampling-parameters origin
+   trial is live (see the token in index.html). Off-trial it rejects or returns
+   null, and passing temperature/topK to create() would then throw - so read it
+   once and treat "no params" as "use the model defaults". */
+async function aiParamsOnce(){
+  if (aiParamsRead) return aiParams;
+  aiParamsRead = true;
+  try { aiParams = await LanguageModel.params(); } catch { aiParams = null; }
+  return aiParams;
+}
+async function aiCreate(onProgress, signal){
+  const opts = { initialPrompts:[{ role:"system", content:AI_SYS }], signal };
+  if (onProgress)
+    opts.monitor = m => m.addEventListener("downloadprogress",
+      e => onProgress(e.loaded));
+  const p = await aiParamsOnce();
+  if (p){
+    /* Low temperature: this is compression, not composition. */
+    opts.temperature = Math.min(0.3, p.maxTemperature ?? 0.3);
+    opts.topK = Math.min(3, p.maxTopK ?? 3);
+  }
+  try { return await LanguageModel.create(opts); }
+  catch (e){
+    if (opts.temperature === undefined || e?.name === "AbortError") throw e;
+    /* Trial token expired or origin mismatch (www., staging): retry bare. */
+    delete opts.temperature; delete opts.topK;
+    return LanguageModel.create(opts);
+  }
+}
+/* The visible prose of a section, minus the methodology <details> - that block
+   is long, near-identical between sections, and would dominate the summary. */
+function aiSectionText(id){
+  const sec = document.getElementById(id);
+  if (!sec) return "";
+  const parts = [];
+  for (const n of sec.querySelectorAll(".sec-h > div > p, [id^='body-']")){
+    if (n.closest("details")) continue;
+    const t = (n.innerText || "").trim();
+    if (t) parts.push(t);
+  }
+  return parts.join("\n\n").replace(/\s+\n/g, "\n").slice(0, 4000);
+}
+/* Model output is untrusted text: build the DOM with textContent, never
+   innerHTML. (The CSP would not save us here - this is same-origin markup.) */
+function aiRender(panel, raw){
+  panel.textContent = "";
+  const lines = raw.split("\n").map(s => s.trim()).filter(Boolean);
+  let ul = null;
+  for (const line of lines){
+    const m = /^[-*•]\s+(.*)$/.exec(line);
+    if (m){
+      if (!ul){ ul = document.createElement("ul"); panel.appendChild(ul); }
+      const li = document.createElement("li"); li.textContent = m[1];
+      ul.appendChild(li);
+    } else {
+      ul = null;
+      const p = document.createElement("p"); p.textContent = line;
+      panel.appendChild(p);
+    }
+  }
+  const note = document.createElement("span");
+  note.className = "ai-note";
+  note.textContent = T("Generated on your device. May be inaccurate - the figures above are the source of truth.");
+  panel.appendChild(note);
+}
+async function aiSummarise(id, btn, panel){
+  const ctrl = new AbortController();
+  btn.dataset.busy = "1";
+  btn.disabled = true;
+  panel.hidden = false;
+  panel.classList.remove("ai-err");
+  panel.textContent = T("Preparing the model…");
+  let bar = null, session = null;
+  const onProgress = loaded => {
+    if (!bar){
+      panel.textContent = T("Preparing the model…");
+      bar = document.createElement("span");
+      bar.className = "ai-prog";
+      bar.appendChild(document.createElement("i"));
+      panel.appendChild(bar);
+    }
+    bar.firstChild.style.width = Math.round(loaded * 100) + "%";
+  };
+  try {
+    session = await aiCreate(onProgress, ctrl.signal);
+    const body = aiSectionText(id);
+    if (!body) throw new Error("empty section");
+    panel.textContent = T("Summarising…");
+    const ask = LANG === "ms"
+      ? "Ringkaskan teks berikut dalam Bahasa Malaysia:\n\n"
+      : "Summarise the following:\n\n";
+    let out = "";
+    /* promptStreaming() yields deltas, not cumulative snapshots - assigning
+       each chunk straight to the node (as the older docs showed) renders only
+       the last few words. Accumulate. */
+    for await (const chunk of session.promptStreaming(ask + body, { signal: ctrl.signal })){
+      out += chunk;
+      panel.textContent = out;
+    }
+    aiRender(panel, out.trim());
+  } catch (e){
+    if (e?.name !== "AbortError"){
+      panel.classList.add("ai-err");
+      panel.textContent = T("Summary failed. The on-device model may have run out of memory.");
+    }
+  } finally {
+    /* Each session pins model state; drop it rather than hold one per section. */
+    try { session?.destroy(); } catch {}
+    delete btn.dataset.busy;
+    btn.disabled = false;
+    aiLabel(btn, !panel.hidden);
+  }
+}
+/* Text-only: the sprite has no icon that reads as "summarise", and borrowing
+   an unrelated one (flame = Trending) would say the wrong thing. */
+function aiLabel(btn, open){
+  btn.textContent = open ? T("Hide summary") : T("Summarise");
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+async function mountAI(){
+  if (!("LanguageModel" in globalThis)) return;
+  let avail;
+  try { avail = await LanguageModel.availability(); } catch { return; }
+  if (avail === "unavailable") return;
+  for (const s of SECTIONS){
+    const head = document.querySelector(`#${s.id} .sec-h`);
+    if (!head || head.querySelector(".ai-btn")) continue;
+    const panel = document.createElement("div");
+    panel.className = "ai-panel";
+    panel.hidden = true;
+    panel.id = `ai-${s.id}`;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn ai-btn";
+    btn.setAttribute("aria-controls", panel.id);
+    aiLabel(btn, false);
+    btn.addEventListener("click", () => {
+      if (btn.dataset.busy) return;
+      if (!panel.hidden){ panel.hidden = true; aiLabel(btn, false); return; }
+      aiSummarise(s.id, btn, panel);
+    });
+    const time = head.querySelector(".sec-time");
+    if (time) head.insertBefore(btn, time); else head.appendChild(btn);
+    head.appendChild(panel);
+  }
+}
+/* A language switch must relabel the buttons; the summaries themselves are
+   left as generated rather than silently re-run in the new language. */
+function relabelAI(){
+  for (const btn of document.querySelectorAll(".ai-btn")){
+    if (btn.dataset.busy) continue;
+    const panel = document.getElementById(btn.getAttribute("aria-controls"));
+    aiLabel(btn, panel && !panel.hidden);
+  }
+}
+
 function boot(){
   loadPrefs();
   buildShell();
@@ -6935,6 +7221,9 @@ function boot(){
      loaders share) - render as soon as it lands; slow.json is tiny and
      cached after the first section loads it. */
   readSlow().then(() => renderHolWidget());
+  /* Fire-and-forget: availability() can block on a disk check, and nothing
+     else in boot() depends on the result. */
+  mountAI().catch(() => {});
   setInterval(tick, 30000);
 }
 /* Chart.js is deferred, so it exists only after parsing; wait for both. */
