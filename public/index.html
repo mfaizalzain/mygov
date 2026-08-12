@@ -21,11 +21,12 @@
      options are rejected, so aiSummarise() reads LanguageModel.params() and
      omits them when the call fails - the feature degrades to model defaults
      rather than breaking.
-     Token is bound to https://malaysia-at-a-glance.com:443 with NO subdomain
-     match, so it is inert on www. and on the mygov.faizalmzain.com staging
-     deploy. Origin-trial tokens are public by design (they ship in the page);
-     this is not a secret. -->
-<meta http-equiv="origin-trial" content="As7xLgBxGDGODg+jDdPoHV7+oIAtmTFPN8Ld4HJCRf0nYQkcEHL39SkkCblSzsEpsFNjPS+VWYyCps3S4Yp5TAUAAABjeyJvcmlnaW4iOiJodHRwczovL21hbGF5c2lhLWF0LWEtZ2xhbmNlLmNvbTo0NDMiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElQYXJhbXMiLCJleHBpcnkiOjE3OTEyNDQ4MDB9">
+     Token is bound to https://malaysia-at-a-glance.com:443 with isSubdomain,
+     so it covers www. too - but NOT the mygov.faizalmzain.com staging deploy,
+     which is a different apex and always runs on model defaults.
+     Origin-trial tokens are public by design (they ship in the page); this is
+     not a secret. -->
+<meta http-equiv="origin-trial" content="AlUFzMtDqi4iMlXLTjQikpXBV3aIuvJHgmuoIJEWZIzKdq3vUWIhDYQeIDN8opAi/GnDblNUijwy4JZvGAfJSwMAAAB2eyJvcmlnaW4iOiJodHRwczovL21hbGF5c2lhLWF0LWEtZ2xhbmNlLmNvbTo0NDMiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElQYXJhbXMiLCJleHBpcnkiOjE3OTEyNDQ4MDAsImlzU3ViZG9tYWluIjp0cnVlfQ==">
 <!-- SEO: canonical + social sharing (OG/Twitter) -->
 <link rel="canonical" href="https://malaysia-at-a-glance.com/">
 <meta property="og:type" content="website">
