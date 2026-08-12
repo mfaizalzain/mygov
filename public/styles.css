@@ -97,23 +97,10 @@ header{position:sticky; top:0; z-index:40; background:rgba(10,12,16,.86);
   backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line-soft)}
 .hd{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6);
     display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}
-/* the control row wraps to a second line on narrow screens once the install
-   button appears (the hd-r gets ~40px wider); reserving the wrapped height
-   and the button's slot from first paint keeps the header from shifting the
-   page below it (CLS). Note [hidden] can't be overridden - the UA sheet uses
-   display:none !important - so the button toggles a .show class instead. */
+/* The install button is hidden until beforeinstallprompt; it toggles .show
+   because [hidden] is display:none !important in the UA sheet. */
 #install{display:none}
 #install.show{display:inline-flex}
-@media (max-width:620px){
-  .hd{min-height:110px}
-  #install{display:inline-flex;visibility:hidden}
-  #install.show{visibility:visible}
-}
-/* Touch sizing (see the pointer:coarse block further down) puts the wrapped
-   control row at 44px, so the reserve above under-shoots by ~9px and the CLS
-   it exists to prevent comes back. 12px padding x2 + 36px brand + 16px gap
-   + 44px controls = 124. Keep this in step with .btn's min-height. */
-@media (max-width:620px) and (pointer:coarse){ .hd{min-height:124px} }
 .brand{display:flex;align-items:center;gap:var(--s3);min-width:0}
 .mark{width:36px;height:36px;border-radius:11px;flex:none;box-shadow:var(--shadow)}
 .brand h1{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
@@ -1021,15 +1008,29 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   .hero{padding:var(--s6) 0 var(--s4)} .hero h2{font-size:23px}
   .kpi .val{font-size:21px} .chart{height:250px} .brand p{display:none}
   .vgrid{grid-template-columns:1fr} .lvmap{height:260px}
-  /* the header has to stay one short row here - two sticky bars plus a wrapped
-     header would eat a fifth of a phone screen. The timestamp keeps only its
-     progress count, and the display toggles collapse to icons. */
-  .hd{gap:var(--s3)}
-  .hd-r{gap:6px}
-  #stamp{padding:5px 10px}
+  /* Keep the header to one short row on phones. The brand title truncates
+     instead of pushing controls onto their own line, and the progress badge is
+     hidden so the buttons + refresh stay beside it. Install stays icon-only
+     when the PWA prompt appears. */
+  .hd{min-height:0;gap:var(--s2);flex-wrap:nowrap}
+  .brand{gap:var(--s2);flex:0 1 auto}
+  .brand>div{min-width:0}
+  .brand h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hd-r{flex:0 0 auto;gap:4px;flex-wrap:nowrap}
+  #stamp{display:none}
+  #net{padding:5px 8px}
+  #net-t{display:none}
+  #install{display:none}
+  #install.show{display:inline-flex}
   #stamp-t .stamp-time{display:none}
   #lang,#textsize,#theme{padding:8px 10px}
   #install span{display:none}
+}
+/* Very narrow phones drop the wordmark and PWA prompt; the remaining four
+   controls fit beside the app mark without wrapping. */
+@media (max-width:360px){
+  .brand h1{display:none}
+  #install.show{display:none}
 }
 /* Touch sizing below takes both stacked children of .hero-loc-row to 44px
    (44 + 12px gap + 44), so the 85px reserve set above under-shoots by 15 and

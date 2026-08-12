@@ -7584,7 +7584,16 @@ function pwa(){
   syncNet = () => {
     const off = !navigator.onLine;
     net.hidden = !off;
-    if (off){ net.className = "badge off"; netT.textContent = T("Offline - showing cached data"); }
+    if (off){
+      net.className = "badge off";
+      const label = T("Offline - showing cached data");
+      netT.textContent = label;
+      net.title = label;
+      net.setAttribute("aria-label", label);
+    } else {
+      net.title = "";
+      net.removeAttribute("aria-label");
+    }
   };
   addEventListener("online", syncNet);
   addEventListener("offline", syncNet);
