@@ -808,6 +808,14 @@ details.hz-tile[open] .hz-hint::after{content:"\00b7  " attr(data-open) "  \25B4
 .wx-track .alert{flex:0 0 340px;scroll-snap-align:start;margin:0}
 .wx-ctl{display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);margin-top:var(--s2)}
 @media (max-width:560px){.wx-track .alert{flex-basis:calc(100vw - 64px)}}
+/* air quality comparison grid - one cell per city, worst first */
+.aq-grid{display:grid;gap:var(--s2);
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.aq-cell{background:var(--surface);border:1px solid var(--line-soft);
+  border-radius:var(--r);padding:var(--s3) var(--s4)}
+.aq-cell .aq-name{font-size:12px;font-weight:650;color:var(--fg)}
+.aq-cell .aq-val{font-size:22px;font-weight:750;letter-spacing:-.01em;margin-top:2px}
+.aq-cell .aq-sub{font-size:10.5px;color:var(--fg-3);margin-top:2px}
 /* quiet green "no active warnings" chip */
 .chip-ok{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.32);color:var(--ok)}
 /* small card footnote */
@@ -957,6 +965,7 @@ html[data-text="large"] table{font-size:14px}
   <symbol id="i-temp" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4.5 4.5 0 1 0 4 0Z"/><path d="M12 9.5v5.8"/></symbol>
   <symbol id="i-ev" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4H11l-.9 8.1 8.4-10.9H12.3l.9-8.1Z"/></symbol>
   <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 4.4 2.7 17.5A2 2 0 0 0 4.4 20.5h15.2a2 2 0 0 0 1.7-3L13.7 4.4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4.2"/><path d="M12 17.2h.01"/></symbol>
+  <symbol id="i-air" viewBox="0 0 24 24"><path d="M4 9.5h8.2a3.2 3.2 0 1 0-3.2-3.2"/><path d="M4 14h13a3 3 0 1 1-3 3"/><path d="M4 18.5h5.5"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.3"/><path d="M15.4 15.4 20 20"/></symbol>
   <symbol id="i-bus" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="13" rx="2.5"/><path d="M4 10.2h16"/><path d="M8 13.4h.01M16 13.4h.01"/><path d="M6.8 16.5V19M17.2 16.5V19"/></symbol>
   <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21.8a6.5 6.5 0 0 1-6.5-6.5c0-2.4 1.1-4.4 2.3-5.9.4-.5 1.2-.3 1.3.4.1 1 .5 1.8 1.1 2.3.4-2.6 1.7-5 3.7-7 .4-.4 1.1-.2 1.2.4.5 3.2 3.4 5.3 3.4 9.8a6.5 6.5 0 0 1-6.5 6.5Z"/><path d="M12 21.8a3 3 0 0 1-3-3c0-1.6 1.2-2.6 2.1-4.1.3-.6 1.1-.6 1.4 0 .9 1.5 2.5 2.5 2.5 4.1a3 3 0 0 1-3 3Z"/></symbol>
@@ -1107,11 +1116,11 @@ html[data-text="large"] table{font-size:14px}
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-warn"/></svg></div>
         <div><h3 id="h-hazards">Warnings &amp; Hazards</h3>
-          <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.</p>
+          <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality across the major cities. Live only; nothing here is historical.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. A hazard with nothing to report shows an all-clear rather than an empty table.</p>
-            <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li></ul>
+            <p>Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+). A hazard with nothing to report shows an all-clear rather than an empty table.</p>
+            <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li><li><code>GET myrapid.com.my PULSE via r.jina.ai (via /api/rapid-alerts)</code></li><li><code>GET air-quality-api.open-meteo.com (via /api/aqi)</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-hazards"></span>
@@ -1533,6 +1542,15 @@ const I18N = {
   "no station above threshold":"tiada stesen melebihi ambang",
   "warning":"amaran", "alert":"waspada", "Unavailable":"Tidak tersedia",
   "Details":"Butiran", "Hide":"Sembunyi",
+  "Weather, earthquakes, flood & more":"Cuaca, gempa bumi, banjir & lain-lain",
+  "Rapid KL":"Rapid KL", "AQI":"IPU", "Air quality":"Kualiti udara",
+  "Worst":"Paling teruk", "Cleanest":"Paling bersih", "cities":"bandar",
+  "Current hour":"Jam semasa", "MYT":"WPM",
+  "Open-Meteo model":"Model Open-Meteo",
+  "Air quality data unavailable.":"Data kualiti udara tidak tersedia.",
+  "Good":"Baik", "Moderate":"Sederhana", "Unhealthy":"Tidak sihat",
+  "Very unhealthy":"Sangat tidak sihat", "Hazardous":"Berbahaya",
+  "Unhealthy for sensitive groups":"Tidak sihat untuk kumpulan sensitif",
   "From Malaysia":"Dari Malaysia",
   "No earthquakes within Nkm of Malaysia in the last 24 hours.":
     "Tiada gempa bumi dalam lingkungan Nkm dari Malaysia dalam 24 jam lepas.",
@@ -2290,9 +2308,15 @@ async function loadHazards(){
   const warnings = await request("weather", "/weather/warning");
   const quakes   = await request("weather", "/weather/warning/earthquake");
   /* Flood is same-origin and unmetered by the API rate limiter, and a failure
-     there must not take the other two hazards down with it. */
+     there must not take the other two hazards down with it. Same for Rapid
+     alerts and air quality - each is fetched through the Worker, and any one
+     failing leaves the rest of the deck standing. */
   let flood = null;
   try { flood = await loadFlood(); } catch { flood = null; }
+  let rapid = null;
+  try { rapid = await loadRapid(); } catch { rapid = null; }
+  let aqi = null;
+  try { aqi = await loadAQI(); } catch { aqi = null; }
 
   /* MET's earthquake feed is a global list - 800 events, most of them nowhere
      near Malaysia (Aleutians, Chile, Kamchatka). `n_distancemas` is the
@@ -2333,7 +2357,21 @@ async function loadHazards(){
              dated: real(w.valid_from) && real(w.valid_to) };
   }).sort((a,b) => Number(a.info) - Number(b.info));
 
-  return { warn, eq, flood, eqRadius:EQ_RADIUS_KM };
+  return { warn, eq, flood, rapid, aqi, eqRadius:EQ_RADIUS_KM };
+}
+
+async function loadRapid(){
+  const d = await fetch("/api/rapid-alerts", { cache:"no-store" })
+    .then(r => { if (!r.ok) throw new ApiError("Rapid alerts unavailable.", "http"); return r.json(); });
+  /* One card, latest post only - the whole point of the route. */
+  return d.latest || null;
+}
+
+async function loadAQI(){
+  const d = await fetch("/api/aqi", { cache:"no-store" })
+    .then(r => { if (!r.ok) throw new ApiError("Air quality unavailable.", "http"); return r.json(); });
+  if (!d.stations || !d.stations.length) return null;
+  return d;
 }
 
 async function loadFuel(){
@@ -3552,19 +3590,28 @@ function renderHazards(d){
   const notices = d.warn.filter(w => w.info);
   const f = d.flood;
   const atRisk = f ? f.atRisk : null;
+  /* Rapid shows one card when there is a current alert post; AQI always
+     shows one card (cleanest vs worst), but only counts as an *alert* when
+     the worst station breaches the Unhealthy threshold (US AQI 101). */
+  const rapidN = d.rapid ? 1 : 0;
+  const aqiWorst = d.aqi && d.aqi.worst ? d.aqi.worst.aqi : null;
+  const aqiAlert = aqiWorst != null && aqiWorst >= 101 ? 1 : 0;
 
-  /* Weather warnings, earthquakes and flood-risk stations are one tile with
-     one carousel: all three are "something is happening right now", and split
-     across tiles the same person had to open three disclosures. The chips and
-     the carousel are paintAlerts(), mounted here. */
-  const alertN = active.length + d.eq.length + (atRisk || 0);
+  /* Weather warnings, earthquakes, flood-risk stations, the latest Rapid KL
+     service alert and air quality are one tile with one carousel: all of
+     them are "something is happening right now", and split across tiles the
+     same person had to open five disclosures. The chips and the carousel are
+     paintAlerts(), mounted here. */
+  const alertN = active.length + d.eq.length + (atRisk || 0) + rapidN + aqiAlert;
   const wxBody = (alertN || notices.length) ? `<div id="wx-warn"></div>` : "";
-  const wxTile = hzTile("wx", "warn", T("Weather, earthquakes & flood"), alertN > 0,
+  const wxTile = hzTile("wx", "warn", T("Weather, earthquakes, flood & more"), alertN > 0,
     alertN ? `${alertN} ${T(alertN === 1 ? "active alert" : "active alerts")}`
            : T("All clear"),
     alertN
       ? `${active.length} ${T("warnings")} · ${d.eq.length} ${T("quakes")}` +
-        (atRisk ? ` · ${atRisk} ${T("stations at risk")}` : "")
+        (atRisk ? ` · ${atRisk} ${T("stations at risk")}` : "") +
+        (rapidN ? ` · ${rapidN} ${T("Rapid KL")}` : "") +
+        (aqiWorst != null ? ` · ${T("AQI")} ${aqiWorst}` : "")
       : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue")),
     wxBody);
 
@@ -3579,7 +3626,20 @@ function renderHazards(d){
                : T("no station above threshold"),
         atRisk ? `<div id="body-flood"></div>` : "");
 
-  host.innerHTML = `<div class="hz-strip">${wxTile}${fTile}</div>`;
+  /* Air quality - all cities, always, as comparison cards. The tile opens on
+     its own; the card only becomes an *alert* (riding the deck above) when
+     the worst city is Unhealthy, US AQI 101+. */
+  const aq = d.aqi;
+  const aqTile = !aq
+    ? hzTile("aq", "air", T("Air quality"), false, T("Unavailable"), T("Open-Meteo model"), "")
+    : hzTile("aq", "air", T("Air quality"), aqiWorst != null && aqiWorst >= 101,
+        aqiWorst != null ? `${aqiWorst} ${T("AQI")}` : T("All clear"),
+        aq.worst && aq.cleanest
+          ? `${T("Worst")} ${aq.worst.name} ${aq.worst.aqi} · ${T("Cleanest")} ${aq.cleanest.name} ${aq.cleanest.aqi}`
+          : "",
+        `<div class="aq-grid" id="body-aqi">${aqiGrid(aq)}</div>`);
+
+  host.innerHTML = `<div class="hz-strip">${wxTile}${fTile}${aqTile}</div>`;
   setNavBadge("hazards", alertN, "active alert", "active alerts");
 
   if (wxBody) paintAlerts();
@@ -3656,6 +3716,60 @@ function floodCard(s){
     <div class="meta">${s.ts ? ago(Math.floor(s.ts / 1000)) : ""}</div>
   </div>`;
 }
+/* The latest Rapid KL service alert (PULSE) as an alert card. myrapid posts
+   are in Bahasa Melayu - keep the original text, the reader knows the mode
+   names (Laluan = line, Kelewatan = delay). The whole alert links out. */
+function rapidCard(r){
+  const col = "var(--info)";
+  return `<div class="alert rain">
+    <h4><span class="alert-ico" aria-hidden="true">🚈</span> ${esc(r.title)}
+      <span class="pill" style="color:${col};border:1px solid ${col}55;background:${col}18">${T("Rapid KL")}</span></h4>
+    ${r.excerpt ? `<p>${esc(r.excerpt)}</p>` : ""}
+    <div class="meta">${r.ts ? ago(r.ts) + " · " : ""}<a class="maplink" target="_blank" rel="noopener"
+       href="${esc(r.url)}" aria-label="Open this Rapid KL alert on myrapid.com.my">myrapid.com.my &#8599;</a></div>
+  </div>`;
+}
+/* Air quality card: the worst station vs the cleanest, current hour. The
+   card rides in the same deck so a haze episode (Unhealthy+, US AQI >= 101)
+   is an alert, not a footnote. */
+const AQI_COL = aqi => aqi >= 301 ? "var(--danger)" :
+  aqi >= 201 ? "var(--danger)" :
+  aqi >= 151 ? "var(--warn)" :
+  aqi >= 101 ? "var(--warn)" : "var(--ok)";
+const AQI_BAND = aqi => aqi >= 301 ? "Hazardous" :
+  aqi >= 201 ? "Very unhealthy" :
+  aqi >= 151 ? "Unhealthy" :
+  aqi >= 101 ? "Unhealthy for sensitive groups" :
+  aqi >= 51  ? "Moderate" : "Good";
+function aqiCard(a){
+  const w = a.worst, c = a.cleanest;
+  if (!w) return "";
+  const col = AQI_COL(w.aqi);
+  const line = (st) => `<span style="font-weight:600">${esc(st.name)}</span> ${st.aqi}
+    ${st.pm25 != null ? `· PM2.5 ${st.pm25}` : ""}`;
+  return `<div class="alert ${w.aqi >= 101 ? "storm" : "rain"}">
+    <h4><span class="alert-ico" aria-hidden="true">🌫️</span> ${T("Air quality")}
+      <span class="pill" style="color:${col};border:1px solid ${col}55;background:${col}18">${T(AQI_BAND(w.aqi))}</span></h4>
+    <p>${T("Worst")}: ${line(w)}</p>
+    ${c && c !== w ? `<p style="margin-top:6px">${T("Cleanest")}: ${line(c)}</p>` : ""}
+    <div class="meta">${a.reading_time ? T("Current hour") + " · " + esc(String(a.reading_time).slice(11, 16)) : ""} ${T("MYT")} · ${a.stations ? `${a.stations.length} ${T("cities")}` : ""}</div>
+  </div>`;
+}
+/* Full-city air quality comparison: one card per station, worst first, so a
+   haze episode reads as a ranked list. Always shown (the tile opens on its
+   own); the deck card above is the alert view. */
+function aqiGrid(a){
+  const rows = (a.stations || []).slice().sort((x, y) => y.aqi - x.aqi);
+  if (!rows.length) return `<p class="dim">${T("Air quality data unavailable.")}</p>`;
+  return rows.map(st => {
+    const col = AQI_COL(st.aqi);
+    return `<div class="aq-cell" style="border-left:3px solid ${col}">
+      <div class="aq-name">${esc(st.name)}</div>
+      <div class="aq-val" style="color:${col}">${st.aqi}</div>
+      <div class="aq-sub">${T(AQI_BAND(st.aqi))}${st.pm25 != null ? ` · PM2.5 ${st.pm25}` : ""}</div>
+    </div>`;
+  }).join("");
+}
 /** Active warnings + nearby quakes as one card deck; notices collapsed below. */
 const MARINE_RE = /waters|coastal|sea |seas|wave|maritim|perairan|laut|pantai|ombak/i;
 function pickedName(){
@@ -3696,11 +3810,23 @@ function paintAlerts(){
     .sort((a, b) => (FLOOD_RANK[a.status] ?? 3) - (FLOOD_RANK[b.status] ?? 3))
     .slice(0, 6);
   const total = d.warn.filter(x => !x.info).length + d.eq.length +
-    (d.flood ? d.flood.atRisk : 0);
+    (d.flood ? d.flood.atRisk : 0) +
+    (d.rapid ? 1 : 0) +
+    (d.aqi && d.aqi.worst && d.aqi.worst.aqi >= 101 ? 1 : 0);
   /* Cards in one deck: warnings first (they are actionable now), then quakes
-     newest-first as loadHazards already sorted them, then flood stations. */
+     newest-first as loadHazards already sorted them, then flood stations,
+     then the latest Rapid KL service alert. AQI only rides in the deck as an
+     ALERT when the worst station is Unhealthy (US AQI 101+) - the everyday
+     comparison lives in its own tile, so a moderate reading does not masquerade
+     as a warning. Rapid + AQI ride under "All Malaysia" only - they are
+     neither weather, quakes, area nor marine, so the narrower chips leave
+     them out. */
+  const inAll = wxFilter === "all";
+  const aqiAlert = d.aqi && d.aqi.worst && d.aqi.worst.aqi >= 101;
   const cards = active.map(warnCard).concat(quakes.map(quakeCard))
-    .concat(floods.map(floodCard));
+    .concat(floods.map(floodCard))
+    .concat(inAll && d.rapid ? [rapidCard(d.rapid)] : [])
+    .concat(inAll && aqiAlert ? [aqiCard(d.aqi)] : []);
   const empty = wxFilter === "all"
     ? [T("No active warnings or earthquakes"),
        T("MET Malaysia has nothing on issue.") + " " +
@@ -7765,10 +7891,12 @@ function paintMaps(){
 /* ════════════════════════════ orchestration ════════════════════════════ */
 const META = {
   hazards:{ title:"Warnings & Hazards",
-    desc:"Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, and river gauges above their flood thresholds. Live only; nothing here is historical.",
-    how:"Three feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. A hazard with nothing to report shows an all-clear rather than an empty table.",
+    desc:"Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality across the major cities. Live only; nothing here is historical.",
+    how:"Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).",
     eps:["/weather/warning","/weather/warning/earthquake",
-         "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)"] },
+         "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)",
+         "myrapid.com.my PULSE via r.jina.ai (via /api/rapid-alerts)",
+         "air-quality-api.open-meteo.com (via /api/aqi)"] },
   weather:{ title:"Weather",
     desc:"Live current conditions at your location on a map, plus the seven-day MET outlook for every state, district and town in Malaysia.",
     how:"Live conditions come from Open-Meteo (free, open data, no key) at the selected location's coordinates, with the map pinning that location; when it is unreachable the card falls back to MET's day-0 forecast, honestly labelled. The seven-day outlook comes from MET Malaysia, covering 360 locations from states down to individual towns and highland resorts. Warnings and earthquakes moved to the Warnings & Hazards section above.",
