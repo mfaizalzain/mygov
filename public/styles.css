@@ -926,3 +926,18 @@ html[data-text="large"] table{font-size:14px}
   transition:width .2s linear}
 @media (prefers-reduced-motion:reduce){.ai-prog i{transition:none}}
 html[data-text="large"] .ai-panel{font-size:15px}
+
+/* ── Election results section ─────────────────────────────────────── */
+.wchip{display:inline-flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap}
+.wchip i{width:10px;height:10px;border-radius:3px;flex:none}
+.el-bar{display:flex;align-items:stretch;gap:2px;height:14px;border-radius:3px;overflow:hidden;
+  background:rgba(128,128,128,.14);min-width:90px}
+.el-bar .cand{flex:1;display:block;min-width:2px}
+.el-bar .cand i{display:block;height:100%}
+.hv{display:flex;flex-direction:column;gap:10px}
+.hv-row{display:grid;grid-template-columns:130px 1fr 44px;align-items:center;gap:10px}
+.hv-lab{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.hv-lab i{width:10px;height:10px;border-radius:3px;flex:none}
+.hv-bar{height:10px;border-radius:3px;background:rgba(128,128,128,.14);overflow:hidden}
+.hv-bar i{display:block;height:100%;border-radius:3px}
+.hv-num{font-size:12.5px;font-family:var(--mono);color:var(--fg-2);text-align:right}

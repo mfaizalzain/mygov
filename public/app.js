@@ -309,6 +309,15 @@ const I18N = {
  "hotel guests":"tetamu hotel", "latest":"terkini", "prev":"sebelum ini",
  "change":"perubahan", "domestic":"domestik", "international":"antarabangsa",
  "State":"Negeri",
+ "Election Results":"Keputusan Pilihan Raya", "election":"pilihan raya",
+ "seats counted":"kerusi dikira", "constituencies with results":"kawasan yang ada keputusan",
+ "leading party":"parti peneraju", "seats won":"kerusi dimenangi",
+ "Seats by party":"Kerusi mengikut parti", "Election category":"Kategori pilihan raya",
+ "Parliament":"Parlimen", "State":"Negeri", "By-election":"Pilihan Raya Kecil",
+ "Seats":"Kerusi", "Constituency":"Kawasan", "Polling day":"Hari mengundi",
+ "Winner":"Pemenang", "Majority":"Majoriti", "Vote share":"Kongsi undi",
+ "each seat's vote share by party colour":"kongsi undi setiap kerusi mengikut warna parti",
+ "No results yet":"Tiada keputusan lagi",
  "Tourism mode":"Mod pelancongan",
  "vs 2025:":"berbanding 2025:", "Top 10 countries":"10 negara teratas",
  "Country":"Negara", "y/y":"t/t", "YTD":"YTD",
@@ -555,6 +564,7 @@ const SECTIONS = [
   { id:"finance",   label:"Finance",    icon:"finance",    family:"data-catalogue" },
   { id:"mobility",  label:"Vehicles",   icon:"mobility",   family:"data-catalogue" },
   { id:"transport", label:"Transport",  icon:"transport",  family:"gtfs-static" },
+  { id:"election",  label:"Election",   icon:"vote",       family:"spr" },
 ];
 /* Loaded first, then the rest lazily as their section nears the viewport.
    Keeps the rate limiter happy (requests are globally serialised anyway) while
@@ -4749,6 +4759,111 @@ function renderHotel(d){
   animateCounters(host);
 }
 
+/* ════════════════════════ election results (SPR MySPRSemak) ════════════════════════
+   election.json is the manual collector's output (tools/collect_election.py):
+   the latest PRU, state election and by-election with per-seat winners,
+   votes and party colours from mysprsemak.spr.gov.my's JSON API. Results are
+   static once published, so the section is a one-time crawl per election. */
+let electionData = null, electionCat = "pru";
+async function loadElection(){
+  if (electionData) return electionData;
+  const r = await fetch("election.json", { cache:"no-store" });
+  if (!r.ok) throw new Error("election " + r.status);
+  const d = await r.json();
+  if (!d.seats || !d.seats.length) throw new Error("election: empty");
+  electionData = d;
+  return d;
+}
+function renderElection(d){
+  const host = $("#body-election"); if (!host) return;
+  host.hidden = false;
+  const seats = (d.seats || []).filter(s => s.category === electionCat);
+  const cat = d.categories && d.categories[electionCat];
+  const label = cat ? cat.name : "";
+  /* Party totals: group seats by the winner's party short name (colour from
+     the winning candidate). BEBAS stays its own bucket. */
+  const byParty = {};
+  for (const s of seats){
+    const w = (s.candidates || []).find(c => c.isWinner) || (s.candidates || [])[0];
+    if (!w) continue;
+    const key = w.partyShort || "BEBAS";
+    if (!byParty[key]) byParty[key] = { n: 0, colour: w.colour || "#888" };
+    byParty[key].n++;
+  }
+  const partyRows = Object.entries(byParty).sort((a, b) => b[1].n - a[1].n);
+  const maxN = partyRows.length ? partyRows[0][1].n : 1;
+  const seatHTML = (s) => {
+    const w = (s.candidates || []).find(c => c.isWinner);
+    const run = (s.candidates || []).slice().sort((a, b) => (b.votes||0) - (a.votes||0));
+    const cols = run.map(c => {
+      const pct = (s.totalVotes && c.votes) ? (c.votes / s.totalVotes * 100) : 0;
+      return `<span class="cand" title="${esc(c.name)} · ${esc(c.partyShort || c.party || "BEBAS")} · ${nf(c.votes || 0)}">
+        <i style="background:${esc(c.colour || "#888")};width:${Math.max(2, pct)}%"></i></span>`;
+    }).join("");
+    return `<tr>
+      <td>${esc(s.name || "")}</td>
+      <td class="num">${esc(s.date || "")}</td>
+      <td>${w ? `<span class="wchip"><i style="background:${esc(w.colour || "#888")}"></i>${esc(w.name)}</span>
+        <span class="dim">${esc(w.partyShort || w.party || "BEBAS")}</span>` : "-"}</td>
+      <td class="num">${s.majority != null ? nf(s.majority) : "-"}</td>
+      <td class="bar"><div class="el-bar">${cols}</div></td>
+    </tr>`;
+  };
+  const first = seats[0] || {};
+  const total = seats.length;
+  host.innerHTML = `
+    <div class="grid g3 mb">
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T("election")}</span></div>
+        <div class="val" style="font-size:17px">${esc(label || "-")}</div>
+        <div class="sub">${first.date ? esc(first.date) : ""}</div></div>
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T("seats counted")}</span></div>
+        <div class="val">${nf(total)}</div>
+        <div class="sub">${T("constituencies with results")}</div></div>
+      <div class="kpi"><div class="kpi-t"><span class="lab">${T("leading party")}</span></div>
+        <div class="val" style="font-size:17px">${partyRows.length ? `<span class="wchip"><i style="background:${esc(partyRows[0][1].colour)}"></i>${esc(partyRows[0][0])}</span> <span class="dim">${nf(partyRows[0][1].n)}</span>` : "-"}</div>
+        <div class="sub">${partyRows.length ? T("seats won") : ""}</div></div>
+    </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Seats by party")} · ${esc(label || "")}</h4>
+        <span class="right">
+          <span class="seg" role="group" aria-label="${T("Election category")}">
+            <button data-eleccat="pru" aria-pressed="${electionCat === "pru"}">${T("Parliament")}</button>
+            <button data-eleccat="dun" aria-pressed="${electionCat === "dun"}">${T("State")}</button>
+            <button data-eleccat="prk" aria-pressed="${electionCat === "prk"}">${T("By-election")}</button>
+          </span>
+        </span>
+      </div>
+      <div class="card-b"><div class="hv">
+        ${partyRows.map(([name, p]) => `
+          <div class="hv-row">
+            <span class="hv-lab"><i style="background:${esc(p.colour)}"></i>${esc(name)}</span>
+            <span class="hv-bar"><i style="width:${p.n / maxN * 100}%;background:${esc(p.colour)}"></i></span>
+            <span class="hv-num">${nf(p.n)}</span>
+          </div>`).join("") || `<div class="state err"><div class="big">⚠</div><strong>${esc(T("No results yet"))}</strong></div>`}
+      </div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h4>${T("Seats")} · ${esc(label || "")}</h4>
+        <span class="sub">${T("each seat's vote share by party colour")}</span></div>
+      <div class="card-b"><div class="tw"><table>
+        <thead><tr>
+          <th>${T("Constituency")}</th><th class="num">${T("Polling day")}</th>
+          <th>${T("Winner")}</th><th class="num">${T("Majority")}</th>
+          <th class="num">${T("Vote share")}</th>
+        </tr></thead><tbody>
+        ${seats.map(seatHTML).join("")}
+        </tbody></table></div>
+      </div>
+    </div>`;
+  host.querySelectorAll("[data-eleccat]").forEach(b => {
+    b.onclick = () => {
+      electionCat = b.dataset.eleccat;
+      renderElection(d);
+    };
+  });
+  animateCounters(host);
+}
+
 async function loadTravel(){
   const r = await fetch("travel.json", { cache:"no-store" });
   if (!r.ok) throw new Error("travel " + r.status);
@@ -6748,6 +6863,12 @@ const META = {
     desc:"Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.",
     how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips and stops are read, never the largest file.",
     eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl"] },
+  election:{ title:"Election Results",
+    desc:"Latest election results from the Election Commission's MySPRSemak portal - the most recent general election (PRU-15), state election and by-election, with every constituency's winner, votes and party colours.",
+    how:"Results are crawled from the Election Commission's official MySPRSemak lookup (mysprsemak.spr.gov.my) - its own JSON API behind the constituency search. The collector keeps only the latest election per category (parliamentary, state assembly, by-election) since published results never change; it runs manually after each new election. SPR's API omits Kedah P.017 Padang Serai (a 2023 by-election seat) and the federal-territory seats have no state entry, so PRU-15 shows 208 seats here vs 222 nationally. Data provided by SPR.",
+    eps:["POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPru",
+         "POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPruDun",
+         "POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPrk"] },
   live:{ title:"Live Vehicles",
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
     how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.",
@@ -6823,6 +6944,7 @@ const LOADERS = {
          for one operator. Same pattern as Groceries under Household. */
       if (!loaded.has("live")) loadSection("live", false);
     } },
+  election: { load:loadElection,  render:renderElection,  asOf:d => d.generated },
   live:     { load:loadLive,      render:renderLive },
   travel:   { load:loadTravel,    render:renderTravel,    asOf:d => d.generated },
 };

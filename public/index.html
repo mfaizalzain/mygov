@@ -73,6 +73,7 @@
   <symbol id="i-basket" viewBox="0 0 24 24"><path d="M3 9h18l-1.7 9.3a2 2 0 0 1-2 1.7H6.7a2 2 0 0 1-2-1.7Z"/><path d="M8.5 9 11 3.8"/><path d="M15.5 9 13 3.8"/><path d="M9.5 13v3"/><path d="M14.5 13v3"/></symbol>
   <symbol id="i-population" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.2 5.6a3.2 3.2 0 0 1 0 6.1"/><path d="M17.6 14.4A6 6 0 0 1 21 20"/></symbol>
   <symbol id="i-economy" viewBox="0 0 24 24"><path d="M3 17.5 8.6 12l3.5 3.5L21 6.5"/><path d="M15 6.5h6v6"/></symbol>
+  <symbol id="i-vote" viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="m8 17 2-2 4 4"/></symbol>
   <symbol id="i-finance" viewBox="0 0 24 24"><path d="M4 8.5h13"/><path d="M14 5.5l3 3-3 3"/><path d="M20 15.5H7"/><path d="M10 12.5l-3 3 3 3"/></symbol>
   <symbol id="i-health" viewBox="0 0 24 24"><path d="M20.4 6.8a4.9 4.9 0 0 0-7 0L12 8.2l-1.4-1.4a4.9 4.9 0 1 0-7 7l7.7 7.7a1 1 0 0 0 1.4 0l7.7-7.7a4.9 4.9 0 0 0 0-7Z"/></symbol>
   <symbol id="i-mobility" viewBox="0 0 24 24"><path d="M5 13.6l1.5-4.5a2 2 0 0 1 1.9-1.4h7.2a2 2 0 0 1 1.9 1.4l1.5 4.5"/><path d="M4.6 13.6h14.8a1.6 1.6 0 0 1 1.6 1.6V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-1.8a1.6 1.6 0 0 1 1.6-1.6Z"/><circle cx="7.4" cy="18" r="1.5"/><circle cx="16.6" cy="18" r="1.5"/></symbol>
@@ -126,6 +127,7 @@
     <li><a href="#finance" id="nav-finance"><span class="dot" id="dot-finance"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-finance"/></svg> Finance</a></li>
     <li><a href="#mobility" id="nav-mobility"><span class="dot" id="dot-mobility"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mobility"/></svg> Vehicles</a></li>
     <li><a href="#transport" id="nav-transport"><span class="dot" id="dot-transport"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-transport"/></svg> Transport</a></li>
+    <li><a href="#election" id="nav-election"><span class="dot" id="dot-election"></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-vote"/></svg> <span data-i18n="Election Results">Election Results</span></a></li>
   </ul>
 </nav>
 
@@ -403,7 +405,25 @@
         <span class="sec-time" id="time-transport"></span>
       </div>
       <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-            <!-- Live Vehicles: a merged sub-block of its parent section. -->
+    </section>
+    <section id="election" aria-labelledby="h-election">
+      <div class="sec-h">
+        <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-vote"/></svg></div>
+        <div><h3 id="h-election" data-i18n="Election Results">Election Results</h3>
+          <p data-i18n="Latest results from the Election Commission's MySPRSemak portal - the most recent general election, state election and by-election, with every constituency's winner, votes and party colour.">Latest results from the Election Commission's MySPRSemak portal - the most recent general election, state election and by-election, with every constituency's winner, votes and party colour.</p>
+          <details class="meta">
+            <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
+            <p data-i18n="Results are crawled from the Election Commission's official MySPRSemak lookup (mysprsemak.spr.gov.my) - its own JSON API behind the constituency search. The collector keeps only the latest election per category (parliamentary, state assembly, by-election) since published results never change; it runs manually after each new election. Parliamentary and state seats shown by party colour; the winner carries a check.">Results are crawled from the Election Commission's official MySPRSemak lookup (mysprsemak.spr.gov.my) - its own JSON API behind the constituency search. The collector keeps only the latest election per category (parliamentary, state assembly, by-election) since published results never change; it runs manually after each new election. Parliamentary and state seats shown by party colour; the winner carries a check.</p>
+            <ul><li><code>POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPru</code></li>
+            <li><code>POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPruDun</code></li>
+            <li><code>POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPrk</code></li></ul>
+          </details>
+        </div>
+        <span class="sec-time" id="time-election"></span>
+      </div>
+      <div id="body-election"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div>
+    </section>
+    <!-- Live Vehicles: a merged sub-block of its parent section. -->
       <div class="sec-sub" id="live-sub" aria-labelledby="h-live">
         <div class="sec-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>

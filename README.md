@@ -39,6 +39,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Health (sub-block of People) | Ministry of Health | Daily blood donations with blood-type split, organ pledges, PeKa B40 screenings |
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
+| Election Results | SPR (MySPRSemak) | Latest election per category from the Election Commission's lookup - PRU-15 parliamentary seats, the most recent state election (Negeri Sembilan KE-16) and the latest by-election (Kinabatangan), each with winner, votes, majority and per-party colour bars |
 | Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
 | Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
@@ -101,6 +102,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Hotels | `collect_hotel.yml`, quarterly 3rd 02:30 UTC (Jan/Apr/Jul/Oct) | `public/hotel.json` | Paid Accommodation Survey infographic - occupancy rate (AOR), average room rate (ARR) and hotel guests (domestic/international) for all 16 states, current quarter vs a year earlier. Only the latest quarter is public on the portal, so the collector probes newest-first (same pattern as tourism) and the dashboard shows the current quarter only |
 | Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and one English line each (Gemini, deterministic fallback) |
 | Rapid KL alerts | `collect_rapid.yml`, every 10 min | `public/rapid_alerts.json` | the **latest** myRapid PULSE service alert (title, excerpt, link, MYT timestamp). The source is behind Incapsula (a JS-challenge WAF; its wp-json also returns 401 for anonymous reads), so the collector scrapes it through the **r.jina.ai reader proxy** - run from GitHub's IP pool because jina's free tier rate-limits Cloudflare Worker egress to null |
+| Election Results | `collect_election.yml`, manual | `public/election.json` | Latest election per category from SPR's MySPRSemak JSON API (CSRF token + UUID ids from the page, then per-seat POSTs): PRU-15 parliamentary (208 seats - SPR omits Kedah P.017 and the federal-territory seats), Negeri Sembilan KE-16 state election (36 seats), latest by-election. ~245 requests, one-time per election; results never change once published |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that
@@ -401,6 +403,7 @@ tools/
   collect_insights.py   forecasts + daily briefing → public/{forecasts,insights}.json
   collect_rapid.py      latest Rapid KL PULSE alert via r.jina.ai → public/rapid_alerts.json
   collect_hotel.py      quarterly Paid Accommodation Survey infographic → public/hotel.json
+  collect_election.py   latest SPR election results per category → public/election.json
   embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```
