@@ -2361,10 +2361,15 @@ async function loadHazards(){
 }
 
 async function loadRapid(){
-  const d = await fetch("/api/rapid-alerts", { cache:"no-store" })
-    .then(r => { if (!r.ok) throw new ApiError("Rapid alerts unavailable.", "http"); return r.json(); });
-  /* One card, latest post only - the whole point of the route. */
-  return d.latest || null;
+  /* Same pattern as the other collectors: the collect_rapid workflow pushes
+     KV key "rapid" (served as /rapid_alerts.json, 10-min cron). A live
+     Worker fetch of the source is rate-limited by jina's free tier on
+     Cloudflare egress, so the static/KV file is the primary path. */
+  const r = await fetch("rapid_alerts.json", { cache:"no-store" });
+  if (!r.ok) return null;
+  const j = await r.json();
+  /* One card, latest post only - the whole point of the collector. */
+  return j && j.latest ? j.latest : null;
 }
 
 async function loadAQI(){
