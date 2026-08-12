@@ -47,6 +47,23 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"mygov - Malaysia Open Data","alternateName":"mygov","url":"https://malaysia-at-a-glance.com/","description":"Live weather, fuel prices, economic statistics and public transport from Malaysia's Government Open API.","inLanguage":["en-MY","ms-MY"],"publisher":{"@type":"Organization","name":"mygov","url":"https://malaysia-at-a-glance.com/"}}
 </script>
+<!-- DataCatalog: the site is a dashboard over published datasets, so the
+     honest schema type is a catalogue of Datasets, not an Article or a
+     TouristDestination. This is also what Google's dataset vertical reads.
+     Only files actually served at these URLs are listed, each pointing at its
+     own JSON distribution; sourceOrganization credits the upstream publisher
+     rather than implying this site produced the figures. No license is
+     asserted - the terms are the source portal's to state, not ours. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"DataCatalog","name":"mygov - Malaysia Open Data","url":"https://malaysia-at-a-glance.com/","description":"Live Malaysian government open data - weather, fuel prices, groceries, population, economy, elections and public transport - collected from api.data.gov.my and republished as plain JSON.","inLanguage":["en-MY","ms-MY"],"publisher":{"@type":"Organization","name":"mygov","url":"https://malaysia-at-a-glance.com/"},"isAccessibleForFree":true,"dataset":[
+{"@type":"Dataset","name":"Trend radar","description":"Top trending issues in Malaysia with fact-check status, bilingual titles and source links.","url":"https://malaysia-at-a-glance.com/#radar-band","distribution":{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://malaysia-at-a-glance.com/radar.json"}},
+{"@type":"Dataset","name":"Population and constituency socioeconomics","description":"State, district and constituency population estimates with median income, poverty, inequality and labour-force figures per parliamentary and state seat.","url":"https://malaysia-at-a-glance.com/#population","sourceOrganization":{"@type":"GovernmentOrganization","name":"Department of Statistics Malaysia"},"distribution":{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://malaysia-at-a-glance.com/geo.json"}},
+{"@type":"Dataset","name":"Election results","description":"Latest parliamentary, state assembly and by-election results per seat with candidates, votes, majority and party.","url":"https://malaysia-at-a-glance.com/#election","sourceOrganization":{"@type":"GovernmentOrganization","name":"Suruhanjaya Pilihan Raya Malaysia"},"distribution":{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://malaysia-at-a-glance.com/election.json"}},
+{"@type":"Dataset","name":"Retail fuel and grocery prices","description":"Weekly RON95, RON97 and diesel pump prices and the PriceCatcher grocery basket by item, state and district.","url":"https://malaysia-at-a-glance.com/#fuel","sourceOrganization":{"@type":"GovernmentOrganization","name":"Ministry of Domestic Trade and Cost of Living"},"distribution":{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://malaysia-at-a-glance.com/prices.json"}},
+{"@type":"Dataset","name":"Daily series forecasts","description":"14-day projections for daily count series that beat a naive baseline in backtesting, each with an 80% band and its measured gain.","url":"https://malaysia-at-a-glance.com/","distribution":{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://malaysia-at-a-glance.com/forecasts.json"}},
+{"@type":"Dataset","name":"Rapid KL service alerts","description":"Latest myRapid PULSE LRT, MRT, monorail and bus disruption alert with title, excerpt, link and MYT timestamp.","url":"https://malaysia-at-a-glance.com/#hazards","sourceOrganization":{"@type":"Organization","name":"Rapid Rail"},"distribution":{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://malaysia-at-a-glance.com/rapid_alerts.json"}}
+]}
+</script>
 <!-- Self-hosted + subresource-integrity checked: if the files were ever
      altered the browser refuses to execute them rather than running them.
      (Serving locally also removes the CDN as a single point of failure and

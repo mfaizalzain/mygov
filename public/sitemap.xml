@@ -1,28 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- The <loc> host MUST match the host this file is served from, or search
+     engines discard the entries as cross-host. It previously listed the
+     mygov.faizalmzain.com staging apex, so production shipped a sitemap in
+     which every URL was ignored.
+
+     Only "/" is listed. The app is a single document whose sections are hash
+     fragments (#weather, #economy), and a fragment is not a separate URL to a
+     crawler - listing them would pad the file without adding an indexable
+     page. The JSON data files that used to appear here are machine payloads,
+     not pages; they are advertised to crawlers and agents through llms.txt
+     and the DataCatalog JSON-LD in index.html instead. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://mygov.faizalmzain.com/</loc>
+    <loc>https://malaysia-at-a-glance.com/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://mygov.faizalmzain.com/radar.json</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mygov.faizalmzain.com/health.json</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mygov.faizalmzain.com/slow.json</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mygov.faizalmzain.com/feed.xml</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
   </url>
 </urlset>

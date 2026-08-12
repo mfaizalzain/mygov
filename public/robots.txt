@@ -2,4 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://mygov.faizalmzain.com/sitemap.xml
+# Canonical production apex. The same file is served from the staging deploy
+# (mygov.faizalmzain.com), which is deliberate: staging's canonical tag already
+# points at production, so pointing the sitemap there too keeps every crawl
+# signal on one host.
+Sitemap: https://malaysia-at-a-glance.com/sitemap.xml
