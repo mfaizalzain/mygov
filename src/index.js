@@ -807,10 +807,26 @@ export default {
         const res = await env.ASSETS.fetch(request);
         if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
           const html = await res.text();
+          /* Two things worth keeping here:
+           *
+           * 1. The replacement is a FUNCTION, not a string. String.replace
+           *    interprets $&, $` and $' in the replacement, so a snapshot
+           *    containing them would splice surrounding page content back
+           *    into itself. A function replacement is taken literally.
+           * 2. The snapshot is markup by design (it is the <noscript> block),
+           *    so it cannot be escaped - but it must stay inert. Anything
+           *    that executes is stripped: the collector is trusted today,
+           *    and this keeps a leaked KV token from turning the homepage
+           *    into a script host. CSP already blocks inline and non-'self'
+           *    scripts; this is the belt to that pair of braces. */
+          const inert = String(snap)
+            .replace(/<\s*(script|iframe|object|embed|link|meta|base)\b[\s\S]*?>/gi, "")
+            .replace(/<\/\s*(script|iframe|object|embed)\s*>/gi, "")
+            .replace(/\son[a-z]+\s*=/gi, " data-stripped=");
           const out = html.includes("<!-- SEO:SNAP -->")
             ? html.replace(
                 /<!-- SEO:SNAP -->[\s\S]*?<!-- \/SEO:SNAP -->/,
-                `<!-- SEO:SNAP -->\n${snap}\n<!-- /SEO:SNAP -->`)
+                () => `<!-- SEO:SNAP -->\n${inert}\n<!-- /SEO:SNAP -->`)
             : html;
           // Preserve the asset's headers (CSP, HSTS, X-Frame-Options, and the
           // _headers cache-control) - building a fresh Response here used to
