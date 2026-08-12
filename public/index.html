@@ -168,6 +168,15 @@
 <div class="traffic-band" id="traffic-band" hidden>
   <span class="traffic-tag" aria-hidden="true"><svg class="ico"><use href="#i-traffic"/></svg></span>
   <div class="traffic-mq" id="traffic-mq" role="marquee" aria-label="Live traffic reports"></div>
+  <!-- WCAG 2.2.2 (Pause, Stop, Hide): anything that moves automatically for
+       more than five seconds needs a mechanism to stop it. Hovering pauses the
+       ticker, but hover does not exist on touch and does not help someone who
+       simply finds the movement hard to read past - so the control has to be a
+       real, reachable button. State lives in data-paused on the band. -->
+  <button type="button" class="traffic-pause" id="traffic-pause"
+          aria-pressed="false" aria-label="Pause the traffic ticker" title="Pause">
+    <span aria-hidden="true">⏸</span>
+  </button>
 </div>
 
 <div class="wrap">

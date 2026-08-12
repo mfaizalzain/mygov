@@ -7,12 +7,14 @@
 # CSP notes:
 # - The app's own JavaScript and CSS live in /app.js and /styles.css, so
 #   script-src needs NO 'unsafe-inline' - inline scripts are refused entirely.
-#   style-src keeps 'unsafe-inline' because the app sets ~200 inline
-#   style= attributes (charts, skel skeletons, dynamic widths) that are
-#   cheap to keep and low-risk: style injection cannot exfiltrate data or
-#   run code, and everything else (scripts, frames, objects, forms) is
-#   locked down. This matches the pragmatic tier used by major production
-#   sites: no inline scripts, no inline event handlers, no eval.
+#   The app does set ~200 inline style= attributes (charts, skel skeletons,
+#   dynamic widths), so the inline allowance is scoped to style-src-attr
+#   rather than blanketing style-src: the attributes keep working while an
+#   injected <style> block is refused. Browsers that don't know
+#   style-src-attr fall back to style-src, which stays 'self' - the worst
+#   case there is unstyled dynamic widths, never a broken page.
+#   Everything else (scripts, frames, objects, forms) is locked down: no
+#   inline scripts, no inline event handlers, no eval.
 # - Two locally-hosted vendor scripts (Chart.js, Leaflet) are SRI-pinned.
 # - connect-src is deliberately minimal: api.data.gov.my for every dataset,
 #   the S3 bucket the GTFS-static endpoint redirects to, Open-Meteo for
@@ -27,7 +29,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Origin-Agent-Cluster: ?1
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://*.basemaps.cartocdn.com; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.data.gov.my https://*.s3.ap-southeast-1.amazonaws.com https://api.open-meteo.com; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; style-src-attr 'unsafe-inline'; style-src-elem 'self'; img-src 'self' data: https://tile.openstreetmap.org https://*.basemaps.cartocdn.com; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.data.gov.my https://*.s3.ap-southeast-1.amazonaws.com https://api.open-meteo.com; upgrade-insecure-requests
 
 # The service worker must not be cached, or a stale one pins an old app shell.
 /sw.js

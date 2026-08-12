@@ -34,6 +34,62 @@ const json = (body, status = 200, extra = {}) =>
     },
   });
 
+/* ── Upstream parameter allowlists ────────────────────────────────────
+ *
+ * These used to be shape checks (`/^[a-z0-9-]{1,32}$/`), which accept ~10^48
+ * values where the app only ever sends two or three. That mattered more than
+ * it looks: every distinct value is a distinct edge-cache key, so a loop over
+ * junk values never hits cache and turns each proxy route into an
+ * amplifier - one cheap inbound request became a full upstream fetch, and for
+ * /api/rapid a four-request socket.io handshake with a 1.5 s sleep against
+ * Prasarana's kiosk. Enumerating the real values caps the cache-key space, so
+ * upstream load is bounded by the cache TTL no matter what arrives.
+ *
+ * Keep these in sync with the client: GTFS_PAIRS with the feed list in
+ * app.js, FIDS_TERMINALS with F_AIRPORTS. */
+const GTFS_PAIRS = new Set([
+  "ktmb|",
+  "prasarana|rapid-bus-kl",
+  "prasarana|rapid-rail-kl",
+]);
+const FIDS_TERMINALS = new Set([
+  "KLIA", "klia2", "SZB", "PEN", "BKI", "KCH", "LGK",
+  "KBR", "TWU", "AOR", "TGG", "LBU", "IPH",
+]);
+const RAPID_PROVIDERS = new Set(["RKL", "RPG", "RKN"]);
+/* Place names only: letters (incl. accented), digits, space and . ' ( ) -
+ * This is the one route whose value space cannot be enumerated - the MET
+ * location list lives in the upstream payload, not here - so it leans on the
+ * rate limiter below instead. */
+const GEOCODE_Q = /^[\p{L}\p{N} .'()-]{2,60}$/u;
+
+/* Same-origin + rate-limit gate for the proxy routes.
+ *
+ * The previous check was `if (origin && url.origin !== origin) 403`, which
+ * skipped itself whenever the Origin header was absent - that is, for every
+ * non-browser client, which is exactly who abuse comes from. Sec-Fetch-Site
+ * closes that hole: browsers always send it on fetch(), and only our own page
+ * sends `same-origin` (a direct navigation sends `none`). It is still only
+ * checked when present, so a header-stripping extension or an ancient browser
+ * degrades to the rate limiter rather than to a 403.
+ *
+ * The limiter is keyed on IP + path. It is per-colo and best-effort by
+ * design - it is an abuse cap, not a quota - and the binding is optional so
+ * `wrangler dev` and the staging deploy still work without it. */
+async function guard(request, url, env) {
+  const origin = request.headers.get("origin");
+  if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+  const site = request.headers.get("sec-fetch-site");
+  if (site && site !== "same-origin") return json({ error: "forbidden" }, 403);
+  if (env.API_RATE_LIMIT) {
+    const ip = request.headers.get("cf-connecting-ip") || "anon";
+    const { success } = await env.API_RATE_LIMIT.limit({ key: `${ip}|${url.pathname}` });
+    if (!success)
+      return json({ error: "rate_limited" }, 429, { "retry-after": "60" });
+  }
+  return null;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -48,14 +104,13 @@ export default {
           lat < -90 || lat > 90 || lon < -180 || lon > 180)
         return json({ error: "bad_coordinates" }, 400);
 
-      // Round to ~1 km so nearby visitors share one cache entry and we send
-      // far fewer requests upstream. Also avoids storing precise locations.
       // Only same-origin callers. This route exists for our own page; without
       // this it is a free, cached geocoding endpoint for anyone who finds it.
-      const origin = request.headers.get("origin");
-      if (origin && new URL(request.url).origin !== origin)
-        return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
+      // Round to ~1 km so nearby visitors share one cache entry and we send
+      // far fewer requests upstream. Also avoids storing precise locations.
       const rlat = lat.toFixed(2), rlon = lon.toFixed(2);
       const cacheKey = new Request(
         `${url.origin}/api/reverse?lat=${rlat}&lon=${rlon}`, { method: "GET" });
@@ -105,13 +160,17 @@ export default {
     if (url.pathname === "/api/geocode") {
       if (request.method !== "GET")
         return json({ error: "method_not_allowed" }, 405);
-      const q = (url.searchParams.get("q") || "").trim().slice(0, 120);
-      if (!q) return json({ error: "bad_query" }, 400);
-      const origin = request.headers.get("origin");
-      if (origin && new URL(request.url).origin !== origin)
-        return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
+      /* Normalise before validating AND before keying the cache: "Kuala  Lumpur"
+         and "kuala lumpur" are the same lookup, and letting them be two cache
+         entries is the cache-busting hole in miniature. */
+      const q = (url.searchParams.get("q") || "")
+        .trim().replace(/\s+/g, " ").slice(0, 60);
+      if (!q || !GEOCODE_Q.test(q)) return json({ error: "bad_query" }, 400);
       const cacheKey = new Request(
-        `${url.origin}/api/geocode?q=${encodeURIComponent(q)}`, { method: "GET" });
+        `${url.origin}/api/geocode?q=${encodeURIComponent(q.toLowerCase())}`,
+        { method: "GET" });
       const cache = caches.default;
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
@@ -147,13 +206,15 @@ export default {
      * entirely, and edge-caching means the government API sees a handful of
      * requests per day instead of one 8 MB download per visitor. */
     if (url.pathname === "/api/gtfs") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
       const agency = url.searchParams.get("agency") || "";
       const category = url.searchParams.get("category") || "";
-      // Strict allowlist - never interpolate user input into the upstream URL.
-      if (!/^[a-z0-9-]{1,32}$/.test(agency) || (category && !/^[a-z0-9-]{1,32}$/.test(category)))
+      /* Allowlist the PAIR, not each part: "ktmb|rapid-rail-kl" is not a real
+         feed, and each accepted combination is another 8 MB ZIP the edge has
+         to fetch and hold. */
+      if (!GTFS_PAIRS.has(`${agency}|${category}`))
         return json({ error: "bad_agency" }, 400);
 
       const upstream = new URL(`https://api.data.gov.my/gtfs-static/${agency}/`);
@@ -194,17 +255,20 @@ export default {
      * Proxying server-side keeps the kiosk's shared sid private-ish and edge
      * caches for ~25 s so every visitor shares one upstream poll. */
     if (url.pathname === "/api/rapid") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
-      const provider = /^[A-Za-z]{3}$/.test(url.searchParams.get("provider") || "")
-        ? url.searchParams.get("provider").toUpperCase() : "RKL";
-      const route = /^[A-Za-z0-9-]{1,16}$/.test(url.searchParams.get("route") || "")
-        ? url.searchParams.get("route") : "";
-      if (!["RKL", "RPG", "RKN"].includes(provider))
+      const provider = (url.searchParams.get("provider") || "RKL").toUpperCase();
+      if (!RAPID_PROVIDERS.has(provider))
         return json({ error: "bad_provider" }, 400);
+      /* `route` used to be a caller-supplied filter, but the client has always
+         asked for the full fleet and filtered chips locally - so it only ever
+         widened the cache-key space in front of the most expensive upstream
+         call on the site (handshake + 1.5 s sleep per miss). Always request
+         every route; three providers means at most three cache keys. */
+      const route = "";
 
-      const cacheKey = new Request(`${url.origin}/api/rapid?provider=${provider}&route=${route}`);
+      const cacheKey = new Request(`${url.origin}/api/rapid?provider=${provider}`);
       const cache = caches.default;
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
@@ -290,8 +354,8 @@ export default {
      * per-state summary. Edge-caches 5 min - flood telemetry updates every
      * 15 min upstream, so 5 min is a fair sharing window. */
     if (url.pathname === "/api/flood") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
       const FEED = "https://publicinfobanjir.water.gov.my/wp-content/themes/enlighten/data/latestreadingstrendabc.json";
       let res;
@@ -376,8 +440,8 @@ export default {
      * WATCH + 24 h freshness + receding-Warning/Alert exclusion) so the band
      * and the flood section can never disagree. */
     if (url.pathname === "/api/alerts") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
       const now = Date.now();
       const EARTHQUAKE_FEED = "https://api.data.gov.my/weather/warning/earthquake";
@@ -478,8 +542,8 @@ export default {
      * start / KV cleared - where it may legitimately come back null, which
      * the deck simply omits. */
     if (url.pathname === "/api/rapid-alerts") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
       /* KV copy first - fresh, reliable, unmetered by jina. */
       try {
@@ -554,8 +618,8 @@ export default {
      * side by side. All timestamps are the model's hourly snapshot time
      * (Asia/Kuala_Lumpur). Edge-caches 10 min; the model updates hourly. */
     if (url.pathname === "/api/aqi") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
       const CITIES = [
         ["Kuala Lumpur", 3.1390, 101.6869],
@@ -624,15 +688,18 @@ export default {
      * request per TTL regardless of visitors. Boards refresh roughly every
      * minute on the site; 90 s is a fair middle ground. */
     if (url.pathname === "/api/fids") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
 
       const code = url.searchParams.get("code") || "A";
       const terminal = url.searchParams.get("terminal") || "KLIA";
       const dayKey = url.searchParams.get("dayKey") || "0";
       // Strict allowlist - never interpolate user input into the upstream URL.
+      // `terminal` is the 13 airports the board actually offers, not any
+      // 16-char string: each unknown value was a fresh cache key costing up to
+      // six paged upstream fetches.
       if (!/^[AD]$/.test(code)) return json({ error: "bad_code" }, 400);
-      if (!/^[a-zA-Z0-9-]{1,16}$/.test(terminal)) return json({ error: "bad_terminal" }, 400);
+      if (!FIDS_TERMINALS.has(terminal)) return json({ error: "bad_terminal" }, 400);
       if (!/^[0-9]$/.test(dayKey)) return json({ error: "bad_dayKey" }, 400);
 
       /* KV-first: the collect_fids workflow (GitHub IPs) uploads every board
@@ -739,13 +806,22 @@ export default {
         terminal: f.terminal,
         codeshares: (f.codeShareFlights || []).map(c => c.flightNumber),
       }));
+      /* A page that failed above is skipped rather than failing the board, so
+         `slim` can be short of `total`. Serve it - a partial board beats no
+         board - but do NOT cache it: a single transient upstream hiccup would
+         otherwise be frozen under the same key as a complete board and served
+         to everyone for the full TTL, long after the upstream recovered. Only
+         a whole board is worth keeping. */
+      const partial = slim.length < total;
       const out = json({
         count: total,
         returned: slim.length,
-        truncated: slim.length < total,
+        truncated: partial,
         flights: slim,
-      }, 200, { "cache-control": "public, max-age=90" });
-      ctx.waitUntil(cache.put(cacheKey, out.clone()));
+      }, 200, {
+        "cache-control": partial ? "no-store" : "public, max-age=90",
+      });
+      if (!partial) ctx.waitUntil(cache.put(cacheKey, out.clone()));
       return out;
     }
 
@@ -757,8 +833,8 @@ export default {
      * the visitor's IP-derived location (city, region, country, lat/lon), so
      * this route hands that to the app as a fallback. Same-origin only. */
     if (url.pathname === "/api/geoip") {
-      const origin = request.headers.get("origin");
-      if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
       const cf = request.cf || {};
       const out = {
         city: cf.city || null,

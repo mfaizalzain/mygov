@@ -6393,12 +6393,20 @@ function paintRailDiagram(){
   </div>`;
   /* click/tap a station → open OSM at that station */
   host.querySelectorAll(".metro-stn").forEach(g => {
-    g.onclick = () => {
+    const open_ = () => {
       const col = g.closest(".metro-col");
       const line = rail.lines[Number(col.dataset.lineIdx)];
       const stn = line && line.stations[Number(g.dataset.idx)];
       if (!stn || stn.lat == null) return;
       open(`https://www.openstreetmap.org/?mlat=${stn.lat}&mlon=${stn.lon}#map=16/${stn.lat}/${stn.lon}`, "_blank");
+    };
+    g.onclick = open_;
+    /* An SVG <g> cannot be a <button>, so role="button" + tabindex is the
+       right markup here - but the role is a promise the element has to keep.
+       Enter and Space are what a button responds to; without this the station
+       was reachable by keyboard and inert once you got there. */
+    g.onkeydown = e => {
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); open_(); }
     };
   });
   host.hidden = false;
@@ -6660,9 +6668,17 @@ function radarDetail(i){
         ${fc.sebenarnya_url && safeUrl(fc.sebenarnya_url) ? `<a class="rd-sb" href="${esc(fc.sebenarnya_url)}" target="_blank" rel="noopener">
           ${T("Official Sebenarnya.my fact-check")} ↗</a>` : ""}
         ${srcs.length ? `<h5 class="rd-src-h">${T("Sources")}</h5>
-          <ol class="rd-srcs">${srcs.slice(0,5).map(s =>
-            `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.name)}</a>
-             <span class="dim">${esc(s.name)}</span></li>`).join("")}</ol>` : ""}
+          <ol class="rd-srcs">${srcs.slice(0,5).map(s => {
+            /* safeUrl, not just esc: these urls come from the RSS feeds via
+               Gemini, and esc() neutralises quotes but not schemes - a
+               javascript: href would survive it intact. The collector already
+               filters on SAFE_URL; this is the second lock on the same door.
+               An unsafe url still lists the source, just not as a link. */
+            const href = safeUrl(s.url);
+            const label = esc(s.title || s.name);
+            return `<li>${href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${label}</a>` : label}
+             <span class="dim">${esc(s.name)}</span></li>`;
+          }).join("")}</ol>` : ""}
       </div>
     </div>
   </div>`;
@@ -6805,7 +6821,13 @@ function vchip(f, v){
     [T("Last seen"), v.timestamp ? ago(v.timestamp) : "-"],
     [T("Position"), `<span class="mono">${v.lat == null ? "-" : v.lat.toFixed(4) + ", " + v.lon.toFixed(4)}</span>`],
   ].map(([k, val]) => `<div class="vrow"><span>${k}</span><span>${val}</span></div>`).join("");
-  return `<span class="vchip mono" tabindex="0" role="button" aria-label="${esc(v.vehicleId || v.entityId || "train")}">
+  /* role="group", not "button": this chip is a focusable disclosure whose
+     tooltip opens on hover/focus (see .vchip .tip in styles.css). Nothing
+     happens when you press it, so announcing it as a button promised a press
+     that did nothing. It cannot become a real <button> either - the tip
+     contains a link, and interactive content may not nest. "group" is the
+     honest role, and unlike a bare <span> it is one that supports aria-label. */
+  return `<span class="vchip mono" tabindex="0" role="group" aria-label="${esc(v.vehicleId || v.entityId || "train")}">
     ${esc(v.vehicleId || v.entityId || "-")}
     ${v.intercity == null ? "" : `<span class="pill" style="background:${v.intercity ? "var(--warn-dim)" : "var(--accent-dim)"};color:${cssVar("--chip-fg")}">${esc(v.intercity ? T("Intercity / ETS") : T("Komuter"))}</span>`}
     ${v.routeId ? `<span class="pill" style="background:var(--accent-dim);color:${cssVar("--chip-fg")}">${esc(v.routeId)}</span>` : ""}
@@ -6941,6 +6963,25 @@ async function loadTrafficMarquee(){
     `<span class="traffic-run">${items}</span><span class="traffic-run" aria-hidden="true">${items}</span>`;
   band.hidden = false;
   band.title = `${T("Live traffic")} · ${d.updated ? ago(Math.floor(Date.parse(d.updated)/1000)) : ""}`;
+  initTrafficPause(band);
+}
+/* WCAG 2.2.2: the ticker starts moving on its own and never stops, so there
+   has to be a way to stop it that does not depend on hovering. Bound once -
+   the marquee re-renders on refresh, but the button lives in index.html and
+   outlives the innerHTML swap above. */
+function initTrafficPause(band){
+  const btn = $("#traffic-pause");
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = "1";
+  btn.onclick = () => {
+    const paused = band.dataset.paused === "1";
+    band.dataset.paused = paused ? "" : "1";
+    btn.setAttribute("aria-pressed", String(!paused));
+    btn.setAttribute("aria-label", paused ? T("Pause the traffic ticker")
+                                          : T("Resume the traffic ticker"));
+    btn.title = paused ? T("Pause") : T("Resume");
+    btn.firstElementChild.textContent = paused ? "⏸" : "▶";
+  };
 }
 /* Flood risk: KPI row + state chips + status-coloured map. 26 stations is
    small enough to render individual markers (no clustering needed), but the
@@ -6953,8 +6994,13 @@ function renderFlood(d){
   if (!host) return;
   const n = d.atRisk, by = d.stations.length;
   const statCount = s => d.stations.filter(x => x.status === s).length;
+  /* Plain text, not a control: these state counts have no tooltip and no
+     handler - nothing to activate. They were focusable and announced as
+     buttons, which put a stop in every keyboard user's tab order for an
+     element that does nothing. The visible "Selangor 12" already reads
+     correctly, so no ARIA is needed either. */
   const chips = d.states.map(s =>
-    `<span class="vchip mono" tabindex="0" role="button" aria-label="${esc(s.state)} · ${s.count}">
+    `<span class="vchip mono">
       ${esc(s.state.replace(/\s+$/,""))}<b class="cnt">${s.count}</b></span>`).join("");
   host.innerHTML = `
     <div class="grid g3 mb">
@@ -6988,7 +7034,9 @@ function fchip(s){
     [T("Trend"), esc(s.trend || "-")],
     [T("Last reading"), s.ts ? ago(s.ts) : "-"],
   ].map(([k, val]) => `<div class="vrow"><span>${k}</span><span>${val}</span></div>`).join("");
-  return `<span class="vchip mono" tabindex="0" role="button"
+  /* Focusable disclosure, not a button - same reasoning as the vehicle chip:
+     the tip holds a link, so this cannot nest inside a <button>. */
+  return `<span class="vchip mono" tabindex="0" role="group"
     aria-label="${esc(s.name)} · ${esc(s.status)}">
     <span class="dot" style="background:${col}"></span>${esc(s.name.replace(/^Sg\.?\s*/i, "").split(" (")[0])}
     <span class="pill" style="background:${col}22;color:${col}">${esc(s.status)}</span>
@@ -7053,11 +7101,18 @@ function rchip(f, rc, veh, total){
     `<div class="vrow"><span class="mono">${esc(v.vehicleId || "-")}</span>` +
     `<span>${v.speed == null ? "-" : nf(v.speed, 0) + " km/h"} · ${v.timestamp ? ago(v.timestamp) : "-"}</span></div>`).join("")
     + (onRoute.length > 8 ? `<div class="vrow dim">+${onRoute.length - 8} ${T("more buses")}</div>` : "");
-  return `<span class="vchip mono${active ? " on" : ""}" tabindex="0" role="button"
+  /* A real <button>, not a span wearing role="button": this chip toggles the
+     map filter on click, but the click delegate never fired for a keyboard
+     user - they could tab to it, see the focus ring, press Enter and get
+     nothing (WCAG 2.1.1). A button dispatches click on Enter and Space
+     natively, so the existing delegate now serves both. Safe to nest here
+     because this tip holds only text rows - no link, unlike the vehicle and
+     flood-station chips. */
+  return `<button type="button" class="vchip mono${active ? " on" : ""}"
     aria-pressed="${active}" aria-label="${esc(rc.route)} · ${rc.count} ${esc(T("buses"))}"
     data-route="${esc(rc.route)}" data-feed="${f.key}">
     ${esc(rc.route)}<b class="cnt">${rc.count}</b>
-    <span class="tip">${busList}</span></span>`;
+    <span class="tip">${busList}</span></button>`;
 }
 /* 800+ markers on one Leaflet map is a wall of overlapping dots. Grid-cluster
    instead: bucket points into a cell that shrinks as the user zooms in, so

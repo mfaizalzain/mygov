@@ -185,6 +185,20 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   padding:0 3px;border-radius:var(--r-sm);background:var(--accent-dim)}
 .traffic-link:hover{text-decoration:underline;color:var(--fg)}
 .traffic-band:hover .traffic-run,.traffic-band:focus-within .traffic-run{animation-play-state:paused}
+/* The explicit pause is a latch, unlike hover - it has to survive the pointer
+   moving away, so it is a state on the band rather than a :hover rule. */
+.traffic-band[data-paused="1"] .traffic-run{animation-play-state:paused}
+.traffic-pause{position:relative;flex:none;display:flex;align-items:center;justify-content:center;
+  width:22px;height:22px;padding:0;border-radius:var(--r-sm);cursor:pointer;
+  border:1px solid transparent;background:none;color:var(--fg-3);font-size:10px;
+  -webkit-appearance:none;appearance:none;transition:var(--t)}
+/* The glyph is sized to match .traffic-tag next to it, which lands under the
+   24x24 minimum in WCAG 2.5.8 (Target Size). Grow the hit area rather than the
+   button: an invisible inset overlay makes it 30x30 to press (26x26 on the
+   smaller phone variant) while the strip keeps its proportions. */
+.traffic-pause::after{content:"";position:absolute;inset:-4px}
+.traffic-pause:hover{color:var(--fg);border-color:var(--line)}
+.traffic-pause:focus-visible{outline:none;border-color:var(--accent);color:var(--fg)}
 @keyframes mq{to{transform:translateX(-50%)}}
 /* On phones the ticker sat a notch above the surrounding body text and used the
    desktop gutter, so it read as the loudest thing on the page. Drop it to the
@@ -197,6 +211,11 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   .traffic-mq{font-size:11px}
   .traffic-run{animation-duration:110s;padding-right:2.4em}
   .traffic-sep{margin:0 .7em;font-size:8px}
+  /* The glyph shrinks with the rest of the strip, but the press target must
+     not - this is the touch breakpoint, where it is the only way to stop the
+     ticker. A deeper overlay holds it at 28x28. */
+  .traffic-pause{width:18px;height:18px}
+  .traffic-pause::after{inset:-6px}
 }
 /* Active-alert count on a nav item. Only Warnings uses it today; it is set
    from renderHazards()'s own alertN, so the nav and the tile can never
@@ -781,9 +800,18 @@ html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(18
 .vcard .vrow{display:flex;justify-content:space-between;gap:var(--s2);font-size:12.5px;padding:3px 0;color:var(--fg-2)}
 /* live trains: compact chips with hover/focus tooltips instead of cards */
 .vchips{display:flex;flex-wrap:wrap;gap:var(--s2)}
+/* .vchip is used on both <span> (focusable tooltip disclosures) and <button>
+   (the route filter chips), so it neutralises the UA button styling itself -
+   appearance, margin and centred text would otherwise make the two render
+   differently. */
 .vchip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:4px 11px;
   border-radius:99px;border:1px solid var(--line);background:var(--bg-2);
-  font-size:12px;color:var(--fg-2);cursor:help;transition:var(--t);outline:none}
+  font-size:12px;color:var(--fg-2);cursor:help;transition:var(--t);outline:none;
+  -webkit-appearance:none;appearance:none;margin:0;text-align:inherit;font:inherit;
+  font-size:12px}
+/* cursor:help suits a chip that only reveals a tooltip; the route chips
+   actually do something when pressed, so they get the pointer. */
+button.vchip{cursor:pointer}
 .vchip:hover,.vchip:focus-visible{border-color:var(--accent);color:var(--fg)}
 /* route chips: count badge + active (filtered) state - the Live section's
    Rapid feed aggregates 800+ buses into one chip per route */
@@ -1038,6 +1066,13 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
     transition-duration:.001ms!important}
   .kpi:hover,.btn:hover{transform:none}
+  /* The blanket rule above is right for a fade but actively harmful for a
+     marquee: collapsing the duration of a 0→-50% translate does not stop the
+     ticker, it runs it at maximum speed. The user who asked for less motion
+     got the most violent element on the page. Stop it outright and let the
+     first run of items sit still - they stay readable, and the band keeps its
+     pause control for everyone else. */
+  .traffic-run{animation:none!important;transform:none!important}
 }
 /* larger text mode */
 html[data-text="large"] body{font-size:16px}

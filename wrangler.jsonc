@@ -37,8 +37,18 @@
       "kv_namespaces": [
         { "binding": "MYGOV_DATA", "id": "40812fc5fedb4e1fb66d70f75e707f90" }
       ],
-      "vars": {
-        "FIDS_API_KEY": "f02f252a781a4db584d1ae9fce22bed1"
+      // Environments do not inherit top-level bindings, so this is repeated
+      // rather than shared. Same namespace_id is fine - counters are scoped
+      // per Worker, and staging is a different Worker (mygov-staging).
+      "ratelimits": [
+        {
+          "name": "API_RATE_LIMIT",
+          "namespace_id": "1001",
+          "simple": { "limit": 120, "period": 60 }
+        }
+      ],
+      "secrets": {
+        "required": ["FIDS_API_KEY"]
       }
     }
   },
@@ -65,10 +75,34 @@
   "kv_namespaces": [
     { "binding": "MYGOV_DATA", "id": "40812fc5fedb4e1fb66d70f75e707f90" }
   ],
-  // Public API key embedded in malaysiaairports.com.my's JS bundle; declared
-  // as a var (not a secret) so `wrangler deploy` pushes it — set at:
-  // https://dash.cloudflare.com/.../workers/services/mygov/settings/variables
-  "vars": {
-    "FIDS_API_KEY": "f02f252a781a4db584d1ae9fce22bed1"
+  // Abuse cap on /api/* (see guard() in src/index.js), keyed on client IP +
+  // path. 120/min per path is far above what the dashboard itself asks for -
+  // the busiest poller is the live-bus map at roughly one call per 25 s - but
+  // low enough that a scripted loop stops being free. Best-effort and
+  // per-colo by design; the parameter allowlists are what actually bound
+  // upstream load, and this is the backstop for the routes (/api/geocode,
+  // /api/reverse) whose inputs cannot be enumerated.
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 120, "period": 60 }
+    }
+  ],
+  // FIDS upstream key. Public - it ships in malaysiaairports.com.my's own JS
+  // bundle - so the point here is not confidentiality, it is that rotation has
+  // to actually work. As a `vars` entry it did not: `wrangler deploy` deletes
+  // every var and re-sets whatever the config holds, so a key rotated in the
+  // dashboard was silently reverted to the committed one on the next deploy.
+  //
+  // It is a secret now (`wrangler secret put FIDS_API_KEY`), which deploys
+  // never delete, so the dashboard is the source of truth and rotation sticks.
+  // Declaring it here does not reveal it - `secrets.required` is a list of
+  // NAMES. It makes `wrangler deploy` fail with a clear message if the secret
+  // is missing, instead of shipping a Worker whose flight board 401s.
+  //
+  // Local dev reads it from .dev.vars (gitignored).
+  "secrets": {
+    "required": ["FIDS_API_KEY"]
   }
 }
