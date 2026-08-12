@@ -796,6 +796,7 @@ export default {
       "/tourism.json": { key: "tourism", type: "json" },
       "/travel.json":  { key: "travel",  type: "json" },
       "/rapid_alerts.json": { key: "rapid", type: "json" },
+      "/traffic.json":     { key: "traffic", type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {

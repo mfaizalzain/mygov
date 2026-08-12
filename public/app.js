@@ -353,6 +353,7 @@ const I18N = {
   "Avg trips / route":"Purata perjalanan / laluan", "routes":"laluan", "Stops":"Perhentian",
   "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
+  "Live traffic":"Trafik langsung",
   "Intercity / ETS":"Antara bandar / ETS", "Komuter":"Komuter", "Service":"Perkhidmatan",
   "unclassified":"tidak diklasifikasikan",
   "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
@@ -6861,6 +6862,28 @@ function renderLive(d){
   paintMaps();
 }
 
+/* Live traffic marquee: crowd-sourced road reports scrolling under the nav.
+   The InfoTrafikGZ Telegram channel posts live updates in Malay around the
+   clock (collected to KV every 5 min); the strip shows the newest reports
+   as one continuous ticker, pausing on hover. Hidden until data arrives. */
+async function loadTrafficMarquee(){
+  const band = $("#traffic-band");
+  if (!band) return;
+  const d = await fetch("/traffic.json", { cache:"no-store" })
+    .then(r => { if (!r.ok) throw new Error("traffic unavailable"); return r.json(); });
+  const posts = (d.posts || []).slice(0, 12);
+  if (!posts.length) return;
+  const items = posts.map(p => {
+    const t = p.time ? p.time.slice(11,16) : "";
+    return `${esc(t)} ${esc(p.text)}`;
+  }).join("  ·  ");
+  /* Duplicate the run so the loop never has a gap: a marquee only looks
+     seamless when the content is >= 2x the viewport. */
+  $("#traffic-mq").innerHTML =
+    `<span class="traffic-run">${items}</span><span class="traffic-run" aria-hidden="true">${items}</span>`;
+  band.hidden = false;
+  band.title = `${T("Live traffic")} · ${d.updated ? ago(Math.floor(Date.parse(d.updated)/1000)) : ""}`;
+}
 /* Flood risk: KPI row + state chips + status-coloured map. 26 stations is
    small enough to render individual markers (no clustering needed), but the
    same marker styling family as the live vehicles map keeps the theme
@@ -7726,6 +7749,9 @@ function boot(){
   /* Fire-and-forget: availability() can block on a disk check, and nothing
      else in boot() depends on the result. */
   mountAI().catch(() => {});
+  /* Live traffic marquee: loads independently of the sections - it is a
+     nav-adjacent strip, not a section sub-block. */
+  loadTrafficMarquee().catch(() => {});
   setInterval(tick, 30000);
 }
 /* boot() used to wait for the deferred Chart.js global before running - up to

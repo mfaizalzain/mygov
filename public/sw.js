@@ -19,8 +19,9 @@
    v19: on-demand Chart.js/Leaflet, series.json split, "Malaysia at a Glance"
    rename, per-condition weather icons. The cache name keeps the mygov- prefix
    deliberately: it is an internal key, and renaming it only orphans caches.
-   v20: brief icon, holiday/school chip dropdowns. */
-const VERSION    = "mygov-v20";
+   v20: brief icon, holiday/school chip dropdowns.
+   v21: live traffic feed (traffic.json in the data-bundle exclusion). */
+const VERSION    = "mygov-v21";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -146,6 +147,7 @@ self.addEventListener("fetch", event => {
       url.pathname === "/insights.json" || url.pathname === "/forecasts.json" ||
       url.pathname === "/transport_history.json" || url.pathname === "/cars.json" ||
       url.pathname === "/tourism.json" || url.pathname === "/travel.json" ||
+      url.pathname === "/rapid_alerts.json" || url.pathname === "/traffic.json" ||
       url.pathname === "/feed.xml") return;
 
   // Everything else (icons, vendor scripts): cache first.
