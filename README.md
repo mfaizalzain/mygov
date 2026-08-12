@@ -6,8 +6,9 @@ statistics and public transport, in one page.
 **Production:** https://malaysia-at-a-glance.com  
 **Staging / Dev:** https://mygov.faizalmzain.com
 
-No build step, no framework, no npm dependencies at runtime. The whole app is a
-single HTML file plus a service worker, served by a Cloudflare Worker that also
+No build step, no framework, no npm dependencies at runtime. The whole app is
+plain HTML + CSS + JS (index.html, styles.css, app.js) plus a service worker,
+served by a Cloudflare Worker that also
 proxies the reverse-geocoding, GTFS archive, flight-board, live-bus, flood,
 service-alert and air-quality calls.
 
@@ -360,7 +361,9 @@ KV key `travel`, workflow `collect_travel.yml`, sw.js exclusion list updated.
 
 ```
 public/
-  index.html            entire app - markup, design system, logic
+  index.html            markup + shell (SEO snapshot in <noscript>)
+  styles.css            design system + layout (was inline in index.html)
+  app.js                all app logic (was inline; CSP has no unsafe-inline for scripts)
   sw.js                 service worker (offline shell + API fallback)
   manifest.webmanifest  PWA manifest
   icons/                generated PNGs (192, 512, apple-touch)
@@ -474,10 +477,18 @@ the alert deck only gains an AQI card when the worst city is Unhealthy
 
 ### Security
 
-- **CSP** with no `'unsafe-eval'`, `object-src 'none'`, `frame-ancestors
-  'none'`, and a `connect-src` allowlist, plus HSTS, `nosniff`,
-  `X-Frame-Options`, a restrictive `Permissions-Policy` (only `geolocation`,
-  same-origin) and `strict-origin-when-cross-origin` referrer policy. All in
+- **CSP with no inline script execution**: the app's JS lives in `/app.js`,
+  so `script-src` has no `'unsafe-inline'` - inline scripts, inline event
+  handlers and `javascript:` URLs are all refused. `style-src` keeps
+  `'unsafe-inline'` for ~200 dynamic inline styles (charts, skeleton
+  widths) - style injection cannot exfiltrate data or execute code. Plus
+  no `'unsafe-eval'`, `object-src 'none'`, `frame-ancestors 'none'`,
+  `form-action 'none'`, and a `connect-src` allowlist.
+- **HSTS with `preload`** (`max-age=31536000; includeSubDomains`), `nosniff`,
+  `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin`,
+  `Cross-Origin-Resource-Policy: same-origin`, `Origin-Agent-Cluster`,
+  a restrictive `Permissions-Policy` (only `geolocation`, same-origin) and
+  `strict-origin-when-cross-origin` referrer policy. All in
   `public/_headers`.
 - **Chart.js and Leaflet are pinned and SRI-checked**
   (`integrity="sha384-…"`), so altered bytes are refused rather than executed.
@@ -486,8 +497,9 @@ the alert deck only gains an AQI card when the worst city is Unhealthy
   callers - they exist for this page, not as a public proxy.
 - No secrets, tokens or account identifiers are in the repo; the app needs
   none. `.dev.vars` and `.wrangler/` are gitignored.
-- No analytics. The page connects to exactly three hosts: itself (static assets
-  and `/api/*`), `api.data.gov.my` (every dataset, health included) and
+- No analytics. The page connects to a short allowlist: itself (static assets
+  and `/api/*`), `api.data.gov.my` (every dataset, health included),
+  `api.open-meteo.com` (weather live conditions), and
   `tile.openstreetmap.org` (map tiles in the Live section). Every library is self-hosted. The "Buy me a coffee" button is a
   plain link, not their tracking widget. Earthquake and live-vehicle cards
   include an outbound Google Maps link - a normal link the reader chooses to
