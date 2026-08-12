@@ -336,6 +336,12 @@ a.maplink:hover{background:rgba(45,212,191,.12);text-decoration:none;border-colo
 #wx-prose{margin-top:var(--s2)}
 #wx-prose .brief-h{align-items:center;gap:var(--s2)}
 #wx-prose .sec-ico{width:34px;height:34px;border-radius:10px}
+/* Today in brief carries the same badge as the card above it: the two sit in
+   one stack, and only one of them having an icon read as an oversight. The
+   header is baseline-aligned for its wrapping note, so the badge centres
+   itself rather than hanging off the text baseline. */
+#brief-band .brief-h{align-items:center;gap:var(--s2)}
+#brief-band .sec-ico{width:34px;height:34px;border-radius:10px;flex:none}
 /* Animated sky behind the next-hours card. Two pseudo-element layers over the
    normal card background: ::before is a slow-drifting colour wash keyed to the
    WMO class, ::after the motion (falling drops, drifting cloud, sun glow).
