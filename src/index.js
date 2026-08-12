@@ -465,15 +465,33 @@ export default {
     /* Rapid KL service alerts (PULSE) - the latest post only.
      *
      * myrapid.com.my sits behind Incapsula (a JS-challenge WAF), so every
-     * plain HTTP request - page, RSS, wp-json - returns a challenge shell.
-     * The r.jina.ai reader proxy renders the page server-side and returns
-     * clean markdown, which we parse for the newest alert (title, excerpt,
-     * timestamp, link). We keep only the LATEST item - the dashboard shows
-     * one card, not a feed. Edge-caches 10 min: alerts change a handful of
-     * times a day, and caching keeps jina (free tier) to a trickle. */
+     * plain HTTP request - page, RSS, wp-json (which additionally returns
+     * 401 rest_forbidden for anonymous reads) - fails. The r.jina.ai reader
+     * proxy renders the page server-side and returns clean markdown, which
+     * we parse for the newest alert (title, excerpt, timestamp, link). We
+     * keep only the LATEST item - the dashboard shows one card, not a feed.
+     *
+     * Fetch strategy: the collect_rapid GitHub Action runs every 10 min from
+     * GitHub's IP pool (jina's free tier rate-limits Cloudflare Worker
+     * egress to null) and stores the result in KV under "rapid". This route
+     * prefers that KV copy and only falls back to a live jina fetch on cold
+     * start / KV cleared - where it may legitimately come back null, which
+     * the deck simply omits. */
     if (url.pathname === "/api/rapid-alerts") {
       const origin = request.headers.get("origin");
       if (origin && url.origin !== origin) return json({ error: "forbidden" }, 403);
+
+      /* KV copy first - fresh, reliable, unmetered by jina. */
+      try {
+        const kv = await env.MYGOV_DATA.get("rapid");
+        if (kv != null) {
+          const parsed = JSON.parse(kv);
+          if (parsed && parsed.latest) {
+            const out = json(parsed, 200, { "cache-control": "public, max-age=300" });
+            return out;
+          }
+        }
+      } catch { /* fall through to the live fetch */ }
 
       const JINA = "https://r.jina.ai/https://myrapid.com.my/pulse/service-alerts-on-pulse/";
       let latest = null;
@@ -753,6 +771,7 @@ export default {
       "/cars.json": { key: "cars", type: "json" },
       "/tourism.json": { key: "tourism", type: "json" },
       "/travel.json":  { key: "travel",  type: "json" },
+      "/rapid_alerts.json": { key: "rapid", type: "json" },
       "/feed.xml":    { key: "feed",   type: "text" },
     };
     if (KV_FILES[url.pathname]) {
