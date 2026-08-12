@@ -35,9 +35,23 @@ jobs:
           python3 -m pip install --quiet --disable-pip-version-check pytest
           python3 -m pytest tests/test_forecast.py -q
 
-      # The collector reads the other collectors' committed output. Those are
-      # refreshed to KV twice daily; the committed copies are the cold-start
-      # fallback and are what this job sees.
+      # The collector reads the other collectors' output. Those live in KV
+      # (refreshed on each collector's schedule); the git-committed copies are
+      # only the cold-start fallback and would be stale here - the slow-data
+      # run at 00:30 UTC publishes yesterday's exchange rate, and a brief
+      # built from the committed file would cite the day-before-yesterday
+      # figure. Pull the freshest KV copies first (|| true: if KV is empty on
+      # a brand-new namespace the committed fallbacks still work).
+      - name: Pull freshest collector data from KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          python3 tools/kv_upload.py pull slow public/slow.json || true
+          python3 tools/kv_upload.py pull health public/health.json || true
+          python3 tools/kv_upload.py pull prices public/prices.json || true
+          python3 tools/kv_upload.py pull radar public/radar.json || true
+
       - name: Run collector (forecasts + brief)
         run: python3 tools/collect_insights.py
 
