@@ -357,6 +357,20 @@ export default {
       const denied = await guard(request, url, env);
       if (denied) return denied;
 
+      /* KV-first: the collect_hazards workflow uploads the slim flood result
+         under "flood". Serving that skips the 1.3 MB upstream fetch and the
+         per-request filter/summary pass; the live fetch below is only the
+         fallback. */
+      try {
+        const kv = await env.MYGOV_DATA.get("flood");
+        if (kv != null) {
+          const parsed = JSON.parse(kv);
+          if (parsed && Array.isArray(parsed.stations)) {
+            return json(parsed, 200, { "cache-control": "public, max-age=300" });
+          }
+        }
+      } catch { /* corrupt or missing KV value - fall through to live fetch */ }
+
       const FEED = "https://publicinfobanjir.water.gov.my/wp-content/themes/enlighten/data/latestreadingstrendabc.json";
       let res;
       try {
@@ -442,6 +456,18 @@ export default {
     if (url.pathname === "/api/alerts") {
       const denied = await guard(request, url, env);
       if (denied) return denied;
+
+      /* KV-first: combined earthquake + flood summary from collect_alerts.py.
+         The live branch below stays as the fallback when KV is empty. */
+      try {
+        const kv = await env.MYGOV_DATA.get("alerts");
+        if (kv != null) {
+          const parsed = JSON.parse(kv);
+          if (parsed && Array.isArray(parsed.earthquakes) && parsed.flood) {
+            return json(parsed, 200, { "cache-control": "public, max-age=60" });
+          }
+        }
+      } catch { /* corrupt or missing KV value - fall through to live fetch */ }
 
       const now = Date.now();
       const EARTHQUAKE_FEED = "https://api.data.gov.my/weather/warning/earthquake";
@@ -620,6 +646,19 @@ export default {
     if (url.pathname === "/api/aqi") {
       const denied = await guard(request, url, env);
       if (denied) return denied;
+
+      /* KV-first: collect_aqi.py fans out to Open-Meteo on a schedule and
+         stores the ranked result. The live fan-out below remains the fallback
+         for cold starts / KV cleared. */
+      try {
+        const kv = await env.MYGOV_DATA.get("aqi");
+        if (kv != null) {
+          const parsed = JSON.parse(kv);
+          if (parsed && Array.isArray(parsed.stations) && parsed.stations.length) {
+            return json(parsed, 200, { "cache-control": "public, max-age=600" });
+          }
+        }
+      } catch { /* corrupt or missing KV value - fall through to live fetch */ }
 
       const CITIES = [
         ["Kuala Lumpur", 3.1390, 101.6869],

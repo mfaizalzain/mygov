@@ -50,6 +50,9 @@ FILES = {
     "traffic": "public/traffic.json",
     "fids": "public/fids.json",
     "election": "public/election.json",
+    "aqi": "public/aqi.json",
+    "flood": "public/flood.json",
+    "alerts": "public/alerts.json",
     "feed": "public/feed.xml",
 }
 

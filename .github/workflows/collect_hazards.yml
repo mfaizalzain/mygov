@@ -1,0 +1,70 @@
+name: Collect Live Hazards (AQI, Flood, Alerts)
+
+on:
+  schedule:
+    # Every 10 minutes. The sources update continuously; this keeps KV fresh
+    # while the Worker serves the cached/slimmed result to all visitors.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collect-hazards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.11'
+
+      - name: Syntax-check collectors
+        run: |
+          python3 -m py_compile tools/collect_aqi.py tools/collect_flood.py tools/collect_alerts.py tools/kv_upload.py
+          echo "syntax OK"
+
+      - name: Run collectors
+        run: |
+          python3 tools/collect_aqi.py || echo "AQI collector failed"
+          python3 tools/collect_flood.py || echo "Flood collector failed"
+          python3 tools/collect_alerts.py || echo "Alerts collector failed"
+
+      - name: Validate outputs
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+
+          ok = []
+          if os.path.exists('public/aqi.json'):
+              d = json.load(open('public/aqi.json'))
+              assert isinstance(d.get('stations'), list), 'aqi stations missing'
+              assert len(d['stations']) >= 12, f'aqi has only {len(d["stations"])} stations'
+              assert d.get('worst') and d.get('cleanest'), 'aqi worst/cleanest missing'
+              ok.append('aqi')
+
+          if os.path.exists('public/flood.json'):
+              d = json.load(open('public/flood.json'))
+              assert isinstance(d.get('stations'), list), 'flood stations missing'
+              assert d.get('at_risk') == len(d['stations']), 'flood count mismatch'
+              ok.append('flood')
+
+          if os.path.exists('public/alerts.json'):
+              d = json.load(open('public/alerts.json'))
+              assert isinstance(d.get('earthquakes'), list), 'alerts earthquakes missing'
+              assert isinstance(d.get('flood'), dict) and 'top' in d['flood'], 'alerts flood missing'
+              ok.append('alerts')
+
+          if not ok:
+              sys.exit('no hazard collector produced a valid output')
+          print('OK:', ', '.join(ok))
+          PY
+
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push aqi flood alerts
