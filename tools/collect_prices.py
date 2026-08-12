@@ -67,6 +67,11 @@ MIN_DISTRICT_COVERAGE = 0.5  # basket items must appear in >=half the districts
 MIN_PREMISE_ITEMS = 15       # premises below this are not ranked in `cheapest`
 MIN_DISTRICT_ITEMS = 30      # districts below this get no spatial index
 TOP_PREMISES = 3             # cheapest premises listed per district
+# Per-item district ranking (`itemGeo`). A district median for a *single* item
+# can rest on one or two enumerator visits, which is noise rather than a price
+# level - require a floor before the district is ranked for that item at all.
+MIN_ITEM_DISTRICT_OBS = 5
+TOP_ITEM_DISTRICTS = 5       # cheapest/dearest districts listed per item
 OUTLIER_LO, OUTLIER_HI = 0.2, 5.0   # keep prices within [0.2x, 5x] item median
 
 # Premise types that sell groceries. Prepared-food outlets (Restoran *,
@@ -273,8 +278,12 @@ def main():
     # basket. Latest month only - this is a snapshot, not a trend.
     cur_month = b[b.ym == latest_ym]
     nat_now = cur_month.groupby("item_code").price.median()
-    d_med = cur_month.groupby(["state", "district", "item_code"]).price.median()
-    d_med = d_med.reset_index()
+    # `n` (observation count) rides along for itemGeo below. The district index
+    # itself deliberately does NOT filter on it - adding a floor here would
+    # silently move every published district number.
+    d_med = cur_month.groupby(["state", "district", "item_code"]).price.agg(
+        ["median", "size"]).reset_index()
+    d_med = d_med.rename(columns={"median": "price", "size": "n"})
     d_med["rel"] = d_med.price / d_med.item_code.map(nat_now)
 
     districts = {}
@@ -323,6 +332,33 @@ def main():
         if ranked:
             cheapest[district] = ranked[:TOP_PREMISES]
 
+    # ── 5. cheapest / dearest districts per item ──────────────────────────
+    # Same relative-price trick as the district index, but held at item level
+    # instead of collapsed: rel is this district's median for THIS item over
+    # the national median for it, so 0.88 means 12% below the national price.
+    #
+    # Only the extremes are shipped. The full 198x166 matrix is ~400 KB of
+    # mostly uninteresting middle; the tails are what answers "where is this
+    # cheapest". Districts must clear MIN_ITEM_DISTRICT_OBS for the item and
+    # already carry a spatial index, so a district that failed the basket
+    # thresholds cannot reappear here.
+    ranked_geo = d_med[(d_med.n >= MIN_ITEM_DISTRICT_OBS)
+                       & (d_med.district.isin(districts))]
+    item_geo = {}
+    for code, g in ranked_geo.groupby("item_code"):
+        if len(g) < TOP_ITEM_DISTRICTS * 2:
+            continue          # too few districts to speak of a spread at all
+        g = g.sort_values("rel")
+        pick = lambda rows: [[str(x.district), r((x.rel - 1) * 100, 1)]
+                             for x in rows.itertuples()]
+        item_geo[str(int(code))] = {
+            "lo": pick(g.head(TOP_ITEM_DISTRICTS)),
+            "hi": pick(g.tail(TOP_ITEM_DISTRICTS).iloc[::-1]),
+            "nd": int(len(g)),
+        }
+    sys.stderr.write(f"  itemGeo: {len(item_geo)} items ranked across districts "
+                     f"(>={MIN_ITEM_DISTRICT_OBS} obs each)\n")
+
     payload = {
         "generated": dt.date.today().isoformat(),
         "asOf": as_of,
@@ -345,6 +381,7 @@ def main():
         "items": item_rows,
         "districts": districts,
         "cheapest": cheapest,
+        "itemGeo": item_geo,
     }
 
     with open(OUT, "w") as f:

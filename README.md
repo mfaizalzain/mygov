@@ -135,7 +135,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
 KPDN enumerators record the shelf price of ~340 grocery items at ~2,100
 premises across all 177 districts, daily. `tools/collect_prices.py` turns that
-into `public/prices.json` (~87 KB).
+into `public/prices.json` (~131 KB).
 
 **It is not on the OpenAPI.** `pricecatcher` carries `exclude_openapi: true`,
 so `api.data.gov.my/data-catalogue/?id=pricecatcher` answers `404`. It exists
@@ -165,6 +165,26 @@ sampling rather than the prices:
 basis, never on a raw basket total - a shop carrying only the cheap half of the
 basket must not be reported as the cheapest shop in town. A premise needs 15+
 basket items before it is ranked at all.
+
+`itemGeo` holds the spatial index **per item** rather than collapsed to one
+number per district: for each basket item, the 5 cheapest and 5 dearest
+districts, as a percentage against that item's national median. Multiplying it
+back through the item's national median gives the local ringgit figure the UI
+shows ("Where it's cheapest" under Biggest movers). Only the tails ship - the
+full 198 × 166 matrix is ~400 KB of uninteresting middle, against ~44 KB for
+the extremes. A district needs 5+ recorded prices for that item and must
+already carry a spatial index, so one that failed the basket thresholds cannot
+reappear at item level. That floor applies to `itemGeo` alone: adding it to the
+district index would silently move every published district number.
+
+**What it does and does not answer.** "Where is chicken cheapest" - yes,
+district by district. "Which *shop* has the cheapest chicken" - no, and not
+from this dataset: premise × item is sparse (most premises price a fraction of
+the basket) and the matrix is far too large to ship. Basket-level `cheapest`
+remains the answer for "which shops near me are cheap". Note also that
+PriceCatcher records specific brands and pack sizes, so part of any gap is
+which variety gets stocked locally rather than what it costs - the UI says so
+beneath the table.
 
 Sanity checks that the numbers are right, not merely plausible:
 

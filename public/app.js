@@ -56,6 +56,9 @@ const I18N = {
   "Biggest movers":"Perubahan terbesar", "12 months":"12 bulan",
   "Filter movers":"Tapis perubahan", "Risers":"Naik", "Fallers":"Turun", "All":"Semua",
   "Prices near you":"Harga berhampiran anda",
+  "Where it's cheapest":"Di mana paling murah",
+  "Cheapest district":"Daerah termurah", "Dearest district":"Daerah termahal",
+  "Each district's median for that item against the national median, latest month, counting only districts with at least five recorded prices for it. PriceCatcher records specific brands and pack sizes, so part of a gap is which variety gets stocked locally, not only what it costs.":"Median daerah bagi barangan itu berbanding median kebangsaan, bulan terkini, mengira hanya daerah dengan sekurang-kurangnya lima harga direkodkan untuknya. PriceCatcher merekod jenama dan saiz pek tertentu, jadi sebahagian jurang ialah jenis yang distok tempatan, bukan hanya kosnya.",
   "100 = national average":"100 = purata kebangsaan",
   "Choose a district":"Pilih daerah", "Choose a district…":"Pilih daerah…",
   "Groceries y/y":"Barangan runcit t/t",
@@ -3258,7 +3261,40 @@ function paintMovers(d){
     rows.map(i => [i.u ? `${i.n} · ${i.u}` : i.n, nf(price(i), 2),
                    i.mom == null ? "-" : nf(i.mom, 1) + "%",
                    i.yoy == null ? "-" : nf(i.yoy, 1) + "%"]),
-    [1, 2, 3]);
+    [1, 2, 3])
+    + geoTableHTML(d, rows, price);
+}
+
+/* "Where it's cheapest": the same items again, but placed rather than dated.
+   A fifth column overflows the movers card at half-grid width (see above), so
+   this rides underneath as its own table instead of widening that one.
+
+   itemGeo ships a percentage against the national median; multiplying it back
+   through the item's own national median turns it into the ringgit figure
+   people actually compare. */
+function geoTableHTML(d, rows, price){
+  const geo = d.itemGeo;
+  if (!geo) return "";                     // payload predates the collector change
+  const cell = (pair, base) => {
+    if (!pair) return "";
+    const [district, pct] = pair;
+    const local = base != null ? base * (1 + pct / 100) : null;
+    return local != null
+      ? `${district} · RM${nf(local, 2)} (${pct > 0 ? "+" : ""}${nf(pct, 1)}%)`
+      : `${district} (${pct > 0 ? "+" : ""}${nf(pct, 1)}%)`;
+  };
+  const body = rows.map(i => {
+    const g = geo[String(i.c)];
+    if (!g) return null;
+    const base = price(i);
+    return [i.u ? `${i.n} · ${i.u}` : i.n,
+            cell(g.lo && g.lo[0], base),
+            cell(g.hi && g.hi[0], base)];
+  }).filter(Boolean);
+  if (!body.length) return "";
+  return `<div class="sub" style="margin:var(--s4) 0 var(--s2)">${T("Where it's cheapest")}</div>`
+    + dataTableHTML([T("Item"), T("Cheapest district"), T("Dearest district")], body)
+    + `<p class="note">${T("Each district's median for that item against the national median, latest month, counting only districts with at least five recorded prices for it. PriceCatcher records specific brands and pack sizes, so part of a gap is which variety gets stocked locally, not only what it costs.")}</p>`;
 }
 
 function paintNear(d){
