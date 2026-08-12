@@ -8,14 +8,16 @@ statistics and public transport, in one page.
 
 No build step, no framework, no npm dependencies at runtime. The whole app is a
 single HTML file plus a service worker, served by a Cloudflare Worker that also
-proxies the reverse-geocoding, GTFS archive, flight-board and live-bus calls.
+proxies the reverse-geocoding, GTFS archive, flight-board, live-bus, flood,
+service-alert and air-quality calls.
 
 ## AI agents: MCP connector
 
 The same data is available to AI coding agents through an official MCP plugin -
 **[mfaizalzain/mygov-mcp](https://github.com/mfaizalzain/mygov-mcp)** - exposing
 weather, fuel prices, CPI/OpenDOSM, GTFS transit, live Rapid bus positions, flood
-risk, groceries and monthly tourism arrivals as **ten read-only tools**.
+risk, groceries, monthly tourism arrivals, the latest Rapid KL service alert and
+live air quality as **twelve read-only tools**.
 Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 (universal plugin directory). No API key, same rate-limit rules as the app.
 
@@ -25,7 +27,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 
 | Section | Source | Contents |
 | --- | --- | --- |
-| Warnings & Hazards | MET Malaysia, JPS | Everything currently on issue, as a **status strip** of two tiles. The first merges severe-weather warnings and earthquakes within 500 km in the last 24 h into **one alert carousel** (filter chips: all / weather / earthquakes / my area / marine); the second is water-level stations at danger / warning / alert from JPS telemetry, which keeps its own tile because it mounts a status-coloured map with per-state counts and station chips. A tile expands into its detail only when that hazard is active, so a quiet day is one row rather than five screens. Live only - nothing here is historical |
+| Warnings & Hazards | MET Malaysia, JPS, Prasarana (myRapid), Open-Meteo | Everything currently on issue, as a **status strip** of three tiles. The first merges severe-weather warnings, earthquakes within 500 km in the last 24 h, flood-risk stations, the **latest Rapid KL service alert** and **live air quality** into **one alert carousel** (filter chips: all / weather / earthquakes / my area / marine; Rapid + AQI ride under All Malaysia only). The second is water-level stations at danger / warning / alert from JPS telemetry, which keeps its own tile because it mounts a status-coloured map with per-state counts and station chips. The third is air quality for **18 major cities as comparison cards**, worst first, with the cleanest station for contrast; the deck only gains an AQI alert card when the worst city is Unhealthy (US AQI 101+ - the haze threshold). A tile expands into its detail only when that hazard is active, so a quiet day is one row rather than five screens. Live only - nothing here is historical |
 | Weather | MET Malaysia, Open-Meteo | Live current conditions at your location on a map (temperature, feels-like, humidity, wind), a **next-12-hours strip** (hour, condition, rain probability), a plain-language **"next few hours" line under Today in brief**, and the 7-day MET outlook for all 360 locations, from states down to towns and highland resorts |
 | Household | Ministry of Finance, KPDN | Weekly RON95 / RON97 / diesel ceiling prices, household income, and the PriceCatcher groceries basket (a merged **Groceries sub-block** with per-district price levels) |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
@@ -82,7 +84,7 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
 
 ## Collectors: how the data gets here
 
-Five collectors pre-fetch everything that changes at most daily, so visitors
+Collectors pre-fetch everything that changes at most daily, so visitors
 spend zero API budget on it. All run as GitHub Actions and produce a static
 JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
@@ -96,6 +98,7 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers **and top EV makers** (current + previous year) |
 | Tourism | `collect_tourism.yml`, monthly 2nd 02:30 UTC | `public/tourism.json` | Tourism Malaysia visitor-arrivals PDF - top-51 table with month, y/y vs 2025 and 2019, YTD (May 2026 seeded) |
 | Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and one English line each (Gemini, deterministic fallback) |
+| Rapid KL alerts | `collect_rapid.yml`, every 10 min | `public/rapid_alerts.json` | the **latest** myRapid PULSE service alert (title, excerpt, link, MYT timestamp). The source is behind Incapsula (a JS-challenge WAF; its wp-json also returns 401 for anonymous reads), so the collector scrapes it through the **r.jina.ai reader proxy** - run from GitHub's IP pool because jina's free tier rate-limits Cloudflare Worker egress to null |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
 > unfiltered push also re-uploads the git-committed copies of the files that
@@ -363,7 +366,7 @@ public/
   icons/                generated PNGs (192, 512, apple-touch)
   vendor/               self-hosted Chart.js, Leaflet (SRI-pinned)
 src/
-  index.js              Worker: static assets + /api/reverse, /api/gtfs, /api/fids, /api/rapid, /api/flood
+  index.js              Worker: static assets + /api/reverse, /api/geocode, /api/gtfs, /api/fids, /api/rapid, /api/flood, /api/alerts, /api/rapid-alerts, /api/aqi
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
   collect_radar.py      Trend Radar collector (see above)
@@ -372,13 +375,15 @@ tools/
   collect_prices.py     PriceCatcher basket index → public/prices.json
   collect_geo.py        sub-national population + seat socioeconomics → public/geo.json
   collect_insights.py   forecasts + daily briefing → public/{forecasts,insights}.json
+  collect_rapid.py      latest Rapid KL PULSE alert via r.jina.ai → public/rapid_alerts.json
   embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```
 
-The Worker serves `public/` through the `ASSETS` binding and owns five routes,
-`/api/reverse`, `/api/gtfs`, `/api/fids`, `/api/rapid` and `/api/flood`.
-Everything else is static.
+The Worker serves `public/` through the `ASSETS` binding and owns the API
+routes - `/api/reverse`, `/api/geocode`, `/api/gtfs`, `/api/fids`,
+`/api/rapid`, `/api/flood`, `/api/alerts`, `/api/rapid-alerts` and
+`/api/aqi`. Everything else is static.
 
 > Static assets are served by Cloudflare's asset router **without invoking the
 > Worker**, so response headers for them come from `public/_headers`, not from
@@ -386,10 +391,10 @@ Everything else is static.
 
 ### Why there is a Worker at all
 
-Three of the four routes exist because the upstream API cannot be called from
-the browser; the fourth exists because the browser could not render 800+ live
-markers efficiently. The weather section can centre itself on wherever you are,
-which needs reverse geocoding. That call cannot be made from the browser:
+Most routes exist because the upstream API cannot be called from the browser,
+or because the payload needs slimming server-side. The weather section can
+centre itself on wherever you are, which needs reverse geocoding. That call
+cannot be made from the browser:
 
 1. `nominatim.openstreetmap.org` returns **no `access-control-allow-origin`
    header**, so a direct browser request is blocked by CORS.
@@ -444,6 +449,28 @@ slims each station to name, coordinates, level, threshold margin, trend and
 timestamp, adds a per-state count, and edge-caches for 5 minutes (upstream
 telemetry updates every 15). The page renders status-coloured markers on the
 map and one chip per station with the details in a tooltip.
+
+The sixth route, `/api/rapid-alerts`, serves the latest Rapid KL service
+alert card. myrapid.com.my sits behind Incapsula (a JS-challenge WAF), so no
+plain HTTP client - page, RSS, or its wp-json (which answers `401
+rest_forbidden` for anonymous reads) - can reach the PULSE alerts. The
+route's primary data is the `rapid` KV key written every 10 minutes by the
+`collect_rapid` workflow, which scrapes the page through the **r.jina.ai
+reader proxy** (from GitHub's IP pool - jina's free tier rate-limits
+Cloudflare Worker egress to null) and parses the newest post. The route
+falls back to a live jina fetch on cold start, and the dashboard reads
+`rapid_alerts.json` same-origin (KV first, committed file as cold-start
+copy), the same pattern as the other collectors.
+
+The seventh route, `/api/aqi`, backs the air quality tile and alert card.
+The official APIMS feed (eqms.doe.gov.my) resets connections for non-browser
+clients, so the Worker polls **Open-Meteo's air-quality model** (free,
+keyless - the same provider the weather section already uses) for **18 major
+cities** in parallel, returns every station's US AQI and PM2.5 sorted
+worst-first plus the cleanest for comparison, and edge-caches 10 minutes
+(the model updates hourly). The page renders one comparison card per city;
+the alert deck only gains an AQI card when the worst city is Unhealthy
+(US AQI 101+, the haze threshold).
 
 ### Security
 
