@@ -39,6 +39,22 @@ def load(path):
         return None
 
 
+def load_slow():
+    """slow.json merged with series.json.
+
+    collect_slow.py splits the heavy series (finance, mobility, economy) into
+    series.json so the browser does not download them during boot. Consumers
+    here still want one dict, and an older slow.json that predates the split
+    still carries the keys - so merge when the file exists and fall back to
+    whatever slow.json holds when it does not.
+    """
+    slow = load("public/slow.json") or {}
+    for k, v in (load("public/series.json") or {}).items():
+        if k != "generated":
+            slow.setdefault(k, v)
+    return slow
+
+
 def f2(x):
     return f"{x:.2f}" if isinstance(x, (int, float)) else "-"
 
@@ -199,7 +215,7 @@ def make_feed(radar):
 def main():
     radar = load("public/radar.json")
     health = load("public/health.json")
-    slow = load("public/slow.json")
+    slow = load_slow()
     embed(radar, health, slow)
     make_feed(radar)
 

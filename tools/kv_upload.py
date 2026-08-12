@@ -34,6 +34,7 @@ NAMESPACE_ID = "40812fc5fedb4e1fb66d70f75e707f90"  # MYGOV_DATA
 BASE = "https://api.cloudflare.com/client/v4"
 FILES = {
     "slow": "public/slow.json",
+    "series": "public/series.json",
     "health": "public/health.json",
     "radar": "public/radar.json",
     "prices": "public/prices.json",
@@ -100,7 +101,7 @@ def push(include_snap=False, only=None):
             import embed_seo
             radar = embed_seo.load("public/radar.json")
             health = embed_seo.load("public/health.json")
-            slow = embed_seo.load("public/slow.json")
+            slow = embed_seo.load_slow()
             lines = embed_seo.snapshot(radar, health, slow)
             if lines:
                 put("seo_snap", "\n".join(lines))

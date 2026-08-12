@@ -29,6 +29,12 @@ import urllib.request
 
 BASE = "https://api.data.gov.my/"
 OUT = "public/slow.json"
+# The heavy series (finance, mobility, economy) live in their own file.
+# slow.json is fetched during boot because the eager fuel section reads it;
+# those three blobs are ~91% of the payload and are only ever read by LAZY
+# sections, so shipping them at boot cost every visitor ~110 KB compressed
+# for data most never scroll to. See readSeries() in public/app.js.
+OUT_SERIES = "public/series.json"
 STALE_DAYS = 5
 
 
@@ -313,14 +319,8 @@ def main():
         sys.stderr.write(f"fetch failed: {e}\n")
         raise SystemExit(1)
 
-    payload = {
+    series = {
         "generated": today,
-        "fuel": {
-            "rows": [[r["date"], num(r.get("ron95")), num(r.get("ron97")), num(r.get("diesel"))] for r in lv],
-            "latest": (lv[-1] if lv else None),
-            "prev": (lv[-2] if len(lv) > 1 else None),
-            "hh": hh_rows, "hhFresh": bool(hh_latest), "hhLatest": hh_latest,
-        },
         "finance": {
             "fx": avg, "fxd": dly,
             "fpx": [[r["date"], num(r.get("value")), num(r.get("volume"))] for r in (fpx or [])],
@@ -339,15 +339,26 @@ def main():
             "gdp": [[r["date"], num(r.get("value"))] for r in (gdp or [])
                     if r.get("series") == "abs" or r.get("series") is None],
         },
+    }
+    payload = {
+        "generated": today,
+        "fuel": {
+            "rows": [[r["date"], num(r.get("ron95")), num(r.get("ron97")), num(r.get("diesel"))] for r in lv],
+            "latest": (lv[-1] if lv else None),
+            "prev": (lv[-2] if len(lv) > 1 else None),
+            "hh": hh_rows, "hhFresh": bool(hh_latest), "hhLatest": hh_latest,
+        },
         "population": {"trend": trend, "latest": latest, "ethnicity": ethnicity},
         "holidays": hol,
         "school": sch,
     }
-    with open(OUT, "w") as f:
-        json.dump(payload, f, separators=(",", ":"))
-    sizes = {k: len(json.dumps(v, separators=(",", ":"))) for k, v in payload.items() if k != "generated"}
-    sys.stderr.write(f"wrote {OUT} ({len(open(OUT).read())} bytes): "
-                     + ", ".join(f"{k}={v}" for k, v in sizes.items()) + "\n")
+    for path, doc in ((OUT, payload), (OUT_SERIES, series)):
+        with open(path, "w") as f:
+            json.dump(doc, f, separators=(",", ":"))
+        sizes = {k: len(json.dumps(v, separators=(",", ":")))
+                 for k, v in doc.items() if k != "generated"}
+        sys.stderr.write(f"wrote {path} ({len(open(path).read())} bytes): "
+                         + ", ".join(f"{k}={v}" for k, v in sizes.items()) + "\n")
 
 
 if __name__ == "__main__":

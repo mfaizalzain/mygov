@@ -761,6 +761,7 @@ export default {
      * see fresh headline values without any bot commits. */
     const KV_FILES = {
       "/slow.json":   { key: "slow",  type: "json" },
+      "/series.json": { key: "series", type: "json" },
       "/health.json": { key: "health", type: "json" },
       "/radar.json":  { key: "radar",  type: "json" },
       "/prices.json": { key: "prices", type: "json" },

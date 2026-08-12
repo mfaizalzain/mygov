@@ -481,6 +481,12 @@ def main():
     args = ap.parse_args()
 
     slow = load("public/slow.json")
+    # The heavy series moved to series.json (see collect_slow.py); merge so
+    # slow["finance"] et al keep resolving, and an older combined slow.json
+    # still works because setdefault leaves its own keys alone.
+    for _k, _v in (load("public/series.json") or {}).items():
+        if _k != "generated":
+            slow.setdefault(_k, _v)
     health = load("public/health.json")
     prices = load("public/prices.json")
     radar = load("public/radar.json")

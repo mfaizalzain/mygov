@@ -1070,7 +1070,7 @@ function byDivision(rows){
 }
 
 async function loadEconomy(){
-  const slow = await readSlow();
+  const slow = await readSeries();
   if (slow && slow.economy) return slow.economy;
   const core = await request("opendosm", "/opendosm", { id:"cpi_core" });
   /* Only the all-items line is charted against core, so filter the division
@@ -1121,7 +1121,7 @@ async function loadEconomy(){
 }
 
 async function loadFinance(){
-  const slow = await readSlow();
+  const slow = await readSeries();
   if (slow && slow.finance) return slow.finance;
   const fx = await request("data-catalogue", "/data-catalogue",
     { id:"exchangerates", sort:"-date" });
@@ -1185,7 +1185,7 @@ const KTMB_SERVICES = [
 ];
 
 async function loadMobility(){
-  const slow = await readSlow();
+  const slow = await readSeries();
   await readForecasts();          // additive; null is a fine outcome
   let cars = null;
   try {
@@ -1429,6 +1429,30 @@ function renderHolWidget(){
   band.hidden = false;
 }
 
+/* The heavy series (finance, mobility, economy) moved out of slow.json into
+   series.json: slow.json is on the boot path because the eager fuel section
+   reads it, and those three blobs were ~91% of it while only ever being read
+   by lazy sections.
+
+   The fallback matters during a deploy: a Worker still serving the previous
+   slow.json from KV has no series.json to give, but that older payload still
+   carries the three keys, so reading them from slow.json keeps finance,
+   mobility and economy working until the next collector run. */
+let seriesData = null;
+async function readSeries(){
+  if (seriesData) return seriesData;
+  try {
+    const r = await fetch("series.json", { cache:"no-store" });
+    if (r.ok){
+      const j = await r.json();
+      const fresh = j.generated &&
+        (Date.now() - Date.parse(j.generated + "T00:00:00Z")) < 6 * DAY_MS;
+      if (fresh){ seriesData = j; return seriesData; }
+    }
+  } catch { /* fall through to the combined file */ }
+  seriesData = await readSlow();
+  return seriesData;
+}
 let slowData = null;
 async function readSlow(){
   if (slowData) return slowData;
@@ -1560,14 +1584,13 @@ async function loadTransport(){
   /* KTMB ridership used to sit in the Vehicles section, next to car
      registrations - the same operator whose schedules are here and whose
      trains are in Live, split across three nav entries. It belongs with the
-     rest of public transport. readSlow() is the shared, cached slow-data
-     read, so this costs nothing extra. */
+     rest of public transport. Ridership rides along with the mobility series
+     while the holiday calendar stays in slow.json; both reads are cached, so
+     this costs nothing beyond the first section to ask. */
   try {
-    const slow = await readSlow();
-    if (slow && slow.mobility){
-      out.rid = slow.mobility.rid;
-      out.holidays = slow.holidays || [];
-    }
+    const [series, slow] = await Promise.all([readSeries(), readSlow()]);
+    if (series && series.mobility) out.rid = series.mobility.rid;
+    if (slow) out.holidays = slow.holidays || [];
   } catch { /* the GTFS half of the section stands on its own */ }
   return out;
 }

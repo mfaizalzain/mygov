@@ -48,6 +48,7 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
           python3 tools/kv_upload.py pull slow public/slow.json || true
+          python3 tools/kv_upload.py pull series public/series.json || true
           python3 tools/kv_upload.py pull health public/health.json || true
           python3 tools/kv_upload.py pull prices public/prices.json || true
           python3 tools/kv_upload.py pull radar public/radar.json || true
