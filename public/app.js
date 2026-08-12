@@ -491,15 +491,77 @@ function loadPrefs(){
   } catch {}
 }
 const savePref = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+/* Seasonal theme layer: a date window + a phase, never a full theme.
+   Merdeka runs from 1 August through Malaysia Day (16 September). */
+function movableSeason(now, holidays, id, nameRe, lead = 7, trail = 3){
+  const rows = (holidays || []).filter(h => h && h[0] && nameRe.test(h[1]));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let best = null;
+  for (const h of rows){
+    const p = String(h[0]).split("-").map(Number);
+    if (p.length !== 3 || !p[0] || !p[1] || !p[2]) continue;
+    const day = new Date(p[0], p[1] - 1, p[2]);
+    const diff = Math.round((day - today) / DAY_MS);
+    if (diff >= -lead && diff <= trail){
+      if (!best || diff < best.diff) best = { id, phase: diff < 0 ? "lead" : "live", diff };
+    }
+  }
+  return best ? { id:best.id, phase:best.phase } : null;
+}
+const SEASONS = [
+  { id:"kaamatan", start:[5,25], end:[5,31], peak:[5,30] },
+  { id:"gawai", start:[6,1], end:[6,4], peak:[6,1] },
+  { id:"merdeka", start:[8,1], end:[9,16], peak:[8,31] },
+  { id:"raya", resolve:(now, holidays) => movableSeason(now, holidays, "raya", /Hari Raya|Eid al-Fitr/i, 7, 7) },
+  { id:"deepavali", resolve:(now, holidays) => movableSeason(now, holidays, "deepavali", /Deepavali/i) },
+  { id:"cny", resolve:(now, holidays) => movableSeason(now, holidays, "cny", /Chinese New Year/i) },
+  { id:"christmas", start:[12,20], end:[12,27], peak:[12,25] }
+];
+function seasonNow(){
+  const now = new Date(), y = now.getFullYear();
+  for (const s of SEASONS){
+    if (s.resolve){
+      const r = s.resolve(now, slowData && slowData.holidays);
+      if (r) return r;
+      continue;
+    }
+    const start = new Date(y, s.start[0] - 1, s.start[1]);
+    const end = new Date(y, s.end[0] - 1, s.end[1], 23, 59, 59, 999);
+    if (now >= start && now <= end){
+      const peak = new Date(y, s.peak[0] - 1, s.peak[1]);
+      return { id:s.id, phase: now < peak ? "lead" : "live" };
+    }
+  }
+  return null;
+}
+function applySeason(){
+  const root = document.documentElement;
+  const season = seasonNow();
+  if (season){
+    root.dataset.season = season.id;
+    root.dataset.seasonPhase = season.phase;
+  } else {
+    delete root.dataset.season;
+    delete root.dataset.seasonPhase;
+  }
+  const dark = root.dataset.theme === "dark";
+  const tc = $("#tc");
+  if (tc){
+    const seasonalBg = getComputedStyle(root).getPropertyValue("--bg").trim();
+    tc.content = season
+      ? (seasonalBg || (dark ? "#0a1120" : "#f6f7fb"))
+      : (dark ? "#0a0c10" : "#f4f6fa");
+  }
+}
 function applyTheme(){
   const dark = themeMode === "dark" ||
     (themeMode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
-  const tc = $("#tc"); if (tc) tc.content = dark ? "#0a0c10" : "#f4f6fa";
   const b = $("#theme"); if (b){
     b.textContent = themeMode === "dark" ? "🌙" : themeMode === "light" ? "☀️" : "🌓";
     b.setAttribute("aria-label", "Theme: " + themeMode);
   }
+  applySeason();
 }
 function applyText(){
   document.documentElement.dataset.text = textLarge ? "large" : "normal";
@@ -7868,7 +7930,7 @@ function boot(){
      loaders share) - render as soon as it lands; slow.json is tiny and
      cached after the first section loads it. */
   initHolPanels();
-  readSlow().then(() => renderHolWidget());
+  readSlow().then(() => { renderHolWidget(); applySeason(); });
   /* Fire-and-forget: availability() can block on a disk check, and nothing
      else in boot() depends on the result. */
   mountAI().catch(() => {});
