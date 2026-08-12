@@ -6866,6 +6866,7 @@ function renderLive(d){
    The InfoTrafikGZ Telegram channel posts live updates in Malay around the
    clock (collected to KV every 5 min); the strip shows the newest reports
    as one continuous ticker, pausing on hover. Hidden until data arrives. */
+const TRAFFIC_URL_RE = /(https?:\/\/[^\s<>"']+)/g;
 async function loadTrafficMarquee(){
   const band = $("#traffic-band");
   if (!band) return;
@@ -6873,10 +6874,16 @@ async function loadTrafficMarquee(){
     .then(r => { if (!r.ok) throw new Error("traffic unavailable"); return r.json(); });
   const posts = (d.posts || []).slice(0, 12);
   if (!posts.length) return;
+  /* One <span class="traffic-item"> per post, with the embedded t.co link
+     extracted and made clickable (safe: esc() everywhere, url-encoded).
+     Items are separated by a diamond so the ticker reads as a list, not a
+     blob of text. */
   const items = posts.map(p => {
     const t = p.time ? p.time.slice(11,16) : "";
-    return `${esc(t)} ${esc(p.text)}`;
-  }).join("  ·  ");
+    const text = esc(p.text).replace(TRAFFIC_URL_RE,
+      m => `<a href="${encodeURI(m)}" target="_blank" rel="noopener" class="traffic-link">↗</a>`);
+    return `<span class="traffic-item"><b>${t}</b> ${text}</span>`;
+  }).join('<span class="traffic-sep" aria-hidden="true">◆</span>');
   /* Duplicate the run so the loop never has a gap: a marquee only looks
      seamless when the content is >= 2x the viewport. */
   $("#traffic-mq").innerHTML =

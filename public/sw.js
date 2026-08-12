@@ -20,8 +20,10 @@
    rename, per-condition weather icons. The cache name keeps the mygov- prefix
    deliberately: it is an internal key, and renaming it only orphans caches.
    v20: brief icon, holiday/school chip dropdowns.
-   v21: live traffic feed (traffic.json in the data-bundle exclusion). */
-const VERSION    = "mygov-v21";
+   v21: live traffic feed (traffic.json in the data-bundle exclusion).
+   v22: traffic marquee items - separators, clickable t.co links, slower
+   scroll. */
+const VERSION    = "mygov-v22";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
