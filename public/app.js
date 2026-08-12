@@ -2230,19 +2230,25 @@ function renderHazards(d){
   const aqiWorst = d.aqi && d.aqi.worst ? d.aqi.worst.aqi : null;
   const aqiAlert = aqiWorst != null && aqiWorst >= 101 ? 1 : 0;
 
+  /* The carousel renders at most 6 flood cards (see paintAlerts), so the
+     alert count must reflect the cards actually in the carousel - not every
+     at-risk station. The flood tile's own headline keeps the full station
+     count for the map view. */
+  const floodCards = f ? Math.min((f.stations || []).length, 6) : 0;
+
   /* Weather warnings, earthquakes, flood-risk stations, the latest Rapid KL
      service alert and air quality are one tile with one carousel: all of
      them are "something is happening right now", and split across tiles the
      same person had to open five disclosures. The chips and the carousel are
      paintAlerts(), mounted here. */
-  const alertN = active.length + d.eq.length + (atRisk || 0) + rapidN + aqiAlert;
+  const alertN = active.length + d.eq.length + floodCards + rapidN + aqiAlert;
   const wxBody = (alertN || notices.length) ? `<div id="wx-warn"></div>` : "";
   const wxTile = hzTile("wx", "warn", T("Weather, earthquakes, flood & more"), alertN > 0,
     alertN ? `${alertN} ${T(alertN === 1 ? "active alert" : "active alerts")}`
            : T("All clear"),
     alertN
       ? `${active.length} ${T("warnings")} · ${d.eq.length} ${T("quakes")}` +
-        (atRisk ? ` · ${atRisk} ${T("stations at risk")}` : "") +
+        (floodCards ? ` · ${floodCards} ${T("stations at risk")}` : "") +
         (rapidN ? ` · ${rapidN} ${T("Rapid KL")}` : "") +
         (aqiWorst != null ? ` · ${T("AQI")} ${aqiWorst}` : "")
       : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue")),
@@ -2442,8 +2448,11 @@ function paintAlerts(){
     .filter(filt.fl)
     .sort((a, b) => (FLOOD_RANK[a.status] ?? 3) - (FLOOD_RANK[b.status] ?? 3))
     .slice(0, 6);
+  /* "N active elsewhere" counts the cards this carousel actually renders
+     (flood cards are capped at 6), not every at-risk station - the flood
+     tile carries the full station count for its map. */
   const total = d.warn.filter(x => !x.info).length + d.eq.length +
-    (d.flood ? d.flood.atRisk : 0) +
+    floods.length +
     (d.rapid ? 1 : 0) +
     (d.aqi && d.aqi.worst && d.aqi.worst.aqi >= 101 ? 1 : 0);
   /* Cards in one deck: warnings first (they are actionable now), then quakes
