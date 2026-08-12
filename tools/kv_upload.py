@@ -110,7 +110,10 @@ def push(include_snap=False, only=None):
 
 def pull(key, dest):
     resp = api("GET", f"values/{key}")
-    if isinstance(resp, dict) and not resp.get("success"):
+    # KV returns the RAW value as the body. JSON-valued keys (slow.json etc.)
+    # parse into a dict that has no "success" key - only treat a response as
+    # an error envelope when it explicitly says success:false.
+    if isinstance(resp, dict) and resp.get("success") is False:
         sys.exit(f"kv: pull {key} failed: {resp.get('errors')}")
     raw = resp if isinstance(resp, str) else json.dumps(resp)
     with open(dest, "w", encoding="utf-8") as f:
