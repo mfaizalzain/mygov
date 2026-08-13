@@ -1454,6 +1454,29 @@ html[data-text="large"] table{font-size:14px}
   background:var(--surface);padding:var(--s3) var(--s4);font-size:13.5px;
   color:var(--fg-2);line-height:1.6;max-width:76ch}
 .ai-panel[hidden]{display:none}
+
+/* Per-section share button. Sized to match .ai-btn so a section carrying both
+   reads as one pair rather than two unrelated controls. */
+.share-btn{flex:none;font-size:11.5px;padding:5px 10px;margin-left:auto}
+.share-btn .ico{width:14px;height:14px}
+/* .ai-btn and .sec-time each claim margin-left:auto for the case where they
+   are the first of the right-hand group. Once share is there, it is - so the
+   others fall back to a plain gap. */
+.share-btn ~ .ai-btn,
+.share-btn ~ .sec-time{margin-left:var(--s2)}
+/* Inside a band's control cluster it is one of the group, and the cluster
+   itself is already right-aligned - a second auto margin here would push the
+   arrows away from it. */
+.radar-band-ctl .share-btn{margin-left:0}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);
+  transform:translate(-50%,10px);z-index:60;max-width:calc(100vw - 32px);
+  padding:9px var(--s4);border-radius:99px;border:1px solid var(--line);
+  background:var(--surface-3);color:var(--fg);font-size:13px;font-weight:550;
+  box-shadow:var(--shadow);text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.toast{transition:opacity .18s}}
 .ai-panel p{margin:0 0 var(--s2)}
 .ai-panel p:last-child{margin-bottom:0}
 .ai-panel ul{margin:0;padding-left:1.2em}
