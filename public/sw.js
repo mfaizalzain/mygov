@@ -48,9 +48,11 @@
    now lives in the ridership card.
    v31: each transport network's route/stops/trips KPIs live in their own
    titled card instead of a bare KPI row.
+   v32: Rapid Penang joins the transport network cards (GTFS-static, plain
+   row-per-trip counts) with its own filter chip and stops coverage.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v31";
+const VERSION    = "mygov-v32";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

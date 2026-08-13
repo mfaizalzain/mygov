@@ -98,8 +98,8 @@ const I18N = {
   "PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.":"PriceCatcher merekod harga rak ~340 item di ~2,100 premis di seluruh negara. Ia tiada pada OpenAPI (id=pricecatcher memulangkan 404) - diterbitkan hanya sebagai Parquet bulanan, maka GitHub Action harian menggabungkan 13 bulan daripadanya ke dalam prices.json. Trend ialah indeks Jevons (min geometri nisbah harga) ke atas item yang berharga setiap bulan, jadi bakul tidak boleh hanyut. Ia wajaran sama, bukan CPI: DOSM tidak menerbitkan wajaran perbelanjaan per-item pada butiran ini. Angka daerah ialah tahap harga ruang - median tempatan setiap item berbanding median nasional - jadi daerah tidak dihukum kerana menyimpan bahagian bakul yang berbeza.",
   "Department of Statistics Malaysia - inflation by spending category, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia - inflasi mengikut kategori perbelanjaan, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
   "Core CPI is broken down by expenditure division, labour-force figures are monthly, and real GDP is quarterly. All three come from OpenDOSM.":"CPI teras dipecahkan mengikut bahagian perbelanjaan, angka buruh bulanan, dan KDNK benar suku tahunan. Kesemuanya daripada OpenDOSM.",
-  "Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, how many stops and trips each network runs, and how many trips people actually take every day.":"Laluan bas dan kereta api berjadual untuk KTMB dan Rapid KL - laluan paling sibuk, bilangan perhentian dan perjalanan setiap rangkaian, serta bilangan perjalanan yang sebenarnya diambil setiap hari.",
-  "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Daily trips by service come from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. They count journeys taken, not unique passengers, and are audited monthly before release.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda - hanya laluan, perjalanan, perhentian dan kalendar dibaca, bukan fail terbesar. Kiraan perjalanan ialah pelepasan pada satu hari bekerja biasa. Setiap suapan membawa corak hari bekerja, Sabtu dan Ahad sekali gus, jadi mengira baris fail akan menambah hari berasingan ke dalam jumlah yang tiada siapa boleh menaiki; kedua-dua suapan Rapid KL juga berasaskan kekerapan, menyenaraikan satu templat bagi setiap arah serta headway, maka laluan Kelana Jaya muncul dalam fail sebagai 6 perjalanan, bukan ~350 yang sebenarnya berjalan. Perjalanan harian mengikut perkhidmatan datang daripada siri ridership_headline dalam katalog data kerajaan - jumlah tap-in/tap-out tanpa nama daripada sistem tiket pengendali, diterbitkan oleh Prasarana dan Kementerian Pengangkutan. Ia mengira perjalanan yang diambil, bukan penumpang unik, dan diaudit setiap bulan sebelum diterbitkan.",
+  "Scheduled bus and train routes for KTMB, Rapid KL and Rapid Penang - the busiest lines, how many stops and trips each network runs, and how many trips people actually take every day.":"Laluan bas dan kereta api berjadual untuk KTMB, Rapid KL dan Rapid Penang - laluan paling sibuk, bilangan perhentian dan perjalanan setiap rangkaian, serta bilangan perjalanan yang sebenarnya diambil setiap hari.",
+  "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Penang's bus feed is the opposite - a plain row per trip, so its count reads directly. Daily trips by service come from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. They count journeys taken, not unique passengers, and are audited monthly before release.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda - hanya laluan, perjalanan, perhentian dan kalendar dibaca, bukan fail terbesar. Kiraan perjalanan ialah pelepasan pada satu hari bekerja biasa. Setiap suapan membawa corak hari bekerja, Sabtu dan Ahad sekali gus, jadi mengira baris fail akan menambah hari berasingan ke dalam jumlah yang tiada siapa boleh menaiki; kedua-dua suapan Rapid KL juga berasaskan kekerapan, menyenaraikan satu templat bagi setiap arah serta headway, maka laluan Kelana Jaya muncul dalam fail sebagai 6 perjalanan, bukan ~350 yang sebenarnya berjalan. Suapan bas Pulau Pinang pula sebaliknya - satu baris untuk satu perjalanan, jadi kiraannya dibaca terus. Perjalanan harian mengikut perkhidmatan datang daripada siri ridership_headline dalam katalog data kerajaan - jumlah tap-in/tap-out tanpa nama daripada sistem tiket pengendali, diterbitkan oleh Prasarana dan Kementerian Pengangkutan. Ia mengira perjalanan yang diambil, bukan penumpang unik, dan diaudit setiap bulan sebelum diterbitkan.",
   "Trains and buses currently reporting their position, straight from the operators' live feeds.":"Kereta api dan bas yang kini melaporkan kedudukan mereka, terus daripada suapan langsung pengendali.",
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
   "Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). The section opens on the Klang Valley feed, with KTMB trains and Rapid Penang one chip away (or All for the full board). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.":"Kereta api daripada suapan GTFS-realtime KTM, dinyahkod dalam pelayar anda oleh pembaca format wayar kecil; ia kerap kosong walaupun di tengah perkhidmatan, sebab itu bas menggunakan sumber berbeza. Bas daripada suapan kiosk rasmi Prasarana - data yang sama dipaparkan di laman myrapidbus - untuk Lembah Klang (800+ bas) dan Pulau Pinang (200+). Bahagian ini dibuka dengan suapan Lembah Klang, dengan kereta api KTMB dan Rapid Penang satu ketukan sahaja (atau Semua untuk paparan penuh). Kod laluan dalam suapan langsung dipadankan dengan jadual diterbitkan pengendali untuk menamakan setiap laluan dan hentiannya; Lembah Klang dipadankan mengikut id laluan, Pulau Pinang mengikut nombor laluan. Kenderaan yang kedudukan terakhirnya dilaporkan melebihi 15 minit lalu ditinggalkan daripada peta dan kiraan, serta dinyatakan di bawah. Bas diagregatkan ke dalam cip laluan dan peta mengelompokkan kedudukan sehingga anda zum masuk.",
@@ -346,9 +346,9 @@ const I18N = {
   "No more flights scheduled today.":"Tiada lagi penerbangan dijadualkan hari ini.",
   "upcoming":"akan datang", "Cancelled":"Dibatalkan",
   "Check-in open":"Daftar masuk dibuka", "First bag":"Beg pertama",
-  "All stops - both networks":"Semua perhentian - kedua-dua rangkaian",
+  "All stops - all networks":"Semua perhentian - semua rangkaian",
   "type to filter or use “Find stops near me”":"taip untuk menapis atau guna “Cari perhentian berdekatan saya”",
-  "Search both networks' stops above, or use “Find stops near me” to rank by distance.":"Cari perhentian kedua-dua rangkaian di atas, atau guna “Cari perhentian berdekatan saya” untuk menyusun mengikut jarak.",
+  "Search all networks' stops above, or use “Find stops near me” to rank by distance.":"Cari perhentian semua rangkaian di atas, atau guna “Cari perhentian berdekatan saya” untuk menyusun mengikut jarak.",
   "of":"daripada", "Network":"Rangkaian",
   "Prev":"Sebelum", "constituency":"kawasan pilihan raya",
   "no district breakdown":"tiada pecahan daerah",
@@ -1698,6 +1698,9 @@ const FEEDS = [
   { key:"prasarana", label:"Rapid KL", desc:"Prasarana Rapid Bus - Klang Valley network",
     agency:"prasarana", category:"rapid-bus-kl",
     path:"/gtfs-static/prasarana", params:{ category:"rapid-bus-kl" } },
+  { key:"penang", label:"Rapid Penang", desc:"Prasarana Rapid Bus - Penang network",
+    agency:"prasarana", category:"rapid-bus-penang",
+    path:"/gtfs-static/prasarana", params:{ category:"rapid-bus-penang" } },
   { key:"rail", label:"LRT & MRT", desc:"Rapid KL rail - LRT, MRT & monorail lines",
     agency:"prasarana", category:"rapid-rail-kl",
     path:"/gtfs-static/prasarana", params:{ category:"rapid-rail-kl" } },
@@ -6400,7 +6403,7 @@ function paintPeka(d){
     labels, [daily, mean]);
 }
 /* ════════════════════════════ transport view ════════════════════════════ */
-let netFilter = "all";        // all | ktmb | prasarana
+let netFilter = "all";        // all | ktmb | prasarana | penang | rail
 let stopQ = "";
 let tdata = null;
 const tgeo = { status:"idle", near:null };
@@ -6658,7 +6661,8 @@ function renderTransport(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="rid-dt"></div></details></div>
     </div>` : ""}`;
-  $("#tr-filters").innerHTML = [["all",T("All networks")],["ktmb","KTMB"],["prasarana","Rapid KL"],["rail","LRT & MRT"]]
+  $("#tr-filters").innerHTML = [["all",T("All networks")],["ktmb","KTMB"],["prasarana","Rapid KL"],
+    ["penang",T("Rapid Penang")],["rail","LRT & MRT"]]
     .map(([v, label]) => `<button class="chip" data-net="${v}" aria-pressed="${netFilter === v}">${label}</button>`)
     .join("");
   $("#tr-filters").querySelectorAll("[data-net]").forEach(b => {
@@ -6921,7 +6925,7 @@ function paintBlocks(){
       </div></div>
     </div>`).join("")}</div>
     <div class="card" style="margin-top:var(--s6)">
-      <div class="card-h"><h4>${T("All stops - both networks")}</h4>
+      <div class="card-h"><h4>${T("All stops - all networks")}</h4>
         <span class="sub">${T("type to filter or use “Find stops near me”")}</span>
         <span class="right"><span class="dim" id="tr-stop-count"></span></span></div>
       <div class="tw scroll-y" style="max-height:420px"><table>
@@ -6954,7 +6958,7 @@ function paintStops(){
   if (cnt) cnt.textContent = sq || near ? `${nf(ranked.length)} ${T("of")} ${nf(all.length)}` : "";
   if (!sq && !near){
     rows.innerHTML = `<tr><td colspan="3" class="state" style="padding:var(--s4)">
-      ${T("Search both networks' stops above, or use “Find stops near me” to rank by distance.")}</td></tr>`;
+      ${T("Search all networks' stops above, or use “Find stops near me” to rank by distance.")}</td></tr>`;
     return;
   }
   rows.innerHTML = ranked.map(x => `<tr>
@@ -7851,8 +7855,8 @@ const META = {
     eps:["/data-catalogue?id=blood_donations","/data-catalogue?id=organ_pledges",
          "/data-catalogue?id=pekab40_screenings"] },
   transport:{ title:"Public Transport",
-    desc:"Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, how many stops and trips each network runs, and how many trips people actually take every day.",
-    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Daily trips by service come from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. They count journeys taken, not unique passengers, and are audited monthly before release.",
+    desc:"Scheduled bus and train routes for KTMB, Rapid KL and Rapid Penang - the busiest lines, how many stops and trips each network runs, and how many trips people actually take every day.",
+    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Penang's bus feed is the opposite - a plain row per trip, so its count reads directly. Daily trips by service come from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. They count journeys taken, not unique passengers, and are audited monthly before release.",
     eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl",
          "/data-catalogue?id=ridership_headline"] },
   election:{ title:"Election Results",
