@@ -36,7 +36,12 @@ const I18N = {
     "flood-desc":"Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.",
     "flood-how":"JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.",
     "verified_claim":"Verified claim",
+    "misleading":"Misleading",
     "no_check_found":"Not checked yet",
+    "Claim":"Claim",
+    "The facts":"The facts",
+    "Verified":"Verified", "Debunked":"Debunked", "Unchecked":"Unchecked",
+    "No trending issues match this filter.":"No trending issues match this filter.",
     "LRT & MRT network":"LRT & MRT network",
     "Rapid KL rail - click a station to open it on the map":"Rapid KL rail - click a station to open it on the map",
     "stns":"stns",
@@ -271,8 +276,13 @@ const I18N = {
   "Sources":"Sumber", "issues":"isu", "sources":"sumber", "View sources":"Lihat sumber",
   "verified":"disahkan", "debunked":"palsu", "unverified":"tidak disahkan",
   "verified_claim":"Dakwaan disahkan",
+  "misleading":"mengelirukan",
   "no_check_found":"belum disemak", "No trending issues right now.":"Tiada isu tular buat masa ini.",
   "Verdict":"Verdik",
+  "Claim":"Dakwaan",
+  "The facts":"Fakta",
+  "Verified":"Disahkan", "Debunked":"Palsu", "Unchecked":"Belum disemak",
+  "No trending issues match this filter.":"Tiada isu tular sepadan dengan penapis ini.",
   "Official Sebenarnya.my fact-check":"Semakan fakta rasmi Sebenarnya.my",
   "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
@@ -6672,24 +6682,37 @@ async function loadRadar(){
 }
 
 const FC_BADGE = {
-  verified_claim:["✅","ok"], debunked:["🚫","err"], no_check_found:["ℹ️",""]
+  verified_claim:["✅","ok"], debunked:["🚫","err"], misleading:["⚠️","warn"], no_check_found:["ℹ️",""]
 };
 function fcBadge(st){
   const [ic, cls] = FC_BADGE[st] || ["❓",""];
   return `<span class="fc-badge ${cls}" title="${esc(st)}">${ic} ${esc(T(st))}</span>`;
 }
 
-let radarIdx = 0, radarTimer = null, radarIssues = [];
+const RADAR_FILTERS = [
+  ["all", "All"],
+  ["verified_claim", "Verified"],
+  ["misleading", "Misleading"],
+  ["debunked", "Debunked"],
+  ["no_check_found", "Unchecked"],
+];
+let radarIdx = 0, radarTimer = null, radarIssues = [], radarVisible = [], radarFilter = "all";
 
 function radarSlide(i, idx){
   const fc = i.fact_check || {};
   const verdict = fc.verdict ? `<span class="fc-verdict">${esc(fc.verdict.replace("_"," "))}</span>` : "";
-  const debunk = fc.status === "debunked" ? " radar-debunk" : "";
-  return `<button class="radar-slide${debunk}" data-idx="${idx}">
+  const tone = {
+    verified_claim:"radar-ok", debunked:"radar-debunk", misleading:"radar-warn"
+  }[fc.status] || "radar-unchecked";
+  const rawClaim = (i.claim || fc.claim || "").trim();
+  const claimPreview = rawClaim && rawClaim !== i.title_bm && rawClaim !== i.title_en ? rawClaim : "";
+  const claimText = claimPreview.length > 150 ? claimPreview.slice(0, 150) + "…" : claimPreview;
+  return `<button class="radar-slide ${tone}" data-idx="${idx}">
     <span class="rank">${i.rank}</span>
     <div class="rs-body">
       <h4>${esc(i.title_bm)}</h4>
       ${i.title_en && i.title_en !== i.title_bm ? `<p class="dim">${esc(i.title_en)}</p>` : ""}
+      ${claimText ? `<p class="rs-claim">${esc(claimText)}</p>` : ""}
       <div class="radar-meta">
         ${fcBadge(fc.status)} ${verdict}
         <span class="pill">${esc(i.category || "lain")}</span>
@@ -6702,6 +6725,9 @@ function radarSlide(i, idx){
 function radarDetail(i){
   const fc = i.fact_check || {};
   const verdict = fc.verdict ? fc.verdict.replace("_"," ").toUpperCase() : "";
+  const claim = i.claim || fc.claim || "";
+  const facts = i.fact_details || fc.fact_details || "";
+  const reason = facts ? "" : (fc.reason || "");
   /* TRUE / PARTLY TRUE / FALSE → tone for the banner */
   const vt = /TRUE/i.test(verdict) && !/PARTLY/.test(verdict) ? "ok"
     : /FALSE|HOAX|PALSU/i.test(verdict) ? "err" : "warn";
@@ -6719,6 +6745,10 @@ function radarDetail(i){
         <span class="pill">${esc(i.category || "lain")}</span>
       </div>
       <div class="rd-body">
+        ${claim ? `<div class="rd-fact">
+          <span class="rd-kicker">${T("Claim")}</span>
+          <p class="rd-claim">${esc(claim)}</p>
+        </div>` : ""}
         <div class="rd-verdict ${vt}">
           <span class="rd-vicon" aria-hidden="true">${vIcon}</span>
           <div>
@@ -6727,7 +6757,11 @@ function radarDetail(i){
           </div>
           ${fcBadge(fc.status)}
         </div>
-        ${fc.reason ? `<p class="rd-reason">${esc(fc.reason)}</p>` : ""}
+        ${facts ? `<div class="rd-fact">
+          <span class="rd-kicker">${T("The facts")}</span>
+          <p class="rd-facts">${esc(facts)}</p>
+        </div>` : ""}
+        ${reason ? `<p class="rd-reason">${esc(reason)}</p>` : ""}
         ${fc.sebenarnya_url && safeUrl(fc.sebenarnya_url) ? `<a class="rd-sb" href="${esc(fc.sebenarnya_url)}" target="_blank" rel="noopener">
           ${T("Official Sebenarnya.my fact-check")} ↗</a>` : ""}
         ${srcs.length ? `<h5 class="rd-src-h">${T("Sources")}</h5>
@@ -6760,6 +6794,7 @@ async function initRadarCarousel(){
   }
   radarIssues = d.top_issues || [];
   const track = $("#radar-track");
+  const filters = $("#radar-filters");
   if (!radarIssues.length || !track){
     band.hidden = true;
     return;
@@ -6768,18 +6803,37 @@ async function initRadarCarousel(){
   /* When the radar was collected. Every other band on the page carries its
      own fetch stamp; this one was reading as undated. */
   const when = $("#radar-when");
-  if (when && d.generated_at){
-    const t = new Date(d.generated_at);
-    when.textContent = isNaN(t) ? "" : `${ymd(d.generated_at)} · ${hhmm(d.generated_at)}`;
-    when.title = `${T("Data collected")} ${when.textContent}`;
-  }
+  const updateWhen = (dd) => {
+    if (!when || !dd.generated_at) return;
+    const t = new Date(dd.generated_at);
+    if (isNaN(t)) return;
+    const ts = Math.floor(t.getTime() / 1000);
+    when.textContent = `${ymd(dd.generated_at)} · ${hhmm(dd.generated_at)} · ${T("Updated")} ${ago(ts)}`;
+    when.title = `${T("Data collected")} ${ymd(dd.generated_at)} · ${hhmm(dd.generated_at)}`;
+  };
+  updateWhen(d);
   /* the nav entry ships hidden and only appears once the band has content,
      so it never points at an empty destination */
   const navItem = $("#nav-radar-band");
   if (navItem) navItem.parentElement.hidden = false;
-  track.innerHTML = radarIssues.map((i, idx) => radarSlide(i, idx)).join("");
-  syncTrackFades();
-  const slides = track.querySelectorAll(".radar-slide");
+  if (filters){
+    filters.innerHTML = RADAR_FILTERS.map(([val, key]) => {
+      const active = radarFilter === val;
+      return `<button class="rf${active ? " active" : ""}" data-filter="${esc(val)}" data-i18n="${esc(key)}" aria-pressed="${active}">${esc(T(key))}</button>`;
+    }).join("");
+  }
+  let slides = [];
+  const visibleIssues = () => radarFilter === "all"
+    ? radarIssues.slice()
+    : radarIssues.filter(i => (i.fact_check || {}).status === radarFilter);
+  const renderTrack = () => {
+    radarVisible = visibleIssues();
+    track.innerHTML = radarVisible.length
+      ? radarVisible.map((i, idx) => radarSlide(i, idx)).join("")
+      : `<div class="radar-empty" data-i18n="No trending issues match this filter.">${esc(T("No trending issues match this filter."))}</div>`;
+    slides = [...track.querySelectorAll(".radar-slide")];
+    syncTrackFades();
+  };
   const perView = () => track.clientWidth < 560 ? 1 : track.clientWidth < 900 ? 2 : 3;
   const maxIdx = () => Math.max(0, slides.length - perView());
   /* each slide is a fixed width + the track gap; this is the scroll step */
@@ -6790,6 +6844,12 @@ async function initRadarCarousel(){
     return m ? Math.round((i / m) * (slides.length - 1)) + 1 : 1;
   };
   const render = () => {
+    if (!slides.length){
+      $("#radar-count").textContent = "0 / 0";
+      $("#radar-prev").disabled = true;
+      $("#radar-next").disabled = true;
+      return;
+    }
     track.scrollTo({ left: radarIdx * step(), behavior: "smooth" });
     $("#radar-count").textContent = `${pageNum(radarIdx)} / ${slides.length}`;
     $("#radar-prev").disabled = radarIdx === 0;
@@ -6799,6 +6859,7 @@ async function initRadarCarousel(){
   const prev = () => { radarIdx = Math.max(radarIdx - 1, 0); render(); };
   const start = () => {
     clearInterval(radarTimer);
+    if (!slides.length) return;
     radarTimer = setInterval(() => {
       if (radarIdx >= maxIdx()) radarIdx = 0; else radarIdx++;
       render();
@@ -6806,7 +6867,26 @@ async function initRadarCarousel(){
   };
   $("#radar-prev").onclick = () => { prev(); start(); };
   $("#radar-next").onclick = () => { next(); start(); };
+  if (filters){
+    filters.addEventListener("click", e => {
+      const b = e.target.closest(".rf"); if (!b) return;
+      radarFilter = b.dataset.filter;
+      filters.querySelectorAll(".rf").forEach(x => {
+        const on = x === b;
+        x.classList.toggle("active", on);
+        x.setAttribute("aria-pressed", String(on));
+      });
+      radarIdx = 0;
+      renderTrack();
+      render();
+      start();
+    });
+  }
   track.addEventListener("scroll", () => {
+    if (!slides.length){
+      $("#radar-count").textContent = "0 / 0";
+      return;
+    }
     const st = step();
     const n = st ? Math.round(track.scrollLeft / st) : 0;
     radarIdx = Math.min(Math.max(n, 0), maxIdx());
@@ -6822,7 +6902,7 @@ async function initRadarCarousel(){
   track.addEventListener("mouseleave", start);
   track.addEventListener("click", e => {
     const b = e.target.closest(".radar-slide"); if (!b) return;
-    const issue = radarIssues[Number(b.dataset.idx)];
+    const issue = radarVisible[Number(b.dataset.idx)];
     if (!issue) return;
     const m = document.createElement("div");
     m.innerHTML = radarDetail(issue);
@@ -6837,10 +6917,11 @@ async function initRadarCarousel(){
      the CI pipeline without needing a full reload. */
   $("#refresh").addEventListener("click", async () => {
     try { const nd = await loadRadar(); radarIssues = nd.top_issues || [];
-      track.innerHTML = radarIssues.map((i, idx) => radarSlide(i, idx)).join("");
-      radarIdx = 0; render(); start();
+      updateWhen(nd);
+      radarIdx = 0; renderTrack(); render(); start();
     } catch {}
   });
+  renderTrack();
   render(); start();
 }
 
