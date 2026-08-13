@@ -31,7 +31,7 @@ from collect_flood import (
 EARTHQUAKE_FEED = "https://api.data.gov.my/weather/warning/earthquake"
 OUT = os.environ.get("ALERTS_OUT", "public/alerts.json")
 EQ_RADIUS_KM = 500
-EQ_FRESH_MS = 12 * 3600 * 1000
+EQ_FRESH_MS = 3 * 3600 * 1000
 
 
 def parse_quake_ts(raw):

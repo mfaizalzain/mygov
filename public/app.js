@@ -175,7 +175,7 @@ const I18N = {
   "Flood risk":"Risiko banjir", "All clear":"Semua selamat",
   "active warning":"amaran aktif", "active warnings":"amaran aktif",
   "all-clear notices":"notis semua selamat", "nothing on issue":"tiada amaran dikeluarkan",
-  "event":"peristiwa", "within Nkm - last 24h":"dalam lingkungan Nkm - 24 jam lepas",
+  "event":"peristiwa", "within Nkm - last 3h":"dalam lingkungan Nkm - 3 jam lepas",
   "no station above threshold":"tiada stesen melebihi ambang",
   "warning":"amaran", "alert":"waspada", "Unavailable":"Tidak tersedia",
   "Details":"Butiran", "Hide":"Sembunyi",
@@ -189,8 +189,8 @@ const I18N = {
   "Very unhealthy":"Sangat tidak sihat", "Hazardous":"Berbahaya",
   "Unhealthy for sensitive groups":"Tidak sihat untuk kumpulan sensitif",
   "From Malaysia":"Dari Malaysia",
-  "No earthquakes within Nkm of Malaysia in the last 24 hours.":
-    "Tiada gempa bumi dalam lingkungan Nkm dari Malaysia dalam 24 jam lepas.",
+  "No earthquakes within Nkm of Malaysia in the last 3 hours.":
+    "Tiada gempa bumi dalam lingkungan Nkm dari Malaysia dalam 3 jam lepas.",
   "All Malaysia":"Seluruh Malaysia", "My area":"Kawasan saya", "Marine":"Marin",
   /* ── the merged weather + earthquake alert deck ── */
   "Weather, earthquakes & flood":"Cuaca, gempa bumi & banjir",
@@ -200,7 +200,7 @@ const I18N = {
   "No active warnings or earthquakes":"Tiada amaran atau gempa bumi aktif",
   "Nothing on issue in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
   "No earthquakes near Malaysia right now":"Tiada gempa bumi berhampiran Malaysia buat masa ini",
-  "No quakes within Nkm in the last 24h.":"Tiada gempa bumi dalam lingkungan Nkm dalam 24 jam lepas.",
+  "No quakes within Nkm in the last 3h.":"Tiada gempa bumi dalam lingkungan Nkm dalam 3 jam lepas.",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
   "No warnings in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
@@ -1056,9 +1056,9 @@ async function loadWeather(){
    now", so they share one loader and one section that stays compact until
    something is actually happening.
 
-   Nothing here is historical: warnings expire, earthquakes are capped at 24 h
+   Nothing here is historical: warnings expire, earthquakes are capped at 3 h
    and JPS gauges at 24 h. An empty hazard is an all-clear, not a gap. */
-const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 24 * 3600 * 1000;
+const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 3 * 3600 * 1000;
 
 async function loadHazards(){
   const warnings = await request("weather", "/weather/warning");
@@ -1084,7 +1084,7 @@ async function loadHazards(){
     return m ? Number(m[1].replace(/,/g, "")) : null;
   };
   const nowMs = Date.now();
-  /* Live view only - within 500 km AND within the last 24 h. Malaysia is
+  /* Live view only - within 500 km AND within the last 3 h. Malaysia is
      seismically quiet, so this is empty on most days; that is the honest
      answer, not a gap. */
   const eq = (quakes || []).filter(q => q.visible !== false)
@@ -3068,7 +3068,7 @@ function paintAlerts(){
        T("MET Malaysia has nothing on issue.") + " " +
        /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
           "N" rewrote that instead of the radius. */
-       T("No quakes within Nkm in the last 24h.").replace("Nkm", nf(d.eqRadius) + "km")]
+       T("No quakes within Nkm in the last 3h.").replace("Nkm", nf(d.eqRadius) + "km")]
     : [T(wxFilter === "area" ? "Nothing on issue in your area right now"
         : wxFilter === "marine" ? "No marine warnings right now"
         : wxFilter === "quake" ? "No earthquakes near Malaysia right now"
@@ -7827,7 +7827,7 @@ function paintMaps(){
 const META = {
   hazards:{ title:"Warnings & Hazards",
     desc:"Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality across the major cities. Live only; nothing here is historical.",
-    how:"Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).",
+    how:"Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 3 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).",
     eps:["/weather/warning","/weather/warning/earthquake",
          "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)",
          "myrapid.com.my PULSE via r.jina.ai (via /api/rapid-alerts)",
