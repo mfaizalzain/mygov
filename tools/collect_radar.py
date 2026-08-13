@@ -34,6 +34,27 @@ TRENDS_RSS = "https://trends.google.com/trending/rss?geo=MY"  # curl-able, no br
 SAFE_URL = re.compile(r"^https?://", re.I)
 
 
+def parse_json_text(text):
+    """Parse Gemini JSON that may be wrapped in fences or contain stray text."""
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    start = text.find("{")
+    if start == -1:
+        raise ValueError("no JSON object found")
+    depth = 0
+    for idx in range(start, len(text)):
+        if text[idx] == "{":
+            depth += 1
+        elif text[idx] == "}":
+            depth -= 1
+            if depth == 0:
+                return json.loads(text[start:idx + 1])
+    raise ValueError("no JSON object found")
+
+
 def gemini_post(url, body, timeout=90, tries=3):
     """POST to Gemini, retrying transient failures."""
     last = None
@@ -181,26 +202,12 @@ Rules:
 - Exactly 10 issues (fewer only if genuinely fewer distinct issues requiring verification)."""
 
     body = json.dumps({"contents": [{"parts": [{"text": prompt}]}],
-                       "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192}}).encode()
+                       "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192,
+                                            "responseMimeType": "application/json"}}).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     d = gemini_post(url, body, timeout=90)
     text = d["candidates"][0]["content"]["parts"][0]["text"]
-    text = re.sub(r"^```(json)?\s*|\s*```$", "", text.strip())
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        start = text.find("{")
-        depth = 0
-        for idx in range(start, len(text)):
-            if text[idx] == "{":
-                depth += 1
-            elif text[idx] == "}":
-                depth -= 1
-                if depth == 0:
-                    parsed = json.loads(text[start:idx + 1])
-                    break
-        else:
-            raise
+    parsed = parse_json_text(text)
     return parsed.get("top_issues")
 
 
@@ -318,14 +325,14 @@ Rules:
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}],
-        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 800},
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 800,
+                             "responseMimeType": "application/json"},
     }).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     try:
         d = gemini_post(url, body, timeout=60)
         text = d["candidates"][0]["content"]["parts"][0]["text"]
-        text = re.sub(r"^```(json)?\s*|\s*```$", "", text.strip())
-        parsed = json.loads(text)
+        parsed = parse_json_text(text)
         verdict = parsed.get("verdict", "UNVERIFIED")
         status = {
             "TRUE": "verified_claim",
@@ -390,6 +397,9 @@ def main():
             if sb.get("status") != "no_check_found":
                 fc["sebenarnya_title"] = sb.get("sebenarnya_title")
                 fc["sebenarnya_url"] = sb.get("sebenarnya_url")
+                if fc.get("status") in (None, "no_check_found"):
+                    fc["status"] = sb.get("status")
+                    fc["verdict"] = sb.get("verdict") or fc.get("verdict")
             
             # Attach root-level claim and fact_details for easy rendering
             i["claim"] = fc.get("claim")
