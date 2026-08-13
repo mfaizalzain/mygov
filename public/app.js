@@ -8076,16 +8076,19 @@ function shareTargets(){
     hosts: [`#${s.id} .sec-h`],
     facts: s.id === "weather" ? weatherFacts : null,
   }));
-  /* Bands prefer their control cluster and fall back to the header row.
-     .radar-band-ctl claims margin-left:auto, so it swallows the whole of the
-     row's free space - a button beside it has nowhere to sit and wraps to the
-     next line. Inside the cluster it just joins the group. travel-band keeps
-     its controls down in the card body and has no cluster at all, so there
-     the header row is the only option. */
-  const bandHosts = id => [`#${id} .radar-band-ctl`, `#${id} .radar-band-h`];
+  /* Every target joins a row that already exists rather than starting one.
+     radar-band has a control cluster, so the button goes in it - beside it in
+     the header row it would wrap, because .radar-band-ctl takes
+     margin-left:auto and swallows all the free space. travel-band has no
+     cluster (its arrows live down in the card body), but its collection
+     timestamp already occupies a line of its own directly under the header,
+     and the section is a block container - so a button placed before that
+     timestamp simply shares the line instead of adding one. */
   list.push(
-    { id:"radar-band",  title: () => T("Trend Radar"),    hosts: bandHosts("radar-band"),  facts: bandFacts },
-    { id:"travel-band", title: () => T("Travel Outlook"), hosts: bandHosts("travel-band"), facts: bandFacts },
+    { id:"radar-band",  title: () => T("Trend Radar"),
+      hosts:["#radar-band .radar-band-ctl", "#radar-band .radar-band-h"], facts: bandFacts },
+    { id:"travel-band", title: () => T("Travel Outlook"),
+      hosts:["#travel-band"], facts: bandFacts },
   );
   return list;
 }

@@ -1468,6 +1468,11 @@ html[data-text="large"] table{font-size:14px}
    itself is already right-aligned - a second auto margin here would push the
    arrows away from it. */
 .radar-band-ctl .share-btn{margin-left:0}
+/* travel-band has no cluster: the button joins the collection stamp on the
+   line that stamp already held. Block context here, so the auto margin would
+   do nothing and the two need aligning against each other instead. */
+#travel-band > .share-btn{margin-left:0;margin-right:var(--s2);vertical-align:middle}
+#travel-band > .sec-time{vertical-align:middle}
 
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);
   transform:translate(-50%,10px);z-index:60;max-width:calc(100vw - 32px);
