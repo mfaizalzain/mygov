@@ -52,9 +52,11 @@
    row-per-trip counts) with its own filter chip and stops coverage.
    v33: the ridership card is renamed "Daily ridership by service" to match
    data.gov.my's own dashboards - it was mislabelled as trips.
+   v34: the All stops card asks for location once when Public Transport
+   opens and shows nearest stops by default, no tap required.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v33";
+const VERSION    = "mygov-v34";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
