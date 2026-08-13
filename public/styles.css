@@ -1058,8 +1058,19 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
    grid would be wider than the screen and the page would scroll sideways. */
 .tr-grid{display:grid;gap:var(--s6);align-items:start;
   grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr))}
-/* In a column the KPI row goes 2x2 - four across at ~130px clipped the labels. */
-.tr-grid .tr-kpis{grid-template-columns:repeat(2,1fr)}
+/* "All networks" shows three feeds, which in two columns left the third one
+   alone beside 584px of nothing. An odd last block spans the row instead - a
+   routes table is happy at full width in a way a chart is not. */
+.tr-grid > div:last-child:nth-child(odd){grid-column:1/-1}
+/* Both KPI overrides are gated on the width where two 460px tracks actually
+   fit, because below it every block is full-width and the plain .g4 cascade
+   (two-up on a tablet, one-up on a phone) is already the right answer. Inside
+   a narrow column four across at ~130px clipped the labels, so 2x2; a block
+   spanning the full row keeps four, since 2x2 over 1158px is two vast tiles. */
+@media (min-width:1000px){
+  .tr-grid .tr-kpis{grid-template-columns:repeat(2,1fr)}
+  .tr-grid > div:last-child:nth-child(odd) .tr-kpis{grid-template-columns:repeat(4,1fr)}
+}
 /* live map + vehicle cards */
 /* The two feeds sit side by side rather than stacked - see renderLive(). Each
    column needs ~420px before the KPI trio inside it starts wrapping, so on a
