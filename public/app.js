@@ -632,6 +632,7 @@ function rerenderAll(){
      "Next"/"in N days" wording stayed in the previous language. */
   if (slowData) try { renderHolWidget(); } catch {}
   relabelAI();
+  relabelShare();
 }
 
 /** An <svg> referencing a sprite symbol. Decorative by default - every call
@@ -7814,6 +7815,14 @@ Object.assign(I18N.ms, {
   "Summary failed. The on-device model may have run out of memory.":
     "Ringkasan gagal. Model pada peranti mungkin kehabisan memori.",
 });
+Object.assign(I18N.ms, {
+  "Share":"Kongsi", "Link copied":"Pautan disalin",
+  "Could not copy - select the address bar instead":
+    "Tidak dapat menyalin - pilih bar alamat sebagai ganti",
+  /* The site name rides along in the shared message, so it needs a reading in
+     both languages even though the header never translates it. */
+  "Malaysia at a Glance":"Malaysia Sekilas Pandang",
+});
 /* The scraped text is untrusted. #body-hazards carries the Rapid KL alert,
    which originates on myrapid.com.my and reaches us through the r.jina.ai
    reader - two hops we do not control - so a hostile post could carry
@@ -7990,6 +7999,158 @@ function relabelAI(){
   }
 }
 
+/* Per-section share.
+ *
+ * The deep links already work - initAnchorNav() resolves #id on first load
+ * and on hashchange - so the button's real job is composing a message that
+ * says something on its own. A bare link is a grey rectangle in WhatsApp
+ * until someone taps it; the headline figures already on screen are what
+ * make it worth forwarding, and unlike an og: card no scraper caches them.
+ *
+ * Figures are read from the DOM at click time, never at mount time: most
+ * sections load lazily, and any of them can be shared the moment it paints. */
+const SHARE_MAX_FACTS = 3;
+/* label/value pairs, in the two shapes the page actually uses. Both render a
+   short caption above a headline number, which is exactly what a shared
+   message wants. */
+const SHARE_PAIRS = [
+  { box:".kpi",     lab:".lab",     val:".val"     },
+  { box:".hz-tile", lab:".hz-lab",  val:".hz-val"  },
+];
+const oneLine = n => (n.textContent || "").replace(/\s+/g, " ").trim();
+
+function shareFacts(id){
+  const root = document.getElementById("body-" + id) || document.getElementById(id);
+  if (!root) return [];
+  const out = [];
+  for (const { box, lab, val } of SHARE_PAIRS){
+    for (const b of root.querySelectorAll(box)){
+      /* Skeletons carry the same classes as the real thing while a section
+         is still loading - sharing "Basket index: ▮▮▮" would be worse than
+         sharing nothing. */
+      if (b.classList.contains("kpi-load") || b.querySelector(".skel")) continue;
+      const l = b.querySelector(lab), v = b.querySelector(val);
+      if (!l || !v) continue;
+      const lt = oneLine(l), vt = oneLine(v);
+      if (!lt || !vt) continue;
+      out.push(`${lt}: ${vt}`);
+      if (out.length >= SHARE_MAX_FACTS) return out;
+    }
+  }
+  return out;
+}
+/* Weather has no label/value tiles at all - its headline is the live
+   conditions line, which already reads as a sentence. */
+function weatherFacts(){
+  const out = [];
+  for (const sel of ["#wx-now .wx-now-row", "#wx-now .wx-meta"]){
+    const n = document.querySelector(sel);
+    const t = n && oneLine(n);
+    if (t) out.push(t);
+  }
+  return out;
+}
+/* The two carousel bands have no KPIs - their headline is whichever card is
+   currently in front, which is also what the reader was looking at. */
+function bandFacts(id){
+  const root = document.getElementById(id);
+  if (!root) return [];
+  const card = root.querySelector(".radar-slide h4, .t-row .t-driver b");
+  return card ? [oneLine(card)] : [];
+}
+
+function shareMessage(t){
+  const facts = (t.facts || shareFacts)(t.id);
+  const url = location.origin + location.pathname + "#" + t.id;
+  const head = `${t.title()} - ${T("Malaysia at a Glance")}`;
+  return { title: head, text: [head, ...facts].join("\n"), url };
+}
+
+/* Nothing here is a section in SECTIONS, so the bands are listed explicitly
+   rather than inferred. Each entry says where its button goes, because the
+   bands keep their controls in a cluster rather than beside a timestamp. */
+function shareTargets(){
+  const list = SECTIONS.map(s => ({
+    id: s.id,
+    title: () => T(META[s.id].title),
+    hosts: [`#${s.id} .sec-h`],
+    facts: s.id === "weather" ? weatherFacts : null,
+  }));
+  /* Bands prefer their control cluster and fall back to the header row.
+     .radar-band-ctl claims margin-left:auto, so it swallows the whole of the
+     row's free space - a button beside it has nowhere to sit and wraps to the
+     next line. Inside the cluster it just joins the group. travel-band keeps
+     its controls down in the card body and has no cluster at all, so there
+     the header row is the only option. */
+  const bandHosts = id => [`#${id} .radar-band-ctl`, `#${id} .radar-band-h`];
+  list.push(
+    { id:"radar-band",  title: () => T("Trend Radar"),    hosts: bandHosts("radar-band"),  facts: bandFacts },
+    { id:"travel-band", title: () => T("Travel Outlook"), hosts: bandHosts("travel-band"), facts: bandFacts },
+  );
+  return list;
+}
+
+let toastTimer;
+function toast(msg){
+  let t = document.getElementById("toast");
+  if (!t){
+    t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    /* polite, not assertive: a copy confirmation must not interrupt whatever
+       a screen reader is already reading. */
+    t.setAttribute("role", "status");
+    t.setAttribute("aria-live", "polite");
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+async function doShare(t){
+  const msg = shareMessage(t);
+  /* navigator.share is the phone path and needs no fallback UI - the OS sheet
+     is the confirmation. Desktop mostly lacks it, so copy instead and say so;
+     a share that looks like it did nothing is worse than no button. */
+  if (navigator.share){
+    try { await navigator.share(msg); return; }
+    catch (e){
+      /* Dismissing the sheet is an AbortError and means "no thanks" - falling
+         through to the clipboard there would be the opposite of the ask. */
+      if (e && e.name === "AbortError") return;
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(`${msg.text}\n${msg.url}`);
+    toast(T("Link copied"));
+  } catch { toast(T("Could not copy - select the address bar instead")); }
+}
+
+function mountShare(){
+  for (const t of shareTargets()){
+    const host = t.hosts.map(sel => document.querySelector(sel)).find(Boolean);
+    if (!host || host.querySelector(".share-btn")) continue;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn share-btn";
+    btn.dataset.share = t.id;
+    btn.innerHTML = ico("share") + " <span>" + esc(T("Share")) + "</span>";
+    btn.addEventListener("click", () => { doShare(t); });
+    /* Sections: ahead of the timestamp, matching where mountAI() lands its
+       button. Bands: on the end of the control cluster, after the arrows. */
+    const time = host.querySelector(".sec-time");
+    if (time) host.insertBefore(btn, time); else host.appendChild(btn);
+  }
+}
+function relabelShare(){
+  for (const btn of document.querySelectorAll(".share-btn")){
+    const lab = btn.querySelector("span");
+    if (lab) lab.textContent = T("Share");
+  }
+}
+
 function boot(){
   loadPrefs();
   buildShell();
@@ -8060,6 +8221,7 @@ function boot(){
   readSlow().then(() => { renderHolWidget(); applySeason(); });
   /* Fire-and-forget: availability() can block on a disk check, and nothing
      else in boot() depends on the result. */
+  mountShare();
   mountAI().catch(() => {});
   /* Live traffic marquee: loads independently of the sections - it is a
      nav-adjacent strip, not a section sub-block. */
