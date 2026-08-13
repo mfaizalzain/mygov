@@ -291,6 +291,7 @@ const I18N = {
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
   "Locating stops near you…":"Mencari perhentian berdekatan anda…",
+  "nearest stops within 50 km · type to filter":"perhentian terdekat dalam 50 km · taip untuk tapis",
   "No stops found within your area - try widening your search or switching network.":"Tiada perhentian ditemui dalam kawasan anda - cuba luaskan carian atau tukar rangkaian.",
   "LRT & MRT network":"Rangkaian LRT & MRT",
   "Rapid KL rail - click a station to open it on the map":"Rel Rapid KL - klik stesen untuk buka pada peta",
@@ -6408,6 +6409,11 @@ let netFilter = "all";        // all | ktmb | prasarana | penang | rail
 let stopQ = "";
 let tdata = null;
 const tgeo = { status:"idle", near:null };
+/* The "nearest stops" list must stay in the reader's own metro area: without
+   a cap, someone in KL gets Rapid Penang's "nearest" stops, which are 300 km
+   away. 50 km covers a metro area (and the transit around it) while keeping
+   every other network out. */
+const NEAR_STOP_KM = 50;
 const haversine = (a, b) => {
   const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180,
         dLon = (b.lon - a.lon) * Math.PI / 180;
@@ -6556,6 +6562,7 @@ async function findStopsNear(){
   for (const f of trFeeds()){
     tgeo.near[f.key] = f.stopList
       .map(s => ({ s, km:haversine({ lat:tgeo.lat, lon:tgeo.lon }, s) }))
+      .filter(x => x.km <= NEAR_STOP_KM)
       .sort((a, b) => a.km - b.km).slice(0, 12);
   }
   tgeo.status = "ok";
@@ -6936,7 +6943,7 @@ function paintBlocks(){
     </div>`).join("")}</div>
     <div class="card" style="margin-top:var(--s6)">
       <div class="card-h"><h4>${T("All stops - all networks")}</h4>
-        <span class="sub">${T("type to filter or use “Find stops near me”")}</span>
+        <span class="sub">${T("nearest stops within 50 km · type to filter")}</span>
         <span class="right"><span class="dim" id="tr-stop-count"></span></span></div>
       <div class="tw scroll-y" style="max-height:420px"><table>
         <thead><tr><th>${T("Network")}</th><th>${T("Stop")}</th>${tgeo.near ? `<th class="num">${T("Distance")}</th>` : `<th>${T("Map")}</th>`}</tr></thead>
