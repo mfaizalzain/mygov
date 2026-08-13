@@ -102,6 +102,7 @@ const I18N = {
   "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Daily trips by service come from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. They count journeys taken, not unique passengers, and are audited monthly before release.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda - hanya laluan, perjalanan, perhentian dan kalendar dibaca, bukan fail terbesar. Kiraan perjalanan ialah pelepasan pada satu hari bekerja biasa. Setiap suapan membawa corak hari bekerja, Sabtu dan Ahad sekali gus, jadi mengira baris fail akan menambah hari berasingan ke dalam jumlah yang tiada siapa boleh menaiki; kedua-dua suapan Rapid KL juga berasaskan kekerapan, menyenaraikan satu templat bagi setiap arah serta headway, maka laluan Kelana Jaya muncul dalam fail sebagai 6 perjalanan, bukan ~350 yang sebenarnya berjalan. Perjalanan harian mengikut perkhidmatan datang daripada siri ridership_headline dalam katalog data kerajaan - jumlah tap-in/tap-out tanpa nama daripada sistem tiket pengendali, diterbitkan oleh Prasarana dan Kementerian Pengangkutan. Ia mengira perjalanan yang diambil, bukan penumpang unik, dan diaudit setiap bulan sebelum diterbitkan.",
   "Trains and buses currently reporting their position, straight from the operators' live feeds.":"Kereta api dan bas yang kini melaporkan kedudukan mereka, terus daripada suapan langsung pengendali.",
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
+  "Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). The section opens on the Klang Valley feed, with KTMB trains and Rapid Penang one chip away (or All for the full board). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.":"Kereta api daripada suapan GTFS-realtime KTM, dinyahkod dalam pelayar anda oleh pembaca format wayar kecil; ia kerap kosong walaupun di tengah perkhidmatan, sebab itu bas menggunakan sumber berbeza. Bas daripada suapan kiosk rasmi Prasarana - data yang sama dipaparkan di laman myrapidbus - untuk Lembah Klang (800+ bas) dan Pulau Pinang (200+). Bahagian ini dibuka dengan suapan Lembah Klang, dengan kereta api KTMB dan Rapid Penang satu ketukan sahaja (atau Semua untuk paparan penuh). Kod laluan dalam suapan langsung dipadankan dengan jadual diterbitkan pengendali untuk menamakan setiap laluan dan hentiannya; Lembah Klang dipadankan mengikut id laluan, Pulau Pinang mengikut nombor laluan. Kenderaan yang kedudukan terakhirnya dilaporkan melebihi 15 minit lalu ditinggalkan daripada peta dan kiraan, serta dinyatakan di bawah. Bas diagregatkan ke dalam cip laluan dan peta mengelompokkan kedudukan sehingga anda zum masuk.",
   "Data source & methodology":"Sumber data & kaedah",
   "loading…":"memuatkan…", "updated ":"dikemas kini ", "cached · ":"cache · ",
   "fetched ":"diambil ", "just now":"sebentar tadi", "min ago":"min lalu",
@@ -375,6 +376,7 @@ const I18N = {
   "among live ":"antara ", "Live map - ":"Peta langsung - ", "positions as broadcast":"kedudukan seperti disiarkan",
   "moving":"bergerak", "stopped":"berhenti", "Komuter":"Komuter", "ETS":"ETS",
   "operator kiosk feed":"suapan kiosk pengendali",
+  "KTMB trains":"Kereta api KTMB", "Rapid Penang":"Rapid Penang",
   "Nearest ":"Terdekat ", " to you":" dengan anda",
   "straight-line distance, within 5 km":"jarak garis lurus, dalam 5 km",
   "route unnamed in the schedule feed":"laluan tanpa nama dalam suapan jadual",
@@ -1965,7 +1967,11 @@ function ensureLiveNames(){
           if (r.id) ROUTE_NAMES.set(r.id, { short:r.short || r.id, long:r.long || "" });
   const want = [];
   if (lvdata && lvdata.rapid  && !FEEDER_NAMES.size) want.push(loadFeederNames());
-  if (lvdata && lvdata.penang && !PENANG_NAMES.size) want.push(loadPenangNames());
+  /* Penang's route names are megabytes of static GTFS fetched just to label
+     its buses; they are only needed once the Penang block is actually shown,
+     so they stay deferred until the chip (or All) asks for them. */
+  if (lvdata && lvdata.penang && !PENANG_NAMES.size &&
+      (lvNet === "penang" || lvNet === "all")) want.push(loadPenangNames());
   if (!want.length) return;
   /* Repaint only if names actually arrived. Re-rendering unconditionally
      would call this again, queue the same loads again, and never settle. */
@@ -7280,6 +7286,7 @@ const ago = ts => {
 };
 let lvdata = null;
 let lvFilter = {};   // feed key -> route id filter (clicking a route chip)
+let lvNet = "rapid";  // live network chips: rapid (default) | ktmb | penang | all
 const lvMaps = {};
 function vcard(f, v){
   return `<div class="card vcard">
@@ -7375,11 +7382,19 @@ function renderLive(d){
   lvFilter = lvFilter || {};
   $("body-live") ? $("body-live").innerHTML = "" : null;
   const host = $("#body-live");
-  /* The two feeds (KTMB trains, Rapid KL buses) are structurally identical
-     blocks - KPI row, map, route chips - and stacked they cost two screens to
-     say the same thing twice. Side by side the section is one screen. auto-fit
-     rather than a plain g2 so a single surviving feed still spans the row. */
-  host.innerHTML = `<div class="lv-grid">` + Object.values(d).map(f => {
+  /* Network chips: Rapid KL by default - the feed most visitors mean when
+     they open this section - with KTMB trains and Rapid Penang one tap away,
+     and All keeping the old side-by-side status board for those who want it.
+     The blocks stay in the DOM (hidden), so switching is instant and an
+     already-painted map keeps its view; only the selected feed's map is ever
+     mounted, because paintMaps waits for visibility before creating it. */
+  host.innerHTML =
+    `<div class="chips mb" id="lv-filters" role="group" aria-label="${esc(T("Live Vehicles"))}">
+      ${[["rapid", T("Rapid KL")], ["ktmb", T("KTMB trains")],
+          ["penang", T("Rapid Penang")], ["all", T("All networks")]]
+        .map(([v, l]) => `<button class="chip" data-lvnet="${v}" aria-pressed="${lvNet === v}">${l}</button>`).join("")}
+    </div>
+    <div class="lv-grid">` + Object.values(d).map(f => {
     /* "795 live" counted vehicles whose last known position was hours old
        alongside ones reporting seconds ago. Split them: the headline counts
        what is actually reporting, and the stale ones are named rather than
@@ -7399,7 +7414,7 @@ function renderLive(d){
     routes.sort((a,b) => b.count - a.count);
     const top = routes.slice(0, 18);
     const filtered = lvFilter[f.key] ? ` · ${T("route")} <b>${esc(lvFilter[f.key])}</b>` : "";
-    return `<div>
+    return `<div data-lv-block="${f.key}"${lvNet === "all" || lvNet === f.key ? "" : " hidden"}>
       <div class="grid g3 mb">
         <div class="kpi"><div class="lab">${esc(f.label)} ${T("live now")}</div>
           <div class="val" style="color:${n ? "var(--ok)" : "var(--fg-3)"}" data-count="${n}">0</div>
@@ -7436,6 +7451,21 @@ function renderLive(d){
             <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles - normal outside service hours, or when the operator's tracking feed is paused.")}</div></div></div>`}
     </div>`;
   }).join("") + `</div>`;
+  host.querySelectorAll("#lv-filters [data-lvnet]").forEach(b => {
+    b.onclick = () => {
+      lvNet = b.dataset.lvnet;
+      host.querySelectorAll("#lv-filters [data-lvnet]").forEach(o =>
+        o.setAttribute("aria-pressed", String(o.dataset.lvnet === lvNet)));
+      host.querySelectorAll("[data-lv-block]").forEach(bl =>
+        bl.hidden = !(lvNet === "all" || lvNet === bl.dataset.lvBlock));
+      /* Leaflet remembers its container's size from when it was last shown;
+         on the way back out tell it the block is laid out again. */
+      for (const k of Object.keys(lvMaps))
+        if (lvMaps[k] && !host.querySelector(`[data-lv-block="${k}"]`).hidden)
+          lvMaps[k].invalidateSize();
+      ensureLiveNames();
+    };
+  });
   animateCounters($("#body-live"));
   paintMaps();
 }
@@ -7874,7 +7904,7 @@ const META = {
          "POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPrk"] },
   live:{ title:"Live Vehicles",
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
-    how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.",
+    how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). The section opens on the Klang Valley feed, with KTMB trains and Rapid Penang one chip away (or All for the full board). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)"] },
   travel:{ title:"Travel Outlook",
     desc:"Upcoming peak travel windows for Malaysia - school breaks, public holidays and long weekends - with what to expect and how to plan around them.",
