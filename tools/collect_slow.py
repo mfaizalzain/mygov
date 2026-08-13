@@ -5,7 +5,7 @@ Fetches every non-real-time dataset the app renders and writes
 public/slow.json in the exact shapes the browser loaders build, so visitors
 spend zero API budget on data that changes at most daily:
 
-  fuel      : fuelprice (weekly), hh_income (yearly)
+  fuel      : fuelprice (weekly, effective Thursdays), hh_income (yearly)
   finance   : exchangerates monthly avg, the three BNM middle-rate references
               (0900/1200/1700, published 4x a trading day), trnsc_daily_fpx
               (daily), payment_instruments (monthly), interestrates (monthly)

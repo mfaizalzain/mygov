@@ -93,7 +93,7 @@ const I18N = {
   "Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.":"Ramalan tujuh hari untuk setiap negeri, daerah dan bandar di Malaysia - serta amaran cuaca buruk dan gempa bumi terkini.",
   "Forecasts, warnings and earthquake notices come from MET Malaysia. Forecasts cover 360 locations, from states down to individual towns and highland resorts.":"Ramalan, amaran dan maklumat gempa bumi daripada MET Malaysia. Ramalan meliputi 360 lokasi, daripada negeri hingga bandar dan resort tanah tinggi.",
   "What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.":"Apa yang dibayar oleh sesebuah isi rumah - harga runcit minyak mingguan, bakul barangan runcit PriceCatcher, dan pertumbuhan pendapatan isi rumah Malaysia.",
-  "Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.":"Harga minyak ditetapkan mingguan oleh Kementerian Kewangan dan diambil dengan penapisan sisi pelayan ke siri paras harga. Barangan runcit ialah bakul tetap item seharian yang dipetik harga setiap hari oleh juruukur KPDN - blok Barangan Runcit di bawah membawa metodologi penuh. Pendapatan isi rumah daripada Kajian Pendapatan Isi Rumah.",
+  "Fuel prices are set weekly by the Ministry of Finance and take effect every Thursday; they are fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.":"Harga minyak ditetapkan mingguan oleh Kementerian Kewangan dan berkuat kuasa setiap Khamis; ia diambil dengan penapisan sisi pelayan ke siri paras harga. Barangan runcit ialah bakul tetap item seharian yang dipetik harga setiap hari oleh juruukur KPDN - blok Barangan Runcit di bawah membawa metodologi penuh. Pendapatan isi rumah daripada Kajian Pendapatan Isi Rumah.",
   "What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.":"Kos sebenar makanan di rak - bakul tetap item seharian yang dipetik harga setiap hari oleh juruukur KPDN di pasar raya, pasar mini dan pasar basah di setiap daerah.",
   "PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.":"PriceCatcher merekod harga rak ~340 item di ~2,100 premis di seluruh negara. Ia tiada pada OpenAPI (id=pricecatcher memulangkan 404) - diterbitkan hanya sebagai Parquet bulanan, maka GitHub Action harian menggabungkan 13 bulan daripadanya ke dalam prices.json. Trend ialah indeks Jevons (min geometri nisbah harga) ke atas item yang berharga setiap bulan, jadi bakul tidak boleh hanyut. Ia wajaran sama, bukan CPI: DOSM tidak menerbitkan wajaran perbelanjaan per-item pada butiran ini. Angka daerah ialah tahap harga ruang - median tempatan setiap item berbanding median nasional - jadi daerah tidak dihukum kerana menyimpan bahagian bakul yang berbeza.",
   "Department of Statistics Malaysia - inflation by spending category, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia - inflasi mengikut kategori perbelanjaan, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
@@ -230,7 +230,8 @@ const I18N = {
   "drizzle":"Gerimis", "rain":"Hujan", "showers":"Hujan setempat", "snow":"Salji",
   "storm":"Ribut petir",
   "Price week of":"Minggu harga", "vs last week":"berbanding minggu lepas",
-  "weeks on record":"minggu direkod", "Retail fuel prices":"Harga runcit minyak",
+  "weeks on record":"minggu direkod", "updated Thursdays":"dikemas kini Khamis",
+  "Retail fuel prices":"Harga runcit minyak",
   "RM per litre · weekly ceiling":"RM seliter · siling mingguan",
   "Household income":"Pendapatan isi rumah", "RM per month · mean vs median":"RM sebulan · min vs median",
   "Week":"Minggu", "Year":"Tahun", "Mean RM":"Min RM", "Median RM":"Median RM",
@@ -3570,7 +3571,7 @@ function renderFuel(d){
           <div class="sub">${badge(delta(L && L[k], P && P[k]))} ${T("vs last week")}</div></div>`).join("")}
       <div class="kpi"><div class="lab">${T("Price week of")}</div>
         <div class="val" style="font-size:18px">${esc(ymd(L && L.date))}</div>
-        <div class="sub">${d.rows.length} ${T("weeks on record")}</div></div>
+        <div class="sub">${T("updated Thursdays")} · ${d.rows.length} ${T("weeks on record")}</div></div>
     </div>
     <div class="grid g2">
     <div class="card">
@@ -7797,7 +7798,7 @@ const META = {
     eps:["/weather/forecast","api.open-meteo.com (current conditions)"] },
   fuel:{ title:"Household",
     desc:"What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.",
-    how:"Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.",
+    how:"Fuel prices are set weekly by the Ministry of Finance and take effect every Thursday; they are fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.",
     eps:["/data-catalogue?id=fuelprice","/data-catalogue?id=hh_income"] },
   prices:{ title:"Groceries",
     desc:"What food actually costs on the shelf - a fixed basket of everyday items priced daily by KPDN enumerators at supermarkets, mini markets and wet markets in every district.",
