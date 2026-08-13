@@ -26,9 +26,11 @@
    v23: security + a11y pass - safeUrl on radar source links, honest roles on
    the vehicle/flood/route chips, keyboard activation for metro stations, and
    a real pause control on the traffic ticker.
+   v24: Trend Radar claim/fact_details modal, claim previews, status filters,
+   relative freshness, and filter/empty-state handling.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v23";
+const VERSION    = "mygov-v24";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
