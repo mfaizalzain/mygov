@@ -758,7 +758,12 @@ export default {
         try {
           const kv = JSON.parse(kvRaw);
           const board = (kv.boards || {})[kvKey];
-          if (board && Array.isArray(board.flights)) {
+          /* Only a complete board is worth serving from KV. A truncated one
+             (a failed page during collection) ends before the evening's
+             flights and reads as "no more flights today", so fall through to
+             the live fetch, which pages the whole day. */
+          if (board && Array.isArray(board.flights) && !board.truncated &&
+              (board.count == null || board.flights.length >= board.count)) {
             return json({
               count: board.count != null ? board.count : board.flights.length,
               returned: board.flights.length,
@@ -796,24 +801,24 @@ export default {
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
 
-      let res;
-      try {
-        res = await fetch(upstream, {
-          headers: {
-            "x-api-key": env.FIDS_API_KEY,
-            accept: "application/json",
-          },
-          cf: { cacheTtl: 90, cacheEverything: true },
-        });
-      } catch {
-        return json({ error: "upstream_unreachable" }, 502);
-      }
-      if (!res.ok)
-        return json({ error: "upstream_error", status: res.status }, res.status === 429 ? 429 : 502);
-
-      let data;
-      try { data = await res.json(); }
-      catch { return json({ error: "bad_upstream_payload" }, 502); }
+      /* The upstream intermittently drops a request (429/timeout), and one
+         missed page used to truncate the board - which read as an empty
+         evening board. Retry page 0 three times and later pages twice. */
+      const pageJson = async (skip, tries) => {
+        for (let a = 0; a < tries; a++){
+          try {
+            const p = await fetch(fidsUrl(skip), {
+              headers: { "x-api-key": env.FIDS_API_KEY, accept: "application/json" },
+              cf: { cacheTtl: 90, cacheEverything: true },
+            });
+            if (p.ok) return await p.json();
+          } catch {}
+          if (a + 1 < tries) await new Promise(r => setTimeout(r, 800));
+        }
+        return null;
+      };
+      const data = await pageJson(0, 3);
+      if (!data) return json({ error: "upstream_unreachable" }, 502);
 
       /* Page 1 tells us the real total; fetch the rest in parallel. A failed
        * page is skipped rather than failing the board - a partial board beats
@@ -824,12 +829,7 @@ export default {
         const pages = Math.min(Math.ceil(total / PAGE), MAX_PAGES);
         const rest = await Promise.all(
           Array.from({ length: pages - 1 }, (_, i) =>
-            fetch(fidsUrl((i + 1) * PAGE), {
-              headers: { "x-api-key": env.FIDS_API_KEY, accept: "application/json" },
-              cf: { cacheTtl: 90, cacheEverything: true },
-            })
-              .then(p => (p.ok ? p.json() : null))
-              .catch(() => null)));
+            pageJson((i + 1) * PAGE, 2)));
         for (const p of rest)
           if (p && Array.isArray(p.flightStatuses)) statuses.push(...p.flightStatuses);
       }

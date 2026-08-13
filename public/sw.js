@@ -56,9 +56,12 @@
    opens and shows nearest stops by default, no tap required.
    v35: nearest stops are capped at 50 km so a KL visitor no longer sees
    Rapid Penang's "nearest" stops from 300 km away.
+   v36: FIDS stops serving truncated boards - the collector retries failed
+   pages, the Worker falls back to a live full-day fetch instead of a short
+   board, and a partial board is labelled rather than looking empty.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v35";
+const VERSION    = "mygov-v36";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

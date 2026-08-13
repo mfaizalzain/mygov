@@ -30,9 +30,16 @@ jobs:
           d = json.load(open('public/fids.json'))
           boards = d.get('boards') or {}
           assert boards, 'no boards collected'
-          klia = boards.get('A|KLIA') or boards.get('D|KLIA')
-          assert klia and klia.get('flights'), 'KLIA board missing'
-          print('OK:', len(boards), 'boards | KLIA A:', len(boards.get('A|KLIA', {}).get('flights', [])), 'flights')
+          klia = {k: boards[k] for k in ('A|KLIA', 'D|KLIA') if k in boards}
+          assert klia, 'no KLIA board collected'
+          for k, b in klia.items():
+              n = len(b.get('flights') or [])
+              # A truncated board must never replace a complete one in KV -
+              # the Worker refuses to serve truncated boards anyway.
+              assert not b.get('truncated'), f'{k} truncated: {n}/{b.get("count")}'
+              assert n >= (b.get('count') or 0), f'{k} incomplete: {n}/{b.get("count")}'
+          print('OK:', len(boards), 'boards | KLIA A:',
+                len(boards.get('A|KLIA', {}).get('flights', [])), 'flights')
           PY
 
       - name: Upload data to Cloudflare KV

@@ -310,6 +310,7 @@ const I18N = {
   "Trips":"Perjalanan", "Share":"Bahagian", "Stop":"Perhentian", "Distance":"Jarak",
   "No stops match ":"Tiada perhentian sepadan ",
   "Live flights":"Penerbangan langsung", "Malaysia Airports · real-time board":"Malaysia Airports · papan masa nyata",
+  "Partial board - ":"Papan separa - ", "flights":"penerbangan",
   "Search flight, city, airline…":"Cari penerbangan, bandar, syarikat…", "Arrivals":"Ketibaan", "Departures":"Berlepas",
  "Tourism":"Pelancongan", "visitors this month":"pelawat bulan ini",
  "vs same month last year":"berbanding bulan sama tahun lepas",
@@ -6484,7 +6485,11 @@ function paintFlights(){
     (f.origin || "").toLowerCase().includes(q) ||
     (f.destination || "").toLowerCase().includes(q) ||
     (f.airline || "").toLowerCase().includes(q));
-  host.innerHTML = `<table>
+  /* A truncated board (a failed upstream page) must never read as "no more
+     flights today": say what is missing instead. */
+  host.innerHTML = `${d.truncated
+    ? `<p class="note" style="margin:0 0 var(--s2)">⚠️ ${T("Partial board - ")}${nf((d.flights || []).length)}/${nf(d.count || (d.flights || []).length)} ${T("flights")}</p>`
+    : ""}<table>
     <thead><tr><th>${T("Flight")}</th><th>${fids.dir === "A" ? T("From") : T("To")}</th>
       <th class="num">${T("Scheduled")}</th><th>${T("Status")}</th><th>${T("Gate")}</th></tr></thead>
     <tbody>${rows.slice(0, 60).map(f => {
