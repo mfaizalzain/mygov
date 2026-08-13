@@ -2509,10 +2509,18 @@ const dateRangeSeg = (attr, ranges, cur) => `<span class="seg" role="group" aria
    One tile per hazard. A tile is a <details> so the browser owns the
    open/closed state and it works with no JS; the detail body is only built
    when that hazard has something to show, which is what keeps a quiet day to
-   a single row instead of five screens. Anything active starts open. */
+   a single row instead of five screens.
+
+   Exactly one tile starts open - the most severe. Opening every active tile
+   undid the whole point on a busy day: an open tile spans the strip (see
+   .hz-strip details[open]), so three active hazards meant three stacked
+   full-width bodies and two thousand pixels before the Weather section. The
+   alerts deck already carries the flood, Rapid and AQI cards, so it is the
+   one that opens; the other two stay as summaries, three across in one row,
+   a click away. */
 let hzData = null;
 
-function hzTile(key, ico, label, active, headline, sub, body){
+function hzTile(key, ico, label, active, headline, sub, body, open){
   const tone = active ? "hz-on" : "hz-ok";
   const mark = active ? "&#9888;" : "&#10003;";
   if (!body)
@@ -2522,7 +2530,7 @@ function hzTile(key, ico, label, active, headline, sub, body){
       <div class="hz-val">${headline}</div>
       <div class="hz-sub">${sub}</div>
     </div>`;
-  return `<details class="hz-tile ${tone}" id="hz-${key}"${active ? " open" : ""}>
+  return `<details class="hz-tile ${tone}" id="hz-${key}"${open ? " open" : ""}>
     <summary class="hz-sum">
       <div class="hz-top"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-${ico}"/></svg>
         <span class="hz-lab">${esc(label)}</span><span class="hz-mark">${mark}</span></div>
@@ -2561,6 +2569,11 @@ function renderHazards(d){
      paintAlerts(), mounted here. */
   const alertN = active.length + d.eq.length + floodCards + rapidN + aqiAlert;
   const wxBody = (alertN || notices.length) ? `<div id="wx-warn"></div>` : "";
+  /* Which single tile starts open. The deck subsumes flood and air quality
+     whenever either is actually alerting, so it wins; the other two only open
+     on their own when the deck has nothing at all to show. */
+  const openKey = alertN > 0 ? "wx" : atRisk > 0 ? "fl"
+    : aqiWorst != null && aqiWorst >= 101 ? "aq" : "";
   const wxTile = hzTile("wx", "warn", T("Weather, earthquakes, flood & more"), alertN > 0,
     alertN ? `${alertN} ${T(alertN === 1 ? "active alert" : "active alerts")}`
            : T("All clear"),
@@ -2570,7 +2583,7 @@ function renderHazards(d){
         (rapidN ? ` · ${rapidN} ${T("Rapid KL")}` : "") +
         (aqiWorst != null ? ` · ${T("AQI")} ${aqiWorst}` : "")
       : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue")),
-    wxBody);
+    wxBody, openKey === "wx");
 
   /* Flood - the map is expensive, so it is only mounted when the tile opens. */
   const fTile = !f
@@ -2581,11 +2594,11 @@ function renderHazards(d){
           f.stations.filter(x => x.status === "Warning").length} ${T("warning")} · ${
           f.stations.filter(x => x.status === "Alert").length} ${T("alert")}`
                : T("no station above threshold"),
-        atRisk ? `<div id="body-flood"></div>` : "");
+        atRisk ? `<div id="body-flood"></div>` : "", openKey === "fl");
 
-  /* Air quality - all cities, always, as comparison cards. The tile opens on
-     its own; the card only becomes an *alert* (riding the deck above) when
-     the worst city is Unhealthy, US AQI 101+. */
+  /* Air quality - all cities, always, as comparison cards behind the summary.
+     The card only becomes an *alert* (riding the deck above) when the worst
+     city is Unhealthy, US AQI 101+. */
   const aq = d.aqi;
   const aqTile = !aq
     ? hzTile("aq", "air", T("Air quality"), false, T("Unavailable"), T("Open-Meteo model"), "")
@@ -2594,7 +2607,7 @@ function renderHazards(d){
         aq.worst && aq.cleanest
           ? `${T("Worst")} ${aq.worst.name} ${aq.worst.aqi} · ${T("Cleanest")} ${aq.cleanest.name} ${aq.cleanest.aqi}`
           : "",
-        `<div class="aq-grid" id="body-aqi">${aqiGrid(aq)}</div>`);
+        `<div class="aq-grid" id="body-aqi">${aqiGrid(aq)}</div>`, openKey === "aq");
 
   host.innerHTML = `<div class="hz-strip">${wxTile}${fTile}${aqTile}</div>`;
   setNavBadge("hazards", alertN, "active alert", "active alerts");
@@ -3314,7 +3327,8 @@ function renderFuel(d){
         <div class="val" style="font-size:18px">${esc(ymd(L && L.date))}</div>
         <div class="sub">${d.rows.length} ${T("weeks on record")}</div></div>
     </div>
-    <div class="card mb">
+    <div class="grid g2">
+    <div class="card">
       <div class="card-h"><h4>${T("Retail fuel prices")}</h4>
         <span class="sub">${T("RM per litre · weekly ceiling")}</span>
         <span class="right"><span class="seg" role="group" aria-label="Date range">
@@ -3334,13 +3348,14 @@ function renderFuel(d){
           <div class="dt-body" id="hh-dt"></div></details></div>
     </div>
     ` : `
-    <div class="card mb">
+    <div class="card">
       <div class="card-b" style="display:flex;align-items:center;gap:var(--s3);color:var(--fg-3);font-size:12.5px">
         <span aria-hidden="true">⏳</span>
         <span>${T("Household income is awaiting the next DOSM release (last updated ")}${d.hhLatest ? esc(d.hhLatest.slice(0,4)) : "-"}${T("). The chart will appear automatically when new data lands.")}</span>
       </div>
     </div>
     `}
+    </div>
   `;
   $("#body-fuel").querySelectorAll("[data-range]").forEach(b => {
     b.onclick = () => { fuelRange = b.dataset.range;
@@ -3718,16 +3733,26 @@ function renderEconomy(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="cpi-dt"></div></details></div>
     </div>
-    <div class="card mb">
-      <div class="card-h"><h4>${T("Inflation by state")}</h4>
-        <span class="sub">${T("year-on-year · overall index")}</span>
-        <span class="right sub" id="cpi-st-date"></span></div>
-      <div class="card-b"><div class="chart tall"><canvas id="cpist-chart" role="img"
-        aria-label="Year-on-year inflation by state"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="cpist-dt"></div></details></div>
-    </div>
     <div class="grid g2 mb">
+      <div class="card">
+        <div class="card-h"><h4>${T("Inflation by state")}</h4>
+          <span class="sub">${T("year-on-year · overall index")}</span>
+          <span class="right sub" id="cpi-st-date"></span></div>
+        <div class="card-b"><div class="chart tall"><canvas id="cpist-chart" role="img"
+          aria-label="Year-on-year inflation by state"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="cpist-dt"></div></details></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>${T("Foreign direct investment")}</h4>
+          <span class="sub">${T("quarterly · RM billion")}</span></div>
+        <div class="card-b"><div class="chart tall"><canvas id="fdi-chart" role="img"
+          aria-label="Foreign direct investment inflow, outflow and net by quarter"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="fdi-dt"></div></details></div>
+      </div>
+    </div>
+    <div class="grid g2">
       <div class="card"><div class="card-h"><h4>${T("Unemployment rate")}</h4><span class="sub">${T("monthly")}</span></div>
         <div class="card-b"><div class="chart"><canvas id="lfs-chart" role="img" aria-label="Unemployment rate"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
@@ -3736,14 +3761,6 @@ function renderEconomy(d){
         <div class="card-b"><div class="chart"><canvas id="gdp-chart" role="img" aria-label="Real GDP"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="gdp-dt"></div></details></div></div>
-    </div>
-    <div class="card">
-      <div class="card-h"><h4>${T("Foreign direct investment")}</h4>
-        <span class="sub">${T("quarterly · RM billion")}</span></div>
-      <div class="card-b"><div class="chart tall"><canvas id="fdi-chart" role="img"
-        aria-label="Foreign direct investment inflow, outflow and net by quarter"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="fdi-dt"></div></details></div>
     </div>`;
 
   const chips = $("#cpi-chips");
@@ -4006,6 +4023,13 @@ const PAY_LABEL = {
   "cheque":"Cheque", "emoney":"E-money",
 };
 
+/* Two rows of two rather than five stacked full-width cards. The charts were
+   rendering 1158px wide by 340 tall - a 3.4:1 letterbox nothing here needs -
+   and the section ran 2,600px for four charts. Paired by subject: the two
+   rate charts (exchange, interest) share a row, the two payments charts (FPX,
+   instruments) share the next. The currency hero, which used to be a 71px
+   card alone in a full-width band, now sits inside the exchange-rate card it
+   was always describing. */
 function renderFinance(d){
   const fp = d.fpx || [];
   const fL = fp[fp.length - 1] || [];
@@ -4021,8 +4045,19 @@ function renderFinance(d){
         <div class="val">${FX_ORDER.length}</div>
         <div class="sub">${esc(T("Bank Negara daily reference rates"))}</div></div>
     </div>
-    <div class="card mb">
-      <div class="card-b fx-row">
+    <div class="grid g2 mb">
+    <div class="card">
+      <div class="card-h"><h4>${T("Exchange rates")}</h4>
+        <span class="sub">${T("RM per unit · Bank Negara reference rates")}</span>
+        <span class="right">
+          <span class="seg" role="group" aria-label="Granularity">
+            ${[["daily",T("Daily")],["monthly",T("Monthly")]].map(([v,l]) =>
+              `<button data-fxgran="${v}" aria-pressed="${v === fxGran}">${l}</button>`).join("")}
+          </span>
+          <span class="seg" role="group" aria-label="Date range">
+          ${FX_RANGES.map(r => `<button data-fxrange="${r}" aria-pressed="${r === fxRange}">${r.toUpperCase()}</button>`).join("")}
+        </span></span></div>
+      <div class="card-b fx-row" style="padding-bottom:8px">
         <div class="fx-pick">
           <span class="fx-code" id="fx-hero-code">USD</span>
           <span class="fx-hero">
@@ -4038,26 +4073,30 @@ function renderFinance(d){
           </select>
         </div>
       </div>
-    </div>
-    <div class="card mb">
-      <div class="card-h"><h4>${T("Exchange rates")}</h4>
-        <span class="sub">${T("RM per unit · Bank Negara reference rates")}</span>
-        <span class="right">
-          <span class="seg" role="group" aria-label="Granularity">
-            ${[["daily",T("Daily")],["monthly",T("Monthly")]].map(([v,l]) =>
-              `<button data-fxgran="${v}" aria-pressed="${v === fxGran}">${l}</button>`).join("")}
-          </span>
-          <span class="seg" role="group" aria-label="Date range">
-          ${FX_RANGES.map(r => `<button data-fxrange="${r}" aria-pressed="${r === fxRange}">${r.toUpperCase()}</button>`).join("")}
-        </span></span></div>
-      <div class="card-b" style="padding-bottom:8px"><div class="chips" id="fx-currs"></div></div>
+      <div class="card-b" style="padding-top:8px;padding-bottom:8px"><div class="chips" id="fx-currs"></div></div>
       <div class="card-b" style="padding-top:8px">
         <p class="note" style="margin-top:0" id="fx-note"></p>
         <div class="chart tall"><canvas id="fx-chart" role="img" aria-label="Exchange rates"></canvas></div>
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="fx-dt"></div></details></div>
     </div>
-    <div class="card mb">
+    <div class="card">
+      <div class="card-h"><h4>${T("Interest rates")}</h4>
+        <span class="sub">${T("Commercial base rate - tracks the OPR")}</span></div>
+      <div class="card-b">
+        <div class="chart"><canvas id="ir-chart" role="img" aria-label="Interest rates"></canvas></div>
+        <p class="note">ℹ️ ${T("The OPR is not published in this dataset - the commercial base rate (BR) tracks it.")}</p>
+        <h5 class="mini-h">${T("Latest rates by bank type")}</h5>
+        <div class="tw"><table>
+          <thead><tr><th>${T("Rate")}</th><th class="num">${T("Commercial")}</th><th class="num">${T("Investment")}</th></tr></thead>
+          <tbody id="ir-rows"></tbody>
+        </table></div>
+        <details class="dt"><summary>${T("View data table")}</summary>
+          <div class="dt-body" id="ir-dt"></div></details></div>
+    </div>
+    </div>
+    <div class="grid g2">
+    <div class="card">
       <div class="card-h"><h4>${T("FPX e-payments")}</h4>
         <span class="sub">${T("daily transaction value & volume")}</span>
         <span class="right"><span class="seg" role="group" aria-label="Date range">
@@ -4069,7 +4108,7 @@ function renderFinance(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="fpx-dt"></div></details></div>
     </div>
-    <div class="card mb">
+    <div class="card">
       <div class="card-h"><h4>${T("Payment instruments")}</h4>
         <span class="sub">${T("monthly transaction value by instrument")}</span>
         <span class="right">
@@ -4086,19 +4125,6 @@ function renderFinance(d){
         <details class="dt"><summary>${T("View data table")}</summary>
           <div class="dt-body" id="pay-dt"></div></details></div>
     </div>
-    <div class="card">
-      <div class="card-h"><h4>${T("Interest rates")}</h4>
-        <span class="sub">${T("Commercial base rate - tracks the OPR")}</span></div>
-      <div class="card-b">
-        <div class="chart"><canvas id="ir-chart" role="img" aria-label="Interest rates"></canvas></div>
-        <p class="note">ℹ️ ${T("The OPR is not published in this dataset - the commercial base rate (BR) tracks it.")}</p>
-        <h5 class="mini-h">${T("Latest rates by bank type")}</h5>
-        <div class="tw"><table>
-          <thead><tr><th>${T("Rate")}</th><th class="num">${T("Commercial")}</th><th class="num">${T("Investment")}</th></tr></thead>
-          <tbody id="ir-rows"></tbody>
-        </table></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="ir-dt"></div></details></div>
     </div>`;
   const chips = $("#fx-currs");
   FX_ORDER.forEach(k => {
@@ -4402,16 +4428,29 @@ function renderMobility(d){
   const busiest = svcLast.slice().sort((a, b) => b.v - a.v)[0];
   const ridDate = rn ? isoOf(R.t0 + rn - 1) : null;
 
+  /* Two KPIs spanning 590px each was a lot of card for a number and a label,
+     while the car-sales block carried two more of its own buried inside it.
+     One four-up row at the top of the section instead: all four headline
+     figures in the space the two were using, and the card below loses a row. */
   $("#body-mobility").innerHTML = `
-    <div class="grid g2 mb">
+    <div class="grid ${d.cars && cy ? "g4" : "g2"} mb">
       <div class="kpi"><div class="lab">🔌 ${T("New EVs")}</div>
         <div class="val" data-count="${ev || 0}">0</div>
         <div class="sub">${last ? esc(ymd(last)) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("EV share")}</div>
         <div class="val">${share == null ? "-" : nf(share, 1) + "%"}</div>
         <div class="sub">${T("of new vehicles")} · ${nf(tot)}</div></div>
+      ${d.cars && cy ? `
+      <div class="kpi"><div class="lab">${T("YTD registrations")}</div>
+        <div class="val" data-count="${cy.rows}">0</div>
+        <div class="sub">${esc(carsYear)} ${T("new cars")}</div></div>
+      <div class="kpi"><div class="lab">${T("Top maker")}</div>
+        <div class="val" style="font-size:20px">${cy.topMakers[0] ? esc(cy.topMakers[0].name) : "-"}</div>
+        <div class="sub">${cy.topMakers[0] ? nf(cy.topMakers[0].n) + " " + T("registered") : ""}</div></div>
+      ` : ""}
     </div>
-    <div class="card mb">
+    <div class="grid g2">
+    <div class="card">
       <div class="card-h"><h4>${T("New vehicle registrations")}</h4>
         <span class="sub">${regUnit === "share" ? T("share of the month · by fuel type")
                                                 : T("by fuel type · monthly")}</span>
@@ -4431,18 +4470,10 @@ function renderMobility(d){
           <div class="dt-body" id="reg-dt"></div></details></div>
     </div>
     ${d.cars && cy ? `
-    <div class="card mb" style="margin-top:var(--s4)">
+    <div class="card">
       <div class="card-h"><h4>${T("Car sales")}</h4>
         <span class="sub">${T("new cars by maker")} · ${esc(carsAsOf)}</span></div>
       <div class="card-b">
-        <div class="grid g2 mb">
-          <div class="kpi"><div class="lab">${T("YTD registrations")}</div>
-            <div class="val" data-count="${cy.rows}">0</div>
-            <div class="sub">${esc(carsYear)} ${T("new cars")}</div></div>
-          <div class="kpi"><div class="lab">${T("Top maker")}</div>
-            <div class="val" style="font-size:20px">${cy.topMakers[0] ? esc(cy.topMakers[0].name) : "-"}</div>
-            <div class="sub">${cy.topMakers[0] ? nf(cy.topMakers[0].n) + " " + T("registered") : ""}</div></div>
-        </div>
         <div class="chips" id="cars-year-chips" style="margin-bottom:var(--s2)">
           ${carYears.map(y =>
             `<button class="chip" data-carsyear="${y}" aria-pressed="${y === String(carsYear)}">${y}</button>`).join("")}
@@ -4456,6 +4487,7 @@ function renderMobility(d){
           aria-label="EV share of new registrations by month"></canvas></div>
       </div>
     </div>` : ""}
+    </div>
 `;
 
   const toggle = (attr, set, fallback, repaint) =>
@@ -4915,7 +4947,8 @@ function renderTourism(d){
         <div class="val" style="${isYTD ? 'font-size:20px' : ''}">${isYTD ? (top1 ? esc(top1.country) : "-") : (t.ytd26 == null ? "-" : nf(t.ytd26))}</div>
         <div class="sub">${isYTD ? (top1 && t.ytd26 ? nf(top1.ytd26 / t.ytd26 * 100, 1) + "% " + T("of YTD total") : "") : (T("vs 2025:") + " " + (t.gy_yoy == null ? "-" : nf(t.gy_yoy, 1) + "%"))}</div></div>
     </div>
-    <div class="card mb">
+    <div class="grid g2">
+    <div class="card">
       <div class="card-h"><h4>${T("Top source countries")} · ${isYTD ? "YTD " + (d.asOf ? d.asOf.year : "2026") : esc(d.asOf ? d.asOf.label : "")}</h4>
         <span class="sub">${T("Data provided by Tourism Malaysia")}</span>
         <span class="right">
@@ -4953,7 +4986,8 @@ function renderTourism(d){
             ${rest.map((r, i) => rowHTML(r, i + 10)).join("")}
             ${others ? rowHTML(others, 0, "&ndash;") : ""}
             </tbody></table></div>
-        </details></div></div>`;
+        </details></div></div>
+    </div>`;
 
   const cData = top10.map(r => isYTD ? r.ytd26 : r.cur);
   chart("tourism-chart", {
@@ -5882,17 +5916,29 @@ function renderHealth(d){
         ${kpiVal(pekaAvg)}
         <div class="sub">${T("per day · last 7 days")}</div></div>
     </div>
-    <div class="card mb">
-      <div class="card-h"><h4>${T("Blood donations")}</h4>
-        <span class="sub">${T("donors per day · 7-day average")}</span>
-        <span class="right">${rangeSeg("don", donRange)}</span></div>
-      <div class="card-b">
-        <div class="chart tall"><canvas id="don-chart" role="img"
-          aria-label="Daily blood donations"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="don-dt"></div></details></div>
-    </div>
     <div class="grid g2 mb">
+      <div class="card">
+        <div class="card-h"><h4>${T("Blood donations")}</h4>
+          <span class="sub">${T("donors per day · 7-day average")}</span>
+          <span class="right">${rangeSeg("don", donRange)}</span></div>
+        <div class="card-b">
+          <div class="chart tall"><canvas id="don-chart" role="img"
+            aria-label="Daily blood donations"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="don-dt"></div></details></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>${T("PeKa B40 screenings")}</h4>
+          <span class="sub">${T("health screenings per day")}</span>
+          <span class="right">${rangeSeg("peka", pekaRange)}</span></div>
+        <div class="card-b">
+          <div class="chart tall"><canvas id="peka-chart" role="img"
+            aria-label="Daily PeKa B40 screenings"></canvas></div>
+          <details class="dt"><summary>${T("View data table")}</summary>
+            <div class="dt-body" id="peka-dt"></div></details></div>
+      </div>
+    </div>
+    <div class="grid g2">
       <div class="card">
         <div class="card-h"><h4>${T("Donations by blood type")}</h4>
           <span class="sub">${T("7-day average · donors per day")}</span></div>
@@ -5911,16 +5957,6 @@ function renderHealth(d){
           <details class="dt"><summary>${T("View data table")}</summary>
             <div class="dt-body" id="organ-dt"></div></details></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-h"><h4>${T("PeKa B40 screenings")}</h4>
-        <span class="sub">${T("health screenings per day")}</span>
-        <span class="right">${rangeSeg("peka", pekaRange)}</span></div>
-      <div class="card-b">
-        <div class="chart"><canvas id="peka-chart" role="img"
-          aria-label="Daily PeKa B40 screenings"></canvas></div>
-        <details class="dt"><summary>${T("View data table")}</summary>
-          <div class="dt-body" id="peka-dt"></div></details></div>
     </div>
     <p class="credit">${T("Data: MoH via data.gov.my")} -
       <a href="https://developer.data.gov.my/realtime-api/data-catalogue" target="_blank"
@@ -6570,12 +6606,18 @@ function paintFilters(){
 function paintBlocks(){
   const host = $("#tr-blocks"); if (!host || !tdata) return;
   const tq = routeQ.trim().toLowerCase();
-  host.innerHTML = `${trFeed().map(f => {
+  /* One block per network, side by side rather than stacked. Three networks
+     stacked ran close to 2,000px of the same four KPIs and the same routes
+     table repeated - the comparison the section is for was never on screen at
+     once. auto-fit means a single visible network still gets the full width,
+     and the KPI row inside a column drops to 2x2 on its own. */
+  const feeds = trFeed();
+  host.innerHTML = `<div class="tr-grid">${feeds.map(f => {
     const routes = f.top.filter(r =>
       !tq || r.short.toLowerCase().includes(tq) || r.long.toLowerCase().includes(tq) || r.id.toLowerCase().includes(tq));
     const near = tgeo.near && tgeo.near[f.key];
-    return `<div class="mb" style="margin-bottom:var(--s6)">
-      <div class="grid g4 mb">
+    return `<div>
+      <div class="grid g4 tr-kpis mb">
         <div class="kpi"><div class="lab">${esc(f.label)} · ${T("routes")}</div>
           <div class="val">${nf(f.routes)}</div><div class="sub">${esc(f.agency)}</div></div>
         <div class="kpi"><div class="lab">${T("Stops")}</div>
@@ -6586,7 +6628,7 @@ function paintBlocks(){
           <div class="val">${nf(f.routes ? f.trips / f.routes : 0, 1)}</div>
           <div class="sub">${esc(f.desc)}</div></div>
       </div>
-      <div class="card mb">
+      <div class="card">
         <div class="card-h"><h4>${T("Busiest routes - ")}${esc(f.label)}</h4>
           <span class="sub">${T("by scheduled trips")}</span>
           <span class="right"><span class="seg" role="group" aria-label="Rows to show">
@@ -6606,8 +6648,8 @@ function paintBlocks(){
         ${!routes.length ? `<tr><td colspan="4" class="state">${T("No routes match ")}“${esc(routeQ)}”.</td></tr>` : ""}
         </tbody></table></div>
       </div>
-    </div>`; }).join("")}
-    <div class="card">
+    </div>`; }).join("")}</div>
+    <div class="card" style="margin-top:var(--s6)">
       <div class="card-h"><h4>${T("All stops - both networks")}</h4>
         <span class="sub">${T("type to filter or use “Find stops near me”")}</span>
         <span class="right"><span class="dim" id="tr-stop-count"></span></span></div>
@@ -6700,7 +6742,6 @@ let radarIdx = 0, radarTimer = null, radarIssues = [], radarVisible = [], radarF
 
 function radarSlide(i, idx){
   const fc = i.fact_check || {};
-  const verdict = fc.verdict ? `<span class="fc-verdict">${esc(fc.verdict.replace("_"," "))}</span>` : "";
   const tone = {
     verified_claim:"radar-ok", debunked:"radar-debunk", misleading:"radar-warn"
   }[fc.status] || "radar-unchecked";
@@ -6714,7 +6755,7 @@ function radarSlide(i, idx){
       ${i.title_en && i.title_en !== i.title_bm ? `<p class="dim">${esc(i.title_en)}</p>` : ""}
       ${claimText ? `<p class="rs-claim">${esc(claimText)}</p>` : ""}
       <div class="radar-meta">
-        ${fcBadge(fc.status)} ${verdict}
+        ${fcBadge(fc.status)}
         <span class="pill">${esc(i.category || "lain")}</span>
         <span class="dim">${i.source_count || ((i.sources || []).length)} ${T("sources")}</span>
       </div>
@@ -6724,14 +6765,16 @@ function radarSlide(i, idx){
 
 function radarDetail(i){
   const fc = i.fact_check || {};
-  const verdict = fc.verdict ? fc.verdict.replace("_"," ").toUpperCase() : "";
   const claim = i.claim || fc.claim || "";
   const facts = i.fact_details || fc.fact_details || "";
   const reason = facts ? "" : (fc.reason || "");
-  /* TRUE / PARTLY TRUE / FALSE → tone for the banner */
-  const vt = /TRUE/i.test(verdict) && !/PARTLY/.test(verdict) ? "ok"
-    : /FALSE|HOAX|PALSU/i.test(verdict) ? "err" : "warn";
-  const vIcon = vt === "ok" ? "✅" : vt === "err" ? "🚫" : "⚠️";
+  /* The banner is driven by fact_check.status - the same four states the
+     filter chips offer. The free-text verdict beside it (TRUE / PARTLY TRUE /
+     FALSE) restated the badge in different words: a "verified claim" whose
+     verdict read TRUE, a "debunked" one whose verdict read FALSE. One label,
+     one vocabulary. */
+  const [vIcon, vt] = FC_BADGE[fc.status] || ["❓", ""];
+  const vLabel = fc.status ? T(fc.status) : "";
   const srcs = (i.sources || []).filter(s => safeUrl(s.url));
   return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-label="${esc(i.title_bm)}">
     <div class="rd-card card">
@@ -6753,9 +6796,8 @@ function radarDetail(i){
           <span class="rd-vicon" aria-hidden="true">${vIcon}</span>
           <div>
             <div class="rd-vlab">${T("Verdict")}</div>
-            ${verdict ? `<div class="rd-vval">${esc(verdict)}</div>` : ""}
+            ${vLabel ? `<div class="rd-vval">${esc(vLabel)}</div>` : ""}
           </div>
-          ${fcBadge(fc.status)}
         </div>
         ${facts ? `<div class="rd-fact">
           <span class="rd-kicker">${T("The facts")}</span>
@@ -6987,7 +7029,11 @@ function renderLive(d){
   lvFilter = lvFilter || {};
   $("body-live") ? $("body-live").innerHTML = "" : null;
   const host = $("#body-live");
-  host.innerHTML = Object.values(d).map(f => {
+  /* The two feeds (KTMB trains, Rapid KL buses) are structurally identical
+     blocks - KPI row, map, route chips - and stacked they cost two screens to
+     say the same thing twice. Side by side the section is one screen. auto-fit
+     rather than a plain g2 so a single surviving feed still spans the row. */
+  host.innerHTML = `<div class="lv-grid">` + Object.values(d).map(f => {
     const n = f.vehicles.length;
     const ts = f.feedTimestamp ? ago(f.feedTimestamp) : "-";
     const veh = lvFilter[f.key] ? f.vehicles.filter(v => String(v.routeId) === lvFilter[f.key]) : f.vehicles;
@@ -7000,7 +7046,7 @@ function renderLive(d){
     routes.sort((a,b) => b.count - a.count);
     const top = routes.slice(0, 18);
     const filtered = lvFilter[f.key] ? ` · ${T("route")} <b>${esc(lvFilter[f.key])}</b>` : "";
-    return `<div style="margin-bottom:var(--s6)">
+    return `<div>
       <div class="grid g3 mb">
         <div class="kpi"><div class="lab">${esc(f.label)} ${T("live now")}</div>
           <div class="val" style="color:${n ? "var(--ok)" : "var(--fg-3)"}" data-count="${n}">0</div>
@@ -7030,9 +7076,9 @@ function renderLive(d){
             </div>`)
           : `<div class="card"><div class="state"><div class="big">🌙</div>
             <strong>${T(f.noun === "trains" ? "No trains are broadcasting right now" : "No buses are broadcasting right now")}</strong>
-            <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles - normal outside service hours, or when the operator's tracking feed is paused.")}</div></div>`}
-      </div></div>`;
-  }).join("");
+            <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles - normal outside service hours, or when the operator's tracking feed is paused.")}</div></div></div>`}
+    </div>`;
+  }).join("") + `</div>`;
   animateCounters($("#body-live"));
   paintMaps();
 }
