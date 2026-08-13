@@ -6898,15 +6898,18 @@ function paintFilters(){
 }
 function paintBlocks(){
   const host = $("#tr-blocks"); if (!host || !tdata) return;
-  /* One KPI row per network, side by side rather than stacked - the network
+  /* One card per network, side by side rather than stacked - the network
      comparison the section is for stays on screen at once, and auto-fit means
      a single visible network still gets the full width. The per-route
      scheduled-trip tables used to sit here, but those were static supply
      numbers; actual demand now lives in the ridership card below. */
   const feeds = trFeed();
   host.innerHTML = `<div class="tr-grid">${feeds.map(f => `
-      <div class="grid g4 tr-kpis mb">
-        <div class="kpi"><div class="lab">${esc(f.label)} · ${T("routes")}</div>
+    <div class="card">
+      <div class="card-h"><h4>${esc(f.label)}</h4>
+        <span class="sub">${esc(f.desc)}</span></div>
+      <div class="card-b" style="padding-top:12px"><div class="grid g4 tr-kpis">
+        <div class="kpi"><div class="lab">${T("routes")}</div>
           <div class="val">${nf(f.routes)}</div><div class="sub">${esc(f.agency)}</div></div>
         <div class="kpi"><div class="lab">${T("Stops")}</div>
           <div class="val">${nf(f.stops)}</div><div class="sub">${T("stations & stops")}</div></div>
@@ -6914,8 +6917,9 @@ function paintBlocks(){
           <div class="val">${nf(f.trips)}</div><div class="sub">${T("trips per weekday")}</div></div>
         <div class="kpi"><div class="lab">${T("Avg trips / route")}</div>
           <div class="val">${nf(f.routes ? f.trips / f.routes : 0, 1)}</div>
-          <div class="sub">${esc(f.desc)}</div></div>
-      </div>`).join("")}</div>
+          <div class="sub">${T("trips per weekday")}</div></div>
+      </div></div>
+    </div>`).join("")}</div>
     <div class="card" style="margin-top:var(--s6)">
       <div class="card-h"><h4>${T("All stops - both networks")}</h4>
         <span class="sub">${T("type to filter or use “Find stops near me”")}</span>
