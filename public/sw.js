@@ -46,9 +46,11 @@
    v30: Public Transport drops the static per-route scheduled-trip tables
    (and the route search that only filtered them) - actual daily ridership
    now lives in the ridership card.
+   v31: each transport network's route/stops/trips KPIs live in their own
+   titled card instead of a bare KPI row.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v30";
+const VERSION    = "mygov-v31";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
