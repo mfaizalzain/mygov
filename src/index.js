@@ -51,6 +51,10 @@ const GTFS_PAIRS = new Set([
   "ktmb|",
   "prasarana|rapid-bus-kl",
   "prasarana|rapid-rail-kl",
+  /* Names only. The live kiosk feed reports ~100 T-prefixed MRT feeder
+     routes that rapid-bus-kl does not carry, so without this every one of
+     them shows on the live map as a bare code. */
+  "prasarana|rapid-bus-mrtfeeder",
 ]);
 const FIDS_TERMINALS = new Set([
   "KLIA", "klia2", "SZB", "PEN", "BKI", "KCH", "LGK",
