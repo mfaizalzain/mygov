@@ -36,7 +36,11 @@ UA = "mygov-dashboard/1.0 (+https://mygov.faizalmzain.com)"
 
 
 def fetch(code, terminal):
-    """Page through one board; return (count, slim_flights) or None on error."""
+    """Page through one board; return (count, slim_flights, truncated) or None
+    on error. Pages are retried with growing backoff - the upstream
+    intermittently drops a request, and a single failed page used to leave
+    the board silently short (200 of 297 flights), which read as an empty
+    evening board once those collected flights were all in the past."""
     def page(skip):
         u = (f"{BASE}?code={code}&key=all&terminal={terminal}&dayKey=0"
              f"&live=true&skip={skip}&take={PAGE}")
@@ -45,8 +49,20 @@ def fetch(code, terminal):
         with urllib.request.urlopen(req, timeout=45) as r:
             return json.loads(r.read().decode("utf-8", "replace"))
 
+    def page_retry(skip):
+        last = None
+        for attempt in range(4):
+            try:
+                return page(skip)
+            except Exception as e:
+                last = e
+                sys.stderr.write(f"  FIDS page skip={skip} attempt {attempt + 1}/4 failed: {e}\n")
+                if attempt < 3:
+                    time.sleep(5 * (attempt + 1))
+        raise last
+
     try:
-        first = page(0)
+        first = page_retry(0)
     except Exception:
         return None
     statuses = list(first.get("flightStatuses") or [])
@@ -55,7 +71,7 @@ def fetch(code, terminal):
         pages = min((total + PAGE - 1) // PAGE, MAX_PAGES)
         for i in range(1, pages):
             try:
-                p = page(i * PAGE)
+                p = page_retry(i * PAGE)
             except Exception:
                 continue
             statuses.extend(p.get("flightStatuses") or [])
@@ -75,7 +91,7 @@ def fetch(code, terminal):
             "terminal": f.get("terminal"),
             "codeshares": [c.get("flightNumber") for c in (f.get("codeShareFlights") or [])],
         })
-    return total, slim
+    return total, slim, len(statuses) < total
 
 
 def main():
@@ -89,9 +105,10 @@ def main():
                 sys.stderr.write(f"FIDS {key}: FAILED\n")
                 fails += 1
                 continue
-            total, slim = res
-            boards[key] = {"count": total, "flights": slim}
-            sys.stderr.write(f"FIDS {key}: {len(slim)}/{total}\n")
+            total, slim, truncated = res
+            boards[key] = {"count": total, "flights": slim, "truncated": truncated}
+            sys.stderr.write(f"FIDS {key}: {len(slim)}/{total}"
+                             + (" TRUNCATED" if truncated else "") + "\n")
             time.sleep(0.5)
     if not boards:
         sys.exit("all FIDS boards failed")
