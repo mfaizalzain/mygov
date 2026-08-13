@@ -137,6 +137,30 @@ class TestParseJson(unittest.TestCase):
     def test_garbage(self):
         self.assertIsNone(ct.parse_json("not json at all"))
 
+    # The four shapes below all returned None before the parser was hardened,
+    # which silently demoted a real outlook to the deterministic fallback.
+    def test_raw_newline_inside_string(self):
+        text = '{"periods": [{"t_en": "Term 2 Break.\nBook early."}]}'
+        out = ct.parse_json(text)
+        self.assertEqual(out["periods"][0]["t_en"],
+                         "Term 2 Break.\nBook early.")
+
+    def test_raw_tab_inside_string(self):
+        self.assertEqual(ct.parse_json('{"t_en": "a\tb"}'), {"t_en": "a\tb"})
+
+    def test_trailing_commas(self):
+        text = '{"periods": [{"impact": "high",},],}'
+        self.assertEqual(ct.parse_json(text), {"periods": [{"impact": "high"}]})
+
+    def test_trailing_prose_containing_a_brace(self):
+        """rfind("}") used to swallow the closing brace of the real object."""
+        text = '{"periods": []}\n\nNote: use {name} as the driver field.'
+        self.assertEqual(ct.parse_json(text), {"periods": []})
+
+    def test_escaped_quote_survives(self):
+        text = r'{"t_en": "the \"peak\" week"}'
+        self.assertEqual(ct.parse_json(text), {"t_en": 'the "peak" week'})
+
 
 class TestBuildOutlookFallback(unittest.TestCase):
     def test_no_key_writes_deterministic(self):

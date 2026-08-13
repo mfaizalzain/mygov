@@ -24,6 +24,7 @@ Deps: stdlib only. GOOGLE_API_KEY or GEMINI_API_KEY env var.
 import datetime as dt
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -81,20 +82,70 @@ def gemini_call(key, body, tries=3):
     raise last or RuntimeError("gemini failed")
 
 
+def _escape_json_string_controls(text):
+    """Escape raw newlines/tabs inside JSON strings that Gemini sometimes emits."""
+    out, in_str, escaped = [], False, False
+    for ch in text:
+        if in_str:
+            if escaped:
+                out.append(ch)
+                escaped = False
+            elif ch == "\\":
+                out.append(ch)
+                escaped = True
+            elif ch == '"':
+                out.append(ch)
+                in_str = False
+            elif ch == "\n":
+                out.append("\\n")
+            elif ch == "\r":
+                out.append("\\r")
+            elif ch == "\t":
+                out.append("\\t")
+            else:
+                out.append(ch)
+        else:
+            if ch == '"':
+                in_str = True
+            out.append(ch)
+    return "".join(out)
+
+
 def parse_json(text):
-    """Tolerate markdown fences and stray prose around the JSON."""
-    t = text.strip()
-    if t.startswith("```"):
-        t = t.split("```", 2)[1]
-        if t.startswith("json"):
-            t = t[4:]
-    i, j = t.find("{"), t.rfind("}")
-    if i >= 0 and j > i:
-        t = t[i:j + 1]
+    """Tolerate markdown fences and stray prose around the JSON.
+
+    The naive version of this - strip fences, slice find("{")..rfind("}"),
+    json.loads, return None on any exception - is why travel.json has been
+    served from the deterministic fallback: Gemini writes a raw newline inside
+    an outlook sentence, json.loads raises, and the whole outlook is silently
+    replaced by f-string templates. Same failure the radar collector hit; this
+    is the same repair, kept deliberately identical so the two stay in step:
+    escape control characters inside strings, drop trailing commas, and if the
+    document still will not parse, brace-match forward from the first { rather
+    than trusting the last } in the text (trailing prose often contains one).
+    """
+    t = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    t = _escape_json_string_controls(t)
+    t = re.sub(r",\s*([}\]])", r"\1", t)
     try:
         return json.loads(t)
-    except Exception:
+    except json.JSONDecodeError:
+        pass
+    start = t.find("{")
+    if start == -1:
         return None
+    depth = 0
+    for idx in range(start, len(t)):
+        if t[idx] == "{":
+            depth += 1
+        elif t[idx] == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(t[start:idx + 1])
+                except json.JSONDecodeError:
+                    return None
+    return None
 
 
 def build_facts(slow, start, end):
