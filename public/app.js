@@ -6432,7 +6432,12 @@ const F_AIRPORTS = [
   ["TWU", "Tawau"], ["AOR", "Alor Setar"], ["TGG", "Terengganu"],
   ["LBU", "Labuan"], ["IPH", "Ipoh"],
 ];
-/* status code → [tone class, label]; unknown codes fall back to the raw text */
+/* Status code → [tone class, label]; unknown codes fall back to the raw text.
+   The FIDS splits codes by direction: D/G-prefixed are departures (DOP
+   check-in open, GOP gate open, GBD boarding, GFC final call, GCL gate
+   closed), C/F-prefixed are arrivals (COP/CCL open/closed, CFB first bag,
+   CLB last bag, FLD landed). A code can mean something different on the
+   other board, so COP on the A board must not read as "check-in open". */
 const F_STATUS = {
   /* FCL arrives from the FIDS as CANCELLED, not "final call" - the label was
      telling people to run for a gate for a flight that is not going. */
@@ -6443,6 +6448,8 @@ const F_STATUS = {
   SCH:["","On schedule"],
   ONT:["ok","On time"], GTW:["warn","At gate"], INF:["","Information"],
   DIV:["warn","Diverted"], RTO:["warn","Returned"], BRD:["warn","Boarding"],
+  DOP:["ok","Check-in open"], GOP:["warn","Gate open"], GBD:["warn","Boarding"],
+  GFC:["warn","Final call"], GCL:["warn","Gate closed"], FLD:["ok","Landed"],
 };
 let fids = { dir:"A", apt:"KLIA", q:"", data:null, last:0, timer:null, err:null };
 
@@ -6493,7 +6500,11 @@ function paintFlights(){
     <thead><tr><th>${T("Flight")}</th><th>${fids.dir === "A" ? T("From") : T("To")}</th>
       <th class="num">${T("Scheduled")}</th><th>${T("Status")}</th><th>${T("Gate")}</th></tr></thead>
     <tbody>${rows.slice(0, 60).map(f => {
-      const [tone, lab] = F_STATUS[f.statusCode] || ["", f.status || f.statusCode || ""];
+      /* COP on arrivals is the arrival process being open - the raw "OPEN" -
+         not check-in, which only applies to departures. */
+      const [tone, lab] = (f.statusCode === "COP" && fids.dir === "A")
+        ? ["ok", f.status || "Open"]
+        : F_STATUS[f.statusCode] || ["", f.status || f.statusCode || ""];
       const city = fids.dir === "A" ? f.origin : f.destination;
       return `<tr>
         <td><span class="mono" style="font-weight:650">${esc(f.flightNumber)}</span>

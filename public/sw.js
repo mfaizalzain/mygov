@@ -61,9 +61,12 @@
    board, and a partial board is labelled rather than looking empty.
    v37: nearest stops reuse the app's single detected location (weather's
    GPS/IP fix) instead of asking the browser for a second fix.
+   v38: FIDS status labels are direction-aware - arrivals no longer show
+   "check-in open" (COP on the A board is the arrival process open), and
+   the missing departure gate/check-in codes are labelled.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v37";
+const VERSION    = "mygov-v38";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
