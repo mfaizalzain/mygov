@@ -913,7 +913,13 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
 .radar-band-t{display:flex;align-items:flex-start;gap:var(--s3);min-width:0}
 .radar-band-t h3{margin:0;font-size:18px;font-weight:680;letter-spacing:-.025em}
 .radar-band-t p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:12.5px;max-width:70ch}
-.radar-band-ctl{margin-left:auto;display:flex;align-items:center;gap:var(--s2)}
+/* The control cluster (collection stamp + slide counter + prev/next) is a
+   nowrap run of monospaced text. At phone widths it outgrew the band and
+   pushed the arrows past the viewport, which gave the whole page a
+   horizontal scroll. It wraps now, and min-width:0 lets it actually shrink
+   rather than forcing the header wider than its parent. */
+.radar-band-ctl{margin-left:auto;display:flex;align-items:center;
+  flex-wrap:wrap;justify-content:flex-end;gap:var(--s2);min-width:0;max-width:100%}
 .radar-filters{display:flex;flex-wrap:wrap;gap:var(--s1);margin:0 0 var(--s3)}
 .radar-filters:empty{display:none}
 .rf{font:inherit;font-size:11px;font-weight:600;padding:4px 9px;border-radius:99px;
@@ -927,6 +933,15 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
    monospaced runs never read as one string */
 #radar-when:not(:empty){padding-right:var(--s2);margin-right:2px;
   border-right:1px solid var(--line)}
+/* once the cluster wraps, the stamp ends its own row and the divider has
+   nothing left to divide - it just dangles off the line end. */
+@media (max-width:620px){
+  #radar-when:not(:empty){padding-right:0;margin-right:0;border-right:0}
+  .radar-band-ctl{width:100%;margin-left:0}
+  /* the counter holds the left edge of the wrapped row so the two arrows
+     stay a pair on the right rather than drifting apart. */
+  .radar-band-ctl .radar-count:last-of-type{margin-right:auto}
+}
 .radar-track{display:flex;gap:var(--s3);overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:none;padding-bottom:2px}
 .radar-track::-webkit-scrollbar{display:none}
