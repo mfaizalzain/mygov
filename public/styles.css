@@ -1099,6 +1099,10 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
    narrow viewport auto-fit drops them back to one per row on its own. */
 .lv-grid{display:grid;gap:var(--s6);align-items:start;
   grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+/* A hidden live feed block must stay hidden: grid children take their
+   display from the grid layout, which would otherwise beat the UA [hidden]
+   rule. */
+.lv-grid [data-lv-block][hidden]{display:none}
 .lvmap{position:relative;z-index:0;height:340px;background:var(--bg-2)}
 html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.7)}
 .lvmap .leaflet-control-attribution{background:rgba(0,0,0,.55);color:var(--fg-3);font-size:10px}
