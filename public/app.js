@@ -288,7 +288,6 @@ const I18N = {
   "Verified":"Disahkan", "Debunked":"Palsu", "Unchecked":"Belum disemak",
   "No trending issues match this filter.":"Tiada isu tular sepadan dengan penapis ini.",
   "Official Sebenarnya.my fact-check":"Semakan fakta rasmi Sebenarnya.my",
-  "Search routes":"Cari laluan", "Route number or name…":"Nombor atau nama laluan…",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
   "No stops found within your area - try widening your search or switching network.":"Tiada perhentian ditemui dalam kawasan anda - cuba luaskan carian atau tukar rangkaian.",
@@ -299,9 +298,7 @@ const I18N = {
   "Schematic":"Skematik", "Network map":"Peta rangkaian",
   "Location permission denied - search by name instead.":"Kebenaran lokasi dinafikan - cari mengikut nama sebaliknya.",
   "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
-  "All networks":"Semua rangkaian", "Busiest routes - ":"Laluan paling sibuk - ",
-  "by scheduled trips":"mengikut perjalanan berjadual", "Stops - ":"Perhentian - ",
-  "by trips per weekday":"mengikut perjalanan sehari bekerja",
+  "All networks":"Semua rangkaian", "Stops - ":"Perhentian - ",
   "trips per weekday":"perjalanan sehari bekerja",
   "with coordinates":"dengan koordinat", "stations & stops":"stesen & perhentian",
   "View on map":"Lihat pada peta", "Map":"Peta",
@@ -309,7 +306,7 @@ const I18N = {
   "). The chart will appear automatically when new data lands.":"). Carta akan muncul secara automatik apabila data baharu diterbitkan.",
   "scheduled trips":"perjalanan berjadual", "Route":"Laluan", "Name":"Nama",
   "Trips":"Perjalanan", "Share":"Bahagian", "Stop":"Perhentian", "Distance":"Jarak",
-  "No routes match ":"Tiada laluan sepadan ", "No stops match ":"Tiada perhentian sepadan ",
+  "No stops match ":"Tiada perhentian sepadan ",
   "Live flights":"Penerbangan langsung", "Malaysia Airports · real-time board":"Malaysia Airports · papan masa nyata",
   "Search flight, city, airline…":"Cari penerbangan, bandar, syarikat…", "Arrivals":"Ketibaan", "Departures":"Berlepas",
  "Tourism":"Pelancongan", "visitors this month":"pelawat bulan ini",
@@ -6403,9 +6400,8 @@ function paintPeka(d){
     labels, [daily, mean]);
 }
 /* ════════════════════════════ transport view ════════════════════════════ */
-let topN = 10;
 let netFilter = "all";        // all | ktmb | prasarana
-let routeQ = "", stopQ = "";
+let stopQ = "";
 let tdata = null;
 const tgeo = { status:"idle", near:null };
 const haversine = (a, b) => {
@@ -6570,12 +6566,11 @@ const trFeeds = () => FEEDS.map(f => tdata && tdata[f.key]).filter(Boolean);
 const trFeed = () => trFeeds()
   .filter(f => netFilter === "all" || f.key === netFilter);
 
-/* Daily trips per service. Deliberately its own card rather than a column in
-   the busiest-routes tables: those count scheduled trips per route, and a
-   route is not a service - the LRT Ampang Line figure covers the Sri Petaling
-   branch too, and the bus figures are whole networks, not the individual
-   routes listed above. Joining them would invent a precision the data does
-   not have. */
+/* Daily trips per service. Deliberately its own card rather than a row in
+   the network KPIs: those count scheduled trips per network, and a network
+   is not a service - the LRT Ampang Line figure covers the Sri Petaling
+   branch too, and the bus figures are whole networks, not individual routes.
+   Joining them would invent a precision the data does not have. */
 function ridershipCard(rows){
   if (!Array.isArray(rows) || !rows.length) return "";
   const latest = rows[0], prior = rows[7] || null;   // same weekday, a week back
@@ -6638,20 +6633,13 @@ function renderTransport(d){
       </div>
     </div>
     <div class="chips mb" id="tr-filters"></div>
-    <div class="grid g2 mb">
-      <div class="card">
-        <div class="card-h"><h4>${T("Search routes")}</h4></div>
-        <div class="card-b"><label class="sr" for="tr-rq">${T("Search routes")}</label>
-          <input class="inp" id="tr-rq" placeholder="${T("Route number or name…")}" autocomplete="off"></div>
-      </div>
-      <div class="card">
-        <div class="card-h"><h4>${T("Search stops")}</h4></div>
-        <div class="card-b">
-          <label class="sr" for="tr-sq">${T("Search stops")}</label>
-          <input class="inp" id="tr-sq" placeholder="${T("Station or stop name…")}" autocomplete="off">
-          <button class="btn" id="tr-near" style="margin-top:var(--s2)">${ico("live")} ${T("Find stops near me")}</button>
-          <div id="tr-near-st" style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)"></div>
-        </div>
+    <div class="card mb">
+      <div class="card-h"><h4>${T("Search stops")}</h4></div>
+      <div class="card-b">
+        <label class="sr" for="tr-sq">${T("Search stops")}</label>
+        <input class="inp" id="tr-sq" placeholder="${T("Station or stop name…")}" autocomplete="off">
+        <button class="btn" id="tr-near" style="margin-top:var(--s2)">${ico("live")} ${T("Find stops near me")}</button>
+        <div id="tr-near-st" style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)"></div>
       </div>
     </div>
     <div id="tr-blocks"></div>
@@ -6676,9 +6664,6 @@ function renderTransport(d){
   $("#tr-filters").querySelectorAll("[data-net]").forEach(b => {
     b.onclick = () => { netFilter = b.dataset.net; paintTransport(); };
   });
-  const rq = $("#tr-rq");
-  rq.value = routeQ;
-  rq.oninput = () => { routeQ = rq.value; paintBlocks(); };
   const sq = $("#tr-sq");
   sq.value = stopQ;
   sq.oninput = () => { stopQ = sq.value; paintBlocks(); };
@@ -6913,18 +6898,13 @@ function paintFilters(){
 }
 function paintBlocks(){
   const host = $("#tr-blocks"); if (!host || !tdata) return;
-  const tq = routeQ.trim().toLowerCase();
-  /* One block per network, side by side rather than stacked. Three networks
-     stacked ran close to 2,000px of the same four KPIs and the same routes
-     table repeated - the comparison the section is for was never on screen at
-     once. auto-fit means a single visible network still gets the full width,
-     and the KPI row inside a column drops to 2x2 on its own. */
+  /* One KPI row per network, side by side rather than stacked - the network
+     comparison the section is for stays on screen at once, and auto-fit means
+     a single visible network still gets the full width. The per-route
+     scheduled-trip tables used to sit here, but those were static supply
+     numbers; actual demand now lives in the ridership card below. */
   const feeds = trFeed();
-  host.innerHTML = `<div class="tr-grid">${feeds.map(f => {
-    const routes = f.top.filter(r =>
-      !tq || r.short.toLowerCase().includes(tq) || r.long.toLowerCase().includes(tq) || r.id.toLowerCase().includes(tq));
-    const near = tgeo.near && tgeo.near[f.key];
-    return `<div>
+  host.innerHTML = `<div class="tr-grid">${feeds.map(f => `
       <div class="grid g4 tr-kpis mb">
         <div class="kpi"><div class="lab">${esc(f.label)} · ${T("routes")}</div>
           <div class="val">${nf(f.routes)}</div><div class="sub">${esc(f.agency)}</div></div>
@@ -6935,28 +6915,7 @@ function paintBlocks(){
         <div class="kpi"><div class="lab">${T("Avg trips / route")}</div>
           <div class="val">${nf(f.routes ? f.trips / f.routes : 0, 1)}</div>
           <div class="sub">${esc(f.desc)}</div></div>
-      </div>
-      <div class="card">
-        <div class="card-h"><h4>${T("Busiest routes - ")}${esc(f.label)}</h4>
-          <span class="sub">${T("by trips per weekday")}</span>
-          <span class="right"><span class="seg" role="group" aria-label="Rows to show">
-            ${[10,25,"all"].map(v => `<button data-top="${v}" data-feed="${f.key}" aria-pressed="${String(v) === String(topN)}">${v === "all" ? "ALL" : "TOP " + v}</button>`).join("")}
-          </span></span></div>
-        <div class="tw scroll-y"><table>
-          <thead><tr><th>${T("Route")}</th><th>${T("Name")}</th><th class="num">${T("Trips")}</th><th style="width:30%">${T("Share")}</th></tr></thead>
-          <tbody>${routes.slice(0, topN === "all" ? routes.length : topN).map(r => {
-            const pct = f.top[0].trips ? (r.trips / f.top[0].trips) * 100 : 0;
-            return `<tr>
-              <td><span class="pill" style="background:${esc(r.color)}22;color:${esc(r.color)};border:1px solid ${esc(r.color)}55">${esc(r.short)}</span></td>
-              <td class="wrapcell">${esc(r.long || "-")}</td>
-              <td class="num" style="font-weight:650">${nf(r.trips)}</td>
-              <td><div style="background:var(--surface-3);border-radius:99px;height:6px;overflow:hidden">
-                <div style="width:${pct.toFixed(1)}%;height:100%;background:${esc(r.color)};border-radius:99px"></div></div></td>
-            </tr>`; }).join("")}
-        ${!routes.length ? `<tr><td colspan="4" class="state">${T("No routes match ")}“${esc(routeQ)}”.</td></tr>` : ""}
-        </tbody></table></div>
-      </div>
-    </div>`; }).join("")}</div>
+      </div>`).join("")}</div>
     <div class="card" style="margin-top:var(--s6)">
       <div class="card-h"><h4>${T("All stops - both networks")}</h4>
         <span class="sub">${T("type to filter or use “Find stops near me”")}</span>
@@ -6968,10 +6927,6 @@ function paintBlocks(){
     </div>
   `;
   paintStops();
-  host.querySelectorAll("[data-top]").forEach(b => {
-    b.onclick = () => { topN = b.dataset.top === "all" ? "all" : Number(b.dataset.top);
-      paintBlocks(); };
-  });
 }
 function paintStops(){
   const rows = $("#tr-stop-rows"); if (!rows || !tdata) return;

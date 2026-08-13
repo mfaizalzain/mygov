@@ -43,9 +43,12 @@
    v29: Live Vehicles open on the Rapid KL feed by default, with network
    chips for KTMB trains / Rapid Penang / All, and the Penang route-name
    load deferred until that feed is actually shown.
+   v30: Public Transport drops the static per-route scheduled-trip tables
+   (and the route search that only filtered them) - actual daily ridership
+   now lives in the ridership card.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v29";
+const VERSION    = "mygov-v30";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
