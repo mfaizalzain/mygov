@@ -54,9 +54,11 @@
    data.gov.my's own dashboards - it was mislabelled as trips.
    v34: the All stops card asks for location once when Public Transport
    opens and shows nearest stops by default, no tap required.
+   v35: nearest stops are capped at 50 km so a KL visitor no longer sees
+   Rapid Penang's "nearest" stops from 300 km away.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v34";
+const VERSION    = "mygov-v35";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
