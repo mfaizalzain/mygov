@@ -370,6 +370,12 @@ const I18N = {
   "unclassified":"tidak diklasifikasikan",
   "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
   "among live ":"antara ", "Live map - ":"Peta langsung - ", "positions as broadcast":"kedudukan seperti disiarkan",
+  "moving":"bergerak", "stopped":"berhenti",
+  "Nearest ":"Terdekat ", " to you":" dengan anda",
+  "straight-line distance, within 5 km":"jarak garis lurus, dalam 5 km",
+  "route unnamed in the schedule feed":"laluan tanpa nama dalam suapan jadual",
+  "more are still broadcasting a position older than 15 minutes, so they are left off the map and the counts above.":
+    "lagi masih menyiarkan kedudukan melebihi 15 minit, jadi ia ditinggalkan daripada peta dan kiraan di atas.",
   "route":"laluan", "buses":"bas", "more buses":"bas lagi", "buses here":"bas di sini",
   "zoom in to see individual buses":"zum masuk untuk melihat bas individu",
   "Network":"Rangkaian", "Trip":"Perjalanan", "Speed":"Kelajuan", "Last seen":"Dilihat terakhir",
@@ -1818,6 +1824,90 @@ async function loadTransport(){
    which loads after transport via the section's after() hook. */
 let ktmbTripInfo = null;
 
+/* ── naming live vehicles ──────────────────────────────────────────────────
+   The kiosk feed reports a bare route code per bus ("U3000"), which is the
+   GTFS route_id, so the static feeds loadTransport already parses can turn it
+   into "300 · Terminal Maluri ~ Lebuh Ampang". Filled there, read here. */
+const ROUTE_NAMES = new Map();
+/* The ~100 T-prefixed MRT feeder routes are in neither rapid-bus-kl nor
+   rapid-rail-kl. Their own feed keys routes by an opaque numeric id and
+   carries the code in route_long_name ("T114"), with the destination only in
+   trips.txt as a headsign - so this map is keyed by code, not route_id. The
+   live feed writes those codes with a trailing variant digit ("T1140"), which
+   liveRoute() strips. Fetched once, lazily, and only for the live section. */
+const FEEDER_NAMES = new Map();
+let feederNames = null, feederTries = 0;
+/* Both maps are filled from render, never from a loader. loadSection() serves
+   a cached section without calling its loader at all, so a name map populated
+   as a side effect of loadTransport was empty for every returning visitor -
+   the same trap the forecasts hook fell into. renderTransport runs on cached
+   data too, and tdata.top already carries id/short/long per route. */
+function ensureLiveNames(){
+  if (tdata)
+    for (const f of Object.values(tdata))
+      if (f && Array.isArray(f.top))
+        for (const r of f.top)
+          if (r.id) ROUTE_NAMES.set(r.id, { short:r.short || r.id, long:r.long || "" });
+  /* Bounded: a feed that stays unreachable must not be re-fetched on every
+     repaint (a theme or language switch repaints everything). */
+  if (!FEEDER_NAMES.size && feederTries < 2){
+    feederTries++;
+    loadFeederNames().then(() => { if (FEEDER_NAMES.size && lvdata) renderLive(lvdata); });
+  }
+}
+function loadFeederNames(){
+  if (feederNames) return feederNames;
+  feederNames = (async () => {
+    const r = await fetch("/api/gtfs?agency=prasarana&category=rapid-bus-mrtfeeder");
+    if (!r.ok) return;
+    const files = await unzipSelected(await r.arrayBuffer(), ["routes.txt","trips.txt"]);
+    const code = new Map();
+    for (const x of parseCSV(files["routes.txt"])){
+      const c = (x.route_long_name || x.route_short_name || "").trim();
+      if (c) code.set(x.route_id, c);
+    }
+    for (const t of parseCSV(files["trips.txt"])){
+      const c = code.get(t.route_id);
+      /* First headsign wins - the rest are the same pair of endpoints in the
+         other direction, and the chip has room for one. */
+      if (c && !FEEDER_NAMES.has(c))
+        FEEDER_NAMES.set(c, { short:c, long:(t.trip_headsign || "").trim() });
+    }
+    for (const [id, c] of code) if (!FEEDER_NAMES.has(c)) FEEDER_NAMES.set(c, { short:c, long:"" });
+  })().catch(() => {
+    /* Naming is a nicety and must never fail the live section - but the
+       memo has to be dropped too, or one bad fetch leaves every feeder
+       route unnamed for the rest of the visit. */
+    feederNames = null;
+  });
+  return feederNames;
+}
+/* A live route code -> what to call it. Falls back to the raw code, which is
+   what the whole section used to show. */
+function liveRoute(code){
+  const c = String(code == null ? "" : code);
+  return ROUTE_NAMES.get(c) || FEEDER_NAMES.get(c.slice(0, -1)) || { short:c, long:"" };
+}
+const liveRouteLabel = code => {
+  const r = liveRoute(code);
+  return r.long ? `${r.short} · ${r.long}` : r.short;
+};
+/* A position this old is not telling you where a bus is. The feed keeps
+   broadcasting the last-known point long after a vehicle stops reporting -
+   the worst observed was nearly 18 hours stale - and painted as an ordinary
+   dot it reads as a bus you could catch. */
+const LIVE_STALE_SECS = 900;
+const vAge = (f, v) => (f.feedTimestamp && v.timestamp) ? f.feedTimestamp - v.timestamp : null;
+const vStale = (f, v) => { const a = vAge(f, v); return a != null && a > LIVE_STALE_SECS; };
+/* What the map is entitled to draw: reporting recently, and matching the
+   route filter if one is set. */
+const lvVisible = f => f.vehicles.filter(v =>
+  !vStale(f, v) && (!lvFilter[f.key] || String(v.routeId) === lvFilter[f.key]));
+const lvPopup = (f, v) => `<b>${esc(v.vehicleId || v.entityId || "-")}</b>` +
+  (v.routeId ? `<br>${esc(liveRouteLabel(v.routeId))}` : "") +
+  (v.speed != null ? `<br>${v.speed > 0 ? nf(v.speed, 0) + " km/h" : T("stopped")}` : "") +
+  (v.timestamp ? `<br><span class="dim">${ago(v.timestamp)}</span>` : "");
+
 const RT = [
   { key:"ktmb", label:"KTMB trains", noun:"trains", path:"/gtfs-realtime/vehicle-position/ktmb", params:null },
   /* Rapid KL buses come from the operator's kiosk feed (via our /api/rapid
@@ -1829,8 +1919,12 @@ async function loadLive(){
   const out = {};
   for (const f of RT){
     if (f.path === "/api/rapid"){
+      /* Names for the T-prefixed feeder routes, in parallel with the
+         positions - it only decorates them, so a failure is swallowed. */
+      const names = loadFeederNames();
       const d = await fetch("/api/rapid?provider=" + encodeURIComponent(f.params.provider),
         { cache:"no-store" }).then(r => { if (!r.ok) throw new ApiError("Rapid KL feed unavailable.", "http"); return r.json(); });
+      await names;
       out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:"kiosk",
         feedTimestamp: d.updated ? Math.floor(Date.parse(d.updated) / 1000) : null,
         vehicles: (d.buses || []).map(b => ({
@@ -7071,8 +7165,34 @@ function vchip(f, v){
         href="https://www.google.com/maps?q=${v.lat},${v.lon}">map ↗</a>`}
     </span></span>`;
 }
+/* "Where is my bus" is the question this section exists to answer, and a
+   field of identical dots never answered it. Uses whatever location the
+   visitor has already given the page - the hero picker or "find stops near
+   me" - rather than asking again, and stays silent when there is none. */
+function lvNearby(f, vehicles){
+  const at = (geo.lat != null && geo.lon != null) ? geo
+           : (tgeo.lat != null && tgeo.lon != null) ? tgeo : null;
+  if (!at || !vehicles.length) return "";
+  const near = vehicles
+    .map(v => ({ v, km: haversine({ lat:at.lat, lon:at.lon }, { lat:v.lat, lon:v.lon }) }))
+    .filter(x => Number.isFinite(x.km) && x.km <= 5)
+    .sort((a, b) => a.km - b.km).slice(0, 6);
+  if (!near.length) return "";
+  const rows = near.map(({ v, km }) => `<div class="lv-near-row">
+      <span class="pill mono">${esc(liveRoute(v.routeId).short)}</span>
+      <span class="lv-near-name">${esc(liveRoute(v.routeId).long || T("route unnamed in the schedule feed"))}</span>
+      <span class="lv-near-d mono">${km < 1 ? Math.round(km * 1000) + " m" : nf(km, 1) + " km"}</span>
+      <span class="lv-near-s mono">${v.speed > 0 ? nf(v.speed, 0) + " km/h" : T("stopped")}</span>
+    </div>`).join("");
+  return `<div class="card mb"><div class="card-h">
+      <h4>${T("Nearest ")}${esc(f.noun)}${T(" to you")}</h4>
+      <span class="sub">${T("straight-line distance, within 5 km")}</span></div>
+    <div class="card-b lv-near">${rows}</div></div>`;
+}
+
 function renderLive(d){
   lvdata = d;
+  ensureLiveNames();
   /* Route filter state per feed: when set, the map + chips show only the
      vehicles on that route. Clicking the active chip clears the filter. */
   lvFilter = lvFilter || {};
@@ -7083,11 +7203,18 @@ function renderLive(d){
      say the same thing twice. Side by side the section is one screen. auto-fit
      rather than a plain g2 so a single surviving feed still spans the row. */
   host.innerHTML = `<div class="lv-grid">` + Object.values(d).map(f => {
-    const n = f.vehicles.length;
+    /* "795 live" counted vehicles whose last known position was hours old
+       alongside ones reporting seconds ago. Split them: the headline counts
+       what is actually reporting, and the stale ones are named rather than
+       quietly dropped. */
+    const fresh = f.vehicles.filter(v => !vStale(f, v));
+    const stale = f.vehicles.length - fresh.length;
+    const n = fresh.length;
+    const moving = fresh.filter(v => v.speed > 0).length;
     const ts = f.feedTimestamp ? ago(f.feedTimestamp) : "-";
-    const veh = lvFilter[f.key] ? f.vehicles.filter(v => String(v.routeId) === lvFilter[f.key]) : f.vehicles;
+    const veh = lvFilter[f.key] ? fresh.filter(v => String(v.routeId) === lvFilter[f.key]) : fresh;
     const routes = [];
-    for (const v of f.vehicles){
+    for (const v of fresh){
       const r = String(v.routeId || "?");
       const hit = routes.find(x => x.route === r);
       if (hit) hit.count++; else routes.push({ route:r, count:1 });
@@ -7099,7 +7226,8 @@ function renderLive(d){
       <div class="grid g3 mb">
         <div class="kpi"><div class="lab">${esc(f.label)} ${T("live now")}</div>
           <div class="val" style="color:${n ? "var(--ok)" : "var(--fg-3)"}" data-count="${n}">0</div>
-          <div class="sub">${n ? T("broadcasting a position") : T("none reporting")}</div></div>
+          <div class="sub">${n ? `${nf(moving)} ${T("moving")} · ${nf(n - moving)} ${T("stopped")}`
+                               : T("none reporting")}</div></div>
         <div class="kpi"><div class="lab">${T("Last update")}</div>
           <div class="val" style="font-size:19px">${esc(ts)}</div>
           <div class="sub">${T("feed v")}${esc(f.version || "?")}</div></div>
@@ -7113,6 +7241,8 @@ function renderLive(d){
         const un = n - ic - ko;
         return ic || ko ? `<p class="note" style="margin:var(--s2) 0 var(--s4)">🚆 ${nf(ic)} ${T("Intercity / ETS")} · ${nf(ko)} ${T("Komuter")}${un ? ` · ${nf(un)} ${T("unclassified")}` : ""}</p>` : "";
       })() : ""}
+      ${lvNearby(f, fresh)}
+      ${stale ? `<p class="note" style="margin:var(--s2) 0 var(--s4)">${nf(stale)} ${T("more are still broadcasting a position older than 15 minutes, so they are left off the map and the counts above.")}</p>` : ""}
       <div class="card mb">
         <div class="card-h"><h4>${T("Live map - ")}${esc(f.label)}</h4>
           <span class="sub">${T("positions as broadcast")}${filtered}</span></div>
@@ -7347,11 +7477,17 @@ function rchip(f, rc, veh, total){
      natively, so the existing delegate now serves both. Safe to nest here
      because this tip holds only text rows - no link, unlike the vehicle and
      flood-station chips. */
+  /* The chip used to read "U3000", which is the GTFS route_id and means
+     nothing to a rider. Show the public route number, and put the pair of
+     endpoints at the top of the tooltip. */
+  const nm = liveRoute(rc.route);
+  const head = nm.long
+    ? `<div class="vrow dim" style="white-space:normal">${esc(nm.long)}</div>` : "";
   return `<button type="button" class="vchip mono${active ? " on" : ""}"
-    aria-pressed="${active}" aria-label="${esc(rc.route)} · ${rc.count} ${esc(T("buses"))}"
+    aria-pressed="${active}" aria-label="${esc(liveRouteLabel(rc.route))} · ${rc.count} ${esc(T("buses"))}"
     data-route="${esc(rc.route)}" data-feed="${f.key}">
-    ${esc(rc.route)}<b class="cnt">${rc.count}</b>
-    <span class="tip">${busList}</span></button>`;
+    ${esc(nm.short)}<b class="cnt">${rc.count}</b>
+    <span class="tip">${head}${busList}</span></button>`;
 }
 /* 800+ markers on one Leaflet map is a wall of overlapping dots. Grid-cluster
    instead: bucket points into a cell that shrinks as the user zooms in, so
@@ -7418,9 +7554,9 @@ function paintMaps(){
       }
     });
     tiles.on("tileload", () => { omsFailed = Math.max(0, omsFailed - 1); });
-    if (f.vehicles.length){
-      const veh = lvFilter[f.key] ? f.vehicles.filter(v => String(v.routeId) === lvFilter[f.key]) : f.vehicles;
-      const pts = clusterPts(veh, map.getZoom());
+    const shown = lvVisible(f);
+    if (shown.length){
+      const pts = clusterPts(shown, map.getZoom());
       for (const c of pts){
         if (c.count > 1){
           const r = Math.min(7 + Math.sqrt(c.count) * 2.2, 22);
@@ -7438,21 +7574,16 @@ function paintMaps(){
           radius: 6, color:"#0a0c10", weight:1.5,
           fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.9,
         }).addTo(map);
-        m.bindPopup(`<b>${esc(v.vehicleId || v.entityId || "-")}</b>` +
-          (v.routeId ? ` · ${esc(v.routeId)}` : "") +
-          (v.tripId ? `<br>${esc(v.tripId)}` : "") +
-          (v.timestamp ? `<br>${ago(v.timestamp)}` : ""));
+        m.bindPopup(lvPopup(f, v));
       }
       if (pts.length > 1) map.fitBounds(pts, { padding:[30, 30], maxZoom:14 });
       else if (pts.length) map.setView([pts[0].lat, pts[0].lon], 13);
     }
     map.on("zoomend", () => {
       /* Re-cluster at the new zoom: redraw markers (removing old ones). */
-      if (!f.vehicles.length) return;
-      const layer = [];
+      if (!lvVisible(f).length) return;
       map.eachLayer(l => { if (l instanceof L.CircleMarker) map.removeLayer(l); });
-      const veh2 = lvFilter[f.key] ? f.vehicles.filter(v => String(v.routeId) === lvFilter[f.key]) : f.vehicles;
-      for (const c of clusterPts(veh2, map.getZoom())){
+      for (const c of clusterPts(lvVisible(f), map.getZoom())){
         if (c.count > 1){
           const m = L.circleMarker([c.lat, c.lon], {
             radius: Math.min(7 + Math.sqrt(c.count) * 2.2, 22), color:"#0a0c10", weight:1.5,
@@ -7466,10 +7597,7 @@ function paintMaps(){
             radius: 6, color:"#0a0c10", weight:1.5,
             fillColor: f.key === "ktmb" ? "#fbbf24" : "#2dd4bf", fillOpacity:.9,
           }).addTo(map);
-          m.bindPopup(`<b>${esc(v.vehicleId || v.entityId || "-")}</b>` +
-            (v.routeId ? ` · ${esc(v.routeId)}` : "") +
-            (v.tripId ? `<br>${esc(v.tripId)}` : "") +
-            (v.timestamp ? `<br>${ago(v.timestamp)}` : ""));
+          m.bindPopup(lvPopup(f, v));
         }
       }
     });

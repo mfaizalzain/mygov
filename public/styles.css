@@ -1474,6 +1474,24 @@ html[data-text="large"] table{font-size:14px}
 #travel-band > .share-btn{margin-left:0;margin-right:var(--s2);vertical-align:middle}
 #travel-band > .sec-time{vertical-align:middle}
 
+/* "Nearest buses to you" - a compact list, not a table: four short fields
+   per row, and the route name is the only one that can wrap. */
+.lv-near{display:grid;gap:2px}
+.lv-near-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:var(--s2);
+  align-items:center;padding:7px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px}
+.lv-near-row:last-child{border-bottom:0}
+.lv-near-name{color:var(--fg-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv-near-d{font-weight:650;white-space:nowrap}
+.lv-near-s{color:var(--fg-3);white-space:nowrap}
+@media (max-width:560px){
+  /* The route name gets the full second line rather than being clipped to a
+     few characters beside three other fields. */
+  .lv-near-row{grid-template-columns:auto auto 1fr;row-gap:2px}
+  .lv-near-name{grid-column:1/-1;order:3;white-space:normal}
+  .lv-near-d{order:1}.lv-near-s{order:2;text-align:right}
+  .lv-near-row .pill{order:0}
+}
+
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);
   transform:translate(-50%,10px);z-index:60;max-width:calc(100vw - 32px);
   padding:9px var(--s4);border-radius:99px;border:1px solid var(--line);
