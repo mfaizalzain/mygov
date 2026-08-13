@@ -297,6 +297,8 @@ const I18N = {
   "Showing nearest stops from ":"Memaparkan perhentian terdekat dari ",
   "All networks":"Semua rangkaian", "Busiest routes - ":"Laluan paling sibuk - ",
   "by scheduled trips":"mengikut perjalanan berjadual", "Stops - ":"Perhentian - ",
+  "by trips per weekday":"mengikut perjalanan sehari bekerja",
+  "trips per weekday":"perjalanan sehari bekerja",
   "with coordinates":"dengan koordinat", "stations & stops":"stesen & perhentian",
   "View on map":"Lihat pada peta", "Map":"Peta",
   "Household income is awaiting the next DOSM release (last updated ":"Pendapatan isi rumah menunggu keluaran DOSM seterusnya (dikemas kini terakhir ",
@@ -1676,6 +1678,40 @@ async function fetchGtfsZip(f){
   return request("gtfs-static", f.path, f.params, "buffer");
 }
 
+/* GTFS clock values are "time since the service day began", so 25:10:00 is a
+   legal 1:10am the next morning and Date parsing would reject it. Seconds. */
+const gtfsSecs = t => {
+  const p = String(t || "").split(":");
+  if (p.length < 2) return NaN;
+  return Number(p[0]) * 3600 + Number(p[1]) * 60 + Number(p[2] || 0);
+};
+/* Both Prasarana feeds are frequency-based: trips.txt holds one template per
+   service pattern per direction, and frequencies.txt says how often that
+   template repeats. Counting trips.txt rows there reports the Kelana Jaya
+   line as running 6 trips - it is 6 templates (weekday/Sat/Sun x 2
+   directions). A template with no frequency row is one real trip, which is
+   how KTMB's feed is written throughout. */
+function tripRuns(freqRows){
+  const by = new Map();
+  for (const r of freqRows){
+    const a = gtfsSecs(r.start_time), b = gtfsSecs(r.end_time), h = Number(r.headway_secs);
+    if (!Number.isFinite(a) || !Number.isFinite(b) || !(h > 0) || b <= a) continue;
+    /* Departures run at start, start+headway, … strictly before end_time. */
+    by.set(r.trip_id, (by.get(r.trip_id) || 0) + Math.ceil((b - a) / h));
+  }
+  return id => by.get(id) || 1;
+}
+/* A feed carries every service pattern at once - weekday, Saturday, Sunday -
+   so the raw row count is separate days added together rather than any day
+   you could actually travel on. KTMB reads 304 that way where an ordinary
+   weekday is 226. Null when calendar.txt names no weekday service, so the
+   caller keeps the whole-feed total rather than reporting zero. */
+function weekdayServices(calRows){
+  const DAYS = ["monday","tuesday","wednesday","thursday","friday"];
+  const s = new Set(calRows.filter(c => DAYS.every(d => c[d] === "1")).map(c => c.service_id));
+  return s.size ? s : null;
+}
+
 async function loadTransport(){
   const out = {};
   /* trip_id -> { intercity, route } for the KTMB feed: the live GTFS-RT
@@ -1685,13 +1721,25 @@ async function loadTransport(){
   let ktmbTrips = null;
   for (const f of FEEDS){
     const buf = await fetchGtfsZip(f);
-    const want = ["routes.txt","trips.txt","stops.txt","agency.txt"];
+    const want = ["routes.txt","trips.txt","stops.txt","agency.txt",
+                  "calendar.txt","frequencies.txt"];
     if (f.key === "rail") want.push("stop_times.txt");
     const files = await unzipSelected(buf, want);
     const routes = parseCSV(files["routes.txt"]), trips = parseCSV(files["trips.txt"]);
     const stops = parseCSV(files["stops.txt"]), agency = parseCSV(files["agency.txt"])[0] || {};
+    /* One ordinary weekday's departures, with frequency templates expanded -
+       see tripRuns/weekdayServices. Counting trips.txt rows instead made the
+       whole rail network read as 47 trips against KTMB's 304. */
+    const runs = tripRuns(parseCSV(files["frequencies.txt"]));
+    const weekday = weekdayServices(parseCSV(files["calendar.txt"]));
     const per = new Map();
-    for (const t of trips) per.set(t.route_id, (per.get(t.route_id) || 0) + 1);
+    let tripTotal = 0;
+    for (const t of trips){
+      if (weekday && !weekday.has(t.service_id)) continue;
+      const n = runs(t.trip_id);
+      tripTotal += n;
+      per.set(t.route_id, (per.get(t.route_id) || 0) + n);
+    }
     const stopList = stops
       .map(s => ({ id:s.stop_id || "", name:s.stop_name || "-",
                    lat:Number(s.stop_lat), lon:Number(s.stop_lon) }))
@@ -1699,7 +1747,7 @@ async function loadTransport(){
       .slice(0, 6000);
     out[f.key] = {
       key:f.key, label:f.label, desc:f.desc, agency:agency.agency_name || f.label,
-      routes:routes.length, stops:stops.length, trips:trips.length,
+      routes:routes.length, stops:stops.length, trips:tripTotal,
       stopList,
       top: routes.map(r => ({
         id:r.route_id, short:r.route_short_name || r.route_id, long:r.route_long_name || "",
@@ -6624,14 +6672,14 @@ function paintBlocks(){
         <div class="kpi"><div class="lab">${T("Stops")}</div>
           <div class="val">${nf(f.stops)}</div><div class="sub">${T("stations & stops")}</div></div>
         <div class="kpi"><div class="lab">${T("Trips")}</div>
-          <div class="val">${nf(f.trips)}</div><div class="sub">${T("scheduled trips")}</div></div>
+          <div class="val">${nf(f.trips)}</div><div class="sub">${T("trips per weekday")}</div></div>
         <div class="kpi"><div class="lab">${T("Avg trips / route")}</div>
           <div class="val">${nf(f.routes ? f.trips / f.routes : 0, 1)}</div>
           <div class="sub">${esc(f.desc)}</div></div>
       </div>
       <div class="card">
         <div class="card-h"><h4>${T("Busiest routes - ")}${esc(f.label)}</h4>
-          <span class="sub">${T("by scheduled trips")}</span>
+          <span class="sub">${T("by trips per weekday")}</span>
           <span class="right"><span class="seg" role="group" aria-label="Rows to show">
             ${[10,25,"all"].map(v => `<button data-top="${v}" data-feed="${f.key}" aria-pressed="${String(v) === String(topN)}">${v === "all" ? "ALL" : "TOP " + v}</button>`).join("")}
           </span></span></div>
@@ -7507,7 +7555,7 @@ const META = {
          "/data-catalogue?id=pekab40_screenings"] },
   transport:{ title:"Public Transport",
     desc:"Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.",
-    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips and stops are read, never the largest file.",
+    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs.",
     eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl"] },
   election:{ title:"Election Results",
     desc:"Latest election results from the Election Commission's MySPRSemak portal - the most recent general election (PRU-15), state election and by-election, with every constituency's winner, votes and party colours.",
