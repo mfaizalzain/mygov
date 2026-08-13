@@ -6,8 +6,9 @@ public/slow.json in the exact shapes the browser loaders build, so visitors
 spend zero API budget on data that changes at most daily:
 
   fuel      : fuelprice (weekly), hh_income (yearly)
-  finance   : exchangerates monthly avg, exchangerates_daily_1200 (business-daily),
-              trnsc_daily_fpx (daily), payment_instruments (monthly), interestrates (monthly)
+  finance   : exchangerates monthly avg, the three BNM middle-rate references
+              (0900/1200/1700, published 4x a trading day), trnsc_daily_fpx
+              (daily), payment_instruments (monthly), interestrates (monthly)
   mobility  : registrations_type_fuel (monthly), ridership_ktmb_daily (daily)
   economy   : cpi_core, cpi_headline, lfs_month, gdp_qtr_real, cpi_state
               (monthly/qtr), epf_dividend, fdi_flows (quarterly)
@@ -17,8 +18,9 @@ Run:  python3 tools/collect_slow.py
 Writes: public/slow.json  (committed by the GitHub Action, auto-deployed)
 
 The app reads slow.json same-origin and only falls back to the live API when
-it is missing or older than STALE_DAYS. The Action runs twice a day so the
-daily series stay within ~12h of current.
+it is missing or older than STALE_DAYS. The Action runs four times a day,
+just after each Bank Negara reference rate lands (09:35 / 12:35 / 17:35 /
+20:35 MYT), so the daily series stay within a few hours of current.
 """
 import datetime as dt
 import json
@@ -210,6 +212,28 @@ def main():
         fxd = fetch("catalogue", "data-catalogue/", {
             "id": "exchangerates_daily_1200", "filter": "middle@rate_type",
             "date_start": days_back(3 * 365) + "@date", "sort": "date"})
+        # BNM publishes four references a trading day - 09:00, 11:30 (best
+        # counter rates), 12:00 and 17:00. data.gov.my carries an official
+        # middle rate for the three reference times (11:30 is buy/sell only,
+        # and covers fewer currencies), so the dashboard's "latest" is the
+        # newest of those three. Two rows each: the newest snapshot plus the
+        # same reference a trading day earlier, for the day-over-day hero.
+        fx_snaps = {}
+        for t, did in (("0900", "exchangerates_daily_0900"),
+                       ("1200", "exchangerates_daily_1200"),
+                       ("1700", "exchangerates_daily_1700")):
+            rows = fetch("catalogue", "data-catalogue/", {
+                "id": did, "filter": "middle@rate_type", "sort": "-date", "limit": 2})
+            fx_snaps[t] = rows or []
+        best_t, best_rows = max(fx_snaps.items(),
+                                key=lambda kv: ((kv[1][0]["date"] if kv[1] else ""), kv[0]))
+
+        def fx_snap(r, t):
+            return {"date": r["date"], "t": t,
+                    **{k: num(r.get(k)) for k in FX_KEYS}}
+
+        fx_latest = fx_snap(best_rows[0], best_t) if best_rows else None
+        fx_prev = fx_snap(best_rows[1], best_t) if len(best_rows) > 1 else None
         fpx = fetch("catalogue", "data-catalogue/", {
             "id": "trnsc_daily_fpx", "filter": "both@model", "sort": "date"})
         pinst = fetch("catalogue", "data-catalogue/", {
@@ -322,7 +346,7 @@ def main():
     series = {
         "generated": today,
         "finance": {
-            "fx": avg, "fxd": dly,
+            "fx": avg, "fxd": dly, "fxLatest": fx_latest, "fxPrev": fx_prev,
             "fpx": [[r["date"], num(r.get("value")), num(r.get("volume"))] for r in (fpx or [])],
             "pay": pay,
             "ir": [[r.get("bank"), r["date"], r.get("rate"), num(r.get("value"))] for r in (ir or [])],

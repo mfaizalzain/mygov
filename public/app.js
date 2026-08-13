@@ -98,8 +98,8 @@ const I18N = {
   "PriceCatcher records the shelf price of ~340 items at ~2,100 premises nationwide. It is not on the OpenAPI (id=pricecatcher returns 404) - it is published only as monthly Parquet, so a daily GitHub Action aggregates 13 months of it into prices.json. The trend is a Jevons index (geometric mean of price relatives) over items priced in every month, so the basket cannot drift. It is equal-weighted, not CPI: DOSM publishes no per-item expenditure weights at this granularity. The district figure is a spatial price level - each item's local median over its national median - so a district is not penalised for stocking a different slice of the basket.":"PriceCatcher merekod harga rak ~340 item di ~2,100 premis di seluruh negara. Ia tiada pada OpenAPI (id=pricecatcher memulangkan 404) - diterbitkan hanya sebagai Parquet bulanan, maka GitHub Action harian menggabungkan 13 bulan daripadanya ke dalam prices.json. Trend ialah indeks Jevons (min geometri nisbah harga) ke atas item yang berharga setiap bulan, jadi bakul tidak boleh hanyut. Ia wajaran sama, bukan CPI: DOSM tidak menerbitkan wajaran perbelanjaan per-item pada butiran ini. Angka daerah ialah tahap harga ruang - median tempatan setiap item berbanding median nasional - jadi daerah tidak dihukum kerana menyimpan bahagian bakul yang berbeza.",
   "Department of Statistics Malaysia - inflation by spending category, the monthly unemployment rate, and quarterly real GDP.":"Jabatan Perangkaan Malaysia - inflasi mengikut kategori perbelanjaan, kadar pengangguran bulanan, dan KDNK benar suku tahunan.",
   "Core CPI is broken down by expenditure division, labour-force figures are monthly, and real GDP is quarterly. All three come from OpenDOSM.":"CPI teras dipecahkan mengikut bahagian perbelanjaan, angka buruh bulanan, dan KDNK benar suku tahunan. Kesemuanya daripada OpenDOSM.",
-  "Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.":"Laluan bas dan kereta api berjadual untuk KTMB dan Rapid KL - laluan paling sibuk, serta bilangan perhentian dan perjalanan setiap rangkaian.",
-  "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips and stops are read, never the largest file.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda - hanya laluan, perjalanan dan perhentian dibaca, bukan fail terbesar.",
+  "Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, how many stops and trips each network runs, and how many trips people actually take every day.":"Laluan bas dan kereta api berjadual untuk KTMB dan Rapid KL - laluan paling sibuk, bilangan perhentian dan perjalanan setiap rangkaian, serta bilangan perjalanan yang sebenarnya diambil setiap hari.",
+  "Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Daily trips by service come from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. They count journeys taken, not unique passengers, and are audited monthly before release.":"Jadual daripada suapan GTFS-static yang diterbitkan oleh setiap pengendali. Tiba sebagai arkib ZIP dan diproses dalam pelayar anda - hanya laluan, perjalanan, perhentian dan kalendar dibaca, bukan fail terbesar. Kiraan perjalanan ialah pelepasan pada satu hari bekerja biasa. Setiap suapan membawa corak hari bekerja, Sabtu dan Ahad sekali gus, jadi mengira baris fail akan menambah hari berasingan ke dalam jumlah yang tiada siapa boleh menaiki; kedua-dua suapan Rapid KL juga berasaskan kekerapan, menyenaraikan satu templat bagi setiap arah serta headway, maka laluan Kelana Jaya muncul dalam fail sebagai 6 perjalanan, bukan ~350 yang sebenarnya berjalan. Perjalanan harian mengikut perkhidmatan datang daripada siri ridership_headline dalam katalog data kerajaan - jumlah tap-in/tap-out tanpa nama daripada sistem tiket pengendali, diterbitkan oleh Prasarana dan Kementerian Pengangkutan. Ia mengira perjalanan yang diambil, bukan penumpang unik, dan diaudit setiap bulan sebelum diterbitkan.",
   "Trains and buses currently reporting their position, straight from the operators' live feeds.":"Kereta api dan bas yang kini melaporkan kedudukan mereka, terus daripada suapan langsung pengendali.",
   "Positions come from GTFS-realtime feeds and are decoded in your browser by a small wire-format reader. Outside service hours the feed legitimately carries zero vehicles.":"Kedudukan daripada suapan GTFS-realtime dan dinyahkod dalam pelayar anda oleh pembaca format wayar kecil. Di luar waktu perkhidmatan, suapan sememangnya membawa sifar kenderaan.",
   "Data source & methodology":"Sumber data & kaedah",
@@ -251,7 +251,9 @@ const I18N = {
   "Select currency":"Pilih mata wang",
   "vs previous day":"berbanding hari sebelumnya",
   "Currencies tracked":"Mata wang dipantau",
-  "Bank Negara daily reference rates":"Kadar rujukan harian Bank Negara",
+  "Bank Negara reference rates":"Kadar rujukan Bank Negara",
+  "reference":"rujukan",
+  "BNM publishes 4 times a day (09:00 · 11:30 · 12:00 · 17:00)":"BNM menerbitkan 4 kali sehari (09:00 · 11:30 · 12:00 · 17:00)",
   "RM per unit · daily reference rates":"RM seunit · kadar rujukan harian",
   "Daily Bank Negara reference rates - monthly average values.":"Kadar rujukan harian Bank Negara - nilai purata bulanan.",
   "Interest rates":"Kadar faedah",
@@ -396,6 +398,16 @@ const I18N = {
   "KTMB ridership":"Penumpang KTMB", "passengers per day":"penumpang sehari",
   "New EVs":"EV baharu", "EV share":"Bahagian EV", "of new vehicles":"daripada kenderaan baharu",
   "Registrations":"Pendaftaran", "Ridership":"Penumpang",
+  "Daily trips by service":"Perjalanan harian mengikut perkhidmatan",
+  "trips taken, not unique passengers":"perjalanan diambil, bukan penumpang unik",
+  "vs week before":"berbanding minggu sebelum", "Service":"Perkhidmatan", "total":"jumlah",
+  "MRT Kajang Line":"Laluan MRT Kajang", "LRT Kelana Jaya Line":"Laluan LRT Kelana Jaya",
+  "LRT Ampang Line":"Laluan LRT Ampang", "MRT Putrajaya Line":"Laluan MRT Putrajaya",
+  "LRT Shah Alam Line":"Laluan LRT Shah Alam", "Monorail Line":"Laluan Monorel",
+  "Rapid Bus (KL)":"Rapid Bus (KL)", "Rapid Bus (Penang)":"Rapid Bus (Pulau Pinang)",
+  "KTM Komuter":"KTM Komuter",
+  "KTM Komuter Utara":"KTM Komuter Utara", "KTMB ETS":"KTMB ETS",
+  "KTM Shuttle Tebrau":"KTM Shuttle Tebrau", "KTM Intercity":"KTM Intercity",
   "Busiest service":"Perkhidmatan tersibuk", "passengers":"penumpang",
   "Electric":"Elektrik", "Hybrid":"Hibrid", "Petrol":"Petrol", "Diesel":"Diesel",
   "Green diesel":"Diesel hijau", "Other":"Lain-lain",
@@ -404,6 +416,7 @@ const I18N = {
   /* ── finance additions ── */
   "Exchange rates and interest rates from Bank Negara Malaysia, plus the pulse of online payments from PayNet - the daily FPX totals and monthly value by payment instrument.":"Kadar pertukaran dan kadar faedah daripada Bank Negara Malaysia, serta nadi pembayaran dalam talian daripada PayNet - jumlah harian FPX dan nilai bulanan mengikut instrumen pembayaran.",
   "Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.":"Kadar pertukaran ialah kadar rujukan Bank Negara - sama ada kadar tengah harian jam 12:00 atau purata bulanan yang diterbitkan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya. Angka FPX ialah nilai dan jumlah transaksi harian PayNet; instrumen pembayaran ialah nilai dan kiraan bulanan yang dipecahkan mengikut debit, kredit, cas, cek dan wang elektronik.",
+  "Exchange rates are Bank Negara's reference rates, published four times a trading day (09:00, 11:30, 12:00 and 17:00 MYT). The headline number is the newest published middle reference; the daily chart plots the 12:00 mid-day series; the monthly view is the published monthly average. The 11:30 best-counter rates carry no official midpoint and are not charted. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.":"Kadar pertukaran ialah kadar rujukan Bank Negara, diterbitkan empat kali sehari dagangan (09:00, 11:30, 12:00 dan 17:00 waktu Malaysia). Angka utama ialah kadar tengah rujukan terkini yang diterbitkan; carta harian memplot siri tengah hari jam 12:00; paparan bulanan ialah purata bulanan yang diterbitkan. Kadar kaunter terbaik jam 11:30 tidak mempunyai titik tengah rasmi dan tidak dipaparkan. Kadar faedah meliputi bank komersial dan pelaburan; OPR sendiri tidak diterbitkan dalam katalog ini, jadi carta menunjukkan kadar asas komersial yang mengikutinya. Angka FPX ialah nilai dan jumlah transaksi harian PayNet; instrumen pembayaran ialah nilai dan kiraan bulanan yang dipecahkan mengikut debit, kredit, cas, cek dan wang elektronik.",
   "FPX e-payments":"Pembayaran elektronik FPX",
   "daily transaction value & volume":"nilai & jumlah transaksi harian",
   "FPX value":"Nilai FPX", "FPX transactions":"Transaksi FPX",
@@ -1229,6 +1242,26 @@ async function loadFinance(){
   const fxd = await request("data-catalogue", "/data-catalogue",
     { id:"exchangerates_daily_1200", filter:"middle@rate_type",
       date_start:cutoff(3) + "@date", sort:"date" });
+  /* BNM publishes four references a trading day - 09:00, 11:30 (best counter
+     rates, no official midpoint), 12:00 and 17:00. The hero shows whichever
+     middle-rate reference is newest; the chart below keeps the 12:00 series
+     for history. The collector stores the same pair in series.json, so this
+     fallback only runs during a deploy window. */
+  const refIds = ["0900", "1200", "1700"];
+  const refRows = await Promise.all(refIds.map(t =>
+    request("data-catalogue", "/data-catalogue",
+      { id:`exchangerates_daily_${t}`, filter:"middle@rate_type", sort:"-date", limit:2 })
+      .catch(() => [])));
+  const snap = (r, t) => r ? { date:r.date, t,
+    usd:r.usd, gbp:r.gbp, eur:r.eur, sgd:r.sgd, idr:r.idr,
+    cny:r.cny, jpy:r.jpy, thb:r.thb, aud:r.aud } : null;
+  const best = refIds.map((t, i) => refRows[i][0] ? { t, cur:refRows[i][0], prev:refRows[i][1] || null } : null)
+    .filter(Boolean)
+    .sort((a, b) => String(a.cur.date) === String(b.cur.date)
+      ? a.t.localeCompare(b.t) : String(a.cur.date).localeCompare(String(b.cur.date)))
+    .pop();
+  const fxLatest = best ? snap(best.cur, best.t) : null;
+  const fxPrev = best && best.prev ? snap(best.prev, best.t) : null;
   const ir = await request("data-catalogue", "/data-catalogue",
     { id:"interestrates", sort:"-date" });
   /* "both" is PayNet's own B2B + B2C total - summing the two models here would
@@ -1255,6 +1288,7 @@ async function loadFinance(){
   }
   return {
     fx: avg,
+    fxLatest, fxPrev,
     /* Same column order as the monthly rows, so one painter serves both. */
     fxd: (fxd || []).map(r => [r.date, r.usd, r.gbp, r.eur, r.sgd, r.idr])
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
@@ -1824,8 +1858,36 @@ async function loadTransport(){
     if (series && series.mobility) out.rid = series.mobility.rid;
     if (slow) out.holidays = slow.holidays || [];
   } catch { /* the GTFS half of the section stands on its own */ }
+  /* How many people actually ride. Everything else in this section is supply -
+     routes, stops, scheduled trips, vehicles moving right now - and until this
+     landed the only demand figure was KTMB's, so the busiest LRT line in the
+     country had no passenger number anywhere on the page. Eight days, because
+     transit is a weekday/weekend series: the honest comparison for a Friday is
+     the Friday before, not yesterday. */
+  try {
+    out.ridership = await request("data-catalogue", "/data-catalogue",
+      { id:"ridership_headline", sort:"-date", limit:8 });
+  } catch { /* the schedules stand on their own */ }
   return out;
 }
+/* Official labels from the data catalogue, not invented here. Ordered by the
+   networks the rest of the section covers: Klang Valley rail, then the bus
+   networks, then KTMB - which keeps its own chart below for history. */
+const RIDERSHIP_SERIES = [
+  { k:"rail_mrt_kajang",    label:"MRT Kajang Line" },
+  { k:"rail_lrt_kj",        label:"LRT Kelana Jaya Line" },
+  { k:"rail_lrt_ampang",    label:"LRT Ampang Line" },
+  { k:"rail_mrt_pjy",       label:"MRT Putrajaya Line" },
+  { k:"rail_lrt_shah_alam", label:"LRT Shah Alam Line" },
+  { k:"rail_monorail",      label:"Monorail Line" },
+  { k:"bus_rkl",            label:"Rapid Bus (KL)" },
+  { k:"bus_rpn",            label:"Rapid Bus (Penang)" },
+  { k:"rail_komuter",       label:"KTM Komuter" },
+  { k:"rail_komuter_utara", label:"KTM Komuter Utara" },
+  { k:"rail_ets",           label:"KTMB ETS" },
+  { k:"rail_tebrau",        label:"KTM Shuttle Tebrau" },
+  { k:"rail_intercity",     label:"KTM Intercity" },
+];
 
 /* ── naming live vehicles ──────────────────────────────────────────────────
    The kiosk feed reports a bare route code per bus ("U3000"), which is the
@@ -4193,7 +4255,7 @@ function paintCpiState(d){
 
 /* ════════════════════════════ finance view ════════════════════════════ */
 let fxRange = "1y";
-let fxGran = "monthly";   // monthly averages (since 2005) | daily 12:00 middle rate
+let fxGran = "monthly";   // monthly averages (since 2005) | daily 12:00 middle-rate series
 let fpxRange = "1y";
 let payMeas = "value";    // PayNet instruments: value (RM) | volume (transactions)
 let payRange = "1y";
@@ -4226,7 +4288,7 @@ function renderFinance(d){
         <div class="sub">${T("millions")} · ${fL[0] ? esc(ymd(fL[0])) : ""}</div></div>
       <div class="kpi"><div class="lab">${T("Currencies tracked")}</div>
         <div class="val">${FX_ORDER.length}</div>
-        <div class="sub">${esc(T("Bank Negara daily reference rates"))}</div></div>
+        <div class="sub">${esc(T("Bank Negara reference rates"))}</div></div>
     </div>
     <div class="grid g2 mb">
     <div class="card">
@@ -4346,13 +4408,19 @@ function renderFinance(d){
    change - plus the as-of date. Switching the dropdown repaints it. */
 let fxPick = "usd";
 function paintLatestFx(d){
-  const src = d.fxd && d.fxd.length ? d.fxd : d.fx;
   const col = FX_COL;
-  const rows = src || [];
-  const last = rows[rows.length - 1];
-  const prev = rows[rows.length - 2];
   const pick = fxPick in CURR ? fxPick : "usd";
-  const v = last ? last[col[pick]] : null;
+  /* The collector stores the newest published BNM reference (fxLatest) and
+     the same reference a trading day earlier (fxPrev); older series.json
+     payloads have neither, so fall back to the chart series. */
+  const snapRow = d.fxLatest, snapPrev = d.fxPrev;
+  const fallback = d.fxd && d.fxd.length ? d.fxd : d.fx;
+  const fLast = fallback && fallback.length ? fallback[fallback.length - 1] : null;
+  const fPrev = fallback && fallback.length > 1 ? fallback[fallback.length - 2] : null;
+  const last = snapRow || fLast;
+  const prev = snapPrev || fPrev;
+  const at = (o, k) => !o ? null : Array.isArray(o) ? o[col[k]] : o[k];
+  const v = last ? at(last, pick) : null;
   const fmt = vv => {
     if (vv == null || !isFinite(vv)) return "-";
     /* IDR trades around 0.0002 RM/unit; showing "RM 0.0002" is unreadable.
@@ -4362,7 +4430,7 @@ function paintLatestFx(d){
   };
   const dlt = (() => {
     if (!last || !prev) return null;
-    const a = last[col[pick]], b = prev[col[pick]];
+    const a = at(last, pick), b = at(prev, pick);
     if (a == null || b == null || !b) return null;
     const chg = a - b, pct = chg / b * 100;
     return { chg, pct, dir: chg > 0 ? "up" : chg < 0 ? "down" : "neutral" };
@@ -4375,7 +4443,12 @@ function paintLatestFx(d){
     ? `${dlt.dir === "up" ? "▲" : dlt.dir === "down" ? "▼" : "•"} ${dlt.chg >= 0 ? "+" : ""}${nf(dlt.chg, 4)} (${dlt.pct >= 0 ? "+" : ""}${nf(dlt.pct, 2)}%)`
     : "";
   if (heroChg) heroChg.className = "chg " + (dlt ? dlt.dir : "neutral");
-  if (heroSub) heroSub.textContent = (last ? esc(ymd(last[0])) : "") + (last ? " · " + esc(T("vs previous day")) : "");
+  if (heroSub){
+    const when = snapRow
+      ? `${esc(ymd(snapRow.date))} · ${snapRow.t.slice(0,2)}:${snapRow.t.slice(2)} ${esc(T("reference"))}`
+      : fLast ? esc(ymd(fLast[0])) : "";
+    heroSub.textContent = when + (when ? " · " + esc(T("vs previous day")) : "");
+  }
   const sel = $("#fx-pick");
   if (sel){
     sel.value = pick;
@@ -4390,7 +4463,8 @@ function paintFx(d){
   const src = daily ? d.fxd : d.fx;
   const note = $("#fx-note");
   if (note) note.innerHTML = "ℹ️ " + (daily
-    ? esc(T("Daily 12:00 middle rates from Bank Negara."))
+    ? esc(T("Daily 12:00 middle rates from Bank Negara.") + " · " +
+          T("BNM publishes 4 times a day (09:00 · 11:30 · 12:00 · 17:00)"))
     : esc(T("Daily Bank Negara reference rates - monthly average values.")));
   const from = fxRange === "all" ? "0000" : cutoff(RANGES[fxRange]);
   const rows = src.filter(r => String(r[0]) >= from);
@@ -6489,6 +6563,49 @@ const trFeeds = () => FEEDS.map(f => tdata && tdata[f.key]).filter(Boolean);
 const trFeed = () => trFeeds()
   .filter(f => netFilter === "all" || f.key === netFilter);
 
+/* Daily trips per service. Deliberately its own card rather than a column in
+   the busiest-routes tables: those count scheduled trips per route, and a
+   route is not a service - the LRT Ampang Line figure covers the Sri Petaling
+   branch too, and the bus figures are whole networks, not the individual
+   routes listed above. Joining them would invent a precision the data does
+   not have. */
+function ridershipCard(rows){
+  if (!Array.isArray(rows) || !rows.length) return "";
+  const latest = rows[0], prior = rows[7] || null;   // same weekday, a week back
+  const items = RIDERSHIP_SERIES
+    .map(s => ({ ...s, n: latest[s.k], was: prior ? prior[s.k] : null }))
+    .filter(s => s.n != null)
+    .sort((a, b) => b.n - a.n);
+  if (!items.length) return "";
+  const peak = items[0].n || 1;
+  const total = items.reduce((a, s) => a + s.n, 0);
+  return `<div class="mb"></div>
+    <div class="card">
+      <div class="card-h"><h4>${T("Daily trips by service")}</h4>
+        <span class="sub">${T("trips taken, not unique passengers")} · ${esc(dow(latest.date))} ${esc(ymd(latest.date))}</span>
+        <span class="right"><span class="dim mono">${nf(total)} ${T("total")}</span></span></div>
+      <div class="tw"><table>
+        <thead><tr><th>${T("Service")}</th><th class="num">${T("Trips")}</th>
+          <th class="num">${T("vs week before")}</th><th style="width:26%">${T("Share")}</th></tr></thead>
+        <tbody>${items.map(s => {
+          /* A week-on-week move on a service running a quarter of a million
+             trips is noise below a percent or so; only label a real one. */
+          const d = (s.was != null && s.was > 0) ? ((s.n - s.was) / s.was) * 100 : null;
+          /* Not .up/.down: those are the price classes, where up is red
+             because a rising price is bad news. More people riding is not. */
+          const cls = d == null ? "dim" : d > 1 ? "rid-up" : d < -1 ? "rid-down" : "dim";
+          const arrow = d == null ? "" : d > 1 ? "▲ " : d < -1 ? "▼ " : "";
+          return `<tr>
+            <td class="wrapcell">${esc(T(s.label))}</td>
+            <td class="num" style="font-weight:650">${nf(s.n)}</td>
+            <td class="num ${cls}">${d == null ? "-" : `${arrow}${nf(Math.abs(d), 1)}%`}</td>
+            <td><div style="background:var(--surface-3);border-radius:99px;height:6px;overflow:hidden">
+              <div style="width:${((s.n / peak) * 100).toFixed(1)}%;height:100%;background:var(--accent);border-radius:99px"></div></div></td>
+          </tr>`; }).join("")}
+        </tbody></table></div>
+    </div>`;
+}
+
 function renderTransport(d){
   tdata = d;
   $("#body-transport").innerHTML = `
@@ -6532,6 +6649,7 @@ function renderTransport(d){
     </div>
     <div id="tr-blocks"></div>
     <div id="rail-diagram" hidden></div>
+    ${ridershipCard(d.ridership)}
     ${d.rid ? `<div class="mb"></div>
     <div class="card">
       <div class="card-h"><h4>${T("KTMB ridership")}</h4>
@@ -7701,9 +7819,11 @@ const META = {
          "/data-catalogue?id=epf_dividend"] },
   finance:{ title:"Finance",
     desc:"Exchange rates and interest rates from Bank Negara Malaysia, plus the pulse of online payments from PayNet - the daily FPX totals and monthly value by payment instrument.",
-    how:"Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.",
+    how:"Exchange rates are Bank Negara's reference rates, published four times a trading day (09:00, 11:30, 12:00 and 17:00 MYT). The headline number is the newest published middle reference; the daily chart plots the 12:00 mid-day series; the monthly view is the published monthly average. The 11:30 best-counter rates carry no official midpoint and are not charted. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.",
     eps:["/data-catalogue?id=exchangerates",
+         "/data-catalogue?id=exchangerates_daily_0900&filter=middle@rate_type",
          "/data-catalogue?id=exchangerates_daily_1200&filter=middle@rate_type",
+         "/data-catalogue?id=exchangerates_daily_1700&filter=middle@rate_type",
          "/data-catalogue?id=interestrates",
          "/data-catalogue?id=trnsc_daily_fpx&filter=both@model",
          "/data-catalogue?id=payment_instruments"] },
@@ -7741,9 +7861,10 @@ const META = {
     eps:["/data-catalogue?id=blood_donations","/data-catalogue?id=organ_pledges",
          "/data-catalogue?id=pekab40_screenings"] },
   transport:{ title:"Public Transport",
-    desc:"Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.",
-    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs.",
-    eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl"] },
+    desc:"Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, how many stops and trips each network runs, and how many trips people actually take every day.",
+    how:"Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Daily trips by service come from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. They count journeys taken, not unique passengers, and are audited monthly before release.",
+    eps:["/gtfs-static/ktmb","/gtfs-static/prasarana?category=rapid-bus-kl",
+         "/data-catalogue?id=ridership_headline"] },
   election:{ title:"Election Results",
     desc:"Latest election results from the Election Commission's MySPRSemak portal - the most recent general election (PRU-15), state election and by-election, with every constituency's winner, votes and party colours.",
     how:"Results are crawled from the Election Commission's official MySPRSemak lookup (mysprsemak.spr.gov.my) - its own JSON API behind the constituency search. The collector keeps only the latest election per category (parliamentary, state assembly, by-election) since published results never change; it runs manually after each new election. SPR's API omits Kedah P.017 Padang Serai (a 2023 by-election seat) and the federal-territory seats have no state entry, so PRU-15 shows 208 seats here vs 222 nationally. Data provided by SPR.",
@@ -7791,6 +7912,7 @@ const LOADERS = {
       let m = null;
       for (const s of [d.fx, d.fxd, d.fpx])
         if (s && s.length){ const x = String(s[s.length-1][0]); if (!m || x > m) m = x; }
+      if (d.fxLatest && (!m || String(d.fxLatest.date) > m)) m = String(d.fxLatest.date);
       return m;
     } },
   mobility: { load:loadMobility,  render:renderMobility,  asOf:d => {

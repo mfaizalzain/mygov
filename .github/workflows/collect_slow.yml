@@ -1,11 +1,15 @@
 name: Update Slow Data (fuel, finance, mobility, economy, population)
 
 on:
-  # Runs twice daily so the business-daily series (FX, FPX, ridership) stay
-  # within ~12h of current: 08:30 AM + 08:30 PM MYT
+  # Runs four times a day, just after each Bank Negara reference rate lands
+  # (09:35 / 12:35 / 17:35 / 20:35 MYT), so the FX hero stays on the newest
+  # published snapshot instead of showing the 12:00 rate all day. The other
+  # business-daily series (FPX, ridership) only get fresher for it.
   schedule:
-    - cron: '30 0 * * *'
-    - cron: '30 12 * * *'
+    - cron: '35 1 * * *'
+    - cron: '35 4 * * *'
+    - cron: '35 9 * * *'
+    - cron: '35 12 * * *'
   # Manual trigger so a delayed/skipped cron can be caught up instantly
   workflow_dispatch:
 
