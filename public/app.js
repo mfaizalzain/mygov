@@ -290,6 +290,7 @@ const I18N = {
   "Official Sebenarnya.my fact-check":"Semakan fakta rasmi Sebenarnya.my",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
+  "Locating stops near you…":"Mencari perhentian berdekatan anda…",
   "No stops found within your area - try widening your search or switching network.":"Tiada perhentian ditemui dalam kawasan anda - cuba luaskan carian atau tukar rangkaian.",
   "LRT & MRT network":"Rangkaian LRT & MRT",
   "Rapid KL rail - click a station to open it on the map":"Rel Rapid KL - klik stesen untuk buka pada peta",
@@ -6560,6 +6561,14 @@ async function findStopsNear(){
   tgeo.status = "ok";
   paintTransport();
 }
+/* The stops card's most useful default is "what is near me", so ask for the
+   location once when the section first renders instead of making the reader
+   find the button. Never re-prompt: status leaves "idle" on the first ask and
+   stays denied/unavailable/ok, and the button remains for a manual re-find. */
+function maybeAutoNear(){
+  if (tgeo.status !== "idle" || !navigator.geolocation) return;
+  findStopsNear();
+}
 
 /* The transport payload is the GTFS feed map plus a couple of siblings (rid,
    holidays - the ridership series that moved here from Vehicles), so walking
@@ -6696,6 +6705,7 @@ function renderTransport(d){
   }
   paintTransport();
   initFlights();
+  maybeAutoNear();
 }
 
 function paintTransport(){
@@ -6958,7 +6968,9 @@ function paintStops(){
   if (cnt) cnt.textContent = sq || near ? `${nf(ranked.length)} ${T("of")} ${nf(all.length)}` : "";
   if (!sq && !near){
     rows.innerHTML = `<tr><td colspan="3" class="state" style="padding:var(--s4)">
-      ${T("Search all networks' stops above, or use “Find stops near me” to rank by distance.")}</td></tr>`;
+      ${tgeo.status === "asking"
+        ? T("Locating stops near you…")
+        : T("Search all networks' stops above, or use “Find stops near me” to rank by distance.")}</td></tr>`;
     return;
   }
   rows.innerHTML = ranked.map(x => `<tr>
