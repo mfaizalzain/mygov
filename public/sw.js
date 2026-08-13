@@ -28,9 +28,13 @@
    a real pause control on the traffic ticker.
    v24: Trend Radar claim/fact_details modal, claim previews, status filters,
    relative freshness, and filter/empty-state handling.
+   v25: Merdeka flag splash, seasonal motif layer, redrawn glyph set, paired
+   section cards, transport block row spanning, trend radar arrows kept in
+   viewport, methodology endpoint URLs, per-section share buttons with live
+   figures, and the travel share button joining its row.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v24";
+const VERSION    = "mygov-v25";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
