@@ -208,6 +208,9 @@ def main():
         hh_latest = hh_rows[-1][0][:10] if hh_rows else None
 
         # ── finance (data-catalogue) ───────────────────────────────────
+        # Currencies tracked by the dashboard (order = column order in the
+        # compact rows; the API returns ~27, these are the ones shown).
+        FX_KEYS = ["usd", "gbp", "eur", "sgd", "idr", "cny", "jpy", "thb", "aud"]
         fx = fetch("catalogue", "data-catalogue/", {"id": "exchangerates", "sort": "-date"})
         fxd = fetch("catalogue", "data-catalogue/", {
             "id": "exchangerates_daily_1200", "filter": "middle@rate_type",
@@ -239,10 +242,6 @@ def main():
         pinst = fetch("catalogue", "data-catalogue/", {
             "id": "payment_instruments", "sort": "date"})
         ir = fetch("catalogue", "data-catalogue/", {"id": "interestrates", "sort": "-date"})
-
-        # Currencies tracked by the dashboard (order = column order in the
-        # compact rows; the API returns ~27, these are the ones shown).
-        FX_KEYS = ["usd", "gbp", "eur", "sgd", "idr", "cny", "jpy", "thb", "aud"]
 
         def fxrows(rows):
             return [[r["date"]] + [num(r.get(k)) for k in FX_KEYS]
