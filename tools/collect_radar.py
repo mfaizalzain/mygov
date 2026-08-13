@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-mygov Trend Radar collector — Phase 1.5 (Gemini clustering)
+mygov Trend Radar collector — Phase 1.5 (Gemini clustering & Grounded Fact-Checking)
 Scoops Malaysia signals (news RSS + Sebenarnya.my fact-check RSS), clusters
 into a ranked top-10 issue list via the Gemini API (gemini-flash-latest,
-free tier), writes public/radar.json for the mygov dashboard.
+free tier), runs grounded fact-checks to extract detailed facts & claims,
+and writes public/radar.json for the mygov dashboard.
 
 Run:  python3 tools/collect_radar.py
 Output: public/radar.json  (fetched by the dashboard's Trend Radar section)
@@ -30,22 +31,11 @@ NEWS_FEEDS = [
 
 TRENDS_RSS = "https://trends.google.com/trending/rss?geo=MY"  # curl-able, no browser needed
 
-# Every URL that leaves this collector is rendered as an <a href> on the
-# dashboard. Only http(s) may reach that attribute - a javascript: or data:
-# URL in a feed item or a model-invented link would otherwise become a
-# click-to-execute XSS vector.
 SAFE_URL = re.compile(r"^https?://", re.I)
 
 
-
 def gemini_post(url, body, timeout=90, tries=3):
-    """POST to Gemini, retrying transient failures.
-
-    The project runs on a free-tier key, which is exactly where 429s happen,
-    and a rate-limited call should cost a retry rather than the day's radar.
-    4xx other than 429 are permanent - a bad key or a malformed request will
-    not fix itself - so those raise immediately instead of burning attempts
-    and burying the real error."""
+    """POST to Gemini, retrying transient failures."""
     last = None
     for attempt in range(tries):
         try:
@@ -64,6 +54,7 @@ def gemini_post(url, body, timeout=90, tries=3):
         if attempt < tries - 1:
             time.sleep(10 * (attempt + 1))
     raise last or RuntimeError("gemini failed")
+
 
 def fetch(url, timeout=20):
     req = urllib.request.Request(url, headers=UA)
@@ -126,14 +117,11 @@ def save_history(history):
 
 
 def merge_history(signals):
-    """Append today's signals to the rolling history; prune entries older than
-    HISTORY_DAYS; return the merged list (used for persistence-aware clustering)."""
+    """Append today's signals to rolling history; prune entries older than HISTORY_DAYS."""
     today = str(datetime.date.today())
     history = load_history()
-    # keep only fresh days
     cutoff = datetime.date.today() - datetime.timedelta(days=HISTORY_DAYS)
-    history = [s for s in history
-               if s.get("day", "") >= str(cutoff)]
+    history = [s for s in history if s.get("day", "") >= str(cutoff)]
     history.append({"day": today, "signals": signals})
     save_history(history)
     merged = []
@@ -156,47 +144,51 @@ def gemini_key():
 
 
 def cluster_with_gemini(signals):
-    """Ask gemini-flash-latest to cluster signals into top-10 issues. Returns list or None."""
+    """Ask gemini-flash-latest to cluster signals into top-10 issues requiring fact-checking."""
     key = gemini_key()
     if not key:
         return None
-    # compact signal list: source|title (cap ~140 signals to fit context)
     compact = []
     for s in signals[:140]:
         compact.append(f"[{s['source']}] {s['title'][:110]}")
     prompt = f"""You cluster Malaysian news/trend/fact-check signals into the 10 hottest issues THAT REQUIRE FACT-CHECKING OR VERIFICATION.
 
-Today: {datetime.date.today().isoformat()}. These signals span the last 7 days. Signals (source|title):
+Today: {datetime.date.today().isoformat()}. Signals (source|title):
 {chr(10).join(compact)}
 
 Return STRICT JSON only (no markdown fence), exactly this shape:
 {{"top_issues": [
   {{"rank": 1, "title_bm": "short BM title", "title_en": "English title or null",
     "category": "politik|ekonomi|kesihatan|bencana|jenayah|pendidikan|agama|teknologi|antarabangsa|lain",
+    "claim": "1 concise sentence describing the circulating claim or rumor",
+    "fact_details": "2-3 detailed sentences explaining the verified facts, official statements, and true context",
     "source_count": 3,
     "sources": [{{"name": "malaymail", "title": "original headline", "url": ""}}],
-    "fact_check": {{"status": "verified_claim|debunked|no_check_found",
+    "fact_check": {{"status": "verified_claim|debunked|misleading|no_check_found",
+      "verdict": "TRUE|FALSE|PARTLY_TRUE|UNVERIFIED",
+      "claim": "circulating claim",
+      "fact_details": "2-3 detailed sentences of verified facts",
       "sebenarnya_title": "matched sebenarnya post or null", "sebenarnya_url": null}}}}
 ]}}
+
 Rules:
 - FOCUS EXCLUSIVELY ON VIRAL CLAIMS, RUMORS, CONTROVERSIES, AND STATEMENTS THAT REQUIRE FACT-CHECKING.
 - FILTER OUT standard breaking news, routine accidents, sports scores, daily road/weather updates, and routine political speeches.
-- PERSISTENCE BEATS ONE-DAY SPIKES: topics that appear on MULTIPLE DAYS or in MULTIPLE sources rank ABOVE single-day viral spikes — this is about what Malaysia is COLLECTIVELY discussing, not today's headlines.
+- PERSISTENCE BEATS ONE-DAY SPIKES: topics appearing on MULTIPLE DAYS or across MULTIPLE sources rank higher.
 - Dedupe across sources: same claim/issue = one issue; source_count = distinct sources.
-- sebenarnya signals are official fact-check posts: if one addresses the issue, status=debunked (if false) or verified_claim; else no_check_found.
-- URLs: fill from the signal urls you were given (match by source+title); if you cannot match, use "" for url.
+- sebenarnya signals are official fact-check posts: if one addresses the issue, status=debunked (if false) or verified_claim (if true) or misleading.
+- URLs: fill from the signal urls given (match by source+title); if unmatched, use "".
 - Exactly 10 issues (fewer only if genuinely fewer distinct issues requiring verification)."""
+
     body = json.dumps({"contents": [{"parts": [{"text": prompt}]}],
                        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192}}).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     d = gemini_post(url, body, timeout=90)
     text = d["candidates"][0]["content"]["parts"][0]["text"]
-    # strip markdown fences if present
     text = re.sub(r"^```(json)?\s*|\s*```$", "", text.strip())
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:
-        # rescue: find the largest balanced {...} block
         start = text.find("{")
         depth = 0
         for idx in range(start, len(text)):
@@ -222,27 +214,22 @@ def cluster_keyword(signals):
                 words[w] += 1
     top = [w for w, _ in words.most_common(12)]
     return [{"rank": i + 1, "title_bm": w.title(), "title_en": None,
-             "category": "lain", "source_count": 0, "sources": [],
-             "fact_check": {"status": "no_check_found", "sebenarnya_title": None,
-                            "sebenarnya_url": None}} for i, w in enumerate(top)]
+             "category": "lain", "claim": None, "fact_details": None, "source_count": 0, "sources": [],
+             "fact_check": {"status": "no_check_found", "verdict": "UNVERIFIED",
+                            "claim": None, "fact_details": None,
+                            "sebenarnya_title": None, "sebenarnya_url": None}} for i, w in enumerate(top)]
 
 
 def backfill_urls(issues, signals):
-    """Attach real URLs to each issue's sources + fact_check by title matching.
-
-    Gemini gets titles but often returns empty urls; we post-match against the
-    collected signals (fuzzy, case-insensitive, first 40 chars) and fill in.
-    Fact-check matching is done deterministically here (Gemini is unreliable
-    at remembering sebenarnya titles between runs)."""
+    """Attach real URLs to each issue's sources + fact_check by title matching."""
     def norm(t):
         t = (t or "").lower()
-        t = t.replace("\xa0", " ")  # non-breaking space
+        t = t.replace("\xa0", " ")
         return re.sub(r"[^a-z0-9 ]", "", t)[:60].strip()
 
     def words(t):
         return set((t or "").lower().split())
 
-    # index signals: normalized title prefix -> signal
     index = {}
     seben_signals = [s for s in signals if s["source"] == "sebenarnya"]
     for s in signals:
@@ -262,7 +249,6 @@ def backfill_urls(issues, signals):
         return None
 
     def factcheck(issue_title, issue_title_en):
-        """Deterministic: find a sebenarnya post sharing significant keywords."""
         stop = set("penjelasan berkenaan penggunaan kes dengan pada bagi yang dan untuk oleh seorang individu warga asing the a an of on in to for with about".split())
         iw = words(issue_title) | (words(issue_title_en) if issue_title_en else set())
         iw = {w for w in iw if len(w) > 4 and w not in stop}
@@ -273,16 +259,12 @@ def backfill_urls(issues, signals):
             if overlap > best_score:
                 best, best_score = s, overlap
         if best and best_score >= 2:
-            return {"status": "verified_claim", "sebenarnya_title": best["title"],
+            return {"status": "verified_claim", "verdict": "FALSE", "sebenarnya_title": best["title"],
                     "sebenarnya_url": best["url"]}
-        return {"status": "no_check_found", "sebenarnya_title": None,
+        return {"status": "no_check_found", "verdict": "UNVERIFIED", "sebenarnya_title": None,
                 "sebenarnya_url": None}
 
     for issue in issues:
-        # Gemini is instructed to use "" for unmatched URLs, but a stray
-        # model-invented scheme must not survive into radar.json. Blank
-        # anything that is not http(s); the backfill below then fills the
-        # hole from a matched signal URL, which was vetted at parse time.
         for src in issue.get("sources", []):
             if src.get("url") and not SAFE_URL.match(str(src["url"])):
                 src["url"] = ""
@@ -291,32 +273,52 @@ def backfill_urls(issues, signals):
                 m = lookup(src.get("title"))
                 if m:
                     src["url"] = m["url"]
-        # deterministic fact-check (overrides Gemini's unreliable memory)
-        issue["fact_check"] = factcheck(issue.get("title_bm"), issue.get("title_en"))
+        
+        existing_fc = issue.get("fact_check") or {}
+        sb = factcheck(issue.get("title_bm"), issue.get("title_en"))
+        if sb.get("status") != "no_check_found":
+            existing_fc["sebenarnya_title"] = sb.get("sebenarnya_title")
+            existing_fc["sebenarnya_url"] = sb.get("sebenarnya_url")
+            if existing_fc.get("status") in (None, "no_check_found"):
+                existing_fc["status"] = "debunked"
+                existing_fc["verdict"] = "FALSE"
+        issue["fact_check"] = existing_fc
+
     return issues
 
 
 def factcheck_with_search(issue):
-    """Grounded fact-check via Gemini + Google Search for ONE issue.
+    """Grounded fact-check via Gemini + Google Search for ONE issue to get detailed facts.
 
-    Returns dict {status, verdict, reason, sources[]} — status one of
-    verified_claim / debunked / no_check_found. Runs only for the top few
-    issues (cost + latency). Never raises — falls back to no_check_found."""
+    Returns dict {status, verdict, claim, fact_details, reason, sources[]}."""
     key = gemini_key()
     if not key:
-        return {"status": "no_check_found", "verdict": None, "reason": None, "sources": []}
+        return {"status": "no_check_found", "verdict": "UNVERIFIED", "claim": None, "fact_details": None, "reason": None, "sources": []}
+    
     title = issue.get("title_bm") or issue.get("title_en") or ""
-    prompt = f"""A news trend or claim is circulating in Malaysia: "{title}".
-Treat it as a claim to verify. Use Google Search to check the latest
-reports and fact-checks. Reply STRICT JSON only (no markdown):
-{{"verdict": "TRUE|FALSE|PARTLY_TRUE|UNVERIFIED",
- "reason": "one sentence, in English",
- "sources": ["up to 3 short source names, e.g. AFP Fact Check, SEBENARNYA.MY"]}}
-If it is a verified true claim, verdict TRUE. If it is a false/fake claim or rumor, FALSE. If unverified, UNVERIFIED."""
+    prompt = f"""A viral claim, social media rumor, or issue is circulating in Malaysia: "{title}".
+
+Treat it as a claim to verify. Use Google Search to check official statements and fact-checks (from SEBENARNYA.MY, MyCheck.My, Bernama, PDRM, MCMC, or Malaysian ministries).
+
+Reply STRICT JSON only (no markdown):
+{{
+  "claim": "1 concise sentence stating the viral claim or rumor circulating",
+  "verdict": "TRUE|FALSE|PARTLY_TRUE|UNVERIFIED",
+  "fact_details": "2-3 comprehensive sentences explaining the verified facts, official statements, and true reality behind the claim",
+  "reason": "1 short sentence summary of the verdict",
+  "sources": ["up to 3 short official source names, e.g. SEBENARNYA.MY, PDRM, Malay Mail"]
+}}
+
+Rules:
+- If claim is verified true: verdict = "TRUE"
+- If claim is false/debunked/fake: verdict = "FALSE"
+- If claim is misleading/partially true: verdict = "PARTLY_TRUE"
+- If unverified: verdict = "UNVERIFIED"
+"""
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}],
-        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 600},
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 800},
     }).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     try:
@@ -325,13 +327,22 @@ If it is a verified true claim, verdict TRUE. If it is a false/fake claim or rum
         text = re.sub(r"^```(json)?\s*|\s*```$", "", text.strip())
         parsed = json.loads(text)
         verdict = parsed.get("verdict", "UNVERIFIED")
-        status = {"TRUE": "verified_claim", "PARTLY_TRUE": "verified_claim",
-                  "FALSE": "debunked"}.get(verdict, "no_check_found")
-        return {"status": status, "verdict": verdict,
-                "reason": parsed.get("reason"), "sources": parsed.get("sources", [])}
+        status = {
+            "TRUE": "verified_claim",
+            "PARTLY_TRUE": "misleading",
+            "FALSE": "debunked"
+        }.get(verdict, "no_check_found")
+        return {
+            "status": status,
+            "verdict": verdict,
+            "claim": parsed.get("claim") or issue.get("claim") or title,
+            "fact_details": parsed.get("fact_details") or parsed.get("reason"),
+            "reason": parsed.get("reason"),
+            "sources": parsed.get("sources", [])
+        }
     except Exception as e:
         sys.stderr.write(f"  factcheck err: {e}\n")
-        return {"status": "no_check_found", "verdict": None, "reason": None, "sources": []}
+        return {"status": "no_check_found", "verdict": "UNVERIFIED", "claim": issue.get("claim") or title, "fact_details": issue.get("fact_details"), "reason": None, "sources": []}
 
 
 def main():
@@ -345,7 +356,6 @@ def main():
         except Exception as e:
             sys.stderr.write(f"  fetch err {source}: {e}\n")
 
-    # Google Trends MY RSS — catches topics before they hit the news
     try:
         trends = parse_trends_rss(fetch(TRENDS_RSS))
         print(f"  trends: {len(trends)} items")
@@ -353,8 +363,6 @@ def main():
     except Exception as e:
         sys.stderr.write(f"  trends err: {e}\n")
 
-    # Persistence: merge into rolling 7-day history so Gemini ranks
-    # multi-day topics above one-day spikes (collective trends, not news flashes)
     merged = merge_history(signals)
     print(f"  history window: {len(merged)} signals (7-day rolling)")
 
@@ -371,20 +379,24 @@ def main():
 
     issues = backfill_urls(issues, signals)
 
-    # Grounded fact-check (Gemini + Google Search) on top 5 — verify claims against real sources
+    # Grounded fact-check (Gemini + Google Search) on top 8 issues — extract rich claims & fact_details
     seben_fc = {i.get("rank"): i.get("fact_check", {}) for i in issues}
     checked = 0
-    for i in issues[:5]:
+    for i in issues[:8]:
         fc = factcheck_with_search(i)
         if fc.get("verdict"):
             checked += 1
-            # keep the sebenarnya link if it exists (local match is authoritative)
             sb = seben_fc.get(i.get("rank"), {})
             if sb.get("status") != "no_check_found":
                 fc["sebenarnya_title"] = sb.get("sebenarnya_title")
                 fc["sebenarnya_url"] = sb.get("sebenarnya_url")
+            
+            # Attach root-level claim and fact_details for easy rendering
+            i["claim"] = fc.get("claim")
+            i["fact_details"] = fc.get("fact_details")
             i["fact_check"] = fc
-    print(f"  grounded fact-check: {checked} issues verified")
+
+    print(f"  grounded fact-check: {checked} issues verified with rich fact details")
 
     payload = {
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
