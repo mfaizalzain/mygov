@@ -49,20 +49,27 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 ## Festive themes
 
 The dashboard carries a low-key seasonal layer that appears for everyone
-nationwide. It changes only the accent tokens, a soft body glow, and one large
-offset header motif; the layout and data presentation stay unchanged. Dark and
-light themes, the user's reduced-motion preference, and the visitor's theme
-toggle are all respected.
+nationwide. It changes only the accent tokens, a soft body glow, and a band of
+small header motifs along the right edge; the layout and data presentation stay
+unchanged. Dark and light themes, the user's reduced-motion preference, and the
+visitor's theme toggle are all respected.
 
 | Season | Window | Header motif |
 | --- | --- | --- |
-| Kaamatan | 25-31 May | Rice stalk |
-| Hari Gawai | 1-4 June | Woven diamond |
+| Kaamatan | 25-31 May | Padi stalk in grain |
+| Hari Gawai | 1-4 June | Kenyalang (hornbill) |
 | Merdeka / Malaysia Day | 1 August-16 September | Waving Jalur Gemilang |
-| Hari Raya | 7 days before / 7 days after | Ketupat |
+| Hari Raya | 7 days before / 7 days after | Ketupat, with its plait |
 | Chinese New Year | 7 days before / 3 days after | Lantern |
 | Deepavali | 7 days before / 3 days after | Diya |
-| Christmas | 20-27 December | Star |
+| Christmas | 20-27 December | Tiered tree |
+
+The motifs tile at roughly 112x74 and drift sideways by exactly one tile width,
+which loops seamlessly under `repeat-x`. They were previously drawn one per
+header at 360x360 and offset to -140px, which showed only a 70px slice through
+the middle of each glyph, and each SVG carried its own `opacity=".5"` on top of
+the layer's `.10` - an effective alpha near 0.05. The layer was shipping
+invisible; opacity is now applied once, in CSS.
 
 Merdeka is the one season drawn from a real object rather than a symbol, so it
 gets a full Jalur Gemilang - 14 alternating stripes, the canton over the upper
@@ -74,6 +81,12 @@ deliberately *not* the accent - the dashboard already spends red on danger
 (flood stations at warning, debunked radar claims, every `.err` badge), and an
 accent in the same hue would read as alarm on screens that are only showing
 data.
+
+Kaamatan and Gawai are both harvest festivals, so they are told apart by what
+each region is known for rather than by the harvest itself: padi for Sabah, the
+hornbill for Sarawak. Kaamatan's palette is a ripening lime and amber, which
+also separates it from Raya's deep green - the two were previously identical
+themes, byte for byte in light mode.
 
 Movable holidays (Hari Raya, Chinese New Year and Deepavali) are resolved from
 the public-holiday calendar already mirrored into `public/slow.json`; the

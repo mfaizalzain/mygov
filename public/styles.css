@@ -53,27 +53,27 @@ html[data-theme="light"] .btn-a:hover:not(:disabled){background:#0b5f58;border-c
 /* ── seasonal theme layer ───────────────────────────────────────────
    Kaamatan / Gawai / Merdeka. Only a few tokens move per season; the
    canvas stays low-saturation and phase only changes glow intensity. */
+/* Kaamatan is the ripening lime-and-amber of a padi field, not the deep green
+   of Raya. The two were previously the same theme - byte-identical in light
+   mode, and separated in dark only by --accent-2 #f2c14e against #f3c969,
+   which nobody could see. They are different festivals and now look it. */
 html[data-theme="dark"][data-season="kaamatan"]{
-  --bg:#0b1310; --bg-2:#0e1713; --surface:#132018; --surface-2:#18261e; --surface-3:#203328;
-  --line:#2a4034; --line-soft:#1c2c23;
-  --accent:#4ade80; --accent-2:#f2c14e; --accent-dim:rgba(74,222,128,.14);
-  --chip-fg:#b7f2cd;
-  --grid:rgba(74,222,128,.06);
-  --season-motif:.10;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%234ade80'%20stroke-width='2'%20opacity='.55'%3E%3Cpath%20d='M60%20112C52%2090%2052%2058%2060%208'/%3E%3Cpath%20d='M60%2078C43%2071%2031%2053%2027%2030'/%3E%3Cpath%20d='M60%2078C77%2071%2089%2053%2093%2030'/%3E%3Cpath%20d='M60%2050C43%2044%2032%2029%2029%209'/%3E%3Cpath%20d='M60%2050C77%2044%2088%2029%2091%209'/%3E%3C/g%3E%3C/svg%3E");
+  --bg:#0c1209; --bg-2:#0f160c; --surface:#141d10; --surface-2:#1a2415; --surface-3:#22301b;
+  --line:#2e4026; --line-soft:#1f2c19;
+  --accent:#a3e635; --accent-2:#facc15; --accent-dim:rgba(163,230,53,.13);
+  --chip-fg:#d9f99d;
+  --grid:rgba(163,230,53,.06);
+  --season-motif:.15;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23a3e635'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M60%20112C57%2088%2057%2062%2066%2044'/%3E%3Cpath%20d='M66%2044C74%2030%2088%2020%20104%2015'/%3E%3Cpath%20d='M60%2086C47%2080%2039%2068%2037%2055'/%3E%3Cpath%20d='M63.2%2034.5L75.3%2043.4M67.5%2029.2L78.6%2039.3M72.3%2024.4L82.3%2035.6M77.5%2020.1L86.5%2032.1M83.1%2016.3L91%2029.1M89.1%2013L95.8%2026.4M95.3%2010.1L100.9%2024.1'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="light"][data-season="kaamatan"]{
-  --bg:#f4f8f5; --bg-2:#edf3ef; --surface:#ffffff; --surface-2:#f7fbf8; --surface-3:#e4eee8;
-  --line:#cbdcd1; --line-soft:#d8e5dc;
-  --accent:#047857; --accent-2:#a16207; --accent-dim:rgba(4,120,87,.10);
-  --chip-fg:#047857;
-  --grid:rgba(4,120,87,.06);
-  --season-motif:.09;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23047857'%20stroke-width='2'%20opacity='.5'%3E%3Cpath%20d='M60%20112C52%2090%2052%2058%2060%208'/%3E%3Cpath%20d='M60%2078C43%2071%2031%2053%2027%2030'/%3E%3Cpath%20d='M60%2078C77%2071%2089%2053%2093%2030'/%3E%3Cpath%20d='M60%2050C43%2044%2032%2029%2029%209'/%3E%3Cpath%20d='M60%2050C77%2044%2088%2029%2091%209'/%3E%3C/g%3E%3C/svg%3E");
+  --bg:#f7faf1; --bg-2:#f0f5e6; --surface:#ffffff; --surface-2:#fafcf5; --surface-3:#e9f0dc;
+  --line:#d3e0bd; --line-soft:#e0e9d1;
+  --accent:#4d7c0f; --accent-2:#a16207; --accent-dim:rgba(77,124,15,.10);
+  --chip-fg:#4d7c0f;
+  --grid:rgba(77,124,15,.06);
+  --season-motif:.14;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%234d7c0f'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M60%20112C57%2088%2057%2062%2066%2044'/%3E%3Cpath%20d='M66%2044C74%2030%2088%2020%20104%2015'/%3E%3Cpath%20d='M60%2086C47%2080%2039%2068%2037%2055'/%3E%3Cpath%20d='M63.2%2034.5L75.3%2043.4M67.5%2029.2L78.6%2039.3M72.3%2024.4L82.3%2035.6M77.5%2020.1L86.5%2032.1M83.1%2016.3L91%2029.1M89.1%2013L95.8%2026.4M95.3%2010.1L100.9%2024.1'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="dark"][data-season="gawai"]{
   --bg:#10120e; --bg-2:#14160f; --surface:#191b13; --surface-2:#202216; --surface-3:#292c1d;
@@ -81,10 +81,8 @@ html[data-theme="dark"][data-season="gawai"]{
   --accent:#f3c969; --accent-2:#34d399; --accent-dim:rgba(243,201,105,.13);
   --chip-fg:#fde9b0;
   --grid:rgba(243,201,105,.06);
-  --season-motif:.10;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23f3c969'%20stroke-width='2'%20opacity='.55'%3E%3Cpath%20d='M60%208%20112%2060%2060%20112%208%2060Z'/%3E%3Cpath%20d='M26%2026l68%2068M94%2026%2026%2094'/%3E%3Cpath%20d='M60%208v104M8%2060h104'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.15;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23f3c969'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M14%2064C28%2046%2044%2036%2062%2036'/%3E%3Cpath%20d='M14%2064C30%2071%2046%2073%2060%2072'/%3E%3Cpath%20d='M22%2060C36%2056%2050%2054%2061%2054'/%3E%3Cpath%20d='M30%2044C34%2030%2052%2024%2066%2030'/%3E%3Cpath%20d='M62%2036C82%2038%2090%2052%2088%2066C86%2082%2074%2092%2058%2090'/%3E%3Cpath%20d='M60%2072C59%2080%2059%2086%2058%2090'/%3E%3Ccircle%20cx='72'%20cy='54'%20r='3.2'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="light"][data-season="gawai"]{
   --bg:#f8f7f2; --bg-2:#f2f0e8; --surface:#ffffff; --surface-2:#fbfaf5; --surface-3:#ece9de;
@@ -92,10 +90,8 @@ html[data-theme="light"][data-season="gawai"]{
   --accent:#a16207; --accent-2:#047857; --accent-dim:rgba(161,98,7,.10);
   --chip-fg:#a16207;
   --grid:rgba(161,98,7,.06);
-  --season-motif:.09;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23047857'%20stroke-width='2'%20opacity='.5'%3E%3Cpath%20d='M60%208%20112%2060%2060%20112%208%2060Z'/%3E%3Cpath%20d='M26%2026l68%2068M94%2026%2026%2094'/%3E%3Cpath%20d='M60%208v104M8%2060h104'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.14;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23a16207'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M14%2064C28%2046%2044%2036%2062%2036'/%3E%3Cpath%20d='M14%2064C30%2071%2046%2073%2060%2072'/%3E%3Cpath%20d='M22%2060C36%2056%2050%2054%2061%2054'/%3E%3Cpath%20d='M30%2044C34%2030%2052%2024%2066%2030'/%3E%3Cpath%20d='M62%2036C82%2038%2090%2052%2088%2066C86%2082%2074%2092%2058%2090'/%3E%3Cpath%20d='M60%2072C59%2080%2059%2086%2058%2090'/%3E%3Ccircle%20cx='72'%20cy='54'%20r='3.2'/%3E%3C/g%3E%3C/svg%3E");
 }
 /* Merdeka carries the Jalur Gemilang's own four colours: the canton's royal
    blue becomes the canvas and the crescent's royal yellow the accent, with the
@@ -129,10 +125,8 @@ html[data-theme="dark"][data-season="raya"]{
   --accent:#4ade80; --accent-2:#f3c969; --accent-dim:rgba(74,222,128,.14);
   --chip-fg:#b7f2cd;
   --grid:rgba(74,222,128,.06);
-  --season-motif:.11;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cg%20fill='none'%20stroke='%23f3c969'%20stroke-width='1.1'%20opacity='.55'%3E%3Cpath%20d='M16%204%2028%2016%2016%2028%204%2016Z'/%3E%3Cpath%20d='M9%2011%2023%2021M23%2011%209%2021M11%2016h10M16%2011v10'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.15;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%234ade80'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M60%2012L108%2060L60%20108L12%2060Z'/%3E%3Cpath%20d='M67%2019L19%2067M53%2019L101%2067M78%2030L30%2078M42%2030L90%2078M90%2042L42%2090M30%2042L78%2090M101%2053L53%20101M19%2053L67%20101'/%3E%3Cpath%20d='M60%2012V3'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="light"][data-season="raya"]{
   --bg:#f4f8f5; --bg-2:#edf3ef; --surface:#ffffff; --surface-2:#f7fbf8; --surface-3:#e4eee8;
@@ -140,10 +134,8 @@ html[data-theme="light"][data-season="raya"]{
   --accent:#047857; --accent-2:#a16207; --accent-dim:rgba(4,120,87,.10);
   --chip-fg:#047857;
   --grid:rgba(4,120,87,.06);
-  --season-motif:.10;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cg%20fill='none'%20stroke='%23047857'%20stroke-width='1.1'%20opacity='.5'%3E%3Cpath%20d='M16%204%2028%2016%2016%2028%204%2016Z'/%3E%3Cpath%20d='M9%2011%2023%2021M23%2011%209%2021M11%2016h10M16%2011v10'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.14;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23047857'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M60%2012L108%2060L60%20108L12%2060Z'/%3E%3Cpath%20d='M67%2019L19%2067M53%2019L101%2067M78%2030L30%2078M42%2030L90%2078M90%2042L42%2090M30%2042L78%2090M101%2053L53%20101M19%2053L67%20101'/%3E%3Cpath%20d='M60%2012V3'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="dark"][data-season="cny"]{
   --bg:#120d0f; --bg-2:#170f12; --surface:#1d1315; --surface-2:#25181b; --surface-3:#302027;
@@ -151,10 +143,8 @@ html[data-theme="dark"][data-season="cny"]{
   --accent:#f87171; --accent-2:#f3c969; --accent-dim:rgba(248,113,113,.13);
   --chip-fg:#fecaca;
   --grid:rgba(248,113,113,.06);
-  --season-motif:.10;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23f87171'%20stroke-width='2'%20opacity='.55'%3E%3Crect%20x='42'%20y='14'%20width='36'%20height='8'%20rx='3'/%3E%3Crect%20x='38'%20y='24'%20width='44'%20height='54'%20rx='12'/%3E%3Cpath%20d='M38%2040h44M38%2056h44M50%2024v54M60%2024v54M70%2024v54M60%2078v12M52%2090h16'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.15;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23f87171'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M44%2020h32'/%3E%3Crect%20x='36'%20y='26'%20width='48'%20height='56'%20rx='16'/%3E%3Cpath%20d='M60%2026v56M48%2028v52M72%2028v52'/%3E%3Cpath%20d='M36%2040h48M36%2068h48'/%3E%3Cpath%20d='M60%2082v14M52%2096h16'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="light"][data-season="cny"]{
   --bg:#fdf6f6; --bg-2:#f9eeee; --surface:#ffffff; --surface-2:#fff8f8; --surface-3:#f5e6e6;
@@ -162,10 +152,8 @@ html[data-theme="light"][data-season="cny"]{
   --accent:#b91c1c; --accent-2:#a16207; --accent-dim:rgba(185,28,28,.10);
   --chip-fg:#b91c1c;
   --grid:rgba(185,28,28,.06);
-  --season-motif:.09;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23b91c1c'%20stroke-width='2'%20opacity='.5'%3E%3Crect%20x='42'%20y='14'%20width='36'%20height='8'%20rx='3'/%3E%3Crect%20x='38'%20y='24'%20width='44'%20height='54'%20rx='12'/%3E%3Cpath%20d='M38%2040h44M38%2056h44M50%2024v54M60%2024v54M70%2024v54M60%2078v12M52%2090h16'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.14;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23b91c1c'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M44%2020h32'/%3E%3Crect%20x='36'%20y='26'%20width='48'%20height='56'%20rx='16'/%3E%3Cpath%20d='M60%2026v56M48%2028v52M72%2028v52'/%3E%3Cpath%20d='M36%2040h48M36%2068h48'/%3E%3Cpath%20d='M60%2082v14M52%2096h16'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="dark"][data-season="deepavali"]{
   --bg:#100d18; --bg-2:#130f1d; --surface:#1a1426; --surface-2:#21192e; --surface-3:#2b2138;
@@ -173,10 +161,8 @@ html[data-theme="dark"][data-season="deepavali"]{
   --accent:#fbbf24; --accent-2:#a78bfa; --accent-dim:rgba(251,191,36,.13);
   --chip-fg:#fde9b0;
   --grid:rgba(251,191,36,.06);
-  --season-motif:.10;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23fbbf24'%20stroke-width='2'%20opacity='.55'%3E%3Cpath%20d='M22%2084h76'/%3E%3Cpath%20d='M34%2084c3-16%2010-24%2026-24s23%208%2026%2024Z'/%3E%3Cpath%20d='M60%2030c8%208%2012%2014%2012%2021%200%2010-5%2017-12%2021-7-4-12-11-12-21%200-7%204-13%2012-21Z'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.15;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23fbbf24'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M18%2092h84'/%3E%3Cpath%20d='M24%2074C27%2088%2093%2088%2096%2074Z'/%3E%3Cpath%20d='M24%2074h72'/%3E%3Cpath%20d='M34%2070C26%2060%2026%2050%2034%2041C42%2050%2042%2060%2034%2070Z'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="light"][data-season="deepavali"]{
   --bg:#fbf7f1; --bg-2:#f6efe6; --surface:#ffffff; --surface-2:#fffaf5; --surface-3:#f2e8dc;
@@ -184,10 +170,8 @@ html[data-theme="light"][data-season="deepavali"]{
   --accent:#b45309; --accent-2:#7c3aed; --accent-dim:rgba(180,83,9,.10);
   --chip-fg:#b45309;
   --grid:rgba(180,83,9,.06);
-  --season-motif:.09;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23b45309'%20stroke-width='2'%20opacity='.5'%3E%3Cpath%20d='M22%2084h76'/%3E%3Cpath%20d='M34%2084c3-16%2010-24%2026-24s23%208%2026%2024Z'/%3E%3Cpath%20d='M60%2030c8%208%2012%2014%2012%2021%200%2010-5%2017-12%2021-7-4-12-11-12-21%200-7%204-13%2012-21Z'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.14;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23b45309'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M18%2092h84'/%3E%3Cpath%20d='M24%2074C27%2088%2093%2088%2096%2074Z'/%3E%3Cpath%20d='M24%2074h72'/%3E%3Cpath%20d='M34%2070C26%2060%2026%2050%2034%2041C42%2050%2042%2060%2034%2070Z'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="dark"][data-season="christmas"]{
   --bg:#0b1314; --bg-2:#0e1718; --surface:#132021; --surface-2:#19282a; --surface-3:#20353a;
@@ -195,10 +179,8 @@ html[data-theme="dark"][data-season="christmas"]{
   --accent:#34d399; --accent-2:#f87171; --accent-dim:rgba(52,211,153,.14);
   --chip-fg:#b7f2cd;
   --grid:rgba(52,211,153,.06);
-  --season-motif:.10;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%2334d399'%20stroke-width='2'%20opacity='.55'%3E%3Cpath%20d='M60%208v104M8%2060h104M23%2023l74%2074M97%2023%2023%2097'/%3E%3Ccircle%20cx='60'%20cy='60'%20r='8'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.15;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%2334d399'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M60%2014L41%2043H51L34%2071H46L27%2099H93L74%2071H86L69%2043H79Z'/%3E%3Cpath%20d='M60%2099v11'/%3E%3Cpath%20d='M49%20110h22'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-theme="light"][data-season="christmas"]{
   --bg:#f4f8f7; --bg-2:#edf3f1; --surface:#ffffff; --surface-2:#f7fbfa; --surface-3:#e4eeec;
@@ -206,10 +188,8 @@ html[data-theme="light"][data-season="christmas"]{
   --accent:#047857; --accent-2:#b91c1c; --accent-dim:rgba(4,120,87,.10);
   --chip-fg:#047857;
   --grid:rgba(4,120,87,.06);
-  --season-motif:.09;
-  --season-motif-size:360px 360px;
-  --season-motif-pos:calc(100% + 70px) -140px;
-  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23047857'%20stroke-width='2'%20opacity='.5'%3E%3Cpath%20d='M60%208v104M8%2060h104M23%2023l74%2074M97%2023%2023%2097'/%3E%3Ccircle%20cx='60'%20cy='60'%20r='8'/%3E%3C/g%3E%3C/svg%3E");
+  --season-motif:.14;
+  --season-motif-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-30%200%20180%20120'%3E%3Cg%20fill='none'%20stroke='%23047857'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M60%2014L41%2043H51L34%2071H46L27%2099H93L74%2071H86L69%2043H79Z'/%3E%3Cpath%20d='M60%2099v11'/%3E%3Cpath%20d='M49%20110h22'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-season][data-season-phase="lead"] body{
   background-image:
@@ -284,19 +264,37 @@ html[data-season] header::before{
   animation:seasonWash 24s ease-in-out infinite;
 }
 @keyframes seasonWash{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+/* The motif is a band of small tiles along the right of the header, not one
+   large offset glyph. A header is ~70px tall; the previous framing scaled each
+   motif to 360x360 and parked it at -140px, so all anyone ever saw was a 70px
+   slice through the middle of the glyph - about 19% of its height, with the
+   parts that identify it cropped away above and below. At tile size the whole
+   glyph is in frame.
+   Opacity is applied once, here. The old SVGs also carried opacity=".5" on
+   their own stroke group, and .10 x .55 is an effective alpha of about 0.05 -
+   below the threshold of visibility on these backgrounds. The motif layer was
+   shipping invisible. The current SVGs draw at full strength and let this
+   layer do the fading. */
 html[data-season] header::after{
   content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  --season-tile-w:112px; --season-tile-h:74px;
   opacity:var(--season-motif,0);
   background-image:var(--season-motif-image,none);
-  background-repeat:no-repeat;
-  background-position:var(--season-motif-pos,calc(100% + 70px) -90px);
-  background-size:var(--season-motif-size,420px 300px);
-  animation:seasonMotif 18s ease-in-out infinite;
-  transform-origin:100% 0%;
+  background-repeat:repeat-x;
+  background-position:100% center;
+  background-size:var(--season-tile-w) var(--season-tile-h);
+  -webkit-mask-image:linear-gradient(to left,#000 0 40%,transparent 88%);
+  mask-image:linear-gradient(to left,#000 0 40%,transparent 88%);
+  animation:seasonMotif 48s linear infinite;
 }
+/* Drifting by exactly one tile width loops seamlessly, since repeat-x makes
+   that offset identical to the start. */
 @keyframes seasonMotif{
-  0%,100%{transform:perspective(800px) rotate3d(0,1,0,0deg) skewY(0deg)}
-  50%{transform:perspective(800px) rotate3d(0,1,0,4deg) skewY(-1.5deg)}
+  from{background-position-x:100%}
+  to{background-position-x:calc(100% + var(--season-tile-w))}
+}
+@media (max-width:720px){
+  html[data-season] header::after{--season-tile-w:92px; --season-tile-h:60px}
 }
 /* Merdeka gets a cropped flag splash instead of the tiled motif: a real Jalur
    Gemilang - 14 alternating stripes, the canton across the upper eight, and
