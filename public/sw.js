@@ -39,9 +39,10 @@
    updated), and the FX hero shows the newest of BNM's four daily references
    (09:00/11:30/12:00/17:00) instead of always the 12:00 rate, with the
    collector now running just after each reference.
+   v28: fuel card + methodology name the Thursday weekly-update cadence.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v27";
+const VERSION    = "mygov-v28";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
