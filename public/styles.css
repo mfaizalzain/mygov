@@ -315,39 +315,64 @@ html[data-season] header::after{
    covered by exactly one subpath - fills as a second crescent facing the
    other way. */
 html[data-season="merdeka"] header::after{
+  /* The splash box lives in custom properties because the wave keyframes have
+     to restate background-position, and a hardcoded position there would win
+     over any media-query override. */
+  --mk-w:480px; --mk-h:240px; --mk-x:34px; --mk-y:-52px; --mk-fade:46%;
   opacity:.17;
   background-image:
     repeating-linear-gradient(101deg,
       rgba(0,0,0,.34) 0 3px, rgba(255,255,255,.26) 15px, rgba(0,0,0,.34) 30px),
     url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20140'%3E%3Cpath%20fill='%23f7f7f5'%20d='M0%200h280v140H0z'/%3E%3Cpath%20fill='%23cc0001'%20d='M0%200h280v10H0zM0%2020h280v10H0zM0%2040h280v10H0zM0%2060h280v10H0zM0%2080h280v10H0zM0%20100h280v10H0zM0%20120h280v10H0z'/%3E%3Cpath%20fill='%23010066'%20d='M0%200h140v80H0z'/%3E%3Cpath%20fill='%23ffcc00'%20d='M64%2021.03A23%2023%200%201%200%2064%2058.97A19.5%2019.5%200%201%201%2064%2021.03Z'/%3E%3Cpath%20fill='%23ffcc00'%20d='M89%2019L91.05%2031.03L98.11%2021.08L94.74%2032.81L105.42%2026.91L97.29%2036.01L109.47%2035.33L98.2%2040L109.47%2044.67L97.29%2043.99L105.42%2053.09L94.74%2047.19L98.11%2058.92L91.05%2048.97L89%2061L86.95%2048.97L79.89%2058.92L83.26%2047.19L72.58%2053.09L80.71%2043.99L68.53%2044.67L79.8%2040L68.53%2035.33L80.71%2036.01L72.58%2026.91L83.26%2032.81L79.89%2021.08L86.95%2031.03Z'/%3E%3C/svg%3E");
-  background-size:480px 240px, 480px 240px;
-  background-position:calc(100% + 34px) -52px, calc(100% + 34px) -52px;
+  background-size:var(--mk-w) var(--mk-h), var(--mk-w) var(--mk-h);
+  background-position:calc(100% + var(--mk-x)) var(--mk-y), calc(100% + var(--mk-x)) var(--mk-y);
   background-repeat:no-repeat, no-repeat;
   background-blend-mode:overlay, normal;
-  -webkit-mask-image:linear-gradient(to left, #000 0 46%, transparent 96%);
-  mask-image:linear-gradient(to left, #000 0 46%, transparent 96%);
+  -webkit-mask-image:linear-gradient(to left, #000 0 var(--mk-fade), transparent 96%);
+  mask-image:linear-gradient(to left, #000 0 var(--mk-fade), transparent 96%);
   animation:merdekaFlagSplash 12s ease-in-out infinite;
   transform-origin:100% 0%;
 }
-html[data-theme="light"][data-season="merdeka"] header::after{opacity:.15}
+/* Light mode needs slightly more than dark, not less: the flag's white stripes
+   disappear into a white header, so only the canton and the red carry it. */
+html[data-theme="light"][data-season="merdeka"] header::after{opacity:.2}
+/* Narrow headers are only a few hundred pixels wide, so the desktop box covers
+   the whole bar and sits behind the brand lockup. Shrink it there and let it
+   ride the top-right corner instead. */
+@media (max-width:720px){
+  html[data-season="merdeka"] header::after{
+    --mk-w:260px; --mk-h:130px; --mk-x:10px; --mk-y:-26px; --mk-fade:62%;
+    opacity:.13;
+  }
+  html[data-theme="light"][data-season="merdeka"] header::after{opacity:.12}
+}
 /* The fold bands slide across the flag while the sheet itself skews, so the
    wave travels rather than the whole rectangle rocking as one plate. */
 @keyframes merdekaFlagSplash{
   0%,100%{transform:perspective(700px) rotate3d(0,1,0,0deg) skewY(0deg) scaleY(1);
-    background-position:calc(100% + 34px) -52px, calc(100% + 34px) -52px}
+    background-position:calc(100% + var(--mk-x)) var(--mk-y), calc(100% + var(--mk-x)) var(--mk-y)}
   50%{transform:perspective(700px) rotate3d(0,1,0,4.5deg) skewY(-1.2deg) scaleY(1.02);
-    background-position:calc(100% + 64px) -52px, calc(100% + 34px) -52px}
+    background-position:calc(100% + var(--mk-x) + 30px) var(--mk-y), calc(100% + var(--mk-x)) var(--mk-y)}
 }
-/* Hairline of the flag under the header: blue through red to royal yellow.
-   border-image paints only the bottom because the other three borders are 0. */
+/* Hairline of the flag under the header, weighted to the right so it reads as
+   the flag bleeding into the rule rather than as a stray coloured bar: the
+   left half stays the ordinary --line-soft and the flag's colours only arrive
+   under the splash itself. border-image paints the bottom alone because the
+   other three borders are 0.
+   The gradient must start on the real line colour, not on `transparent`:
+   border-image replaces the border on all four edges at once, so a transparent
+   first stop erases the hairline under the left half of the header instead of
+   leaving it. */
 html[data-season="merdeka"] header{
   border-bottom-color:transparent;
   border-image:linear-gradient(90deg,
-    rgba(1,0,102,.55), rgba(204,0,1,.6) 42%, rgba(255,204,0,.5) 74%, rgba(247,247,245,.3)) 1;
+    var(--line-soft) 26%, rgba(1,0,102,.4) 48%,
+    rgba(204,0,1,.5) 68%, rgba(255,204,0,.45) 86%, rgba(247,247,245,.22)) 1;
 }
 html[data-theme="light"][data-season="merdeka"] header{
   border-image:linear-gradient(90deg,
-    rgba(1,0,102,.4), rgba(204,0,1,.45) 42%, rgba(200,150,0,.45) 74%, rgba(1,0,102,.12)) 1;
+    var(--line-soft) 26%, rgba(1,0,102,.32) 48%,
+    rgba(204,0,1,.4) 68%, rgba(154,103,0,.4) 86%, rgba(1,0,102,.1)) 1;
 }
 .hd{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6);
     display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}

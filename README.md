@@ -58,11 +58,22 @@ toggle are all respected.
 | --- | --- | --- |
 | Kaamatan | 25-31 May | Rice stalk |
 | Hari Gawai | 1-4 June | Woven diamond |
-| Merdeka / Malaysia Day | 1 August-16 September | Offset Jalur Gemilang |
+| Merdeka / Malaysia Day | 1 August-16 September | Waving Jalur Gemilang |
 | Hari Raya | 7 days before / 7 days after | Ketupat |
 | Chinese New Year | 7 days before / 3 days after | Lantern |
 | Deepavali | 7 days before / 3 days after | Diya |
 | Christmas | 20-27 December | Star |
+
+Merdeka is the one season drawn from a real object rather than a symbol, so it
+gets a full Jalur Gemilang - 14 alternating stripes, the canton over the upper
+eight, the crescent and the fourteen-pointed Bintang Persekutuan - cropped past
+the top-right corner of the header and waved with a travelling fold gradient.
+Its palette is the flag's own: royal blue as the canvas, royal yellow as the
+accent, stripe red left to the body glow and the header wash. Red is
+deliberately *not* the accent - the dashboard already spends red on danger
+(flood stations at warning, debunked radar claims, every `.err` badge), and an
+accent in the same hue would read as alarm on screens that are only showing
+data.
 
 Movable holidays (Hari Raya, Chinese New Year and Deepavali) are resolved from
 the public-holiday calendar already mirrored into `public/slow.json`; the
