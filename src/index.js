@@ -51,10 +51,12 @@ const GTFS_PAIRS = new Set([
   "ktmb|",
   "prasarana|rapid-bus-kl",
   "prasarana|rapid-rail-kl",
-  /* Names only. The live kiosk feed reports ~100 T-prefixed MRT feeder
-     routes that rapid-bus-kl does not carry, so without this every one of
-     them shows on the live map as a bare code. */
+  /* Names only, for the live map. The kiosk feed reports ~100 T-prefixed MRT
+     feeder routes that rapid-bus-kl does not carry, and Penang's routes are
+     in neither; without these both show as bare codes. There is no
+     rapid-bus-kuantan upstream (404), which is why RKN has no entry. */
   "prasarana|rapid-bus-mrtfeeder",
+  "prasarana|rapid-bus-penang",
 ]);
 const FIDS_TERMINALS = new Set([
   "KLIA", "klia2", "SZB", "PEN", "BKI", "KCH", "LGK",

@@ -1163,6 +1163,18 @@ button.vchip{cursor:pointer}
 .vchip .tip .vrow{display:flex;justify-content:space-between;gap:var(--s2);font-size:12px;padding:2px 0;white-space:nowrap}
 .vchip .tip .link-btn{display:inline-block;margin-top:6px}
 @media (max-width:480px){ .vchip .tip{width:auto;white-space:normal} }
+/* The tip is centred on its chip, so a chip near the right edge threw its
+   tooltip past the viewport and gave the page a horizontal scroll - the same
+   left-right shift the trend radar arrows used to cause. Below 560px the tip
+   spans the chip row instead of its own chip: .vchip drops out of the
+   positioning chain so .vchips becomes the offset parent, and left/right:0
+   then pins the tip to a box that is already inside the page. */
+@media (max-width:560px){
+  .vchips{position:relative}
+  .vchip{position:static}
+  .vchip .tip{left:0;right:0;width:auto;max-width:none;transform:translateY(4px)}
+  .vchip:hover .tip,.vchip:focus .tip,.vchip:focus-within .tip{transform:translateY(0)}
+}
 
 /* controls */
 .seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--line-soft);

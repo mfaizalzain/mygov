@@ -370,7 +370,8 @@ const I18N = {
   "unclassified":"tidak diklasifikasikan",
   "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
   "among live ":"antara ", "Live map - ":"Peta langsung - ", "positions as broadcast":"kedudukan seperti disiarkan",
-  "moving":"bergerak", "stopped":"berhenti",
+  "moving":"bergerak", "stopped":"berhenti", "Komuter":"Komuter", "ETS":"ETS",
+  "operator kiosk feed":"suapan kiosk pengendali",
   "Nearest ":"Terdekat ", " to you":" dengan anda",
   "straight-line distance, within 5 km":"jarak garis lurus, dalam 5 km",
   "route unnamed in the schedule feed":"laluan tanpa nama dalam suapan jadual",
@@ -1768,11 +1769,18 @@ async function loadTransport(){
          trip_id, so this is the link. */
       const routeType = new Map(routes.map(r => [r.route_id, r.route_type]));
       const routeName = new Map(routes.map(r => [r.route_id, r.route_long_name || r.route_short_name || r.route_id]));
-      ktmbTrips = new Map();
+      /* A plain object, not a Map: the section payload is cached through
+         JSON.stringify, and a Map serialises to {}. It has to survive the
+         cache - loadTransport does not run for a returning visitor, so a
+         module-level Map filled here was null exactly when the Live section
+         needed it, leaving every train unnamed and unclassified. 304 trips,
+         so the payload barely notices. */
+      ktmbTrips = {};
       for (const t of trips){
         const rt = routeType.get(t.route_id);
-        ktmbTrips.set(t.trip_id, { intercity: rt === "2", route: routeName.get(t.route_id) || "" });
+        ktmbTrips[t.trip_id] = { intercity: rt === "2", route: routeName.get(t.route_id) || "" };
       }
+      out[f.key].tripInfo = ktmbTrips;
     }
     /* The rail feed carries stop_times and shapes, so build the metro-style
        line diagrams here: each route gets its ordered station list (from the
@@ -1816,80 +1824,117 @@ async function loadTransport(){
     if (series && series.mobility) out.rid = series.mobility.rid;
     if (slow) out.holidays = slow.holidays || [];
   } catch { /* the GTFS half of the section stands on its own */ }
-  ktmbTripInfo = ktmbTrips;
   return out;
 }
-/* KTMB trip_id -> { intercity, route } lookup for the Live section. Filled
-   by loadTransport (the static GTFS is parsed there), read by loadLive,
-   which loads after transport via the section's after() hook. */
-let ktmbTripInfo = null;
 
 /* ── naming live vehicles ──────────────────────────────────────────────────
    The kiosk feed reports a bare route code per bus ("U3000"), which is the
    GTFS route_id, so the static feeds loadTransport already parses can turn it
    into "300 · Terminal Maluri ~ Lebuh Ampang". Filled there, read here. */
 const ROUTE_NAMES = new Map();
-/* The ~100 T-prefixed MRT feeder routes are in neither rapid-bus-kl nor
-   rapid-rail-kl. Their own feed keys routes by an opaque numeric id and
-   carries the code in route_long_name ("T114"), with the destination only in
-   trips.txt as a headsign - so this map is keyed by code, not route_id. The
-   live feed writes those codes with a trailing variant digit ("T1140"), which
-   liveRoute() strips. Fetched once, lazily, and only for the live section. */
+/* Two extra static feeds exist only to name live vehicles, and both key
+   routes differently from the KL bus feed, so each gets its own map:
+
+     mrtfeeder  ~100 T-prefixed routes in neither rapid-bus-kl nor
+                rapid-rail-kl. Opaque numeric route_id, code in
+                route_long_name ("T114"); the kiosk writes those codes with a
+                trailing variant digit ("T1140"), which liveRoute() strips.
+     penang     opaque numeric route_id again, but the kiosk sends the public
+                number ("302"), so this one is keyed by route_short_name.
+
+   In both, the destination only exists in trips.txt as a headsign. Fetched
+   once each, lazily, and only when the live section actually renders a feed
+   that needs them - they are megabytes for a few dozen names, so nothing
+   waits on them: positions paint first and the names land on a repaint. */
 const FEEDER_NAMES = new Map();
-let feederNames = null, feederTries = 0;
-/* Both maps are filled from render, never from a loader. loadSection() serves
-   a cached section without calling its loader at all, so a name map populated
-   as a side effect of loadTransport was empty for every returning visitor -
-   the same trap the forecasts hook fell into. renderTransport runs on cached
-   data too, and tdata.top already carries id/short/long per route. */
+const PENANG_NAMES = new Map();
+function nameLoader(category, build){
+  let p = null, tries = 0;
+  return () => {
+    /* Bounded: a feed that stays unreachable must not be re-fetched on every
+       repaint (a theme or language switch repaints everything). */
+    if (p || tries >= 2) return p;
+    tries++;
+    p = (async () => {
+      /* Through the same limiter as the section's own feeds. The upstream
+         allows 4 GTFS requests a minute and the page already spends three on
+         a cold edge cache; an unqueued fetch here is the one that 429s. It
+         queues behind them happily - nothing waits on names. */
+      const r = await schedule("gtfs-static",
+        () => fetch(`/api/gtfs?agency=prasarana&category=${category}`));
+      if (!r.ok) throw new ApiError("name feed unavailable", "http");
+      const files = await unzipSelected(await r.arrayBuffer(), ["routes.txt","trips.txt"]);
+      build(parseCSV(files["routes.txt"]), parseCSV(files["trips.txt"]));
+    })().catch(() => {
+      /* Naming is a nicety and must never fail the live section - but the
+         memo has to be dropped, or one bad fetch leaves the routes unnamed
+         for the rest of the visit. */
+      p = null;
+    });
+    return p;
+  };
+}
+/* First headsign wins - the rest are the same pair of endpoints the other way
+   round, and a chip has room for one. */
+const fillNames = (map, keyOf) => (routes, trips) => {
+  const key = new Map();
+  for (const x of routes){ const k = keyOf(x); if (k) key.set(x.route_id, k); }
+  for (const t of trips){
+    const k = key.get(t.route_id);
+    if (k && !map.has(k)) map.set(k, { short:k, long:(t.trip_headsign || "").trim() });
+  }
+  for (const k of key.values()) if (!map.has(k)) map.set(k, { short:k, long:"" });
+};
+const loadFeederNames = nameLoader("rapid-bus-mrtfeeder",
+  fillNames(FEEDER_NAMES, x => (x.route_long_name || x.route_short_name || "").trim()));
+const loadPenangNames = nameLoader("rapid-bus-penang",
+  fillNames(PENANG_NAMES, x => (x.route_short_name || x.route_long_name || "").trim()));
+/* Names are filled from render, never from a loader. loadSection() serves a
+   cached section without calling its loader at all, so a map populated as a
+   side effect of loadTransport was empty for every returning visitor - the
+   same trap the forecasts hook fell into. renderTransport runs on cached data
+   too, and tdata.top already carries id/short/long per route. */
 function ensureLiveNames(){
   if (tdata)
     for (const f of Object.values(tdata))
       if (f && Array.isArray(f.top))
         for (const r of f.top)
           if (r.id) ROUTE_NAMES.set(r.id, { short:r.short || r.id, long:r.long || "" });
-  /* Bounded: a feed that stays unreachable must not be re-fetched on every
-     repaint (a theme or language switch repaints everything). */
-  if (!FEEDER_NAMES.size && feederTries < 2){
-    feederTries++;
-    loadFeederNames().then(() => { if (FEEDER_NAMES.size && lvdata) renderLive(lvdata); });
-  }
-}
-function loadFeederNames(){
-  if (feederNames) return feederNames;
-  feederNames = (async () => {
-    const r = await fetch("/api/gtfs?agency=prasarana&category=rapid-bus-mrtfeeder");
-    if (!r.ok) return;
-    const files = await unzipSelected(await r.arrayBuffer(), ["routes.txt","trips.txt"]);
-    const code = new Map();
-    for (const x of parseCSV(files["routes.txt"])){
-      const c = (x.route_long_name || x.route_short_name || "").trim();
-      if (c) code.set(x.route_id, c);
-    }
-    for (const t of parseCSV(files["trips.txt"])){
-      const c = code.get(t.route_id);
-      /* First headsign wins - the rest are the same pair of endpoints in the
-         other direction, and the chip has room for one. */
-      if (c && !FEEDER_NAMES.has(c))
-        FEEDER_NAMES.set(c, { short:c, long:(t.trip_headsign || "").trim() });
-    }
-    for (const [id, c] of code) if (!FEEDER_NAMES.has(c)) FEEDER_NAMES.set(c, { short:c, long:"" });
-  })().catch(() => {
-    /* Naming is a nicety and must never fail the live section - but the
-       memo has to be dropped too, or one bad fetch leaves every feeder
-       route unnamed for the rest of the visit. */
-    feederNames = null;
+  const want = [];
+  if (lvdata && lvdata.rapid  && !FEEDER_NAMES.size) want.push(loadFeederNames());
+  if (lvdata && lvdata.penang && !PENANG_NAMES.size) want.push(loadPenangNames());
+  if (!want.length) return;
+  /* Repaint only if names actually arrived. Re-rendering unconditionally
+     would call this again, queue the same loads again, and never settle. */
+  const before = FEEDER_NAMES.size + PENANG_NAMES.size;
+  Promise.all(want).then(() => {
+    if (lvdata && FEEDER_NAMES.size + PENANG_NAMES.size > before) renderLive(lvdata);
   });
-  return feederNames;
 }
-/* A live route code -> what to call it. Falls back to the raw code, which is
-   what the whole section used to show. */
-function liveRoute(code){
+/* A live route code -> what to call it, per feed: Klang Valley sends GTFS
+   route_ids, Penang sends public route numbers. Falls back to the raw code,
+   which is what the whole section used to show. */
+function liveRoute(code, feed){
   const c = String(code == null ? "" : code);
+  if (feed === "penang") return PENANG_NAMES.get(c) || { short:c, long:"" };
   return ROUTE_NAMES.get(c) || FEEDER_NAMES.get(c.slice(0, -1)) || { short:c, long:"" };
 }
-const liveRouteLabel = code => {
-  const r = liveRoute(code);
+/* Trains carry no route id at all - tagKtmb() gives them a line name instead,
+   so ask the vehicle rather than the code. The pill is a few characters wide,
+   which a full line name overflows, so trains put their service in the pill
+   ("Komuter") and the line beside it, matching how a bus reads. */
+function vehicleRoute(f, v){
+  if (f.key === "ktmb"){
+    const short = v.intercity === true ? T("ETS")
+                : v.intercity === false ? T("Komuter") : "KTM";
+    return { short, long: v.route || "" };
+  }
+  const byCode = liveRoute(v.routeId, f.key);
+  return byCode.short ? byCode
+                      : { short:String(v.tripId || v.vehicleId || "-"), long:"" };
+}
+const liveRouteLabel = (code, feed) => {
+  const r = liveRoute(code, feed);
   return r.long ? `${r.short} · ${r.long}` : r.short;
 };
 /* A position this old is not telling you where a bus is. The feed keeps
@@ -1904,7 +1949,7 @@ const vStale = (f, v) => { const a = vAge(f, v); return a != null && a > LIVE_ST
 const lvVisible = f => f.vehicles.filter(v =>
   !vStale(f, v) && (!lvFilter[f.key] || String(v.routeId) === lvFilter[f.key]));
 const lvPopup = (f, v) => `<b>${esc(v.vehicleId || v.entityId || "-")}</b>` +
-  (v.routeId ? `<br>${esc(liveRouteLabel(v.routeId))}` : "") +
+  (() => { const r = vehicleRoute(f, v); return r.short ? `<br>${esc(r.long ? r.short + " · " + r.long : r.short)}` : ""; })() +
   (v.speed != null ? `<br>${v.speed > 0 ? nf(v.speed, 0) + " km/h" : T("stopped")}` : "") +
   (v.timestamp ? `<br><span class="dim">${ago(v.timestamp)}</span>` : "");
 
@@ -1914,17 +1959,22 @@ const RT = [
      proxy): the api.data.gov.my GTFS-RT feed for prasarana is frequently
      empty even mid-service, while the kiosk shows 800+ live buses. */
   { key:"rapid", label:"Rapid KL buses", noun:"buses", path:"/api/rapid", params:{ provider:"RKL" } },
+  /* Same kiosk feed, different city. RKN (Kuantan) is the third provider the
+     kiosk offers and is deliberately absent: it has carried no vehicles when
+     sampled, and there is no rapid-bus-kuantan static feed to name or place
+     them with, so it would only ever add a block of unnamed dots. */
+  { key:"penang", label:"Rapid Penang buses", noun:"buses", path:"/api/rapid", params:{ provider:"RPG" } },
 ];
 async function loadLive(){
   const out = {};
   for (const f of RT){
     if (f.path === "/api/rapid"){
-      /* Names for the T-prefixed feeder routes, in parallel with the
-         positions - it only decorates them, so a failure is swallowed. */
-      const names = loadFeederNames();
+      /* Route names are not fetched here. ensureLiveNames() does it from
+         render, which is the only path a returning visitor takes - a cached
+         section never calls this loader at all. Positions must not wait on
+         megabytes of naming data either. */
       const d = await fetch("/api/rapid?provider=" + encodeURIComponent(f.params.provider),
-        { cache:"no-store" }).then(r => { if (!r.ok) throw new ApiError("Rapid KL feed unavailable.", "http"); return r.json(); });
-      await names;
+        { cache:"no-store" }).then(r => { if (!r.ok) throw new ApiError(`${f.label} feed unavailable.`, "http"); return r.json(); });
       out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:"kiosk",
         feedTimestamp: d.updated ? Math.floor(Date.parse(d.updated) / 1000) : null,
         vehicles: (d.buses || []).map(b => ({
@@ -1936,16 +1986,6 @@ async function loadLive(){
       const d = decodeVehiclePositions(buf);
       const vehicles = d.vehicles.filter(v => v.lat != null && v.lon != null)
         .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-      if (f.key === "ktmb" && ktmbTripInfo){
-        /* The live feed only names trips; the static GTFS (parsed in
-           loadTransport) maps trip -> route, so tag Intercity/ETS trains
-           vs Komuter for the chips and tooltip. */
-        for (const v of vehicles){
-          const info = ktmbTripInfo.get(v.tripId);
-          if (info) v.intercity = info.intercity;
-          if (info) v.route = info.route;
-        }
-      }
       out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
         vehicles };
     }
@@ -7179,8 +7219,8 @@ function lvNearby(f, vehicles){
     .sort((a, b) => a.km - b.km).slice(0, 6);
   if (!near.length) return "";
   const rows = near.map(({ v, km }) => `<div class="lv-near-row">
-      <span class="pill mono">${esc(liveRoute(v.routeId).short)}</span>
-      <span class="lv-near-name">${esc(liveRoute(v.routeId).long || T("route unnamed in the schedule feed"))}</span>
+      <span class="pill mono">${esc(vehicleRoute(f, v).short)}</span>
+      <span class="lv-near-name">${esc(vehicleRoute(f, v).long || T("route unnamed in the schedule feed"))}</span>
       <span class="lv-near-d mono">${km < 1 ? Math.round(km * 1000) + " m" : nf(km, 1) + " km"}</span>
       <span class="lv-near-s mono">${v.speed > 0 ? nf(v.speed, 0) + " km/h" : T("stopped")}</span>
     </div>`).join("");
@@ -7190,9 +7230,27 @@ function lvNearby(f, vehicles){
     <div class="card-b lv-near">${rows}</div></div>`;
 }
 
+/* The KTMB realtime feed names only trips - routeId is always null - so the
+   static schedule is the only thing that can say which line a train is on and
+   whether it is Intercity/ETS or Komuter. Done here rather than in loadLive
+   because the map arrives with the cached transport payload, which a
+   returning visitor gets without any loader running. */
+function tagKtmb(){
+  const info = tdata && tdata.ktmb && tdata.ktmb.tripInfo;
+  const f = lvdata && lvdata.ktmb;
+  if (!info || !f) return;
+  for (const v of f.vehicles){
+    const hit = info[v.tripId];
+    if (!hit) continue;
+    v.intercity = hit.intercity;
+    v.route = hit.route;
+  }
+}
+
 function renderLive(d){
   lvdata = d;
   ensureLiveNames();
+  tagKtmb();
   /* Route filter state per feed: when set, the map + chips show only the
      vehicles on that route. Clicking the active chip clears the filter. */
   lvFilter = lvFilter || {};
@@ -7230,7 +7288,8 @@ function renderLive(d){
                                : T("none reporting")}</div></div>
         <div class="kpi"><div class="lab">${T("Last update")}</div>
           <div class="val" style="font-size:19px">${esc(ts)}</div>
-          <div class="sub">${T("feed v")}${esc(f.version || "?")}</div></div>
+          <div class="sub">${f.version === "kiosk" ? T("operator kiosk feed")
+                             : T("feed v") + esc(f.version || "?")}</div></div>
         <div class="kpi"><div class="lab">${T("Distinct routes")}</div>
           <div class="val" data-count="${routes.length}">0</div>
           <div class="sub">${T("among live ")}${esc(f.noun)}</div></div>
@@ -7480,11 +7539,11 @@ function rchip(f, rc, veh, total){
   /* The chip used to read "U3000", which is the GTFS route_id and means
      nothing to a rider. Show the public route number, and put the pair of
      endpoints at the top of the tooltip. */
-  const nm = liveRoute(rc.route);
+  const nm = liveRoute(rc.route, f.key);
   const head = nm.long
     ? `<div class="vrow dim" style="white-space:normal">${esc(nm.long)}</div>` : "";
   return `<button type="button" class="vchip mono${active ? " on" : ""}"
-    aria-pressed="${active}" aria-label="${esc(liveRouteLabel(rc.route))} · ${rc.count} ${esc(T("buses"))}"
+    aria-pressed="${active}" aria-label="${esc(liveRouteLabel(rc.route, f.key))} · ${rc.count} ${esc(T("buses"))}"
     data-route="${esc(rc.route)}" data-feed="${f.key}">
     ${esc(nm.short)}<b class="cnt">${rc.count}</b>
     <span class="tip">${head}${busList}</span></button>`;
@@ -7693,7 +7752,7 @@ const META = {
          "POST mysprsemak.spr.gov.my/semakan/keputusan/keputusanPrk"] },
   live:{ title:"Live Vehicles",
     desc:"Trains and buses currently reporting their position, straight from the operators' live feeds.",
-    how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader. Rapid KL buses come from Prasarana's official live kiosk feed (the same data the myrapidbus site shows - 800+ buses in the Klang Valley). Buses are aggregated into route chips and the map clusters positions until you zoom in.",
+    how:"Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.",
     eps:["/gtfs-realtime/vehicle-position/ktmb","myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)"] },
   travel:{ title:"Travel Outlook",
     desc:"Upcoming peak travel windows for Malaysia - school breaks, public holidays and long weekends - with what to expect and how to plan around them.",
