@@ -32,7 +32,7 @@
    section cards, transport block row spanning, trend radar arrows kept in
    viewport, methodology endpoint URLs, per-section share buttons with live
    figures, and the travel share button joining its row.
-   v26: daily trips by service on Public Transport - a ridership_headline
+   v26: daily ridership by service on Public Transport - a ridership_headline
    card (trips taken, not unique passengers) with week-on-week moves and a
    share bar, plus the section methodology noting the new source.
    v27: the ridership card drops Rapid Bus Kuantan (its series is not being
@@ -50,9 +50,11 @@
    titled card instead of a bare KPI row.
    v32: Rapid Penang joins the transport network cards (GTFS-static, plain
    row-per-trip counts) with its own filter chip and stops coverage.
+   v33: the ridership card is renamed "Daily ridership by service" to match
+   data.gov.my's own dashboards - it was mislabelled as trips.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v32";
+const VERSION    = "mygov-v33";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
