@@ -34,9 +34,40 @@ TRENDS_RSS = "https://trends.google.com/trending/rss?geo=MY"  # curl-able, no br
 SAFE_URL = re.compile(r"^https?://", re.I)
 
 
+def _escape_json_string_controls(text):
+    """Escape raw newlines/tabs inside JSON strings that Gemini sometimes emits."""
+    out, in_str, escaped = [], False, False
+    for ch in text:
+        if in_str:
+            if escaped:
+                out.append(ch)
+                escaped = False
+            elif ch == "\\":
+                out.append(ch)
+                escaped = True
+            elif ch == '"':
+                out.append(ch)
+                in_str = False
+            elif ch == "\n":
+                out.append("\\n")
+            elif ch == "\r":
+                out.append("\\r")
+            elif ch == "\t":
+                out.append("\\t")
+            else:
+                out.append(ch)
+        else:
+            if ch == '"':
+                in_str = True
+            out.append(ch)
+    return "".join(out)
+
+
 def parse_json_text(text):
     """Parse Gemini JSON that may be wrapped in fences or contain stray text."""
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    text = _escape_json_string_controls(text)
+    text = re.sub(r",\s*([}\]])", r"\1", text)
     try:
         return json.loads(text)
     except json.JSONDecodeError:
@@ -202,8 +233,7 @@ Rules:
 - Exactly 10 issues (fewer only if genuinely fewer distinct issues requiring verification)."""
 
     body = json.dumps({"contents": [{"parts": [{"text": prompt}]}],
-                       "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192,
-                                            "responseMimeType": "application/json"}}).encode()
+                       "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192}}).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     d = gemini_post(url, body, timeout=90)
     text = d["candidates"][0]["content"]["parts"][0]["text"]
@@ -325,8 +355,7 @@ Rules:
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}],
-        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 800,
-                             "responseMimeType": "application/json"},
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 800},
     }).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     try:
