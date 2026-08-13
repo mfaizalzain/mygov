@@ -6549,20 +6549,31 @@ async function initFlights(){
   }, 60000);
 }
 
+/* The app has ONE location. boot() hands geo.status to the weather loader,
+   which resolves it with browser GPS (falling back to IP-based geoip) and
+   remembers it for returning visitors; every location-based card reads the
+   same geo.lat/lon - weather's Now card, nearest stops, nearest live
+   vehicles. This card must not ask the browser for its own fix. */
 async function findStopsNear(){
-  if (!navigator.geolocation){ tgeo.status = "unsupported"; paintTransport(); return; }
-  tgeo.status = "asking"; paintTransport();
-  let pos;
-  try {
-    pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej,
-        { timeout:12000, maximumAge:600000, enableHighAccuracy:false }));
-  } catch (e) {
-    tgeo.status = (e && e.code === 1) ? "denied" : "unavailable";
-    paintTransport();
-    return;
+  tgeo.status = "ok";
+  if (geo.lat == null || geo.lon == null){
+    /* No shared fix (GPS denied and IP fallback unavailable): only the
+       explicit button may prompt, and the result is shared back into geo. */
+    if (!navigator.geolocation){ tgeo.status = "unsupported"; paintTransport(); return; }
+    tgeo.status = "asking"; paintTransport();
+    let pos;
+    try {
+      pos = await new Promise((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej,
+          { timeout:12000, maximumAge:600000, enableHighAccuracy:false }));
+    } catch (e) {
+      tgeo.status = (e && e.code === 1) ? "denied" : "unavailable";
+      paintTransport();
+      return;
+    }
+    geo.lat = pos.coords.latitude; geo.lon = pos.coords.longitude;
   }
-  tgeo.lat = pos.coords.latitude; tgeo.lon = pos.coords.longitude;
+  tgeo.lat = geo.lat; tgeo.lon = geo.lon;
   tgeo.near = {};
   for (const f of trFeeds()){
     tgeo.near[f.key] = f.stopList
@@ -6573,12 +6584,13 @@ async function findStopsNear(){
   tgeo.status = "ok";
   paintTransport();
 }
-/* The stops card's most useful default is "what is near me", so ask for the
-   location once when the section first renders instead of making the reader
-   find the button. Never re-prompt: status leaves "idle" on the first ask and
-   stays denied/unavailable/ok, and the button remains for a manual re-find. */
+/* The stops card's most useful default is "what is near me", using the
+   location the app already detected at load - no tap, and no second
+   permission prompt. If there is no shared fix (GPS denied, no IP fallback)
+   the card falls back to the search prompt and the button. */
 function maybeAutoNear(){
-  if (tgeo.status !== "idle" || !navigator.geolocation) return;
+  if (tgeo.status !== "idle") return;
+  if (geo.lat == null || geo.lon == null) return;
   findStopsNear();
 }
 
