@@ -1149,11 +1149,82 @@ async function loadRapid(){
   return a;
 }
 
+const AQI_CITIES = [
+  ["Kuala Lumpur", 3.1390, 101.6869],
+  ["Petaling Jaya", 3.1073, 101.6067],
+  ["Shah Alam", 3.0733, 101.5185],
+  ["Putrajaya", 2.9264, 101.6964],
+  ["Penang", 5.4141, 100.3288],
+  ["Johor Bahru", 1.4927, 103.7414],
+  ["Ipoh", 4.5975, 101.0901],
+  ["Kuching", 1.5535, 110.3593],
+  ["Kota Kinabalu", 5.9804, 116.0735],
+  ["Melaka", 2.1896, 102.2501],
+  ["Kuantan", 3.8077, 103.3260],
+  ["Seremban", 2.7246, 101.9343],
+  ["Alor Setar", 6.1244, 100.3678],
+  ["Kota Bharu", 6.1256, 102.2383],
+  ["Kuala Terengganu", 5.3302, 103.1408],
+  ["Miri", 4.3993, 113.9914],
+  ["Bintulu", 3.1733, 113.0335],
+  ["Langkawi", 6.3508, 99.8039],
+];
+
 async function loadAQI(){
-  const d = await fetch("/api/aqi", { cache:"no-store" })
-    .then(r => { if (!r.ok) throw new ApiError("Air quality unavailable.", "http"); return r.json(); });
-  if (!d.stations || !d.stations.length) return null;
-  return d;
+  // 1. Try /api/aqi (Worker / API proxy)
+  try {
+    const res = await fetch("/api/aqi", { cache:"no-store" });
+    if (res.ok){
+      const d = await res.json();
+      if (d && Array.isArray(d.stations) && d.stations.length) return d;
+    }
+  } catch {}
+
+  // 2. Try /aqi.json (static snapshot generated daily)
+  try {
+    const res = await fetch("/aqi.json");
+    if (res.ok){
+      const d = await res.json();
+      if (d && Array.isArray(d.stations) && d.stations.length) return d;
+    }
+  } catch {}
+
+  // 3. Fallback: Direct client-side batch fetch to Open-Meteo Air Quality API
+  try {
+    const lats = AQI_CITIES.map(c => c[1]).join(",");
+    const lons = AQI_CITIES.map(c => c[2]).join(",");
+    const res = await fetch(
+      `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lats}&longitude=${lons}&current=us_aqi,pm2_5&timezone=Asia%2FKuala_Lumpur`);
+    if (res.ok){
+      const raw = await res.json();
+      const items = Array.isArray(raw) ? raw : [raw];
+      const stations = [];
+      for (let i = 0; i < AQI_CITIES.length; i++){
+        const item = items[i];
+        if (!item || !item.current) continue;
+        const cur = item.current;
+        if (cur.us_aqi == null) continue;
+        stations.push({
+          name: AQI_CITIES[i][0],
+          aqi: Math.round(Number(cur.us_aqi)),
+          pm25: cur.pm2_5 == null ? null : Number(cur.pm2_5).toFixed(1),
+          time: cur.time || null,
+        });
+      }
+      if (stations.length){
+        stations.sort((a, b) => b.aqi - a.aqi);
+        return {
+          updated: new Date().toISOString(),
+          reading_time: stations[0].time || null,
+          stations,
+          worst: stations[0],
+          cleanest: stations[stations.length - 1],
+        };
+      }
+    }
+  } catch {}
+
+  return null;
 }
 
 async function loadFuel(){

@@ -705,28 +705,34 @@ export default {
       ];
 
       const stations = [];
-      await Promise.all(CITIES.map(async ([name, lat, lon]) => {
-        try {
-          const q = new URLSearchParams({
-            latitude: String(lat), longitude: String(lon),
-            current: "us_aqi,pm2_5", timezone: "Asia/Kuala_Lumpur",
-          });
-          const res = await fetch(
-            `https://air-quality-api.open-meteo.com/v1/air-quality?${q}`,
-            { headers: { "user-agent": UA }, cf: { cacheTtl: 600, cacheEverything: true } });
-          if (!res.ok) return;
-          const d = await res.json();
-          const cur = d.current || {};
-          const aqi = cur.us_aqi;
-          if (aqi == null) return;
-          stations.push({
-            name,
-            aqi: Math.round(Number(aqi)),
-            pm25: cur.pm2_5 == null ? null : Number(cur.pm2_5).toFixed(1),
-            time: cur.time || null,
-          });
-        } catch { /* one bad city must not sink the whole route */ }
-      }));
+      try {
+        const lats = CITIES.map(c => c[1]).join(",");
+        const lons = CITIES.map(c => c[2]).join(",");
+        const q = new URLSearchParams({
+          latitude: lats, longitude: lons,
+          current: "us_aqi,pm2_5", timezone: "Asia/Kuala_Lumpur",
+        });
+        const res = await fetch(
+          `https://air-quality-api.open-meteo.com/v1/air-quality?${q}`,
+          { headers: { "user-agent": UA }, cf: { cacheTtl: 600, cacheEverything: true } });
+        if (res.ok) {
+          const raw = await res.json();
+          const items = Array.isArray(raw) ? raw : [raw];
+          for (let i = 0; i < CITIES.length; i++) {
+            const item = items[i];
+            if (!item || !item.current) continue;
+            const cur = item.current;
+            const aqi = cur.us_aqi;
+            if (aqi == null) continue;
+            stations.push({
+              name: CITIES[i][0],
+              aqi: Math.round(Number(aqi)),
+              pm25: cur.pm2_5 == null ? null : Number(cur.pm2_5).toFixed(1),
+              time: cur.time || null,
+            });
+          }
+        }
+      } catch { /* upstream error */ }
 
       stations.sort((a, b) => b.aqi - a.aqi);
       const out = json({

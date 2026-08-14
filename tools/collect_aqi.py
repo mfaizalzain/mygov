@@ -46,42 +46,49 @@ CITIES = [
 ]
 
 
-def fetch_city(name, lat, lon):
+def fetch_all_cities():
+    lats = ",".join(str(c[1]) for c in CITIES)
+    lons = ",".join(str(c[2]) for c in CITIES)
     q = urllib.parse.urlencode({
-        "latitude": lat,
-        "longitude": lon,
+        "latitude": lats,
+        "longitude": lons,
         "current": "us_aqi,pm2_5",
         "timezone": "Asia/Kuala_Lumpur",
     })
     req = urllib.request.Request(f"{BASE}?{q}", headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        d = json.loads(r.read().decode("utf-8", "replace"))
-    cur = d.get("current") or {}
-    aqi = cur.get("us_aqi")
-    if aqi is None:
-        return None
-    pm25 = cur.get("pm2_5")
-    return {
-        "name": name,
-        "aqi": int(round(float(aqi))),
-        "pm25": None if pm25 is None else f"{float(pm25):.1f}",
-        "time": cur.get("time") or None,
-    }
+    ctx = None
+    try:
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+    except Exception:
+        pass
+    with urllib.request.urlopen(req, context=ctx, timeout=30) as r:
+        raw = json.loads(r.read().decode("utf-8", "replace"))
+
+    items = raw if isinstance(raw, list) else [raw]
+    stations = []
+    for (name, _lat, _lon), item in zip(CITIES, items):
+        cur = item.get("current") or {}
+        aqi = cur.get("us_aqi")
+        if aqi is None:
+            continue
+        pm25 = cur.get("pm2_5")
+        stations.append({
+            "name": name,
+            "aqi": int(round(float(aqi))),
+            "pm25": None if pm25 is None else f"{float(pm25):.1f}",
+            "time": cur.get("time") or None,
+        })
+    return stations
 
 
 def main():
-    stations = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
-        futures = {pool.submit(fetch_city, *c): c for c in CITIES}
-        for fut in concurrent.futures.as_completed(futures):
-            city = futures[fut]
-            try:
-                st = fut.result()
-            except Exception as e:
-                sys.stderr.write(f"AQI {city[0]}: FAILED ({e})\n")
-                continue
-            if st:
-                stations.append(st)
+    try:
+        stations = fetch_all_cities()
+    except Exception as e:
+        sys.exit(f"aqi: batch fetch failed ({e})")
 
     if not stations:
         sys.exit("aqi: no city readings collected")
@@ -89,7 +96,7 @@ def main():
     stations.sort(key=lambda s: s["aqi"], reverse=True)
     out = {
         "updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "reading_time": stations[0]["time"],
+        "reading_time": stations[0]["time"] if stations[0].get("time") else None,
         "stations": stations,
         "worst": stations[0],
         "cleanest": stations[-1],

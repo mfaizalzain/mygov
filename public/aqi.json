@@ -1,0 +1,126 @@
+{
+ "updated": "2026-08-14T08:37:06Z",
+ "reading_time": "2026-08-14T16:00",
+ "stations": [
+  {
+   "name": "Kuala Lumpur",
+   "aqi": 166,
+   "pm25": "57.0",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Petaling Jaya",
+   "aqi": 166,
+   "pm25": "57.0",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Shah Alam",
+   "aqi": 166,
+   "pm25": "57.0",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Kuching",
+   "aqi": 160,
+   "pm25": "57.5",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Seremban",
+   "aqi": 152,
+   "pm25": "50.2",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Putrajaya",
+   "aqi": 149,
+   "pm25": "55.6",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Ipoh",
+   "aqi": 119,
+   "pm25": "31.9",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Melaka",
+   "aqi": 118,
+   "pm25": "58.2",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Miri",
+   "aqi": 99,
+   "pm25": "40.3",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Bintulu",
+   "aqi": 97,
+   "pm25": "40.9",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Johor Bahru",
+   "aqi": 93,
+   "pm25": "39.6",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Kuantan",
+   "aqi": 83,
+   "pm25": "38.9",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Kuala Terengganu",
+   "aqi": 74,
+   "pm25": "30.4",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Penang",
+   "aqi": 69,
+   "pm25": "15.0",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Kota Kinabalu",
+   "aqi": 68,
+   "pm25": "24.8",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Kota Bharu",
+   "aqi": 57,
+   "pm25": "16.4",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Alor Setar",
+   "aqi": 56,
+   "pm25": "9.9",
+   "time": "2026-08-14T16:00"
+  },
+  {
+   "name": "Langkawi",
+   "aqi": 29,
+   "pm25": "3.8",
+   "time": "2026-08-14T16:00"
+  }
+ ],
+ "worst": {
+  "name": "Kuala Lumpur",
+  "aqi": 166,
+  "pm25": "57.0",
+  "time": "2026-08-14T16:00"
+ },
+ "cleanest": {
+  "name": "Langkawi",
+  "aqi": 29,
+  "pm25": "3.8",
+  "time": "2026-08-14T16:00"
+ }
+}
