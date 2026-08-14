@@ -30,7 +30,8 @@ same rate-limit rules as the app.
 
 | Section | Source | Contents |
 | --- | --- | --- |
-| Weather | MET Malaysia, Open-Meteo | Unified Weather Station: live current conditions at your location with interactive mini-map (temperature, feels-like, humidity, wind), a **24-hour hourly forecast timeline** (hour, condition icon, temperature, rain probability % with color pills), a dynamic **7-day daily forecast outlook** (daily high/low temperature range, rain probability, conditions), instant location search with auto-complete suggestions, and a collapsed-by-default **360-location table** from MET Malaysia |
+| Warnings & Hazards | MET Malaysia, JPS, Prasarana (myRapid), Open-Meteo | Everything currently on issue, as a **status strip** of three tiles. The first merges severe-weather warnings, **earthquakes within 500 km of Malaysia in the last 12 hours** (filtered using MET Malaysia's official `n_distancemas` and UTC timestamps), flood-risk stations, the **latest Rapid KL service alert** and **live air quality** into **one alert carousel** (filter chips: all / weather / earthquakes / my area / marine; Rapid + AQI ride under All Malaysia only). The second is water-level stations at danger / warning / alert from JPS telemetry with status map. The third is air quality for **18 major cities as comparison cards** (Open-Meteo US AQI & PM2.5, sorted worst-first with multi-tier resilient fallback). Live only - nothing here is historical |
+| Weather | MET Malaysia, Open-Meteo | Unified Weather Station: live current conditions at your location with interactive mini-map & live condition pin badge (temperature, feels-like, humidity, wind), a **24-hour hourly forecast timeline** (hour, condition icon, temperature, rain probability % with color pills), a dynamic **7-day daily forecast outlook** (daily high/low temperature range, rain probability, conditions), instant location search with auto-complete suggestions & popular Malaysian hubs, and a collapsed-by-default **360-location table** from MET Malaysia |
 | Household | Ministry of Finance, KPDN | Weekly RON95 / RON97 / diesel ceiling prices, household income, and the PriceCatcher groceries basket (a merged **Groceries sub-block** with per-district price levels) |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
 | Finance | Bank Negara Malaysia, PayNet | Exchange rates vs key currencies (daily or monthly), interest rates by bank type, daily FPX payment value and volume |
@@ -540,9 +541,9 @@ The seventh route, `/api/aqi`, backs the air quality tile and alert card.
 The official APIMS feed (eqms.doe.gov.my) resets connections for non-browser
 clients, so the Worker polls **Open-Meteo's air-quality model** (free,
 keyless - the same provider the weather section already uses) for **18 major
-cities** in parallel, returns every station's US AQI and PM2.5 sorted
+cities** via a single, fast batch coordinates request, returns every station's US AQI and PM2.5 sorted
 worst-first plus the cleanest for comparison, and edge-caches 10 minutes
-(the model updates hourly). The page renders one comparison card per city;
+(the model updates hourly). The frontend features a resilient 3-tier fallback (Worker KV -> static `aqi.json` -> direct client-side Open-Meteo batch query) ensuring zero data dropouts. The page renders one comparison card per city;
 the alert deck only gains an AQI card when the worst city is Unhealthy
 (US AQI 101+, the haze threshold).
 
