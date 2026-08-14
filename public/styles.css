@@ -428,6 +428,29 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .dot.ok{background:var(--ok)} .dot.err{background:var(--danger)}
 .dot.load{background:var(--warn);animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Universal top warnings alert banner - prioritized above live traffic */
+.warn-top-band{display:flex;align-items:center;gap:var(--s3);max-width:1240px;margin:0 auto;
+  padding:8px var(--s6);overflow:hidden;border-bottom:1px solid color-mix(in srgb,var(--warn) 40%,transparent);
+  background:linear-gradient(90deg,rgba(245,158,11,.15),rgba(239,68,68,.08) 60%,transparent);
+  color:var(--fg);font-size:12.5px;transition:var(--t)}
+.warn-top-tag{flex:none;display:flex;align-items:center;justify-content:center;width:24px;height:24px;
+  border-radius:var(--r-sm);background:var(--warn);color:#06121a;font-weight:700}
+.warn-top-tag .ico{width:15px;height:15px;stroke:#06121a;stroke-width:2.2}
+.warn-top-content{flex:1;min-width:0;display:flex;align-items:center;gap:var(--s2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.warn-top-content strong{color:var(--warn);font-weight:700;letter-spacing:0.02em}
+.warn-top-summary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg-2)}
+.warn-top-jump{flex:none;margin-left:auto;font-size:11.5px;font-weight:600;color:var(--accent);
+  padding:3px 9px;border-radius:var(--r-sm);background:var(--accent-dim);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+  text-decoration:none;transition:var(--t);white-space:nowrap}
+.warn-top-jump:hover{background:var(--accent);color:#06121a;text-decoration:none}
+@media (max-width:620px){
+  .warn-top-band{padding:6px var(--s4);gap:var(--s2);font-size:11.5px}
+  .warn-top-tag{width:20px;height:20px}
+  .warn-top-tag .ico{width:13px;height:13px}
+  .warn-top-jump{font-size:10.5px;padding:2px 7px}
+}
+
 /* live traffic marquee: a slim ticker strip under the nav, amber-accented
    like the warnings so it reads as "heads up", scrolling continuously and
    pausing on hover/focus. Two duplicated .traffic-run spans translate 0→-50%

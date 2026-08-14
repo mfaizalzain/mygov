@@ -64,6 +64,15 @@ const I18N = {
     "Show all":"Show all",
     "Show top":"Show top",
     "routes":"routes",
+    "ACTIVE WARNINGS":"ACTIVE WARNINGS",
+    "View warnings":"View warnings",
+    "weather warning":"weather warning",
+    "weather warnings":"weather warnings",
+    "earthquake":"earthquake",
+    "earthquakes":"earthquakes",
+    "flood station at risk":"flood station at risk",
+    "flood stations at risk":"flood stations at risk",
+    "Unhealthy Air Quality (AQI ":"Unhealthy Air Quality (AQI ",
   },
   ms: {
   /* Groceries (PriceCatcher) */
@@ -87,6 +96,15 @@ const I18N = {
   "Show all":"Tunjukkan semua",
   "Show top":"Tunjukkan teratas",
   "routes":"laluan",
+  "ACTIVE WARNINGS":"AMARAN AKTIF",
+  "View warnings":"Lihat amaran",
+  "weather warning":"amaran cuaca",
+  "weather warnings":"amaran cuaca",
+  "earthquake":"gempa bumi",
+  "earthquakes":"gempa bumi",
+  "flood station at risk":"stesen banjir berisiko",
+  "flood stations at risk":"stesen banjir berisiko",
+  "Unhealthy Air Quality (AQI ":"Kualiti Udara Tidak Sihat (IPU ",
   "Cheapest district":"Daerah termurah", "Most expensive district":"Daerah termahal",
   "Basket size":"Saiz bakul", "items · priced every month":"barangan · berharga setiap bulan",
   "since":"sejak", "Grocery basket over time":"Bakul runcit mengikut masa",
@@ -3291,6 +3309,25 @@ function renderHazards(d){
 
   host.innerHTML = `<div class="hz-strip">${wxTile}${fTile}${aqTile}</div>`;
   setNavBadge("hazards", alertN, "active alert", "active alerts");
+
+  // Update Universal Top Warnings Alert Band (elevated above traffic & local feeds)
+  const topBand = $("#warn-top-band");
+  if (topBand){
+    if (alertN > 0){
+      const topContent = $("#warn-top-content");
+      if (topContent){
+        const summaries = [];
+        if (active.length) summaries.push(`${active.length} ${T(active.length === 1 ? "weather warning" : "weather warnings")}`);
+        if (d.eq && d.eq.length) summaries.push(`${d.eq.length} ${T(d.eq.length === 1 ? "earthquake" : "earthquakes")}`);
+        if (atRisk > 0) summaries.push(`${atRisk} ${T(atRisk === 1 ? "flood station at risk" : "flood stations at risk")}`);
+        if (aqiAlert) summaries.push(`${T("Unhealthy Air Quality (AQI ")}${aqiWorst})`);
+        topContent.innerHTML = `<strong>⚠️ ${T("ACTIVE WARNINGS")}:</strong> <span class="warn-top-summary">${esc(summaries.join(" · "))}</span>`;
+      }
+      topBand.hidden = false;
+    } else {
+      topBand.hidden = true;
+    }
+  }
 
   if (wxBody) paintAlerts();
   /* Leaflet needs a laid-out container, so the map waits for the disclosure
