@@ -59,6 +59,9 @@ const I18N = {
     "Saved places":"Saved places",
     "Pin section":"Pin section",
     "Unpin section":"Unpin section",
+    "Show all":"Show all",
+    "Show top":"Show top",
+    "routes":"routes",
   },
   ms: {
   /* Groceries (PriceCatcher) */
@@ -77,6 +80,9 @@ const I18N = {
   "Saved places":"Lokasi disimpan",
   "Pin section":"Semat bahagian",
   "Unpin section":"Nyahsemat bahagian",
+  "Show all":"Tunjukkan semua",
+  "Show top":"Tunjukkan teratas",
+  "routes":"laluan",
   "Cheapest district":"Daerah termurah", "Most expensive district":"Daerah termahal",
   "Basket size":"Saiz bakul", "items · priced every month":"barangan · berharga setiap bulan",
   "since":"sejak", "Grocery basket over time":"Bakul runcit mengikut masa",
@@ -8259,6 +8265,7 @@ const ago = ts => {
 };
 let lvdata = null;
 let lvFilter = {};   // feed key -> route id filter (clicking a route chip)
+let lvExpanded = {}; // feed key -> expanded route list
 let lvNet = "rapid";  // live network chips: rapid (default) | ktmb | penang | all
 const lvMaps = {};
 function vcard(f, v){
@@ -8385,8 +8392,16 @@ function renderLive(d){
       if (hit) hit.count++; else routes.push({ route:r, count:1 });
     }
     routes.sort((a,b) => b.count - a.count);
-    const top = routes.slice(0, 18);
     const filtered = lvFilter[f.key] ? ` · ${T("route")} <b>${esc(lvFilter[f.key])}</b>` : "";
+    const isExp = Boolean(lvExpanded[f.key]);
+    const displayRoutes = (isExp || routes.length <= 28) ? routes : routes.slice(0, 28);
+    const hasMore = routes.length > 28;
+    const expandBtnHtml = hasMore
+      ? `<button type="button" class="lv-expand-btn" data-lv-exp="${f.key}">
+          ${isExp ? `− ${T("Show top")} 28 ${T("routes")}` : `+ ${T("Show all")} ${routes.length} ${T("routes")}`}
+        </button>`
+      : "";
+
     return `<div data-lv-block="${f.key}"${lvNet === "all" || lvNet === f.key ? "" : " hidden"}>
       <div class="grid g3 mb">
         <div class="kpi"><div class="lab">${esc(f.label)} ${T("live now")}</div>
@@ -8415,7 +8430,7 @@ function renderLive(d){
         <div class="card-b" style="padding:0"><div class="lvmap" id="lvmap-${f.key}"></div></div>
       </div>
       ${n ? (f.key === "ktmb"
-          ? `<div class="vchips">${veh.map(v => vchip(f, v)).join("")}</div>`
+          ? `<div class="vchips-tray scroll-y"><div class="vchips">${veh.map(v => vchip(f, v)).join("")}</div></div>`
           : `<div class="lv-search-row">
               <div class="inp-wrap lv-search-wrap">
                 <input class="inp lv-bus-search" id="lv-search-${f.key}" data-feed="${f.key}" placeholder="${esc(T("Search bus route (e.g. 750, T801, 101)..."))}" autocomplete="off" aria-label="${esc(T("Search bus route"))}">
@@ -8423,9 +8438,12 @@ function renderLive(d){
               </div>
               <span class="lv-match-cnt" id="lv-cnt-${f.key}"></span>
             </div>
-            <div class="vchips" data-role="route-chips" data-feed="${f.key}">
-              ${routes.map(rc => rchip(f, rc, veh, routes.length)).join("")}
-            </div>`)
+            <div class="vchips-tray scroll-y">
+              <div class="vchips" data-role="route-chips" data-feed="${f.key}">
+                ${displayRoutes.map(rc => rchip(f, rc, veh, routes.length)).join("")}
+              </div>
+            </div>
+            ${hasMore ? `<div class="vchips-toolbar">${expandBtnHtml}<span class="dim" style="font-size:11px">${routes.length} ${T("routes")} · ${n} ${T("buses")}</span></div>` : ""}`)
           : `<div class="card"><div class="state"><div class="big">🌙</div>
             <strong>${T(f.noun === "trains" ? "No trains are broadcasting right now" : "No buses are broadcasting right now")}</strong>
             <div>${T("The feed responded normally")} (v${esc(f.version || "?")}, timestamp ${esc(ts)}) ${T("but carried zero vehicles - normal outside service hours, or when the operator's tracking feed is paused.")}</div></div></div>`}
@@ -8446,16 +8464,37 @@ function renderLive(d){
       ensureLiveNames();
     };
   });
+  host.querySelectorAll("[data-lv-exp]").forEach(b => {
+    b.onclick = () => {
+      const feed = b.dataset.lvExp;
+      lvExpanded[feed] = !lvExpanded[feed];
+      if (lvdata) renderLive(lvdata);
+    };
+  });
   host.querySelectorAll(".lv-bus-search").forEach(inp => {
     const feed = inp.dataset.feed;
     const clearBtn = host.querySelector(`#lv-clear-${feed}`);
     const cntEl = host.querySelector(`#lv-cnt-${feed}`);
     const container = host.querySelector(`[data-role="route-chips"][data-feed="${feed}"]`);
     if (!container) return;
+    const f = d[feed];
+    const fresh = f ? f.vehicles.filter(v => !vStale(f, v)) : [];
+    const allRoutes = [];
+    for (const v of fresh){
+      const r = String(v.routeId || "?");
+      const hit = allRoutes.find(x => x.route === r);
+      if (hit) hit.count++; else allRoutes.push({ route:r, count:1 });
+    }
+    allRoutes.sort((a,b) => b.count - a.count);
 
     const onFilter = () => {
       const q = inp.value.trim().toLowerCase();
       if (clearBtn) clearBtn.classList.toggle("visible", Boolean(q));
+      if (q && !lvExpanded[feed] && container.children.length < allRoutes.length){
+        container.innerHTML = allRoutes.map(rc => rchip(f, rc, fresh, allRoutes.length)).join("");
+      } else if (!q && !lvExpanded[feed] && container.children.length > 28){
+        container.innerHTML = allRoutes.slice(0, 28).map(rc => rchip(f, rc, fresh, allRoutes.length)).join("");
+      }
       const chips = container.querySelectorAll(".vchip");
       let matched = 0;
       chips.forEach(chip => {
