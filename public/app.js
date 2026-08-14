@@ -45,10 +45,38 @@ const I18N = {
     "LRT & MRT network":"LRT & MRT network",
     "Rapid KL rail - click a station to open it on the map":"Rapid KL rail - click a station to open it on the map",
     "stns":"stns",
+    "Use two fingers to pan map":"Use two fingers to pan map",
+    "Search bus route":"Search bus route",
+    "Search bus route (e.g. 750, T801, 101)...":"Search bus route (e.g. 750, T801, 101)...",
+    "matching":"matching",
+    "Quick hubs":"Quick hubs",
+    "Copy CSV":"Copy CSV",
+    "Copied":"Copied",
+    "rows as CSV":"rows as CSV",
+    "Now":"Now",
+    "Bookmark location":"Bookmark location",
+    "Remove bookmark":"Remove bookmark",
+    "Saved places":"Saved places",
+    "Pin section":"Pin section",
+    "Unpin section":"Unpin section",
   },
   ms: {
   /* Groceries (PriceCatcher) */
   "Groceries":"Barangan Runcit", "Basket index":"Indeks bakul",
+  "Use two fingers to pan map":"Gunakan dua jari untuk gerakkan peta",
+  "Search bus route":"Cari laluan bas",
+  "Search bus route (e.g. 750, T801, 101)...":"Cari laluan bas (cth. 750, T801, 101)...",
+  "matching":"padanan",
+  "Quick hubs":"Hab pantas",
+  "Copy CSV":"Salin CSV",
+  "Copied":"Disalin",
+  "rows as CSV":"baris sebagai CSV",
+  "Now":"Kini",
+  "Bookmark location":"Tandakan lokasi",
+  "Remove bookmark":"Buang tanda",
+  "Saved places":"Lokasi disimpan",
+  "Pin section":"Semat bahagian",
+  "Unpin section":"Nyahsemat bahagian",
   "Cheapest district":"Daerah termurah", "Most expensive district":"Daerah termahal",
   "Basket size":"Saiz bakul", "items · priced every month":"barangan · berharga setiap bulan",
   "since":"sejak", "Grocery basket over time":"Bakul runcit mengikut masa",
@@ -840,7 +868,7 @@ const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matche
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 /** Accessible alternative to a chart: a plain sortable-free table. */
 function dataTableHTML(headers, rows, numCols = []){
-  return `<div class="tw scroll-y" style="max-height:280px"><table>
+  return `<div class="tw tw-sticky scroll-y" style="max-height:280px"><table>
     <thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>
     <tbody>${rows.map(r => `<tr>${r.map((c, i) =>
       `<td class="${numCols.includes(i) ? "num" : ""}">${c == null || c === "" ? "-" : esc(String(c))}</td>`
@@ -889,6 +917,188 @@ function sortable(table, getRows, render){
     th.onclick = go;
     th.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); go(); } };
   });
+}
+
+/* ════════════════════════════ Details Persistence ════════════════════════════ */
+const DETAILS_KEY = "mygov.details.v1";
+function initDetailsPersistence(){
+  try {
+    const raw = localStorage.getItem(DETAILS_KEY);
+    const opened = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(opened)){
+      for (const id of opened){
+        const el = document.getElementById(id);
+        if (el && el.tagName === "DETAILS") el.open = true;
+      }
+    }
+  } catch {}
+
+  document.addEventListener("toggle", e => {
+    const el = e.target;
+    if (el && el.tagName === "DETAILS" && el.id){
+      try {
+        const raw = localStorage.getItem(DETAILS_KEY);
+        let opened = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(opened)) opened = [];
+        if (el.open){
+          if (!opened.includes(el.id)) opened.push(el.id);
+        } else {
+          opened = opened.filter(x => x !== el.id);
+        }
+        localStorage.setItem(DETAILS_KEY, JSON.stringify(opened));
+      } catch {}
+    }
+  }, true);
+}
+
+/* ════════════════════════════ Table Copy CSV & Toast ════════════════════════════ */
+function showCopyToast(msg){
+  let t = $("#copy-toast");
+  if (!t){
+    t = document.createElement("div");
+    t.id = "copy-toast";
+    document.body.appendChild(t);
+  }
+  t.innerHTML = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+function copyTableAsCSV(table){
+  if (!table) return;
+  const rows = Array.from(table.querySelectorAll("tr"));
+  if (!rows.length) return;
+  const csvLines = [];
+  for (const r of rows){
+    const cells = Array.from(r.querySelectorAll("th, td"));
+    if (!cells.length) continue;
+    const line = cells.map(c => {
+      let val = (c.innerText || c.textContent || "").trim().replace(/\s+/g, " ");
+      if (val.includes(",") || val.includes('"') || val.includes("\n")){
+        val = '"' + val.replace(/"/g, '""') + '"';
+      }
+      return val;
+    }).join(",");
+    csvLines.push(line);
+  }
+  const csvText = csvLines.join("\n");
+  const count = Math.max(0, rows.length - 1);
+  const doneMsg = `📋 ${T("Copied")} <b>${count}</b> ${T("rows as CSV")}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(csvText).then(() => {
+      showCopyToast(doneMsg);
+    }).catch(() => fallbackCopy(csvText, doneMsg));
+  } else {
+    fallbackCopy(csvText, doneMsg);
+  }
+}
+
+function fallbackCopy(text, msg){
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch {}
+  ta.remove();
+  showCopyToast(msg);
+}
+
+/* ════════════════════════════ Skeleton Shimmer Helpers ════════════════════════════ */
+function skelKpisHTML(n = 3){
+  return `<div class="grid g${Math.min(n, 4)} mb">` +
+    Array.from({ length: n }).map(() => `
+      <div class="skel-kpi">
+        <div class="skel"></div>
+        <div class="skel"></div>
+        <div class="skel"></div>
+      </div>`).join("") + `</div>`;
+}
+
+function skelCardHTML(h = 280){
+  return `<div class="skel-card"><div class="skel" style="width:35%;height:16px;margin-bottom:12px"></div><div class="skel" style="height:${h}px"></div></div>`;
+}
+
+/* ════════════════════════════ Saved Locations ════════════════════════════ */
+const SAVED_LOCS_KEY = "mygov.savedlocs.v1";
+function getSavedLocs(){
+  try {
+    const raw = localStorage.getItem(SAVED_LOCS_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+
+function saveLocBookmark(id, name){
+  if (!id || !name) return;
+  const list = getSavedLocs().filter(x => x.id !== id);
+  list.unshift({ id, name });
+  if (list.length > 6) list.pop();
+  try { localStorage.setItem(SAVED_LOCS_KEY, JSON.stringify(list)); } catch {}
+  paintHeroLoc();
+  showCopyToast(`⭐ ${T("Bookmark location")}: <b>${esc(name)}</b>`);
+}
+
+function removeLocBookmark(id){
+  const list = getSavedLocs().filter(x => x.id !== id);
+  try { localStorage.setItem(SAVED_LOCS_KEY, JSON.stringify(list)); } catch {}
+  paintHeroLoc();
+}
+
+function isLocSaved(id){
+  if (!id) return false;
+  return getSavedLocs().some(x => x.id === id);
+}
+
+/* ════════════════════════════ Section Pinning ════════════════════════════ */
+const PINNED_KEY = "mygov.pinned.v1";
+function getPinnedSections(){
+  try {
+    const raw = localStorage.getItem(PINNED_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+
+function togglePinSection(id){
+  let list = getPinnedSections();
+  const isPinned = list.includes(id);
+  if (isPinned){
+    list = list.filter(x => x !== id);
+  } else {
+    list.push(id);
+  }
+  try { localStorage.setItem(PINNED_KEY, JSON.stringify(list)); } catch {}
+  mountPins();
+  showCopyToast(isPinned ? `📌 ${T("Unpin section")}` : `📌 ${T("Pin section")}`);
+}
+
+function mountPins(){
+  const pinned = getPinnedSections();
+  for (const s of SECTIONS){
+    const secEl = document.getElementById(s.id);
+    if (!secEl) continue;
+    const head = secEl.querySelector(".sec-h");
+    if (!head) continue;
+    let pinBtn = head.querySelector(".pin-btn");
+    const isPinned = pinned.includes(s.id);
+    if (!pinBtn){
+      pinBtn = document.createElement("button");
+      pinBtn.type = "button";
+      pinBtn.className = "pin-btn";
+      pinBtn.dataset.pin = s.id;
+      pinBtn.onclick = () => togglePinSection(s.id);
+      const time = head.querySelector(".sec-time");
+      if (time) head.insertBefore(pinBtn, time); else head.appendChild(pinBtn);
+    }
+    pinBtn.classList.toggle("pinned", isPinned);
+    pinBtn.setAttribute("title", isPinned ? T("Unpin section") : T("Pin section"));
+    pinBtn.setAttribute("aria-label", isPinned ? T("Unpin section") : T("Pin section"));
+    pinBtn.innerHTML = isPinned ? "📌" : `<svg class="ico" aria-hidden="true" style="width:13px;height:13px"><use href="#i-flag"/></svg>`;
+  }
 }
 
 /* ════════════════════════════ ZIP reader ════════════════════════════
@@ -2283,6 +2493,10 @@ function baseOpts(extra){
   const o = {
     responsive:true, maintainAspectRatio:false,
     interaction:{ mode:"index", intersect:false },
+    elements:{
+      point:{ radius:0, hoverRadius:5, hitRadius:10 },
+      line:{ tension:0.25 }
+    },
     plugins:{
       legend:{ labels:{ color:cssVar("--fg-2"), boxWidth:8, boxHeight:8, usePointStyle:true,
         pointStyle:"circle", font:{ size:11 }, padding:14 } },
@@ -2831,7 +3045,12 @@ function renderWeather(d){
         <span class="right"><span class="dim acc-hint" data-closed="${esc(T("Expand"))}" data-open="${esc(T("Collapse"))}"></span></span>
       </summary>
       <div class="card-b" style="padding-top:0">
-        <div class="tw scroll-y" style="max-height:360px">
+        <div class="tw-tools" style="padding-top:var(--s2)">
+          <button type="button" class="btn-csv" data-table="#wx-table" aria-label="${esc(T("Copy CSV"))}">
+            <svg class="ico" aria-hidden="true" style="width:12px;height:12px"><use href="#i-grid"/></svg> ${T("Copy CSV")}
+          </button>
+        </div>
+        <div class="tw tw-sticky scroll-y" style="max-height:360px">
           <table id="wx-table">
             <thead><tr>
               <th class="sortable" data-key="name">${T("Location")} <span class="arrow">↕</span></th>
@@ -3383,38 +3602,96 @@ function paintWeather(){
   paintWxRows(); paintNow(); paintLocChip(); paintHeroLoc();
   wxProse();
 }
+let showHeroHubs = false;
+function getHubLocations(){
+  if (!wx.data || !wx.data.locs) return [];
+  const topNames = ["Kuala Lumpur", "George Town", "Johor Bahru", "Kuantan", "Kuching", "Kota Kinabalu"];
+  const res = [];
+  for (const name of topNames){
+    const found = wx.data.locs.find(l => l.name.toLowerCase() === name.toLowerCase())
+               || wx.data.locs.find(l => l.name.toLowerCase().includes(name.toLowerCase()));
+    if (found && !res.some(r => r.id === found.id)) res.push({ id: found.id, name: found.name });
+  }
+  return res;
+}
+
 function paintHeroLoc(){
   const host = $("#hero-loc"); if (!host) return;
   const S = geo.status;
+  const hubs = getHubLocations();
+  const hubsHtml = hubs.length
+    ? `<div class="hero-hubs"><span class="dim" style="font-size:11px">${T("Quick hubs")}:</span>` +
+      hubs.map(h => `<button type="button" class="chip" data-cand="${esc(h.id)}">${esc(h.name)}</button>`).join("") +
+      `</div>`
+    : "";
+
+  const curId = geo.matchedId || (wx.data && wx.data.locs && wx.data.locs.find(l => l.name === geo.label)?.id);
+  const isSaved = isLocSaved(curId);
+  const bmBtn = (curId && geo.label)
+    ? `<button type="button" class="btn-bm${isSaved ? " saved" : ""}" id="hero-bm-btn" title="${isSaved ? T("Remove bookmark") : T("Bookmark location")}" aria-label="${isSaved ? T("Remove bookmark") : T("Bookmark location")}">${isSaved ? "★" : "☆"}</button>`
+    : "";
+
+  const savedList = getSavedLocs();
+  const savedHtml = savedList.length
+    ? `<div class="saved-locs"><span class="dim" style="font-size:11px">${T("Saved places")}:</span>` +
+      savedList.map(s => `<span class="saved-chip${s.id === curId ? " active" : ""}" data-cand="${esc(s.id)}">${esc(s.name)}<button type="button" class="saved-chip-x" data-rm-bm="${esc(s.id)}" aria-label="Remove">✕</button></span>`).join("") +
+      `</div>`
+    : "";
+
   let html = "";
   if (geo.manual)
-    html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a>
-            <button class="link-btn" id="hero-loc-change">change</button>
-            <span class="dim" style="font-size:11.5px">${T("selected area")}</span>`;
-  else if (S === "asking") html = `<span class="loc-chip off">${ico("live")} ${T("Locating…")}</span>`;
+    html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a> ${bmBtn}
+            <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change")}</button>
+            <span class="dim" style="font-size:11.5px">${T("selected area")}</span>` +
+            (showHeroHubs ? hubsHtml : "") + savedHtml;
+  else if (S === "asking") html = `<span class="loc-chip off">${ico("live")} ${T("Locating…")}</span>` + savedHtml;
   else if (S === "matched" || S === "cached")
-    html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a>
-            <button class="link-btn" id="hero-loc-change">${T("change")}</button>`;
+    html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a> ${bmBtn}
+            <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change")}</button>` +
+            (showHeroHubs ? hubsHtml : "") + savedHtml;
   else if (S === "ambiguous")
     html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a>
             <span class="dim" style="font-size:11.5px">${T("did you mean")}</span>` +
       geo.candidates.slice(1).map(c =>
-        `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("");
+        `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("") + savedHtml;
   else if (S === "denied") html = `<span class="loc-chip off">${ico("live")} ${T("Location off")}</span>
-      <button class="link-btn" id="hero-loc-try">${T("use my location")}</button>`;
+      <button class="link-btn" id="hero-loc-try">${T("use my location")}</button>` + hubsHtml + savedHtml;
   else if (S === "unavailable") html = `<span class="loc-chip off">${ico("live")} ${T("Couldn't pin your location")}</span>
-      <button class="link-btn" id="hero-loc-try">${T("try again")}</button>`;
+      <button class="link-btn" id="hero-loc-try">${T("try again")}</button>` + hubsHtml + savedHtml;
   else if (S === "nomatch") html = `<span class="loc-chip off">${ico("live")} ${esc(geo.osm || T("Not in the forecast list"))}</span>
-      <a class="link-btn" href="#weather">${T("search below")}</a>`;
+      <a class="link-btn" href="#weather">${T("search below")}</a>` + hubsHtml + savedHtml;
   else if (S === "noproxy") html = `<span class="loc-chip off">${ico("live")} ${T("Location lookup unavailable")}</span>
-      <a class="link-btn" href="#weather">${T("search below")}</a>`;
-  else if (S === "unsupported") html = `<span class="loc-chip off">${ico("live")} ${T("Not supported")}</span>`;
-  else html = `<button class="btn btn-a" id="hero-loc-try">${ico("live")} ${T("use my location")}</button>`;
+      <a class="link-btn" href="#weather">${T("search below")}</a>` + hubsHtml + savedHtml;
+  else if (S === "unsupported") html = `<span class="loc-chip off">${ico("live")} ${T("Not supported")}</span>` + hubsHtml + savedHtml;
+  else html = `<button class="btn btn-a" id="hero-loc-try">${ico("live")} ${T("use my location")}</button>` + hubsHtml + savedHtml;
   host.innerHTML = html;
   const t = $("#hero-loc-try"); if (t) t.onclick = locate;
-  const c = $("#hero-loc-change"); if (c) c.onclick = locate;
+  const c = $("#hero-loc-change");
+  if (c) c.onclick = () => {
+    showHeroHubs = !showHeroHubs;
+    paintHeroLoc();
+  };
+  const bm = $("#hero-bm-btn");
+  if (bm){
+    bm.onclick = () => {
+      if (isSaved){
+        removeLocBookmark(curId);
+      } else {
+        saveLocBookmark(curId, geo.label || "Saved Location");
+      }
+    };
+  }
+  host.querySelectorAll("[data-rm-bm]").forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      removeLocBookmark(b.dataset.rmBm);
+    };
+  });
   host.querySelectorAll("[data-cand]").forEach(b => {
-    b.onclick = () => pickLoc(b.getAttribute("data-cand"));
+    b.onclick = () => {
+      showHeroHubs = false;
+      pickLoc(b.getAttribute("data-cand"));
+    };
   });
 }
 function paintLocChip(){
@@ -3569,7 +3846,10 @@ async function paintNow(){
     host.innerHTML = `<p class="dim">${T("Live conditions unavailable")}</p>`;
   }
   const hrsSlot = $("#wx-hours-slot");
-  if (hrsSlot) hrsSlot.innerHTML = wxHoursHTML(om);
+  if (hrsSlot){
+    hrsSlot.innerHTML = wxHoursHTML(om);
+    bindWxHoursScroll();
+  }
   const daySlot = $("#wx-7day-slot");
   if (daySlot) daySlot.innerHTML = wx7DayHTML(om);
   initWxMap(coords, live, loc);
@@ -3596,8 +3876,10 @@ function wxHoursHTML(om){
     const c = wxCond(h.weather_code[i0 + i]);
     const pr = h.precipitation_probability[i0 + i] || 0;
     const cls = pr >= 50 ? " wx-rain" : pr >= 30 ? " wx-maybe" : "";
-    chips.push(`<span class="wx-h${cls}">
-      <b>${wxHourLab(h.time[i0 + i])}</b> ${c.icon} ${nf(h.temperature_2m[i0 + i], 0)}°
+    const isNow = i === 0;
+    const nowTag = isNow ? `<span class="dim" style="font-size:10px;margin-right:2px">${T("Now")}</span>` : "";
+    chips.push(`<span class="wx-h${isNow ? " now" : ""}${cls}" ${isNow ? 'aria-current="time"' : ""}>
+      ${nowTag}<b>${wxHourLab(h.time[i0 + i])}</b> ${c.icon} ${nf(h.temperature_2m[i0 + i], 0)}°
       ${pr >= 20 ? `<i>💧${pr}%</i>` : ""}</span>`);
   }
   return `<div class="wx-hours-wrap">
@@ -3605,6 +3887,36 @@ function wxHoursHTML(om){
       ${T("Next 24 hours")}</div>
     <div class="wx-hours" role="list" aria-label="${T("Next 24 hours")}">${chips.join("")}</div>
   </div>`;
+}
+
+function bindWxHoursScroll(){
+  const wrap = $(".wx-hours-wrap");
+  const scroller = $(".wx-hours");
+  if (!wrap || !scroller) return;
+
+  const updateScrollShadows = () => {
+    const sl = scroller.scrollLeft;
+    const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+    wrap.classList.toggle("can-scroll-left", sl > 4);
+    wrap.classList.toggle("can-scroll-right", sl < maxScroll - 4);
+  };
+  scroller.addEventListener("scroll", updateScrollShadows, { passive: true });
+  requestAnimationFrame(updateScrollShadows);
+
+  scroller.querySelectorAll(".wx-h").forEach((card, idx, all) => {
+    card.setAttribute("tabindex", "0");
+    card.onkeydown = e => {
+      if (e.key === "ArrowRight" && all[idx + 1]){
+        all[idx + 1].focus();
+        all[idx + 1].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+        e.preventDefault();
+      } else if (e.key === "ArrowLeft" && all[idx - 1]){
+        all[idx - 1].focus();
+        all[idx - 1].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+        e.preventDefault();
+      }
+    };
+  });
 }
 
 function wx7DayHTML(om){
@@ -3648,6 +3960,52 @@ function wx7DayHTML(om){
       </div>
     </div>`;
 }
+function enableTouchFriendlyMap(map, el){
+  if (!el || !map) return;
+  const isTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+  if (!isTouch) return;
+
+  map.dragging.disable();
+  if (map.touchZoom) map.touchZoom.disable();
+
+  let overlay = el.querySelector(".map-touch-prompt");
+  if (!overlay){
+    overlay = document.createElement("div");
+    overlay.className = "map-touch-prompt";
+    overlay.textContent = T("Use two fingers to pan map");
+    el.appendChild(overlay);
+  }
+
+  let promptTimer = null;
+  const showPrompt = () => {
+    overlay.classList.add("show");
+    clearTimeout(promptTimer);
+    promptTimer = setTimeout(() => overlay.classList.remove("show"), 1400);
+  };
+
+  el.addEventListener("touchstart", (e) => {
+    if (e.touches.length >= 2){
+      map.dragging.enable();
+      if (map.touchZoom) map.touchZoom.enable();
+      overlay.classList.remove("show");
+    } else {
+      map.dragging.disable();
+      if (map.touchZoom) map.touchZoom.disable();
+    }
+  }, { passive: true });
+
+  el.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 1){
+      showPrompt();
+    }
+  }, { passive: true });
+
+  el.addEventListener("touchend", () => {
+    map.dragging.disable();
+    if (map.touchZoom) map.touchZoom.disable();
+  }, { passive: true });
+}
+
 function initWxMap(coords, live, loc){
   const el = $("#wx-map");
   if (!el) return;
@@ -3657,6 +4015,7 @@ function initWxMap(coords, live, loc){
   const c = coords || [4.2105, 101.9758];   // fallback: peninsular centre
   const map = L.map(el, { attributionControl:true, zoomControl:true });
   wxMapInst = map;
+  enableTouchFriendlyMap(map, el);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' })
     .addTo(map);
@@ -4586,7 +4945,7 @@ function renderFinance(d){
         <div class="chart"><canvas id="ir-chart" role="img" aria-label="Interest rates"></canvas></div>
         <p class="note">ℹ️ ${T("The OPR is not published in this dataset - the commercial base rate (BR) tracks it.")}</p>
         <h5 class="mini-h">${T("Latest rates by bank type")}</h5>
-        <div class="tw"><table>
+        <div class="tw tw-sticky"><table>
           <thead><tr><th>${T("Rate")}</th><th class="num">${T("Commercial")}</th><th class="num">${T("Investment")}</th></tr></thead>
           <tbody id="ir-rows"></tbody>
         </table></div>
@@ -5519,7 +5878,7 @@ function renderTourism(d){
     <div class="card">
       <div class="card-h"><h4>${T("Arrivals by country")} · ${isYTD ? "YTD " + (d.asOf ? d.asOf.year : "2026") : esc(d.asOf ? d.asOf.label : "")}</h4>
         <span class="sub">${isYTD ? T("ranked by YTD visitor arrivals") : T("ranked by monthly arrivals")}</span></div>
-      <div class="card-b"><div class="tw"><table>
+      <div class="card-b"><div class="tw tw-sticky"><table>
         <thead><tr>
           <th class="num">#</th><th>${T("Country")}</th>
           <th class="num">${esc(yearCol)}</th>
@@ -5527,8 +5886,8 @@ function renderTourism(d){
           <th class="num">${T("vs 2019")}</th>
           <th class="num">${esc(lastCol)}</th>
         </tr></thead><tbody>${top10.map((r, i) => rowHTML(r, i)).join("")}</tbody></table></div>
-        <details class="meta"><summary>${T("All")} ${nf(allList.length)} ${T("countries")}</summary>
-          <div class="tw"><table>
+        <details class="meta" id="tourism-all-countries"><summary>${T("All")} ${nf(allList.length)} ${T("countries")}</summary>
+          <div class="tw tw-sticky"><table>
             <thead><tr>
               <th class="num">#</th><th>${T("Country")}</th>
               <th class="num">${esc(yearCol)}</th>
@@ -5632,7 +5991,7 @@ function renderHotel(d){
           </span>
         </span>
       </div>
-      <div class="card-b"><div class="tw"><table>
+      <div class="card-b"><div class="tw tw-sticky"><table>
         <thead><tr>
           <th class="num">#</th><th>${T("State")}</th>
           <th class="num">${T("latest")}</th>
@@ -5779,7 +6138,13 @@ function renderElection(d){
             ${statesList.map(st => `<option value="${esc(st)}" ${st === electionState ? "selected" : ""}>${esc(st)}</option>`).join("")}
           </select>
         </span></div>
-      <div class="card-b"><div class="tw"><table>
+      <div class="card-b">
+        <div class="tw-tools">
+          <button type="button" class="btn-csv" data-table="#election-table" aria-label="${esc(T("Copy CSV"))}">
+            <svg class="ico" aria-hidden="true" style="width:12px;height:12px"><use href="#i-grid"/></svg> ${T("Copy CSV")}
+          </button>
+        </div>
+        <div class="tw tw-sticky"><table id="election-table">
         <thead><tr>
           <th>${T("Constituency")}</th><th>${T("State")}</th><th class="num">${T("Polling day")}</th>
           <th>${T("Winner")}</th><th class="num">${T("Majority")}</th>
@@ -6085,7 +6450,13 @@ function renderPlaces(g){
             <input class="inp" id="places-dq" placeholder="${T("Search districts…")}" value="${esc(placesDQ)}" autocomplete="off">
             <button type="button" class="inp-x${placesDQ ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
           </span></span></div>
-      <div class="card-b"><div class="tw"><table id="places-dist-table">
+      <div class="card-b">
+        <div class="tw-tools">
+          <button type="button" class="btn-csv" data-table="#places-dist-table" aria-label="${esc(T("Copy CSV"))}">
+            <svg class="ico" aria-hidden="true" style="width:12px;height:12px"><use href="#i-grid"/></svg> ${T("Copy CSV")}
+          </button>
+        </div>
+        <div class="tw tw-sticky"><table id="places-dist-table">
         <thead><tr>
           <th class="sortable" data-key="n">${T("District")} <span class="arrow">↕</span></th>
           ${national ? `<th class="sortable" data-key="s">${T("State")} <span class="arrow">↕</span></th>` : ""}
@@ -6100,7 +6471,7 @@ function renderPlaces(g){
         </tr></thead><tbody></tbody></table></div>
         <div class="pager" id="places-dist-pager"></div></div>
     </div>
-    <details class="card mb">
+    <details class="card mb" id="places-seat-acc">
       <summary class="card-h acc-sum">
         <h4 style="display:inline">${T("Constituencies")}</h4>
         <span class="sub" style="margin-left:var(--s2)">${nf(parl.length + duns.length)} ${T("seats")} · ${T("socio")} ${g[placesLevel].year}</span>
@@ -6120,7 +6491,13 @@ function renderPlaces(g){
               <input class="inp" id="places-sq" placeholder="${T("Search seats…")}" value="${esc(placesSQ)}" autocomplete="off">
               <button type="button" class="inp-x${placesSQ ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
             </span></span></div>
-        <div class="card-b" style="padding-top:0"><div class="tw"><table id="places-seat-table">
+        <div class="card-b" style="padding-top:0">
+          <div class="tw-tools">
+            <button type="button" class="btn-csv" data-table="#places-seat-table" aria-label="${esc(T("Copy CSV"))}">
+              <svg class="ico" aria-hidden="true" style="width:12px;height:12px"><use href="#i-grid"/></svg> ${T("Copy CSV")}
+            </button>
+          </div>
+          <div class="tw tw-sticky"><table id="places-seat-table">
           <thead><tr>
             <th class="sortable" data-key="c"># <span class="arrow">↕</span></th>
             <th class="sortable" data-key="n">${T("Seat")} <span class="arrow">↕</span></th>
@@ -6928,7 +7305,7 @@ function ridershipCard(rows){
       <div class="card-h"><h4>${T("Daily ridership by service")}</h4>
         <span class="sub">${T("trips taken, not unique passengers")} · ${esc(dow(latest.date))} ${esc(ymd(latest.date))}</span>
         <span class="right"><span class="dim mono">${nf(total)} ${T("total")}</span></span></div>
-      <div class="tw"><table>
+      <div class="tw tw-sticky"><table>
         <thead><tr><th>${T("Service")}</th><th class="num">${T("Ridership")}</th>
           <th class="num">${T("vs week before")}</th><th style="width:26%">${T("Share")}</th></tr></thead>
         <tbody>${items.map(s => {
@@ -6974,7 +7351,7 @@ function renderTransport(d){
           <span class="live-dot" aria-hidden="true"></span>
           <span id="fids-count"></span>
         </div>
-        <div class="tw scroll-y" id="fids-body" style="max-height:520px"></div>
+        <div class="tw tw-sticky scroll-y" id="fids-body" style="max-height:520px"></div>
       </div>
     </div>
     <div class="chips mb" id="tr-filters"></div>
@@ -7183,6 +7560,7 @@ function paintRailMap(rail, el){
   if (!window.L){ loadVendor("leaflet").then(() => paintRailMap(rail, el)).catch(() => {}); return; }
   if (railMapInst){ railMapInst.invalidateSize(); return; }
   const map = L.map(el, { scrollWheelZoom:false }).setView([3.12, 101.68], 11);
+  enableTouchFriendlyMap(map, el);
   const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
@@ -7274,7 +7652,7 @@ function paintBlocks(){
       <div class="card-h"><h4>${T("All stops - all networks")}</h4>
         <span class="sub">${T("nearest stops within 50 km · type to filter")}</span>
         <span class="right"><span class="dim" id="tr-stop-count"></span></span></div>
-      <div class="tw scroll-y" style="max-height:420px"><table>
+      <div class="tw tw-sticky scroll-y" style="max-height:420px"><table>
         <thead><tr><th>${T("Network")}</th><th>${T("Stop")}</th>${tgeo.near ? `<th class="num">${T("Distance")}</th>` : `<th>${T("Map")}</th>`}</tr></thead>
         <tbody id="tr-stop-rows"></tbody>
       </table></div>
@@ -7436,21 +7814,17 @@ function radarDetail(i){
   const claim = i.claim || fc.claim || "";
   const facts = i.fact_details || fc.fact_details || "";
   const reason = facts ? "" : (fc.reason || "");
-  /* The banner is driven by fact_check.status - the same four states the
-     filter chips offer. The free-text verdict beside it (TRUE / PARTLY TRUE /
-     FALSE) restated the badge in different words: a "verified claim" whose
-     verdict read TRUE, a "debunked" one whose verdict read FALSE. One label,
-     one vocabulary. */
   const [vIcon, vt] = FC_BADGE[fc.status] || ["❓", ""];
   const vLabel = fc.status ? T(fc.status) : "";
   const srcs = (i.sources || []).filter(s => safeUrl(s.url));
-  return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-label="${esc(i.title_bm)}">
-    <div class="rd-card card">
-      <button class="rd-x" id="radar-close" aria-label="Close">✕</button>
+  return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-labelledby="rd-modal-title">
+    <div class="rd-card card" tabindex="-1">
+      <div class="rd-handle" aria-hidden="true"></div>
+      <button class="rd-x" id="radar-close" aria-label="${T("Close")}">✕</button>
       <div class="rd-head">
         <span class="rank">${i.rank}</span>
         <div class="rd-titles">
-          <h4>${esc(i.title_bm)}</h4>
+          <h4 id="rd-modal-title">${esc(i.title_bm)}</h4>
           ${i.title_en && i.title_en !== i.title_bm ? `<p class="rd-en">${esc(i.title_en)}</p>` : ""}
         </div>
         <span class="pill">${esc(T(i.category || "lain"))}</span>
@@ -7500,13 +7874,14 @@ function breakingDetail(i){
     }
   }
   const href = safeUrl(i.url);
-  return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-    <div class="rd-card card">
-      <button class="rd-x" id="radar-close" aria-label="Close">✕</button>
+  return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-labelledby="rd-modal-title">
+    <div class="rd-card card" tabindex="-1">
+      <div class="rd-handle" aria-hidden="true"></div>
+      <button class="rd-x" id="radar-close" aria-label="${T("Close")}">✕</button>
       <div class="rd-head">
         <span class="rank">${i.rank}</span>
         <div class="rd-titles">
-          <h4>${esc(title)}</h4>
+          <h4 id="rd-modal-title">${esc(title)}</h4>
           ${titleAlt ? `<p class="rd-en">${esc(titleAlt)}</p>` : ""}
         </div>
         <span class="pill">${esc(T(i.category || "nasional"))}</span>
@@ -7534,8 +7909,6 @@ async function initRadarCarousel(){
   const band = $("#radar-band"); if (!band) return;
   let d;
   try { d = await loadRadar(); } catch {
-    /* radar.json unavailable - collapse the band so the skeleton doesn't
-       linger; the nav entry stays hidden and nothing points at it. */
     band.hidden = true;
     const navItem = $("nav .nav-radar-wrap");
     if (navItem) navItem.hidden = true;
@@ -7552,8 +7925,6 @@ async function initRadarCarousel(){
     return;
   }
   band.hidden = false;
-  /* When the radar was collected. Every other band on the page carries its
-     own fetch stamp; this one was reading as undated. */
   const when = $("#radar-when");
   const updateWhen = (dd) => {
     if (!when || !dd.generated_at) return;
@@ -7564,8 +7935,6 @@ async function initRadarCarousel(){
     when.title = `${T("Data collected")} ${ymd(dd.generated_at)} · ${hhmm(dd.generated_at)}`;
   };
   updateWhen(d);
-  /* the nav entry ships hidden and only appears once the band has content,
-     so it never points at an empty destination */
   const navItem = $("#nav-radar-band");
   if (navItem) navItem.parentElement.hidden = false;
 
@@ -7718,14 +8087,77 @@ async function initRadarCarousel(){
     const b = e.target.closest(".radar-slide"); if (!b) return;
     const item = radarVisible[Number(b.dataset.idx)];
     if (!item) return;
+    const prevFocus = document.activeElement;
     const m = document.createElement("div");
     m.innerHTML = (radarMode === "viral") ? radarDetail(item) : breakingDetail(item);
-    document.body.appendChild(m.firstElementChild);
-    $("#radar-close").onclick = () => $("#radar-modal").remove();
-    $("#radar-modal").onclick = e => { if (e.target.id === "radar-modal") e.target.remove(); };
-  });
-  addEventListener("keydown", e => {
-    if (e.key === "Escape"){ const m = $("#radar-modal"); if (m) m.remove(); }
+    const modalEl = m.firstElementChild;
+    document.body.appendChild(modalEl);
+    document.body.classList.add("modal-open");
+    requestAnimationFrame(() => modalEl.classList.add("show"));
+
+    const closeBtn = modalEl.querySelector("#radar-close");
+    const cardEl = modalEl.querySelector(".rd-card");
+    if (closeBtn) closeBtn.focus();
+
+    const closeModal = () => {
+      modalEl.classList.remove("show");
+      document.body.classList.remove("modal-open");
+      window.removeEventListener("keydown", handleKey);
+      setTimeout(() => {
+        if (modalEl.parentNode) modalEl.remove();
+        if (prevFocus && typeof prevFocus.focus === "function") prevFocus.focus();
+      }, 220);
+    };
+
+    const handleKey = (ev) => {
+      if (ev.key === "Escape"){
+        closeModal();
+      } else if (ev.key === "Tab"){
+        const focusables = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (ev.shiftKey && document.activeElement === first){
+          last.focus(); ev.preventDefault();
+        } else if (!ev.shiftKey && document.activeElement === last){
+          first.focus(); ev.preventDefault();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+
+    if (closeBtn) closeBtn.onclick = closeModal;
+    modalEl.onclick = ev => { if (ev.target.id === "radar-modal") closeModal(); };
+
+    // Mobile touch drag / swipe-down to dismiss
+    if (cardEl){
+      let startY = 0, currentY = 0, isDragging = false;
+      cardEl.addEventListener("touchstart", ev => {
+        if (cardEl.scrollTop > 4) return;
+        startY = ev.touches[0].clientY;
+        isDragging = true;
+      }, { passive: true });
+      cardEl.addEventListener("touchmove", ev => {
+        if (!isDragging) return;
+        currentY = ev.touches[0].clientY;
+        const dy = currentY - startY;
+        if (dy > 0){
+          cardEl.style.transform = `translateY(${dy}px)`;
+          cardEl.style.opacity = String(Math.max(0.35, 1 - dy / 280));
+        }
+      }, { passive: true });
+      cardEl.addEventListener("touchend", () => {
+        if (!isDragging) return;
+        isDragging = false;
+        const dy = currentY - startY;
+        if (dy > 80){
+          closeModal();
+        } else {
+          cardEl.style.transform = "";
+          cardEl.style.opacity = "";
+        }
+      }, { passive: true });
+    }
   });
 
   /* radar.json is static; refresh it on manual refresh so the band follows
@@ -7925,8 +8357,15 @@ function renderLive(d){
       </div>
       ${n ? (f.key === "ktmb"
           ? `<div class="vchips">${veh.map(v => vchip(f, v)).join("")}</div>`
-          : `<div class="vchips" data-role="route-chips">
-              ${top.map(rc => rchip(f, rc, veh, routes.length)).join("")}
+          : `<div class="lv-search-row">
+              <div class="inp-wrap lv-search-wrap">
+                <input class="inp lv-bus-search" id="lv-search-${f.key}" data-feed="${f.key}" placeholder="${esc(T("Search bus route (e.g. 750, T801, 101)..."))}" autocomplete="off" aria-label="${esc(T("Search bus route"))}">
+                <button type="button" class="inp-x lv-bus-clear" id="lv-clear-${f.key}" data-feed="${f.key}" aria-label="Clear">✕</button>
+              </div>
+              <span class="lv-match-cnt" id="lv-cnt-${f.key}"></span>
+            </div>
+            <div class="vchips" data-role="route-chips" data-feed="${f.key}">
+              ${routes.map(rc => rchip(f, rc, veh, routes.length)).join("")}
             </div>`)
           : `<div class="card"><div class="state"><div class="big">🌙</div>
             <strong>${T(f.noun === "trains" ? "No trains are broadcasting right now" : "No buses are broadcasting right now")}</strong>
@@ -7947,6 +8386,37 @@ function renderLive(d){
           lvMaps[k].invalidateSize();
       ensureLiveNames();
     };
+  });
+  host.querySelectorAll(".lv-bus-search").forEach(inp => {
+    const feed = inp.dataset.feed;
+    const clearBtn = host.querySelector(`#lv-clear-${feed}`);
+    const cntEl = host.querySelector(`#lv-cnt-${feed}`);
+    const container = host.querySelector(`[data-role="route-chips"][data-feed="${feed}"]`);
+    if (!container) return;
+
+    const onFilter = () => {
+      const q = inp.value.trim().toLowerCase();
+      if (clearBtn) clearBtn.classList.toggle("visible", Boolean(q));
+      const chips = container.querySelectorAll(".vchip");
+      let matched = 0;
+      chips.forEach(chip => {
+        const txt = (chip.textContent + " " + (chip.getAttribute("aria-label") || "")).toLowerCase();
+        const match = !q || txt.includes(q);
+        chip.style.display = match ? "" : "none";
+        if (match) matched++;
+      });
+      if (cntEl){
+        cntEl.textContent = q ? `${matched} ${T("matching")}` : "";
+      }
+    };
+    inp.oninput = onFilter;
+    if (clearBtn){
+      clearBtn.onclick = () => {
+        inp.value = "";
+        onFilter();
+        inp.focus();
+      };
+    }
   });
   animateCounters($("#body-live"));
   paintMaps();
@@ -8110,6 +8580,7 @@ function paintFloodMap(d){
   if (!window.L){ loadVendor("leaflet").then(() => paintFloodMap(d)).catch(() => {}); return; }
   if (floodMap){ floodMap.remove(); floodMap = null; }
   const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 6);
+  enableTouchFriendlyMap(map, el);
   const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
@@ -8216,6 +8687,7 @@ function paintMaps(){
   for (const [f, el] of due){
     if (lvMaps[f.key]){ lvMaps[f.key].remove(); delete lvMaps[f.key]; }
     const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 7);
+    enableTouchFriendlyMap(map, el);
     const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
@@ -9853,6 +10325,18 @@ function boot(){
   initPosUtil();
   initRadarCarousel();
   initInputClearHandlers();
+  initDetailsPersistence();
+  /* Global table copy delegation */
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".btn-csv");
+    if (!btn) return;
+    e.preventDefault();
+    const targetSel = btn.dataset.table;
+    const table = targetSel
+      ? document.querySelector(targetSel)
+      : btn.closest(".card, details, .tw-wrap, div")?.querySelector("table");
+    if (table) copyTableAsCSV(table);
+  });
   /* Route chips in the Live section: clicking filters the map + chips to
      that route; clicking the active chip clears the filter. */
   document.addEventListener("click", e => {
@@ -9907,6 +10391,7 @@ function boot(){
   /* Fire-and-forget: availability() can block on a disk check, and nothing
      else in boot() depends on the result. */
   mountShare();
+  mountPins();
   mountAI().catch(() => {});
   /* Live traffic marquee: loads independently of the sections - it is a
      nav-adjacent strip, not a section sub-block. */
