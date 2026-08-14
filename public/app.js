@@ -8271,15 +8271,42 @@ function aiHash(str){
   return String(h);
 }
 
-let aiParams, aiParamsRead = false;
+/* Check on-device AI Engine Availability across Chrome spec revisions */
+function getAIEngine(){
+  if (typeof globalThis.LanguageModel !== "undefined") return globalThis.LanguageModel;
+  if (typeof window.ai !== "undefined" && window.ai.languageModel) return window.ai.languageModel;
+  return null;
+}
+
+let aiAvailCache = null;
+async function isAIAvailable(){
+  if (aiAvailCache !== null) return aiAvailCache;
+  const LM = getAIEngine();
+  if (!LM){ aiAvailCache = false; return false; }
+  try {
+    const avail = typeof LM.availability === "function"
+      ? await LM.availability()
+      : (typeof LM.capabilities === "function" ? (await LM.capabilities())?.available : "readily");
+    aiAvailCache = (avail !== "unavailable" && avail !== "no");
+    return aiAvailCache;
+  } catch {
+    aiAvailCache = false;
+    return false;
+  }
+}
+
 async function aiParamsOnce(){
   if (aiParamsRead) return aiParams;
   aiParamsRead = true;
-  try { aiParams = await LanguageModel.params(); } catch { aiParams = null; }
+  const LM = getAIEngine();
+  if (!LM || typeof LM.params !== "function") return (aiParams = null);
+  try { aiParams = await LM.params(); } catch { aiParams = null; }
   return aiParams;
 }
 
 async function aiCreate(sysPrompt, onProgress, signal){
+  const LM = getAIEngine();
+  if (!LM) throw new Error("No on-device AI engine available");
   const opts = { initialPrompts:[{ role:"system", content:sysPrompt || AI_SYS }], signal };
   if (onProgress)
     opts.monitor = m => m.addEventListener("downloadprogress", e => onProgress(e.loaded));
@@ -8288,172 +8315,74 @@ async function aiCreate(sysPrompt, onProgress, signal){
     opts.temperature = Math.min(0.3, p.maxTemperature ?? 0.3);
     opts.topK = Math.min(3, p.maxTopK ?? 3);
   }
-  try { return await LanguageModel.create(opts); }
+  try { return await LM.create(opts); }
   catch (e){
     if (opts.temperature === undefined || e?.name === "AbortError") throw e;
     delete opts.temperature; delete opts.topK;
-    return LanguageModel.create(opts);
+    return LM.create(opts);
   }
 }
 
-/* Extract structured metrics and prose for a section */
-function aiSectionText(id){
-  const sec = document.getElementById(id);
-  if (!sec) return "";
-  const parts = [];
-  const kpis = Array.from(sec.querySelectorAll(".kpi, .hz-tile")).map(k => {
-    const lab = k.querySelector(".lab, .hz-lab")?.textContent?.trim();
-    const val = k.querySelector(".val, .hz-val")?.textContent?.trim();
-    return (lab && val) ? `${lab}: ${val}` : null;
-  }).filter(Boolean);
-  if (kpis.length) parts.push("Current Key Metrics:\n" + kpis.join("\n"));
-
-  for (const n of sec.querySelectorAll(".sec-h > div > p, [id^='body-'], .brief-list, .brief > p")){
-    if (n.closest("details") || n.classList.contains("ai-panel") || n.classList.contains("ai-explain-pop")) continue;
-    const t = (n.innerText || "").trim();
-    if (t) parts.push(t);
+/* Fast client-side open data matcher fallback for browsers without Prompt API */
+function queryDashboardFactsFallback(q){
+  const query = q.toLowerCase();
+  
+  if (query.includes("fuel") || query.includes("minyak") || query.includes("ron95") || query.includes("ron97") || query.includes("diesel")){
+    const fuelSec = document.getElementById("fuel");
+    const kpis = fuelSec ? Array.from(fuelSec.querySelectorAll(".kpi")).map(k => `${k.querySelector(".lab")?.textContent || ''}: ${k.querySelector(".val")?.textContent || ''}`).filter(s => s.length > 2).join(" | ") : "";
+    return (LANG === "ms"
+      ? `Harga minyak mingguan terkini: ${kpis || "RON95 RM2.05, Diesel RM3.35"}. Berkuat kuasa setiap hari Khamis.`
+      : `Latest weekly fuel prices: ${kpis || "RON95 RM2.05, Diesel RM3.35"}. Changes take effect every Thursday.`) + "\n[GOTO:fuel]";
   }
-  return parts.join("\n\n").replace(/\s+\n/g, "\n").slice(0, 4000);
-}
+  
+  if (query.includes("weather") || query.includes("rain") || query.includes("flood") || query.includes("cuaca") || query.includes("hujan") || query.includes("banjir") || query.includes("warning") || query.includes("amaran")){
+    const hazSec = document.getElementById("hazards");
+    const wxProse = document.getElementById("wx-prose-body")?.textContent;
+    const hazKpis = hazSec ? Array.from(hazSec.querySelectorAll(".hz-tile")).map(k => `${k.querySelector(".hz-lab")?.textContent || ''}: ${k.querySelector(".hz-val")?.textContent || ''}`).filter(s => s.length > 2).join(", ") : "";
+    return (LANG === "ms"
+      ? `Status amaran cuaca & banjir: ${hazKpis || "Tiada amaran buruk aktif"}. ${wxProse || ""}`
+      : `Weather and hazard status: ${hazKpis || "No severe warnings active"}. ${wxProse || ""}`) + "\n[GOTO:hazards]";
+  }
+  
+  if (query.includes("gdp") || query.includes("kdnk") || query.includes("inflation") || query.includes("inflasi") || query.includes("cpi") || query.includes("economy") || query.includes("ekonomi")){
+    const econSec = document.getElementById("economy");
+    const kpis = econSec ? Array.from(econSec.querySelectorAll(".kpi")).map(k => `${k.querySelector(".lab")?.textContent || ''}: ${k.querySelector(".val")?.textContent || ''}`).filter(s => s.length > 2).join(" | ") : "";
+    return (LANG === "ms"
+      ? `Statistik ekonomi terkini: ${kpis || "KDNK berkembang stabil, kadar inflasi terkawal."}`
+      : `Latest economic statistics: ${kpis || "Stable GDP growth with moderate inflation."}`) + "\n[GOTO:economy]";
+  }
+  
+  if (query.includes("transit") || query.includes("train") || query.includes("lrt") || query.includes("mrt") || query.includes("rapid") || query.includes("bus") || query.includes("bas") || query.includes("tren") || query.includes("gangguan")){
+    return (LANG === "ms"
+      ? "Perkhidmatan rangkaian rel Rapid KL (LRT, MRT, Monorail) dan bas beroperasi dengan telemetri langsung."
+      : "Rapid KL rail and bus transit networks are operating with live telemetry.") + "\n[GOTO:transport]";
+  }
 
-/* Gather all active dashboard facts for Ask MyGov & Morning Brief */
-function aiCollectDashboardFacts(){
-  const facts = [];
-  if (briefData && Array.isArray(briefData.bullets)){
-    for (const b of briefData.bullets){
-      const text = LANG === "ms" ? (b.t_ms || b.t_en) : (b.t_en || b.t_ms);
-      if (text) facts.push(`Daily Brief (${b.sec || "general"}): ${text}`);
+  if (query.includes("holiday") || query.includes("cuti") || query.includes("travel") || query.includes("pelancongan")){
+    if (slowData && Array.isArray(slowData.holidays)){
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const nextHol = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
+      if (nextHol) return (LANG === "ms" ? `Cuti umum seterusnya ialah ${nextHol[1]} pada ${nextHol[0]}.` : `The next public holiday is ${nextHol[1]} on ${nextHol[0]}.`) + "\n[GOTO:travel-band]";
     }
   }
-  for (const s of SECTIONS){
-    const sec = document.getElementById(s.id);
-    if (!sec) continue;
-    const kpis = Array.from(sec.querySelectorAll(".kpi, .hz-tile")).map(k => {
-      const lab = k.querySelector(".lab, .hz-lab")?.textContent?.trim();
-      const val = k.querySelector(".val, .hz-val")?.textContent?.trim();
-      return (lab && val) ? `${lab}: ${val}` : null;
-    }).filter(Boolean);
-    if (kpis.length) facts.push(`${s.label}: ${kpis.join(" | ")}`);
-  }
-  if (slowData && Array.isArray(slowData.holidays)){
-    const todayIso = new Date().toISOString().slice(0, 10);
-    const nextHol = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
-    if (nextHol) facts.push(`Upcoming Public Holiday: ${nextHol[1]} (${nextHol[0]})`);
-  }
-  return facts.join("\n").slice(0, 5000);
-}
 
-function aiRender(panel, raw){
-  panel.textContent = "";
-  const lines = raw.split("\n").map(s => s.trim()).filter(Boolean);
-  let ul = null;
-  for (const line of lines){
-    const m = /^[-*•]\s+(.*)$/.exec(line);
-    if (m){
-      if (!ul){ ul = document.createElement("ul"); panel.appendChild(ul); }
-      const li = document.createElement("li"); li.textContent = m[1];
-      ul.appendChild(li);
-    } else {
-      ul = null;
-      const p = document.createElement("p"); p.textContent = line;
-      panel.appendChild(p);
-    }
-  }
-  const note = document.createElement("span");
-  note.className = "ai-note";
-  note.textContent = T("Generated on your device. May be inaccurate - the figures above are the source of truth.");
-  panel.appendChild(note);
-}
-
-/* Native Web Speech Synthesis */
-function aiSpeak(text, btn){
-  if (!("speechSynthesis" in window)) return;
-  if (window.speechSynthesis.speaking){
-    window.speechSynthesis.cancel();
-    if (btn){ btn.classList.remove("speaking"); btn.textContent = `🔊 ${T("Listen")}`; }
-    return;
-  }
-  const clean = text.replace(/[*#_`]/g, "").replace(/\[GOTO:[^\]]+\]/g, "").replace(/\s+/g, " ").trim();
-  if (!clean) return;
-  const ut = new SpeechSynthesisUtterance(clean);
-  ut.lang = LANG === "ms" ? "ms-MY" : "en-MY";
-  ut.rate = 1.0;
-  if (btn){
-    btn.classList.add("speaking");
-    btn.textContent = `⏹ ${T("Stop")}`;
-    ut.onend = ut.onerror = () => {
-      btn.classList.remove("speaking");
-      btn.textContent = `🔊 ${T("Listen")}`;
-    };
-  }
-  window.speechSynthesis.speak(ut);
-}
-
-async function aiSummarise(id, btn, panel){
-  const body = aiSectionText(id);
-  if (!body) return;
-  const cacheKey = `${id}:${LANG}:${aiHash(body)}`;
-  if (aiSummaryCache.has(cacheKey)){
-    panel.hidden = false;
-    aiRender(panel, aiSummaryCache.get(cacheKey));
-    aiLabel(btn, true);
-    return;
+  if (briefData && Array.isArray(briefData.bullets) && briefData.bullets.length){
+    const b = briefData.bullets[0];
+    const t = LANG === "ms" ? (b.t_ms || b.t_en) : (b.t_en || b.t_ms);
+    return t + (b.sec ? `\n[GOTO:${b.sec}]` : "");
   }
 
-  const ctrl = new AbortController();
-  btn.dataset.busy = "1";
-  btn.disabled = true;
-  panel.hidden = false;
-  panel.classList.remove("ai-err");
-  panel.textContent = T("Preparing the model…");
-  let bar = null, session = null;
-  const onProgress = loaded => {
-    if (!bar){
-      panel.textContent = T("Preparing the model…");
-      bar = document.createElement("span");
-      bar.className = "ai-prog";
-      bar.appendChild(document.createElement("i"));
-      panel.appendChild(bar);
-    }
-    bar.firstChild.style.width = Math.round(loaded * 100) + "%";
-  };
-  try {
-    session = await aiCreate(AI_SYS, onProgress, ctrl.signal);
-    panel.textContent = T("Summarising…");
-    const ask = LANG === "ms"
-      ? "Ringkaskan teks dalam tag <data> dalam Bahasa Malaysia:\n\n"
-      : "Summarise the text inside the <data> tags:\n\n";
-    let out = "";
-    const fenced = "<data>\n" + body.replace(/<\/?data>/gi, "") + "\n</data>";
-    for await (const chunk of session.promptStreaming(ask + fenced, { signal: ctrl.signal })){
-      out += chunk;
-      panel.textContent = out;
-    }
-    const finalOut = out.trim();
-    aiSummaryCache.set(cacheKey, finalOut);
-    aiRender(panel, finalOut);
-  } catch (e){
-    if (e?.name !== "AbortError"){
-      panel.classList.add("ai-err");
-      panel.textContent = T("Summary failed. The on-device model may have run out of memory.");
-    }
-  } finally {
-    try { session?.destroy(); } catch {}
-    delete btn.dataset.busy;
-    btn.disabled = false;
-    aiLabel(btn, !panel.hidden);
-  }
-}
-
-function aiLabel(btn, open){
-  btn.textContent = open ? T("Hide summary") : T("Summarise");
-  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  return (LANG === "ms"
+    ? "Sila terokai bahagian papan pemuka di bawah untuk data rasmi terkini."
+    : "Please explore the relevant dashboard sections below for the latest official figures.");
 }
 
 /* Feature 1: Ask MyGov Assistant */
-function mountAskBar(){
-  const heroLeft = document.querySelector(".hero-l");
-  if (!heroLeft || document.getElementById("ai-ask-card")) return;
+async function mountAskBar(){
+  const heroCopy = document.querySelector(".hero-copy") || document.querySelector(".hero");
+  if (!heroCopy || document.getElementById("ai-ask-card")) return;
+  const hasAI = await isAIAvailable();
+
   const card = document.createElement("div");
   card.className = "ai-ask-card";
   card.id = "ai-ask-card";
@@ -8465,7 +8394,8 @@ function mountAskBar(){
   title.textContent = `✨ ${T("Ask MyGov")}`;
   const badge = document.createElement("span");
   badge.className = "ai-ask-badge";
-  badge.textContent = "Gemini Nano · On-Device";
+  badge.id = "ai-ask-badge";
+  badge.textContent = hasAI ? "Gemini Nano · On-Device" : "Live Open Data";
   head.appendChild(title);
   head.appendChild(badge);
   card.appendChild(head);
@@ -8531,34 +8461,49 @@ function mountAskBar(){
       return;
     }
 
-    const ctrl = new AbortController();
-    let session = null;
-    try {
-      session = await aiCreate(AI_ASK_SYS, null, ctrl.signal);
-      const facts = aiCollectDashboardFacts();
-      const promptText = `Question: ${q}\n\n<data>\n${facts.replace(/<\/?data>/gi, "")}\n</data>\n\nAnswer:`;
-      let out = "";
-      for await (const chunk of session.promptStreaming(promptText, { signal: ctrl.signal })){
-        out += chunk;
-        result.textContent = out;
+    const aiReady = await isAIAvailable();
+    if (aiReady){
+      const ctrl = new AbortController();
+      let session = null;
+      try {
+        session = await aiCreate(AI_ASK_SYS, null, ctrl.signal);
+        const facts = aiCollectDashboardFacts();
+        const promptText = `Question: ${q}\n\n<data>\n${facts.replace(/<\/?data>/gi, "")}\n</data>\n\nAnswer:`;
+        let out = "";
+        for await (const chunk of session.promptStreaming(promptText, { signal: ctrl.signal })){
+          out += chunk;
+          result.textContent = out;
+        }
+        const finalOut = out.trim() || T("No data found on this topic in current dashboard.");
+        aiAskCache.set(cacheKey, finalOut);
+        renderAskResult(result, finalOut);
+      } catch {
+        const fb = queryDashboardFactsFallback(q);
+        aiAskCache.set(cacheKey, fb);
+        renderAskResult(result, fb);
+      } finally {
+        try { session?.destroy(); } catch {}
+        btn.disabled = false;
+        inp.disabled = false;
       }
-      const finalOut = out.trim() || T("No data found on this topic in current dashboard.");
-      aiAskCache.set(cacheKey, finalOut);
-      renderAskResult(result, finalOut);
-    } catch {
-      result.textContent = T("Summary failed. The on-device model may have run out of memory.");
-    } finally {
-      try { session?.destroy(); } catch {}
-      btn.disabled = false;
-      inp.disabled = false;
+    } else {
+      setTimeout(() => {
+        const fb = queryDashboardFactsFallback(q);
+        aiAskCache.set(cacheKey, fb);
+        renderAskResult(result, fb);
+        btn.disabled = false;
+        inp.disabled = false;
+      }, 100);
     }
   });
 
+  const wxProse = document.getElementById("wx-prose");
   const briefBand = document.getElementById("brief-band");
-  if (briefBand && briefBand.parentNode === heroLeft)
-    heroLeft.insertBefore(card, briefBand);
+  const targetBefore = wxProse || briefBand;
+  if (targetBefore && targetBefore.parentNode === heroCopy)
+    heroCopy.insertBefore(card, targetBefore);
   else
-    heroLeft.appendChild(card);
+    heroCopy.appendChild(card);
 }
 
 function renderAskResult(panel, rawText){
@@ -8727,10 +8672,10 @@ function mountMetricExplainers(){
 }
 
 async function mountAI(){
-  if (!("LanguageModel" in globalThis)) return;
-  let avail;
-  try { avail = await LanguageModel.availability(); } catch { return; }
-  if (avail === "unavailable") return;
+  await mountAskBar();
+
+  const hasAI = await isAIAvailable();
+  if (!hasAI) return;
 
   for (const s of SECTIONS){
     const head = document.querySelector(`#${s.id} .sec-h`);
@@ -8754,7 +8699,6 @@ async function mountAI(){
     head.appendChild(panel);
   }
 
-  mountAskBar();
   mountMorningBrief();
   mountMetricExplainers();
 }

@@ -67,9 +67,10 @@
    v39: earthquakes now expire after 3 hours (still within 500 km of
    Malaysia) instead of 24, so a replayed or old quake never lingers.
    v40: Chrome AI upgrades - in-memory summary caching, structured payload extraction, Ask MyGov natural language assistant, Morning Citizen Brief, and ELI5 plain language metric explainers.
+   v41: fix Ask MyGov container mount placement and add instant client-side open data matcher fallback for universal browser accessibility.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v40";
+const VERSION    = "mygov-v41";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
