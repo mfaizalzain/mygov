@@ -59,6 +59,8 @@ const I18N = {
     "Saved places":"Saved places",
     "Pin section":"Pin section",
     "Unpin section":"Unpin section",
+    "Pin":"Pin",
+    "Unpin":"Unpin",
     "Show all":"Show all",
     "Show top":"Show top",
     "routes":"routes",
@@ -80,6 +82,8 @@ const I18N = {
   "Saved places":"Lokasi disimpan",
   "Pin section":"Semat bahagian",
   "Unpin section":"Nyahsemat bahagian",
+  "Pin":"Semat",
+  "Unpin":"Nyahsemat",
   "Show all":"Tunjukkan semua",
   "Show top":"Tunjukkan teratas",
   "routes":"laluan",
@@ -1138,7 +1142,7 @@ function mountPins(){
     if (!pinBtn){
       pinBtn = document.createElement("button");
       pinBtn.type = "button";
-      pinBtn.className = "pin-btn";
+      pinBtn.className = "btn pin-btn";
       pinBtn.dataset.pin = s.id;
       pinBtn.onclick = () => togglePinSection(s.id);
       const time = head.querySelector(".sec-time");
@@ -1147,7 +1151,9 @@ function mountPins(){
     pinBtn.classList.toggle("pinned", isPinned);
     pinBtn.setAttribute("title", isPinned ? T("Unpin section") : T("Pin section"));
     pinBtn.setAttribute("aria-label", isPinned ? T("Unpin section") : T("Pin section"));
-    pinBtn.innerHTML = `<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pin"/></svg>`;
+    pinBtn.innerHTML = isPinned
+      ? `<span style="margin-right:2px">📌</span> <span>${esc(T("Unpin"))}</span>`
+      : `<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pin"/></svg> <span>${esc(T("Pin"))}</span>`;
 
     const navA = $("#nav-" + s.id);
     if (navA){

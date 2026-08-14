@@ -526,11 +526,11 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .saved-chip-x:hover{color:var(--danger)}
 
 /* section pin button & pinned section highlight */
-.pin-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
+.pin-btn{flex:none;font-size:11.5px;padding:5px 10px;display:inline-flex;align-items:center;gap:4px;
   border-radius:var(--r-sm);border:1px solid var(--line-soft);background:var(--surface-2);
-  color:var(--fg-3);font-size:12px;cursor:pointer;transition:var(--t);padding:0}
+  color:var(--fg-3);cursor:pointer;transition:var(--t);user-select:none}
 .pin-btn:hover{color:var(--fg);background:var(--surface-3);border-color:var(--line)}
-.pin-btn.pinned{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+.pin-btn.pinned{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:var(--accent-dim);font-weight:600}
 .pin-btn .ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .pin-btn.pinned .ico{stroke-width:2.2}
 
@@ -1664,7 +1664,9 @@ html[data-text="large"] table{font-size:14px}
    are the first of the right-hand group. Once share is there, it is - so the
    others fall back to a plain gap. */
 .share-btn ~ .ai-btn,
-.share-btn ~ .sec-time{margin-left:var(--s2)}
+.share-btn ~ .pin-btn,
+.share-btn ~ .sec-time,
+.pin-btn ~ .sec-time{margin-left:var(--s2)}
 /* Inside a band's control cluster it is one of the group, and the cluster
    itself is already right-aligned - a second auto margin here would push the
    arrows away from it. */
