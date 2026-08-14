@@ -179,7 +179,7 @@ const I18N = {
   "Flood risk":"Risiko banjir", "All clear":"Semua selamat",
   "active warning":"amaran aktif", "active warnings":"amaran aktif",
   "all-clear notices":"notis semua selamat", "nothing on issue":"tiada amaran dikeluarkan",
-  "event":"peristiwa", "within Nkm - last 3h":"dalam lingkungan Nkm - 3 jam lepas",
+  "event":"peristiwa", "within Nkm - last 12h":"dalam lingkungan Nkm - 12 jam lepas",
   "no station above threshold":"tiada stesen melebihi ambang",
   "warning":"amaran", "alert":"waspada", "Unavailable":"Tidak tersedia",
   "Details":"Butiran", "Hide":"Sembunyi",
@@ -204,7 +204,7 @@ const I18N = {
   "No active warnings or earthquakes":"Tiada amaran atau gempa bumi aktif",
   "Nothing on issue in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
   "No earthquakes near Malaysia right now":"Tiada gempa bumi berhampiran Malaysia buat masa ini",
-  "No quakes within Nkm in the last 3h.":"Tiada gempa bumi dalam lingkungan Nkm dalam 3 jam lepas.",
+  "No quakes within Nkm in the last 12h.":"Tiada gempa bumi dalam lingkungan Nkm dalam 12 jam lepas.",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
   "No warnings in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
@@ -1068,9 +1068,9 @@ async function loadWeather(){
    now", so they share one loader and one section that stays compact until
    something is actually happening.
 
-   Nothing here is historical: warnings expire, earthquakes are capped at 3 h
+   Nothing here is historical: warnings expire, earthquakes are capped at 12 h
    and JPS gauges at 24 h. An empty hazard is an all-clear, not a gap. */
-const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 3 * 3600 * 1000;
+const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 12 * 3600 * 1000;
 
 async function loadHazards(){
   const warnings = await request("weather", "/weather/warning");
@@ -3203,7 +3203,7 @@ function paintAlerts(){
        T("MET Malaysia has nothing on issue.") + " " +
        /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
           "N" rewrote that instead of the radius. */
-       T("No quakes within Nkm in the last 3h.").replace("Nkm", nf(d.eqRadius) + "km")]
+       T("No quakes within Nkm in the last 12h.").replace("Nkm", nf(d.eqRadius) + "km")]
     : [T(wxFilter === "area" ? "Nothing on issue in your area right now"
         : wxFilter === "marine" ? "No marine warnings right now"
         : wxFilter === "quake" ? "No earthquakes near Malaysia right now"
