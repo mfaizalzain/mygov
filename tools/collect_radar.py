@@ -478,6 +478,85 @@ SOFT_TITLE_HINTS = (
 )
 
 
+# ── how "breaking" a headline is ──────────────────────────────────────────
+# Recency alone made a ministerial pleasantry outrank a fatal crash, because
+# both were published in the last hour. These weights rank on consequence:
+# what happened (incidents, deaths, arrests, disasters), how many newsrooms
+# ran it, and how fresh it is — in that order.
+
+# Something happened to someone, right now. The core of a breaking feed.
+URGENT_WORDS = (
+    "maut", "mati", "meninggal", "terbunuh", "bunuh", "korban", "mangsa", "cedera",
+    "parah", "rentung", "kemalangan", "nahas", "terhempas", "karam", "tenggelam",
+    "kebakaran", "terbakar", "letupan", "runtuh", "banjir", "tanah runtuh", "gempa",
+    "ribut", "taufan", "darurat", "kecemasan", "amaran", "dipindahkan", "hilang",
+    "diselamatkan", "ditahan", "tangkap", "cekup", "serbu", "rampas", "dakwa",
+    "didakwa", "disyaki", "rasuah", "sprm", "letak jawatan", "dipecat", "digantung",
+    "diharamkan", "tumpah", "wabak", "kes baharu", "ditutup", "tergendala",
+    "dead", "died", "dies", "killed", "death", "fatal", "victim", "injured",
+    "crash", "collision", "collapse", "fire", "blaze", "explosion", "blast",
+    "flood", "landslide", "quake", "storm", "emergency", "evacuat", "missing",
+    "rescue", "arrest", "detained", "raid", "seized", "charged", "graft",
+    "corruption", "macc", "resign", "sacked", "suspended", "banned", "outbreak",
+    "shut down", "halted", "grounded", "recall", "manhunt", "shooting", "stabb",
+)
+
+# Consequence without a body count: money, policy, prices, courts, elections.
+IMPACT_WORDS = (
+    "harga", "kenaikan", "naik harga", "turun harga", "subsidi", "cukai", "gst",
+    "sst", "bantuan", "tarif", "gaji minimum", "kadar faedah", "opr", "belanjawan",
+    "diluluskan", "dimansuhkan", "berkuat kuasa", "mahkamah", "hukuman", "penjara",
+    "denda", "pilihan raya", "undi", "parlimen", "kabinet", "menteri", "titah",
+    "dilancarkan", "diumumkan", "sekatan", "kuota", "price", "hike", "subsidy",
+    "tax", "tariff", "wage", "rate cut", "budget", "approved", "abolished",
+    "takes effect", "court", "sentenced", "jailed", "fined", "verdict", "ruling",
+    "election", "parliament", "cabinet", "minister", "announce", "ban", "quota",
+    "rm", "billion", "million", "juta", "bilion",
+)
+
+# Ceremony, congratulation and process copy. Real articles, not breaking news.
+ROUTINE_WORDS = (
+    "urges", "calls on", "hopes", "reminds", "congratulat", "welcomes", "praises",
+    "thanks", "attends", "officiates", "launches book", "meets", "to discuss",
+    "expected to", "may consider", "should remain", "must show", "says nothing",
+    "no truth", "clarifies", "menyeru", "mengharap", "diharap", "mengucapkan",
+    "tahniah", "merasmikan", "hadir", "berbincang", "bertemu", "dijangka",
+    "perlu", "harus", "sedia", "komited", "yakin", "berpuas hati",
+)
+
+
+def significant_tokens(title):
+    """Content words used to spot the same story running on several outlets."""
+    words = re.findall(r"[a-z0-9']{4,}", (title or "").lower())
+    return {w for w in words if w not in STOPWORDS}
+
+
+STOPWORDS = {
+    "yang", "untuk", "dengan", "dari", "dalam", "akan", "tidak", "kata", "kepada",
+    "adalah", "pada", "ialah", "oleh", "juga", "lebih", "telah", "sudah", "boleh",
+    "this", "that", "with", "from", "have", "will", "says", "said", "after",
+    "over", "into", "amid", "than", "more", "been", "they", "their", "which",
+    "about", "would", "could", "also", "what", "when", "were", "your",
+}
+
+
+def breaking_score(title, desc, age_hours, corroboration):
+    """Higher = more worth leading the band with."""
+    blob = f" {(title or '').lower()} {(desc or '').lower()} "
+    score = 0.0
+    score += 3.0 * sum(1 for w in URGENT_WORDS if w in blob)
+    score += 1.0 * sum(1 for w in IMPACT_WORDS if w in blob)
+    score -= 2.0 * sum(1 for w in ROUTINE_WORDS if w in blob)
+    # Two newsrooms chasing the same story is the strongest signal we get that
+    # it actually matters — no keyword list encodes editorial judgement.
+    score += 2.5 * max(0, corroboration - 1)
+    # Recency is a tie-breaker, not the ranking: a fatal crash from this
+    # morning still outranks a press statement from ten minutes ago.
+    if age_hours is not None:
+        score += max(0.0, 3.0 - age_hours / 4.0)
+    return score
+
+
 def story_age_hours(pub):
     """Hours since publication, or None when the feed gave no usable date."""
     if not pub:
@@ -545,7 +624,7 @@ def extract_breaking_news(signals, limit=20):
         if len(desc) > 240:
             desc = desc[:237] + "…"
         src_key = s.get("source", "")
-        candidates.append((age, {
+        candidates.append((age, desc, src_key, {
             "title_bm": title if s.get("lang") == "ms" else None,
             "title_en": title if s.get("lang") == "en" else None,
             "title": title,
@@ -557,10 +636,42 @@ def extract_breaking_news(signals, limit=20):
             "summary": desc or title,
         }))
 
-    candidates.sort(key=lambda c: c[0])  # freshest first — this is a breaking feed
+    # Group headlines that are the same story on different outlets: 3+ shared
+    # content words. The group size is the corroboration signal, and only the
+    # strongest member is published — the band used to run "Prosecutor says
+    # police officer deliberately chased teen" directly above the same court
+    # case from another paper.
+    token_sets = [significant_tokens(c[3]["title"]) for c in candidates]
+    group_of = list(range(len(candidates)))
+    for i in range(len(candidates)):
+        for j in range(i + 1, len(candidates)):
+            if len(token_sets[i] & token_sets[j]) >= 3:
+                merge_to = min(group_of[i], group_of[j])
+                stale = max(group_of[i], group_of[j])
+                group_of = [merge_to if g == stale else g for g in group_of]
+
+    groups = {}
+    for idx, gid in enumerate(group_of):
+        groups.setdefault(gid, []).append(idx)
+
+    scored = []
+    for members in groups.values():
+        sources = {candidates[i][2] for i in members}
+        best, best_score = None, None
+        for i in members:
+            age, desc, _src, item = candidates[i]
+            sc = breaking_score(item["title"], desc, age, len(sources))
+            if best_score is None or sc > best_score:
+                best, best_score = (age, item), sc
+        age, item = best
+        item["reported_by"] = len(sources)
+        scored.append((best_score, -age, item))
+
+    scored.sort(key=lambda x: (-x[0], -x[1]))  # consequence first, then freshness
     breaking = []
-    for _, item in candidates[:limit]:
+    for score, _, item in scored[:limit]:
         item["rank"] = len(breaking) + 1
+        item["breaking_score"] = round(score, 2)
         breaking.append(item)
     return breaking
 
