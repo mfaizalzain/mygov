@@ -83,9 +83,10 @@
    v54: Segregate school holidays (KPM calendar) and state-specific vs nationwide public holidays in Ask MyGov AI assistant.
    v55: Location search query refinement and state demographic enhancements.
    v56: Redesign website icons to modern design standards with SVG favicon and high-DPI PWA assets.
+   v57: Warm the live vehicle feeds on idle so the card is populated before the user scrolls to Transport.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v56";
+const VERSION    = "mygov-v57";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

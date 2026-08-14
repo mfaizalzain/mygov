@@ -10652,6 +10652,14 @@ function boot(){
     }, { rootMargin:"0px 0px 45% 0px", threshold:0 });
     for (const s of SECTIONS) if (LAZY.has(s.id) && !loaded.has(s.id))
       obs.observe(document.getElementById(s.id));
+    /* Live vehicles is a sub-block of Transport, so it only started loading
+       once the user scrolled that far - the card sat on skeletons until then,
+       and the feeds take a few seconds, so it was still "loading" when they
+       arrived. Warm it on idle instead: it fetches its own GTFS feeds and does
+       not depend on transport.json, so it can run ahead of its parent. */
+    const warmLive = () => { if (!loaded.has("live") && !loading.has("live")) loadSection("live", false); };
+    if ("requestIdleCallback" in window) requestIdleCallback(warmLive, { timeout:4000 });
+    else setTimeout(warmLive, 1200);
   });
   /* Forecasts are fetched independently of the section loaders.
      loadSection() serves a cached section without calling its loader at all,
