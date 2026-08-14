@@ -522,7 +522,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .pos-util .pos-ico{font-size:13px;color:var(--fg-3)}
 .pos-util .inp{flex:1;min-width:0;padding:8px 30px 8px var(--s3);border-radius:var(--r-sm);
   border:1px solid var(--line);background:var(--surface);color:var(--fg);
-  font-size:13px;transition:var(--t)}
+  font-size:12.5px;transition:var(--t)}
 .pos-util .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
 .pos-util .inp-x{right:10px}
 .pos-util .pos-count{font-size:11px;font-family:var(--mono);color:var(--fg-3);white-space:nowrap}
@@ -666,19 +666,19 @@ a.maplink:hover{background:var(--accent-dim);text-decoration:none;border-color:c
   border-radius:var(--r);padding:var(--s3) var(--s4);margin:0 0 var(--s2)}
 .brief-h{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   margin-bottom:var(--s2)}
-.brief-h h3{margin:0;font-size:14px;font-weight:660;letter-spacing:-.015em}
-.brief p{margin:var(--s1) 0 0;font-size:12.5px;line-height:1.45;color:var(--fg-2)}
+.brief-h h3{margin:0;font-size:13.5px;font-weight:660;letter-spacing:-.015em}
+.brief p{margin:var(--s1) 0 0;font-size:12px;line-height:1.45;color:var(--fg-2)}
 #wx-prose{margin-top:var(--s2)}
 #wx-prose .brief-h{align-items:center;gap:var(--s2)}
-#wx-prose .sec-ico{width:28px;height:28px;border-radius:8px}
-#wx-prose .sec-ico svg{width:16px;height:16px}
+#wx-prose .sec-ico{width:26px;height:26px;border-radius:8px}
+#wx-prose .sec-ico svg{width:15px;height:15px}
 /* Today in brief carries the same badge as the card above it: the two sit in
    one stack, and only one of them having an icon read as an oversight. The
    header is baseline-aligned for its wrapping note, so the badge centres
    itself rather than hanging off the text baseline. */
 #brief-band .brief-h{align-items:center;gap:var(--s2)}
-#brief-band .sec-ico{width:28px;height:28px;border-radius:8px;flex:none}
-#brief-band .sec-ico svg{width:16px;height:16px}
+#brief-band .sec-ico{width:26px;height:26px;border-radius:8px;flex:none}
+#brief-band .sec-ico svg{width:15px;height:15px}
 /* Animated sky behind the next-hours card. Two pseudo-element layers over the
    normal card background: ::before is a slow-drifting colour wash keyed to the
    WMO class, ::after the motion (falling drops, drifting cloud, sun glow).
@@ -786,10 +786,10 @@ html[data-theme="light"] #wx-prose{--wx-drop:rgba(37,99,235,.4)}
 .t-ctl{display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);
   margin-top:var(--s2)}
 .t-dates{display:flex;align-items:center;gap:var(--s2);font-family:var(--mono);
-  font-size:11.5px;color:var(--fg-3);line-height:1.5}
+  font-size:11px;color:var(--fg-3);line-height:1.4}
 .t-mid{min-width:0}
 .t-driver{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
-  font-size:13.5px;margin-bottom:3px}
+  font-size:12.5px;margin-bottom:2px}
 .t-driver b{font-weight:700}
 /* The level still has to be readable without colour vision, so the word
    survives - as small type on the dates line, where it cannot shift the
@@ -803,7 +803,7 @@ html[data-theme="light"] #wx-prose{--wx-drop:rgba(37,99,235,.4)}
    prompts Gemini for one English sentence per period. A machine-translated
    second line under every card doubled the height of a hero block whose
    whole point was to be compact. */
-.t-note{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:2px}
+.t-note{font-size:12px;color:var(--fg-2);line-height:1.45;margin-top:2px}
 /* A period covering today keeps its impact colour and gets a ring instead -
    painting it amber would make a live "quiet" period look like a peak. The
    NOW marker on the dates line and the banner above say the rest. */
@@ -814,25 +814,25 @@ html[data-theme="light"] #wx-prose{--wx-drop:rgba(37,99,235,.4)}
 .t-curband{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
   background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);
   border-radius:var(--r);padding:var(--s3) var(--s4);margin-bottom:var(--s3);
-  font-size:13px}
+  font-size:12px}
 .t-curband b{display:inline-flex;align-items:center;gap:6px;color:#fbbf24}
 .t-curband span{color:var(--fg-2)}
-.t-curband .ico{width:15px;height:15px}
+.t-curband .ico{width:14px;height:14px}
 .t-tips{margin-top:var(--s3);border:1px solid var(--line-soft);
   border-radius:var(--r);background:var(--bg-2)}
-.t-tips summary{cursor:pointer;font-size:12.5px;font-weight:650;
-  padding:var(--s3) var(--s4);display:flex;align-items:center;gap:6px;
+.t-tips summary{cursor:pointer;font-size:12px;font-weight:650;
+  padding:var(--s2) var(--s3);display:flex;align-items:center;gap:6px;
   color:var(--fg-1)}
-.t-tips ul{margin:0;padding:0 var(--s4) var(--s3) var(--s4);list-style:disc;
-  padding-left:calc(var(--s4) + 16px)}
-.t-tips li{font-size:12.5px;color:var(--fg-2);line-height:1.5;margin-top:6px}
+.t-tips ul{margin:0;padding:0 var(--s3) var(--s2) var(--s3);list-style:disc;
+  padding-left:calc(var(--s3) + 16px)}
+.t-tips li{font-size:12px;color:var(--fg-2);line-height:1.45;margin-top:4px}
 /* One card per swipe on a phone, where 232px strands half of the next card at
    the edge. 100% is the track's own width, so it never overshoots the way a
    100vw-minus-padding guess does. */
 @media (max-width:620px){ .t-row{flex-basis:100%} }
 .hol-chip{display:inline-flex;align-items:center;gap:6px;
-  font-family:var(--mono);font-size:11.5px;line-height:1;
-  padding:5px 10px;border-radius:999px;border:1px solid var(--line-soft);
+  font-family:var(--mono);font-size:11px;line-height:1;
+  padding:4px 9px;border-radius:999px;border:1px solid var(--line-soft);
   background:var(--bg-2);color:var(--fg-2)}
 .hol-chip.hol-next{color:var(--fg-1)}
 .hol-chip.hol-school{color:var(--fg-3)}
@@ -858,7 +858,7 @@ html[data-theme="light"] .hol-panel{box-shadow:0 12px 30px rgba(17,21,29,.12)}
   letter-spacing:.04em;text-transform:uppercase;color:var(--fg-3)}
 .hol-panel ul{list-style:none;margin:0;padding:0}
 .hol-panel li{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s3);padding:6px;border-radius:6px;font-size:12px}
+  gap:var(--s3);padding:5px 6px;border-radius:6px;font-size:11.5px}
 .hol-panel li+li{border-top:1px solid var(--line-soft)}
 .hol-panel .hol-n{color:var(--fg-1);line-height:1.35}
 .hol-panel .hol-m{flex:none;font-family:var(--mono);font-size:10.5px;
@@ -921,8 +921,8 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
   box-shadow:var(--shadow);margin:0 0 var(--s2)}
 .radar-band-h{display:flex;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
 .radar-band-t{display:flex;align-items:flex-start;gap:var(--s3);min-width:0}
-.radar-band-t h3{margin:0;font-size:18px;font-weight:680;letter-spacing:-.025em}
-.radar-band-t p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:12.5px;max-width:70ch}
+.radar-band-t h3{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
+.radar-band-t p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:12px;max-width:70ch}
 /* The control cluster (collection stamp + slide counter + prev/next) is a
    nowrap run of monospaced text. At phone widths it outgrew the band and
    pushed the arrows past the viewport, which gave the whole page a
