@@ -652,12 +652,10 @@ function rerenderAll(){
      a re-render, not a re-fetch. */
   renderBrief();
   wxProse();
-  /* The holiday/school chips are drawn straight from slowData rather than from
-     a registered section, so the loop above never reached them and their
-     "Next"/"in N days" wording stayed in the previous language. */
   if (slowData) try { renderHolWidget(); } catch {}
   relabelAI();
   relabelShare();
+  mountMetricExplainers();
 }
 
 /** An <svg> referencing a sprite symbol. Decorative by default - every call
@@ -8059,6 +8057,7 @@ async function loadSection(id, force){
     if (cached){
       try {
         cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
+        mountMetricExplainers();
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
         dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
         setDot(id, "ok"); setSecTime(id, "cached");
@@ -8074,6 +8073,7 @@ async function loadSection(id, force){
       const data = await cfg.load();
       const rec = cacheSet(id, data);
       cfg.render(data); if (cfg.after) cfg.after(data);
+      mountMetricExplainers();
       loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
       dataDate[id] = cfg.asOf ? cfg.asOf(data) : null;
       setDot(id, "ok"); setSecTime(id, "updated");
@@ -8135,6 +8135,7 @@ function primeCached(){
     try {
       LOADERS[s.id].render(rec.d);
       if (LOADERS[s.id].after) LOADERS[s.id].after(rec.d);
+      mountMetricExplainers();
       loaded.add(s.id); stamps[s.id] = rec.t; dataMap[s.id] = rec.d;
       setDot(s.id, "ok"); setSecTime(s.id, "cached");
     } catch { /* shape drift - refetch on load */ }
@@ -8613,17 +8614,68 @@ function mountMorningBrief(){
   if (briefBand) briefBand.appendChild(card);
 }
 
+/* Plain-language explanation fallback for economic and demographic metrics */
+function getMetricExplanationFallback(lab, val, lang){
+  const l = (lab || "").toLowerCase();
+  const isMs = (lang === "ms");
+
+  if (l.includes("cpi") || l.includes("inflasi") || l.includes("inflation")){
+    return isMs
+      ? `Indeks Harga Pengguna (${val}): Mengukur perubahan harga purata barangan dan perkhidmatan asas harian. Angka yang lebih rendah bermakna kos sara hidup isi rumah meningkat lebih perlahan.`
+      : `Core CPI (${val}): Measures the average price change of essential everyday goods and services. A lower rate means household living costs are rising at a moderate pace.`;
+  }
+  if (l.includes("unemployment") || l.includes("pengangguran")){
+    return isMs
+      ? `Kadar Pengangguran (${val}): Menunjukkan peratusan tenaga buruh yang sedang aktif mencari pekerjaan. Kadar di bawah 3.5% menandakan guna tenaga penuh dengan pasaran kerja yang sihat.`
+      : `Unemployment Rate (${val}): Reflects the share of the active labour force seeking work. Rates below 3.5% generally signify full employment and healthy job availability.`;
+  }
+  if (l.includes("gdp") || l.includes("kdnk")){
+    return isMs
+      ? `KDNK Benar (${val}): Nilai keseluruhan output ekonomi negara yang dilaraskan untuk inflasi. Pertumbuhan positif bermakna aktiviti perniagaan, peluang kerja, dan pendapatan negara berkembang.`
+      : `Real GDP (${val}): The total inflation-adjusted economic value produced in Malaysia. Growth indicates expanding business activity, national output, and income stability.`;
+  }
+  if (l.includes("participation") || l.includes("penyertaan")){
+    return isMs
+      ? `Kadar Penyertaan Tenaga Buruh (${val}): Peratusan penduduk usia bekerja yang bekerja atau aktif mencari pekerjaan. Kadar yang lebih tinggi bermaksud lebih ramai rakyat produktif.`
+      : `Labour Force Participation (${val}): The proportion of working-age population actively working or seeking work. Higher rates mean a more productive, active workforce.`;
+  }
+  if (l.includes("fpx") || l.includes("currencies") || l.includes("mata wang") || l.includes("ringgit") || l.includes("myr")){
+    return isMs
+      ? `Transaksi Kewangan (${val}): Menunjukkan volum dan aktiviti pembayaran digital harian serta kadar pertukaran mata wang utama berbanding Ringgit Malaysia.`
+      : `Financial Telemetry (${val}): Indicates digital payment transaction volume and daily benchmark exchange rates against the Malaysian Ringgit.`;
+  }
+  if (l.includes("population") || l.includes("penduduk")){
+    return isMs
+      ? `Populasi (${val}): Anggaran rasmi jumlah penduduk Malaysia daripada DOSM untuk perancangan kemudahan awam, perkhidmatan kesihatan, dan sekolah.`
+      : `Population (${val}): Official DOSM national population estimates used to plan public infrastructure, healthcare services, and local amenities.`;
+  }
+  if (l.includes("ev") || l.includes("kenderaan") || l.includes("registrations")){
+    return isMs
+      ? `Pendaftaran Kenderaan (${val}): Menjejaki kadar penerimaan kenderaan elektrik (EV) dan kenderaan baharu di jalan raya Malaysia.`
+      : `Vehicle Registrations (${val}): Tracks adoption rates of new motor vehicles and electric vehicles (EVs) across Malaysian roads.`;
+  }
+  if (l.includes("basket") || l.includes("bakul") || l.includes("ron95") || l.includes("diesel")){
+    return isMs
+      ? `Paras Harga (${val}): Memantau paras harga runcit barangan keperluan harian dan bahan api bersubsidi untuk perbelanjaan isi rumah.`
+      : `Price Level (${val}): Tracks retail shelf prices of essential grocery items and subsidized fuel for household living costs.`;
+  }
+
+  return isMs
+    ? `Angka rasmi ${lab} (${val}) diterbitkan oleh agensi kerajaan Malaysia untuk memantau trend sosioekonomi semasa.`
+    : `Official ${lab} statistic (${val}) published by Malaysian government agencies to monitor socioeconomic indicators.`;
+}
+
 /* Feature 3: Explain Metric Simply (Layman ELI5 Mode) */
 function mountMetricExplainers(){
-  const targetKpis = document.querySelectorAll("#economy .kpi, #finance .kpi, #population .kpi");
+  const targetKpis = document.querySelectorAll(".kpi, .hz-tile");
   for (const kpi of targetKpis){
-    if (kpi.querySelector(".ai-explain-btn")) continue;
-    const labEl = kpi.querySelector(".lab");
-    const valEl = kpi.querySelector(".val");
+    if (kpi.querySelector(".ai-explain-btn") || kpi.classList.contains("kpi-load") || kpi.querySelector(".skel")) continue;
+    const labEl = kpi.querySelector(".lab, .hz-lab");
+    const valEl = kpi.querySelector(".val, .hz-val");
     if (!labEl || !valEl) continue;
-    const lab = labEl.textContent.trim();
+    const lab = labEl.textContent.replace(/\?/g, "").trim();
     const val = valEl.textContent.trim();
-    if (!lab || !val) continue;
+    if (!lab || !val || val.length === 0) continue;
 
     const btn = document.createElement("button");
     btn.type = "button";
@@ -8638,31 +8690,43 @@ function mountMetricExplainers(){
 
     btn.addEventListener("click", async e => {
       e.stopPropagation();
-      if (!pop.hidden){ pop.hidden = true; return; }
+      if (!pop.hidden){ pop.hidden = true; btn.setAttribute("aria-expanded", "false"); return; }
       pop.hidden = false;
+      btn.setAttribute("aria-expanded", "true");
+
       const cacheKey = `exp:${LANG}:${lab}:${val}`;
       if (aiExplainCache.has(cacheKey)){
         pop.textContent = aiExplainCache.get(cacheKey);
         return;
       }
-      pop.textContent = T("Thinking…");
-      const ctrl = new AbortController();
-      let session = null;
-      try {
-        session = await aiCreate(AI_EXPLAIN_SYS, null, ctrl.signal);
-        const promptText = `Metric: ${lab}\nValue: ${val}\nLanguage: ${LANG === "ms" ? "Bahasa Melayu" : "English"}\n\nExplanation:`;
-        let out = "";
-        for await (const chunk of session.promptStreaming(promptText, { signal: ctrl.signal })){
-          out += chunk;
-          pop.textContent = out;
+
+      const aiReady = await isAIAvailable();
+      if (aiReady){
+        pop.textContent = T("Thinking…");
+        const ctrl = new AbortController();
+        let session = null;
+        try {
+          session = await aiCreate(AI_EXPLAIN_SYS, null, ctrl.signal);
+          const promptText = `Metric: ${lab}\nValue: ${val}\nLanguage: ${LANG === "ms" ? "Bahasa Melayu" : "English"}\n\nExplanation:`;
+          let out = "";
+          for await (const chunk of session.promptStreaming(promptText, { signal: ctrl.signal })){
+            out += chunk;
+            pop.textContent = out;
+          }
+          const finalOut = out.trim();
+          aiExplainCache.set(cacheKey, finalOut);
+          pop.textContent = finalOut;
+        } catch {
+          const fb = getMetricExplanationFallback(lab, val, LANG);
+          aiExplainCache.set(cacheKey, fb);
+          pop.textContent = fb;
+        } finally {
+          try { session?.destroy(); } catch {}
         }
-        const finalOut = out.trim();
-        aiExplainCache.set(cacheKey, finalOut);
-        pop.textContent = finalOut;
-      } catch {
-        pop.textContent = T("Summary failed. The on-device model may have run out of memory.");
-      } finally {
-        try { session?.destroy(); } catch {}
+      } else {
+        const fb = getMetricExplanationFallback(lab, val, LANG);
+        aiExplainCache.set(cacheKey, fb);
+        pop.textContent = fb;
       }
     });
 
@@ -8673,6 +8737,7 @@ function mountMetricExplainers(){
 
 async function mountAI(){
   await mountAskBar();
+  mountMetricExplainers();
 
   const hasAI = await isAIAvailable();
   if (!hasAI) return;
@@ -8700,7 +8765,6 @@ async function mountAI(){
   }
 
   mountMorningBrief();
-  mountMetricExplainers();
 }
 
 function relabelAI(){
