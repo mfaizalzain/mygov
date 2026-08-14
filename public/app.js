@@ -8324,10 +8324,136 @@ async function aiCreate(sysPrompt, onProgress, signal){
   }
 }
 
-/* Fast client-side open data matcher fallback for browsers without Prompt API */
-function queryDashboardFactsFallback(q){
-  const query = q.toLowerCase();
-  
+/* Extract structured metrics and prose for a section */
+function aiSectionText(id){
+  const sec = document.getElementById(id);
+  if (!sec) return "";
+  const parts = [];
+  const kpis = Array.from(sec.querySelectorAll(".kpi, .hz-tile")).map(k => {
+    const lab = k.querySelector(".lab, .hz-lab")?.textContent?.replace(/\?/g, "")?.trim();
+    const val = k.querySelector(".val, .hz-val")?.textContent?.trim();
+    return (lab && val) ? `${lab}: ${val}` : null;
+  }).filter(Boolean);
+  if (kpis.length) parts.push("Current Key Metrics:\n" + kpis.join("\n"));
+
+  for (const n of sec.querySelectorAll(".sec-h > div > p, [id^='body-'], .brief-list, .brief > p")){
+    if (n.closest("details") || n.classList.contains("ai-panel") || n.classList.contains("ai-explain-pop")) continue;
+    const t = (n.innerText || "").trim();
+    if (t) parts.push(t);
+  }
+  return parts.join("\n\n").replace(/\s+\n/g, "\n").slice(0, 4000);
+}
+
+/* Gather all active dashboard facts for Ask MyGov & Morning Brief */
+function aiCollectDashboardFacts(){
+  const facts = [];
+  if (briefData && Array.isArray(briefData.bullets)){
+    for (const b of briefData.bullets){
+      const text = LANG === "ms" ? (b.t_ms || b.t_en) : (b.t_en || b.t_ms);
+      if (text) facts.push(`Daily Brief (${b.sec || "general"}): ${text}`);
+    }
+  }
+  for (const s of SECTIONS){
+    const sec = document.getElementById(s.id);
+    if (!sec) continue;
+    const kpis = Array.from(sec.querySelectorAll(".kpi, .hz-tile")).map(k => {
+      const lab = k.querySelector(".lab, .hz-lab")?.textContent?.replace(/\?/g, "")?.trim();
+      const val = k.querySelector(".val, .hz-val")?.textContent?.trim();
+      return (lab && val) ? `${lab}: ${val}` : null;
+    }).filter(Boolean);
+    if (kpis.length) facts.push(`${s.label}: ${kpis.join(" | ")}`);
+  }
+  if (slowData && Array.isArray(slowData.holidays)){
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const nextHol = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
+    if (nextHol) facts.push(`Upcoming Public Holiday: ${nextHol[1]} (${nextHol[0]})`);
+  }
+  return facts.join("\n").slice(0, 5000);
+}
+
+function aiRender(panel, raw){
+  panel.textContent = "";
+  const lines = raw.split("\n").map(s => s.trim()).filter(Boolean);
+  let ul = null;
+  for (const line of lines){
+    const m = /^[-*•]\s+(.*)$/.exec(line);
+    if (m){
+      if (!ul){ ul = document.createElement("ul"); panel.appendChild(ul); }
+      const li = document.createElement("li"); li.textContent = m[1];
+      ul.appendChild(li);
+    } else {
+      ul = null;
+      const p = document.createElement("p"); p.textContent = line;
+      panel.appendChild(p);
+    }
+  }
+  const note = document.createElement("span");
+  note.className = "ai-note";
+  note.textContent = T("Generated on your device. May be inaccurate - the figures above are the source of truth.");
+  panel.appendChild(note);
+}
+
+async function aiSummarise(id, btn, panel){
+  const body = aiSectionText(id);
+  if (!body) return;
+  const cacheKey = `${id}:${LANG}:${aiHash(body)}`;
+  if (aiSummaryCache.has(cacheKey)){
+    panel.hidden = false;
+    aiRender(panel, aiSummaryCache.get(cacheKey));
+    aiLabel(btn, true);
+    return;
+  }
+
+  const ctrl = new AbortController();
+  btn.dataset.busy = "1";
+  btn.disabled = true;
+  panel.hidden = false;
+  panel.classList.remove("ai-err");
+  panel.textContent = T("Preparing the model…");
+  let bar = null, session = null;
+  const onProgress = loaded => {
+    if (!bar){
+      panel.textContent = T("Preparing the model…");
+      bar = document.createElement("span");
+      bar.className = "ai-prog";
+      bar.appendChild(document.createElement("i"));
+      panel.appendChild(bar);
+    }
+    bar.firstChild.style.width = Math.round(loaded * 100) + "%";
+  };
+  try {
+    session = await aiCreate(AI_SYS, onProgress, ctrl.signal);
+    panel.textContent = T("Summarising…");
+    const ask = LANG === "ms"
+      ? "Ringkaskan teks dalam tag <data> dalam Bahasa Malaysia:\n\n"
+      : "Summarise the text inside the <data> tags:\n\n";
+    let out = "";
+    const fenced = "<data>\n" + body.replace(/<\/?data>/gi, "") + "\n</data>";
+    for await (const chunk of session.promptStreaming(ask + fenced, { signal: ctrl.signal })){
+      out += chunk;
+      panel.textContent = out;
+    }
+    const finalOut = out.trim();
+    aiSummaryCache.set(cacheKey, finalOut);
+    aiRender(panel, finalOut);
+  } catch (e){
+    if (e?.name !== "AbortError"){
+      panel.classList.add("ai-err");
+      panel.textContent = T("Summary failed. The on-device model may have run out of memory.");
+    }
+  } finally {
+    try { session?.destroy(); } catch {}
+    delete btn.dataset.busy;
+    btn.disabled = false;
+    aiLabel(btn, !panel.hidden);
+  }
+}
+
+function aiLabel(btn, open){
+  btn.textContent = open ? T("Hide summary") : T("Summarise");
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
 /* Intelligent multi-section open data matcher fallback */
 function queryDashboardFactsFallback(q){
   const rawQ = String(q || "").trim();
