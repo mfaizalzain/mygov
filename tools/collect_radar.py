@@ -295,7 +295,10 @@ def backfill_urls(issues, signals):
         if k and k not in index:
             index[k] = s
 
-    def lookup(title):
+    def lookup(title, source_name=None):
+        """Exact, then prefix, then fuzzy word overlap. Gemini echoes headlines
+        back paraphrased or truncated, so exact matching alone left most
+        sources with no URL — and a source with no URL is invisible in the UI."""
         if not title:
             return None
         n = norm(title)
@@ -304,7 +307,19 @@ def backfill_urls(issues, signals):
         for k, s in index.items():
             if k[:45] == n[:45]:
                 return s
-        return None
+        tw = {w for w in words(title) if len(w) > 3}
+        if len(tw) < 3:
+            return None
+        pool = [s for s in signals if s["source"] == source_name] if source_name else signals
+        best, best_score = None, 0
+        for s in (pool or signals):
+            sw = {w for w in words(s["title"]) if len(w) > 3}
+            overlap = len(tw & sw)
+            if overlap > best_score:
+                best, best_score = s, overlap
+        # 3 shared content words is the same threshold the breaking-news
+        # deduper uses for "same story".
+        return best if best_score >= 3 else None
 
     def factcheck(issue_title, issue_title_en):
         stop = set("penjelasan berkenaan penggunaan kes dengan pada bagi yang dan untuk oleh seorang individu warga asing the a an of on in to for with about".split())
@@ -328,7 +343,7 @@ def backfill_urls(issues, signals):
                 src["url"] = ""
         for src in issue.get("sources", []):
             if not src.get("url"):
-                m = lookup(src.get("title"))
+                m = lookup(src.get("title"), src.get("name"))
                 if m:
                     src["url"] = m["url"]
         
@@ -874,7 +889,10 @@ def main():
         issues = cluster_keyword(merged)
         print(f"  fallback keyword clustering: {len(issues)} issues")
 
-    issues = backfill_urls(issues, signals)
+    # Match against the same 7-day window the clustering saw, not just today's
+    # fetch: an issue clustered from a three-day-old article could never find
+    # its URL in today's signals, which is why most sources rendered unlinked.
+    issues = backfill_urls(issues, merged)
 
     # Grounded fact-check (Gemini + Google Search) on top 8 issues — extract rich claims & fact_details
     seben_fc = {i.get("rank"): i.get("fact_check", {}) for i in issues}

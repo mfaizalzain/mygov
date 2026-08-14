@@ -7941,7 +7941,9 @@ function radarSlide(i, idx){
       <div class="radar-meta">
         ${fcBadge(fc.status)}
         <span class="pill">${esc(T(i.category || "lain"))}</span>
-        <span class="dim">${i.source_count || ((i.sources || []).length)} ${T("sources")}</span>
+        ${/* No source count here: "3 sources" tells a reader nothing they can
+             act on. The detail sheet lists the actual outlets, which is the
+             thing worth knowing. */""}
       </div>
     </div>
   </button>`;
@@ -7994,7 +7996,10 @@ function radarDetail(i){
   const reason = facts ? "" : (fc.reason || "");
   const [vIcon, vt] = FC_BADGE[fc.status] || ["❓", ""];
   const vLabel = fc.status ? T(fc.status) : "";
-  const srcs = (i.sources || []).filter(s => safeUrl(s.url));
+  /* Keep sources the URL backfill could not resolve: the list below renders
+     them as plain text. Dropping them left issues with no attribution at all,
+     which is worse than an unlinked outlet name. */
+  const srcs = (i.sources || []).filter(s => s && (s.name || s.title));
   return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-labelledby="rd-modal-title">
     <div class="rd-card card" tabindex="-1">
       <div class="rd-handle" aria-hidden="true"></div>
