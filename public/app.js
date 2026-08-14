@@ -9461,8 +9461,20 @@ function aiCollectDashboardFacts(){
   }
   if (slowData && Array.isArray(slowData.holidays)){
     const todayIso = new Date().toISOString().slice(0, 10);
-    const nextHol = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
-    if (nextHol) facts.push(`Upcoming Public Holiday: ${nextHol[1]} (${nextHol[0]})`);
+    const nextNat = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso && (!h[3] || h[3].includes("*") || h[3].length >= 14));
+    if (nextNat) facts.push(`Next Nationwide Public Holiday: ${nextNat[1]} (${nextNat[0]}) - applies across all Malaysian states.`);
+    const nextAny = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
+    if (nextAny && nextAny !== nextNat){
+      const stList = Array.isArray(nextAny[3]) ? nextAny[3].join(", ") : "selected states";
+      facts.push(`Next State Holiday: ${nextAny[1]} (${nextAny[0]}) - applies only in: ${stList}.`);
+    }
+  }
+  if (slowData && Array.isArray(slowData.school)){
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const curr = slowData.school.find(s => s && s.start && s.end && todayIso >= s.start && todayIso <= s.end);
+    if (curr) facts.push(`Current School Holiday: ${curr.name} (${curr.start} to ${curr.end}).`);
+    const nextSch = slowData.school.filter(s => s && s.start && s.start > todayIso).sort((a,b) => a.start < b.start ? -1 : 1)[0];
+    if (nextSch) facts.push(`Next School Holiday (KPM): ${nextSch.name} (from ${nextSch.start} to ${nextSch.end}).`);
   }
   return facts.join("\n").slice(0, 5000);
 }
@@ -9769,12 +9781,75 @@ function queryDashboardFactsFallback(q){
       : `Official EC / SPR election records: Tracks composition and voting telemetry across 222 Parliamentary and 600 State DUN seats.`) + "\n[GOTO:vote]";
   }
 
-  // 15. Holidays / School Holidays / Cuti
-  if (query.match(/\b(holiday|holidays|cuti|sekolah|school|takwim|calendar|kalendar|raya|cny|deepavali|merdeka|gawai|kaamatan)\b/)){
+  // 15a. School Holidays / Cuti Sekolah (KPM Takwim)
+  if (query.match(/\b(school|sekolah|persekolahan|penggal|semester)\b/)){
+    if (slowData && Array.isArray(slowData.school)){
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const sch = slowData.school.filter(s => s && s.start && s.end);
+      const current = sch.find(s => todayIso >= s.start && todayIso <= s.end);
+      const upcoming = sch.filter(s => s.start > todayIso).sort((a, b) => a.start < b.start ? -1 : 1);
+      if (current){
+        const nextBreak = upcoming[0] ? ` ${isMs ? "Cuti penggal seterusnya" : "The next break"} (${upcoming[0].name}) bermula ${upcoming[0].start}.` : "";
+        return (isMs
+          ? `Sekolah kini sedang bercuti: ${current.name} (${current.start} hingga ${current.end}).${nextBreak}`
+          : `Schools are currently on break: ${current.name} (${current.start} to ${current.end}).${nextBreak}`) + "\n[GOTO:travel-band]";
+      } else if (upcoming.length){
+        const n = upcoming[0];
+        return (isMs
+          ? `Cuti sekolah KPM seterusnya ialah ${n.name} bermula ${n.start} hingga ${n.end} (Kumpulan A & B).`
+          : `The next KPM school holiday is ${n.name} from ${n.start} to ${n.end} (Group A & B).`) + "\n[GOTO:travel-band]";
+      }
+    }
+  }
+
+  // 15b. Public Holidays / Cuti Umum (National vs State-Specific)
+  if (query.match(/\b(holiday|holidays|cuti|takwim|calendar|kalendar|raya|cny|deepavali|merdeka|gawai|kaamatan|awal muharram|maulidur|israk|nuzul|krismas|christmas|wesak)\b/)){
     if (slowData && Array.isArray(slowData.holidays)){
       const todayIso = new Date().toISOString().slice(0, 10);
-      const nextHol = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
-      if (nextHol) return (isMs ? `Cuti umum Malaysia yang seterusnya ialah ${nextHol[1]} pada ${nextHol[0]}.` : `The next Malaysian public holiday is ${nextHol[1]} on ${nextHol[0]}.`) + "\n[GOTO:travel-band]";
+      const STATE_LABELS = {
+        "johor":"Johor", "kedah":"Kedah", "kelantan":"Kelantan", "melaka":"Melaka",
+        "negeri-sembilan":"Negeri Sembilan", "pahang":"Pahang", "perak":"Perak",
+        "perlis":"Perlis", "pulau-pinang":"Pulau Pinang", "sabah":"Sabah",
+        "sarawak":"Sarawak", "selangor":"Selangor", "terengganu":"Terengganu",
+        "kuala-lumpur":"WP Kuala Lumpur", "wp-putrajaya":"WP Putrajaya", "wp-labuan":"WP Labuan"
+      };
+
+      let targetStateSlug = null;
+      for (const [slug, label] of Object.entries(STATE_LABELS)){
+        if (query.includes(slug) || query.includes(label.toLowerCase())){
+          targetStateSlug = slug;
+          break;
+        }
+      }
+
+      if (targetStateSlug){
+        const stateHols = slowData.holidays.filter(h => h && h[0] && h[0] >= todayIso && (!h[3] || h[3].includes("*") || h[3].includes(targetStateSlug)));
+        if (stateHols.length){
+          const next = stateHols[0];
+          const isNat = !next[3] || next[3].includes("*") || next[3].length >= 14;
+          const type = isNat ? (isMs ? "cuti kebangsaan" : "national holiday") : (isMs ? `cuti negeri ${STATE_LABELS[targetStateSlug]}` : `${STATE_LABELS[targetStateSlug]} state holiday`);
+          return (isMs
+            ? `Cuti umum seterusnya di ${STATE_LABELS[targetStateSlug]} ialah ${next[1]} pada ${next[0]} (${type}).`
+            : `The next public holiday in ${STATE_LABELS[targetStateSlug]} is ${next[1]} on ${next[0]} (${type}).`) + "\n[GOTO:travel-band]";
+        }
+      }
+
+      const nextNat = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso && (!h[3] || h[3].includes("*") || h[3].length >= 14));
+      const nextAny = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
+
+      if (nextAny && nextNat && nextAny === nextNat){
+        return (isMs
+          ? `Cuti umum kebangsaan Malaysia seterusnya ialah ${nextNat[1]} pada ${nextNat[0]} (berkuat kuasa di seluruh negara).`
+          : `The next nationwide public holiday in Malaysia is ${nextNat[1]} on ${nextNat[0]} (applies across all states).`) + "\n[GOTO:travel-band]";
+      } else if (nextAny){
+        const sts = Array.isArray(nextAny[3]) ? nextAny[3].map(s => STATE_LABELS[s] || s).join(", ") : (isMs ? "negeri terpilih" : "selected states");
+        const natText = nextNat
+          ? (isMs ? ` Manakala cuti kebangsaan seluruh negara seterusnya ialah ${nextNat[1]} pada ${nextNat[0]}.` : ` The next nationwide holiday across all states is ${nextNat[1]} on ${nextNat[0]}.`)
+          : "";
+        return (isMs
+          ? `Cuti umum terdekat ialah cuti negeri: ${nextAny[1]} pada ${nextAny[0]} (hanya di ${sts}).${natText}`
+          : `The nearest public holiday is a state-specific holiday: ${nextAny[1]} on ${nextAny[0]} (applies only in ${sts}).${natText}`) + "\n[GOTO:travel-band]";
+      }
     }
   }
 
