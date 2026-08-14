@@ -493,8 +493,8 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 
 /* ═══════════════════════════ hero ═══════════════════════════ */
 .hero{padding:var(--s8) 0 var(--s6)}
-.hero h2{margin:0 0 var(--s2);font-size:30px;font-weight:720;letter-spacing:-.035em;line-height:1.15}
-.hero p{margin:0;color:var(--fg-2);font-size:14.5px;max-width:62ch}
+.hero h2{margin:0 0 var(--s2);font-size:22px;font-weight:680;letter-spacing:-.025em;line-height:1.2}
+.hero p{margin:0;color:var(--fg-2);font-size:13.5px;max-width:62ch}
 /* Above 1100px the copy caps out at 62ch and would leave the right half of
    the hero empty, so the Travel Outlook band moves up beside it and the daily
    brief fills the space under the copy. Below that the band goes back to a
@@ -520,10 +520,11 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 /* compact postcode utility */
 .pos-util{position:relative;display:flex;align-items:center;gap:var(--s2);max-width:420px;flex:1;min-width:240px}
 .pos-util .pos-ico{font-size:13px;color:var(--fg-3)}
-.pos-util .inp{flex:1;min-width:0;padding:8px var(--s3);border-radius:var(--r-sm);
+.pos-util .inp{flex:1;min-width:0;padding:8px 30px 8px var(--s3);border-radius:var(--r-sm);
   border:1px solid var(--line);background:var(--surface);color:var(--fg);
   font-size:13px;transition:var(--t)}
 .pos-util .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.pos-util .inp-x{right:10px}
 .pos-util .pos-count{font-size:11px;font-family:var(--mono);color:var(--fg-3);white-space:nowrap}
 .pos-panel{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
@@ -662,20 +663,22 @@ a.maplink:hover{background:var(--accent-dim);text-decoration:none;border-color:c
    this is a summary of numbers already on the page, not a headline of its own,
    and machine-written text should not shout. */
 .brief{background:var(--bg-2);border:1px solid var(--line-soft);
-  border-radius:var(--r);padding:var(--s4);margin:0 0 var(--s2)}
-.brief-h{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;
-  margin-bottom:var(--s3)}
-.brief-h h3{margin:0;font-size:15px;font-weight:660;letter-spacing:-.02em}
-.brief p{margin:var(--s1) 0 0;font-size:13px;line-height:1.5;color:var(--fg-2)}
+  border-radius:var(--r);padding:var(--s3) var(--s4);margin:0 0 var(--s2)}
+.brief-h{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
+  margin-bottom:var(--s2)}
+.brief-h h3{margin:0;font-size:14px;font-weight:660;letter-spacing:-.015em}
+.brief p{margin:var(--s1) 0 0;font-size:12.5px;line-height:1.45;color:var(--fg-2)}
 #wx-prose{margin-top:var(--s2)}
 #wx-prose .brief-h{align-items:center;gap:var(--s2)}
-#wx-prose .sec-ico{width:34px;height:34px;border-radius:10px}
+#wx-prose .sec-ico{width:28px;height:28px;border-radius:8px}
+#wx-prose .sec-ico svg{width:16px;height:16px}
 /* Today in brief carries the same badge as the card above it: the two sit in
    one stack, and only one of them having an icon read as an oversight. The
    header is baseline-aligned for its wrapping note, so the badge centres
    itself rather than hanging off the text baseline. */
 #brief-band .brief-h{align-items:center;gap:var(--s2)}
-#brief-band .sec-ico{width:34px;height:34px;border-radius:10px;flex:none}
+#brief-band .sec-ico{width:28px;height:28px;border-radius:8px;flex:none}
+#brief-band .sec-ico svg{width:16px;height:16px}
 /* Animated sky behind the next-hours card. Two pseudo-element layers over the
    normal card background: ::before is a slow-drifting colour wash keyed to the
    WMO class, ::after the motion (falling drops, drifting cloud, sun glow).
@@ -907,9 +910,9 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
   .cmp-gap{flex-direction:row;min-width:0;padding:4px 0} }
 .brief-note{font-family:var(--mono);font-size:11px;color:var(--fg-3)}
 .brief-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
-.brief-list li{display:flex;align-items:flex-start;gap:var(--s2);font-size:13.5px;
-  line-height:1.5;color:var(--fg-2)}
-.brief-list li::before{content:"";flex:0 0 5px;width:5px;height:5px;margin-top:7px;
+.brief-list li{display:flex;align-items:flex-start;gap:var(--s2);font-size:12.5px;
+  line-height:1.45;color:var(--fg-2)}
+.brief-list li::before{content:"";flex:0 0 5px;width:5px;height:5px;margin-top:6px;
   border-radius:50%;background:var(--accent)}
 .brief-list a{color:inherit;text-decoration:none;border-bottom:1px solid transparent}
 .brief-list a:hover{color:var(--fg);border-bottom-color:var(--line)}
@@ -1201,6 +1204,17 @@ button.vchip{cursor:pointer}
   font-size:11.5px;font-weight:600;color:var(--fg-3);cursor:pointer;transition:var(--t)}
 .seg button:hover{color:var(--fg-2)}
 .seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--fg)}
+.inp-wrap{position:relative;display:inline-flex;align-items:center;width:100%;min-width:0}
+.inp-wrap .inp{width:100%;padding-right:28px}
+.inp-x{position:absolute;right:7px;top:50%;transform:translateY(-50%);z-index:4;
+  width:18px;height:18px;padding:0;border:0;border-radius:50%;
+  background:var(--surface-3);color:var(--fg-3);font-size:10px;font-weight:700;
+  line-height:1;display:grid;place-items:center;cursor:pointer;
+  opacity:0;pointer-events:none;transition:var(--t);user-select:none}
+.inp-x:hover{background:var(--line);color:var(--fg)}
+.inp-x.visible{opacity:1;pointer-events:auto}
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration{display:none;-webkit-appearance:none;appearance:none}
 .inp{width:100%;padding:9px var(--s3);border-radius:var(--r-sm);border:1px solid var(--line);
   background:var(--bg-2);color:var(--fg);font-size:13px;transition:var(--t)}
 .inp::placeholder{color:var(--fg-3)}
@@ -1460,8 +1474,8 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 }
 /* larger text mode */
 html[data-text="large"] body{font-size:16px}
-html[data-text="large"] .hero h2{font-size:34px}
-html[data-text="large"] .hero p{font-size:16px}
+html[data-text="large"] .hero h2{font-size:24px}
+html[data-text="large"] .hero p{font-size:14.5px}
 html[data-text="large"] .sec-h h3{font-size:22px}
 html[data-text="large"] .sec-h p{font-size:15px}
 html[data-text="large"] .kpi .val{font-size:28px}
@@ -1554,9 +1568,11 @@ html[data-text="large"] .ai-panel{font-size:15px}
 .ai-ask-badge{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:99px;
   background:rgba(59,130,246,.12);color:var(--accent);font-weight:600;border:1px solid rgba(59,130,246,.25)}
 .ai-ask-form{display:flex;gap:var(--s2);margin-bottom:var(--s2)}
-.ai-ask-inp{flex:1;height:38px;padding:0 var(--s3);border-radius:var(--r-sm);border:1px solid var(--line-soft);
+.ai-ask-wrap{position:relative;display:flex;flex:1;align-items:center;min-width:0}
+.ai-ask-inp{flex:1;width:100%;height:38px;padding:0 30px 0 var(--s3);border-radius:var(--r-sm);border:1px solid var(--line-soft);
   background:var(--surface-2);color:var(--fg);font-size:13.5px;outline:none;transition:border-color .15s,box-shadow .15s}
 .ai-ask-inp:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.ai-ask-wrap .inp-x{right:8px}
 .ai-ask-btn{height:38px;padding:0 var(--s4);flex:none;font-weight:600;cursor:pointer}
 .ai-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--s2)}
 .ai-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;

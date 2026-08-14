@@ -2735,7 +2735,10 @@ function renderWeather(d){
         <div class="card-h"><h4>${T("All locations")}</h4><span class="sub" id="wx-count"></span></div>
         <div class="card-b" style="padding-bottom:10px">
           <label class="sr" for="wx-q">${T("Search locations")}</label>
-          <input class="inp" id="wx-q" placeholder="${T("Search a district, town or state…")}" autocomplete="off">
+          <div class="inp-wrap">
+            <input class="inp" id="wx-q" placeholder="${T("Search a district, town or state…")}" autocomplete="off">
+            <button type="button" class="inp-x${wx.q ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+          </div>
         </div>
         <div class="tw scroll-y"><table id="wx-table">
           <thead><tr>
@@ -5106,11 +5109,53 @@ function paintPos(){
 function initPosUtil(){
   const q = $("#pos-q"); if (!q) return;
   q.value = posQ;
-  q.oninput = () => { posQ = q.value; if (posQ) ensurePosData(); else paintPos(); };
-  q.onfocus = () => { ensurePosData(); };
+  const updateClear = () => syncInputClear(q);
+  q.oninput = () => { posQ = q.value; updateClear(); if (posQ) ensurePosData(); else paintPos(); };
+  q.onfocus = () => { updateClear(); ensurePosData(); };
   q.onkeydown = e => { if (e.key === "Escape"){ $("#pos-panel").hidden = true; q.blur(); } };
   document.addEventListener("click", e => {
     if (!e.target.closest(".pos-util")) { $("#pos-panel").hidden = true; }
+  });
+  updateClear();
+}
+
+/* ════════════════════════════ clearable text inputs ════════════════════════════ */
+function syncInputClear(inp){
+  if (!inp) return;
+  const wrap = inp.closest(".inp-wrap, .pos-util, .ai-ask-wrap, .ai-ask-form");
+  const x = wrap ? wrap.querySelector(".inp-x") : (inp.nextElementSibling && inp.nextElementSibling.classList.contains("inp-x") ? inp.nextElementSibling : null);
+  if (!x) return;
+  const hasVal = Boolean((inp.value || "").trim().length > 0);
+  x.classList.toggle("visible", hasVal);
+}
+
+function initInputClearHandlers(){
+  document.addEventListener("input", e => {
+    if (e.target && (e.target.matches?.(".inp, .ai-ask-inp") || e.target.tagName === "INPUT")){
+      syncInputClear(e.target);
+    }
+  }, { passive: true });
+
+  document.addEventListener("focusin", e => {
+    if (e.target && (e.target.matches?.(".inp, .ai-ask-inp") || e.target.tagName === "INPUT")){
+      syncInputClear(e.target);
+    }
+  }, { passive: true });
+
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".inp-x");
+    if (!btn) return;
+    e.preventDefault();
+    const wrap = btn.closest(".inp-wrap, .pos-util, .ai-ask-wrap, .ai-ask-form");
+    const inp = wrap ? wrap.querySelector("input") : (btn.previousElementSibling && btn.previousElementSibling.tagName === "INPUT" ? btn.previousElementSibling : null);
+    if (inp){
+      inp.value = "";
+      syncInputClear(inp);
+      inp.focus();
+      inp.dispatchEvent(new Event("input", { bubbles: true }));
+      inp.dispatchEvent(new Event("change", { bubbles: true }));
+      if (typeof inp.oninput === "function") inp.oninput();
+    }
   });
 }
 
@@ -5491,8 +5536,11 @@ function renderElection(d){
       <div class="card-h"><h4>${T("Seats")} · ${esc(label || "")}</h4>
         <span class="sub">${T("each seat's vote share by party colour")}</span>
         <span class="right">
-          <input class="inp" id="election-q" type="search" autocomplete="off"
-            placeholder="${T("Search constituency, winner, party…")}" value="${esc(electionQuery)}" aria-label="${T("Search")}">
+          <span class="inp-wrap" style="display:inline-flex;max-width:240px">
+            <input class="inp" id="election-q" type="search" autocomplete="off"
+              placeholder="${T("Search constituency, winner, party…")}" value="${esc(electionQuery)}" aria-label="${T("Search")}">
+            <button type="button" class="inp-x${electionQuery ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+          </span>
           <select class="fx-select" id="election-state" aria-label="${T("State")}">
             <option value="">${T("All states")}</option>
             ${statesList.map(st => `<option value="${esc(st)}" ${st === electionState ? "selected" : ""}>${esc(st)}</option>`).join("")}
@@ -5800,7 +5848,10 @@ function renderPlaces(g){
       <div class="card-h"><h4>${T("Districts")}</h4>
         <span class="sub">${nf(dists.length - wpDists.length)} ${T("of")} ${nf(g.district.known)} ${T("districts")} · ${g.district.year}${hasWP ? " · " + nf(wpSeats) + " " + T("federal territories by constituency") : ""}</span>
         <span class="right"><label class="sr" for="places-dq">${T("Search districts")}</label>
-          <input class="inp" id="places-dq" placeholder="${T("Search districts…")}" value="${esc(placesDQ)}" autocomplete="off" style="max-width:190px"></span></div>
+          <span class="inp-wrap" style="display:inline-flex;max-width:190px">
+            <input class="inp" id="places-dq" placeholder="${T("Search districts…")}" value="${esc(placesDQ)}" autocomplete="off">
+            <button type="button" class="inp-x${placesDQ ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+          </span></span></div>
       <div class="card-b"><div class="tw"><table id="places-dist-table">
         <thead><tr>
           <th class="sortable" data-key="n">${T("District")} <span class="arrow">↕</span></th>
@@ -5832,7 +5883,10 @@ function renderPlaces(g){
                 `<button data-places-lvl="${k}" aria-pressed="${k === placesLevel}">${esc(lab)}</button>`).join("")}
             </span>
             <label class="sr" for="places-sq">${T("Search seats")}</label>
-            <input class="inp" id="places-sq" placeholder="${T("Search seats…")}" value="${esc(placesSQ)}" autocomplete="off" style="max-width:170px;margin-left:var(--s2)"></span></div>
+            <span class="inp-wrap" style="display:inline-flex;max-width:170px;margin-left:var(--s2)">
+              <input class="inp" id="places-sq" placeholder="${T("Search seats…")}" value="${esc(placesSQ)}" autocomplete="off">
+              <button type="button" class="inp-x${placesSQ ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+            </span></span></div>
         <div class="card-b" style="padding-top:0"><div class="tw"><table id="places-seat-table">
           <thead><tr>
             <th class="sortable" data-key="c"># <span class="arrow">↕</span></th>
@@ -6671,7 +6725,10 @@ function renderTransport(d){
         <h4>✈️ ${T("Live flights")}</h4>
         <span class="sub">${T("Malaysia Airports · real-time board")}</span>
         <span class="right">
-          <input class="inp" id="fids-q" placeholder="${T("Search flight, city, airline…")}" autocomplete="off" style="width:190px">
+          <span class="inp-wrap" style="display:inline-flex;width:190px">
+            <input class="inp" id="fids-q" placeholder="${T("Search flight, city, airline…")}" autocomplete="off">
+            <button type="button" class="inp-x${fidsQuery ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+          </span>
           <span class="seg" id="fids-dir" role="group" aria-label="Direction">
             <button data-dir="A" aria-pressed="true">${T("Arrivals")}</button>
             <button data-dir="D" aria-pressed="false">${T("Departures")}</button>
@@ -6692,7 +6749,10 @@ function renderTransport(d){
       <div class="card-h"><h4>${T("Search stops")}</h4></div>
       <div class="card-b">
         <label class="sr" for="tr-sq">${T("Search stops")}</label>
-        <input class="inp" id="tr-sq" placeholder="${T("Station or stop name…")}" autocomplete="off">
+        <div class="inp-wrap">
+          <input class="inp" id="tr-sq" placeholder="${T("Station or stop name…")}" autocomplete="off">
+          <button type="button" class="inp-x${trSQ ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+        </div>
         <button class="btn" id="tr-near" style="margin-top:var(--s2)">${ico("live")} ${T("Find stops near me")}</button>
         <div id="tr-near-st" style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)"></div>
       </div>
@@ -8921,18 +8981,28 @@ async function mountAskBar(){
 
   const form = document.createElement("form");
   form.className = "ai-ask-form";
+  const wrap = document.createElement("div");
+  wrap.className = "ai-ask-wrap";
   const inp = document.createElement("input");
   inp.type = "search";
   inp.className = "ai-ask-inp";
   inp.id = "ai-ask-input";
   inp.placeholder = T("Ask anything about Malaysia open data…");
   inp.setAttribute("aria-label", T("Ask anything about Malaysia open data…"));
+  const clr = document.createElement("button");
+  clr.type = "button";
+  clr.className = "inp-x";
+  clr.setAttribute("aria-label", T("Clear"));
+  clr.setAttribute("tabindex", "-1");
+  clr.textContent = "✕";
+  wrap.appendChild(inp);
+  wrap.appendChild(clr);
   const btn = document.createElement("button");
   btn.type = "submit";
   btn.className = "btn btn-a ai-ask-btn";
   btn.id = "ai-ask-submit";
   btn.textContent = T("Ask");
-  form.appendChild(inp);
+  form.appendChild(wrap);
   form.appendChild(btn);
   card.appendChild(form);
 
@@ -9549,6 +9619,7 @@ function boot(){
   geo.status = "waiting";     // resolved once weather data lands
   initPosUtil();
   initRadarCarousel();
+  initInputClearHandlers();
   /* Route chips in the Live section: clicking filters the map + chips to
      that route; clicking the active chip clears the filter. */
   document.addEventListener("click", e => {
