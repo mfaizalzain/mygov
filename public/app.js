@@ -8815,7 +8815,7 @@ function renderAskResult(panel, rawText){
   if (targetSec && document.getElementById(targetSec)){
     const gotoBtn = document.createElement("a");
     gotoBtn.href = `#${targetSec}`;
-    gotoBtn.className = "ai-action-btn";
+    gotoBtn.className = "btn btn-a ai-action-btn";
     const secObj = SECTIONS.find(s => s.id === targetSec);
     const secLabel = secObj ? T(secObj.label) : targetSec;
     gotoBtn.innerHTML = `<span>🎯</span> <span>${T("Jump to")} ${secLabel}</span> <span>&rarr;</span>`;
@@ -8825,7 +8825,7 @@ function renderAskResult(panel, rawText){
   if ("speechSynthesis" in window){
     const vBtn = document.createElement("button");
     vBtn.type = "button";
-    vBtn.className = "ai-voice-btn";
+    vBtn.className = "btn ai-voice-btn";
     vBtn.innerHTML = `<span>🔊</span> <span>${T("Listen")}</span>`;
     vBtn.addEventListener("click", () => aiSpeak(cleanText, vBtn));
     actions.appendChild(vBtn);
