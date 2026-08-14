@@ -88,6 +88,10 @@ const I18N = {
   "bmc":"Sokong projek ini di Buy Me a Coffee",
   "Weather":"Cuaca", "Household":"Isi Rumah", "Economy":"Ekonomi", "Transport":"Pengangkutan", "Live":"Langsung",
   "Trending":"Trend",
+  "7-Day Forecast":"Ramalan 7 Hari", "All locations table":"Jadual semua lokasi",
+  "Next 24 hours":"24 jam seterusnya", "districts, towns & highlands":"daerah, bandar & pusat peranginan",
+  "Tomorrow":"Esok", "MET Forecast":"Ramalan MET",
+  "The full list reflects daily MET Malaysia forecasts. Click any row to view its live hourly and 7-day forecast.":"Senarai penuh memaparkan ramalan harian MET Malaysia. Klik mana-mana baris untuk melihat ramalan langsung setiap jam dan 7 hari.",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
   "Seven-day forecast for every state, district and town in Malaysia - plus severe-weather warnings and recent earthquakes.":"Ramalan tujuh hari untuk setiap negeri, daerah dan bandar di Malaysia - serta amaran cuaca buruk dan gempa bumi terkini.",
@@ -2721,40 +2725,73 @@ function renderWeather(d){
   }
   $("#body-weather").innerHTML = `
     <div class="sr" id="wx-live" aria-live="polite"></div>
-    <div class="grid g2 mb">
-      <div class="card">
-        <div class="card-h"><h4>${T("Now")}</h4>
-          <span class="sub" id="wx-name"></span>
-          <span class="right" id="wx-loc"></span></div>
-        <div class="card-b">
-          <div class="wx-now" id="wx-now"></div>
-          <div class="lvmap" id="wx-map"></div>
+    <div class="card mb wx-main-card" id="wx-main-card">
+      <div class="card-h wx-card-h">
+        <div class="wx-card-title">
+          <h4><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg> <span id="wx-name"></span></h4>
+          <span class="sub" id="wx-loc"></span>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-h"><h4>${T("All locations")}</h4><span class="sub" id="wx-count"></span></div>
-        <div class="card-b" style="padding-bottom:10px">
+        <div class="wx-search-wrap">
           <label class="sr" for="wx-q">${T("Search locations")}</label>
-          <div class="inp-wrap">
-            <input class="inp" id="wx-q" placeholder="${T("Search a district, town or state…")}" autocomplete="off">
+          <div class="inp-wrap" style="width:230px">
+            <input class="inp" id="wx-q" placeholder="${T("Search a district, town or state…")}" value="${esc(wx.q)}" autocomplete="off">
             <button type="button" class="inp-x${wx.q ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
           </div>
+          <div class="wx-suggest-panel" id="wx-suggest" hidden></div>
         </div>
-        <div class="tw scroll-y"><table id="wx-table">
-          <thead><tr>
-            <th class="sortable" data-key="name">${T("Location")} <span class="arrow">↕</span></th>
-            <th class="sortable" data-key="kind">${T("Type")} <span class="arrow">↕</span></th>
-            <th class="sortable num" data-key="min" data-num="1">${T("Min")} <span class="arrow">↕</span></th>
-            <th class="sortable num" data-key="max" data-num="1" data-desc="1">${T("Max")} <span class="arrow">↕</span></th>
-            <th>${T("Today")}</th>
-          </tr></thead><tbody id="wx-rows"></tbody>
-        </table></div>
       </div>
-    </div>`;
+      <div class="card-b">
+        <div class="wx-top-grid">
+          <div class="wx-now-block">
+            <div class="wx-now" id="wx-now"></div>
+          </div>
+          <div class="wx-map-block">
+            <div class="lvmap" id="wx-map"></div>
+          </div>
+        </div>
+        <div id="wx-hours-slot"></div>
+        <div class="wx-7day-slot" id="wx-7day-slot"></div>
+      </div>
+    </div>
+    <details class="card dt mb" id="wx-all-locs">
+      <summary class="card-h acc-sum">
+        <h4 style="display:inline">${T("All locations table")}</h4>
+        <span class="sub" style="margin-left:var(--s2)"><span id="wx-count"></span> ${T("districts, towns & highlands")}</span>
+        <span class="right"><span class="dim acc-hint" data-closed="${esc(T("Expand"))}" data-open="${esc(T("Collapse"))}"></span></span>
+      </summary>
+      <div class="card-b" style="padding-top:0">
+        <div class="tw scroll-y" style="max-height:360px">
+          <table id="wx-table">
+            <thead><tr>
+              <th class="sortable" data-key="name">${T("Location")} <span class="arrow">↕</span></th>
+              <th class="sortable" data-key="kind">${T("Type")} <span class="arrow">↕</span></th>
+              <th class="sortable num" data-key="min" data-num="1">${T("Min")} <span class="arrow">↕</span></th>
+              <th class="sortable num" data-key="max" data-num="1" data-desc="1">${T("Max")} <span class="arrow">↕</span></th>
+              <th>${T("Today")}</th>
+            </tr></thead>
+            <tbody id="wx-rows"></tbody>
+          </table>
+        </div>
+        <p class="note" style="margin-top:var(--s2)">${T("The full list reflects daily MET Malaysia forecasts. Click any row to view its live hourly and 7-day forecast.")}</p>
+      </div>
+    </details>`;
 
   const q = $("#wx-q");
   q.value = wx.q;
-  q.oninput = () => { wx.q = q.value; paintWxRows(); };
+  q.oninput = () => {
+    wx.q = q.value;
+    paintWxRows();
+    paintWxSuggest();
+  };
+  q.onfocus = () => {
+    if (q.value.trim()) paintWxSuggest();
+  };
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".wx-search-wrap")){
+      const p = $("#wx-suggest");
+      if (p) p.hidden = true;
+    }
+  });
   sortable($("#wx-table"), () => wxTableRows(), rows => paintWxRows(rows));
   paintWeather();
 }
@@ -3177,8 +3214,11 @@ function paintWxRows(pre){
   const term = wx.q.trim().toLowerCase();
   let rows = pre || wxTableRows();
   if (term) rows = rows.filter(r => r.name.toLowerCase().includes(term) || r.kind.includes(term));
-  $("#wx-count").textContent = `${rows.length} ${T("of")} ${wx.data.locs.length}`;
-  $("#wx-rows").innerHTML = rows.slice(0, 400).map(r => `
+  const cEl = $("#wx-count");
+  if (cEl) cEl.textContent = `${rows.length} ${T("of")} ${wx.data.locs.length}`;
+  const rowsEl = $("#wx-rows");
+  if (!rowsEl) return;
+  rowsEl.innerHTML = rows.slice(0, 400).map(r => `
     <tr class="${r.id === wx.pick ? "sel" : ""}">
       <td><button class="pick" data-pick="${esc(r.id)}"
         ${r.id === wx.pick ? 'aria-pressed="true"' : ""}>${esc(r.name)}</button></td>
@@ -3187,13 +3227,43 @@ function paintWxRows(pre){
       <td class="num" style="font-weight:650">${nf(r.max)}°</td>
       <td class="wrapcell">${esc(wxPhrase(r.today))}</td></tr>`).join("")
     || `<tr><td colspan="5" class="state">${T("No location matches")} “${esc(wx.q)}”.</td></tr>`;
-  $("#wx-rows").querySelectorAll("button[data-pick]").forEach(b => {
+  rowsEl.querySelectorAll("button[data-pick]").forEach(b => {
     b.onclick = () => pickLoc(b.getAttribute("data-pick"));
   });
 }
+
+function paintWxSuggest(){
+  const p = $("#wx-suggest"), q = $("#wx-q");
+  if (!p || !q || !wx.data) return;
+  const term = (q.value || "").trim().toLowerCase();
+  if (!term){ p.hidden = true; p.innerHTML = ""; return; }
+  const matches = wx.data.locs.filter(l =>
+    l.name.toLowerCase().includes(term) || (LOC_TYPE[l.kind] || "").toLowerCase().includes(term)
+  ).slice(0, 8);
+  if (!matches.length){
+    p.hidden = false;
+    p.innerHTML = `<div class="wx-suggest-empty">${T("No location matches")} “${esc(q.value)}”</div>`;
+    return;
+  }
+  p.hidden = false;
+  p.innerHTML = matches.map(l => `
+    <button type="button" class="wx-suggest-item" data-sug="${esc(l.id)}">
+      <span><b>${esc(l.name)}</b></span>
+      <span class="dim">${esc(LOC_TYPE[l.kind] || l.kind)}</span>
+    </button>`).join("");
+  p.querySelectorAll("[data-sug]").forEach(b => {
+    b.onclick = () => {
+      const id = b.getAttribute("data-sug");
+      p.hidden = true;
+      pickLoc(id);
+    };
+  });
+}
+
 /** Select a forecast location from anywhere (table, chips, hero). */
 function pickLoc(id){
   wx.pick = id;
+  const p = $("#wx-suggest"); if (p) p.hidden = true;
   const l = wx.data.locs.find(x => x.id === id);
   if (l){
     geo.label = l.name;
@@ -3330,7 +3400,8 @@ async function fetchOpenMeteo(lat, lon){
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
       `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
       `&hourly=temperature_2m,precipitation_probability,weather_code` +
-      `&forecast_days=2&timezone=Asia%2FKuala_Lumpur`);
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+      `&forecast_days=7&timezone=Asia%2FKuala_Lumpur`);
     if (!r.ok) return null;
     const d = await r.json();
     const c = d && d.current;
@@ -3338,7 +3409,8 @@ async function fetchOpenMeteo(lat, lon){
     const out = { current:{ temp:c.temperature_2m, feels:c.apparent_temperature,
       hum:c.relative_humidity_2m, wind:c.wind_speed_10m,
       code:c.weather_code, time:c.time },
-      hourly: d.hourly || null };
+      hourly: d.hourly || null,
+      daily: d.daily || null };
     wxOMCache.set(key, out);
     return out;
   } catch { return null; }
@@ -3361,7 +3433,7 @@ async function paintNow(){
   const row = wxTodayRow();
   const sum = row ? wxPhrase(wx.data.dict[row[7]] || wx.data.dict[row[4]] || "-") : "";
   const today = row
-    ? `<div class="wx-today"><b>${T("Today")}:</b> ${nf(row[2])}°-${nf(row[3])}° · ${esc(sum)}</div>`
+    ? `<div class="wx-today"><b>${T("MET Forecast")}:</b> ${nf(row[2])}°-${nf(row[3])}° · ${esc(sum)}</div>`
     : "";
   const coords = await wxCoords();
   let live = null, om = null;
@@ -3392,12 +3464,14 @@ async function paintNow(){
   } else {
     host.innerHTML = `<p class="dim">${T("Live conditions unavailable")}</p>`;
   }
-  const hrs = wxHoursHTML(om);
-  if (hrs) host.insertAdjacentHTML("beforeend", hrs);
+  const hrsSlot = $("#wx-hours-slot");
+  if (hrsSlot) hrsSlot.innerHTML = wxHoursHTML(om);
+  const daySlot = $("#wx-7day-slot");
+  if (daySlot) daySlot.innerHTML = wx7DayHTML(om);
   initWxMap(coords, live, loc);
 }
-/* Next 12 hours as a scrollable chip strip: hour, condition icon, temp, and
-   rain probability (shown once >=30%). Same hourly payload as the prose. */
+/* Next 24 hours as a scrollable chip strip: hour, condition icon, temp, and
+   rain probability (shown once >=20%). Same hourly payload as the prose. */
 function wxHourLab(t){
   const hh = Number(String(t).slice(11, 13));
   if (isNaN(hh)) return t;
@@ -3411,7 +3485,7 @@ function wxHoursHTML(om){
   const nowMs = Date.now();
   let i0 = h.time.findIndex(t => Date.parse(String(t) + "+08:00") >= nowMs - 30 * 60 * 1000);
   if (i0 < 0) i0 = 0;
-  const n = Math.min(12, h.time.length - i0);
+  const n = Math.min(24, h.time.length - i0);
   if (n < 2) return "";
   const chips = [];
   for (let i = 0; i < n; i++){
@@ -3420,13 +3494,55 @@ function wxHoursHTML(om){
     const cls = pr >= 50 ? " wx-rain" : pr >= 30 ? " wx-maybe" : "";
     chips.push(`<span class="wx-h${cls}">
       <b>${wxHourLab(h.time[i0 + i])}</b> ${c.icon} ${nf(h.temperature_2m[i0 + i], 0)}°
-      ${pr >= 30 ? `<i>${pr}%</i>` : ""}</span>`);
+      ${pr >= 20 ? `<i>💧${pr}%</i>` : ""}</span>`);
   }
   return `<div class="wx-hours-wrap">
     <div class="wx-hours-h"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-temp"/></svg>
-      ${T("Next 12 hours")}</div>
-    <div class="wx-hours" role="list" aria-label="${T("Next 12 hours")}">${chips.join("")}</div>
+      ${T("Next 24 hours")}</div>
+    <div class="wx-hours" role="list" aria-label="${T("Next 24 hours")}">${chips.join("")}</div>
   </div>`;
+}
+
+function wx7DayHTML(om){
+  const d = om && om.daily;
+  if (!d || !d.time || !d.time.length) return "";
+  const days = [];
+  const n = Math.min(7, d.time.length);
+  const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const DAY_NAMES_MS = ["Ahd", "Isn", "Sel", "Rab", "Kha", "Jum", "Sab"];
+
+  for (let i = 0; i < n; i++){
+    const dateStr = d.time[i];
+    const dt = new Date(dateStr + "T00:00:00+08:00");
+    const dayIdx = dt.getDay();
+    const dayName = i === 0 ? T("Today") : i === 1 ? T("Tomorrow") : (LANG === "ms" ? DAY_NAMES_MS[dayIdx] : DAY_NAMES_EN[dayIdx]);
+    const cond = wxCond(d.weather_code[i]);
+    const maxT = Math.round(d.temperature_2m_max[i]);
+    const minT = Math.round(d.temperature_2m_min[i]);
+    const rain = d.precipitation_probability_max ? d.precipitation_probability_max[i] : 0;
+
+    days.push(`
+      <div class="wx-day-card${i === 0 ? " wx-day-today" : ""}">
+        <span class="wx-day-name">${esc(dayName)}</span>
+        <span class="wx-day-icon" title="${esc(cond.label)}">${cond.icon}</span>
+        <span class="wx-day-rain${rain >= 50 ? " rain-hi" : rain >= 30 ? " rain-mid" : ""}">${rain >= 20 ? `<i>💧</i>${rain}%` : ""}</span>
+        <div class="wx-day-temps">
+          <span class="wx-t-max">${maxT}°</span>
+          <span class="wx-t-min">${minT}°</span>
+        </div>
+      </div>`);
+  }
+
+  return `
+    <div class="wx-7day-sec">
+      <div class="wx-sec-h">
+        <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-calendar"/></svg>
+        ${T("7-Day Forecast")}
+      </div>
+      <div class="wx-7day-grid">
+        ${days.join("")}
+      </div>
+    </div>`;
 }
 function initWxMap(coords, live, loc){
   const el = $("#wx-map");
