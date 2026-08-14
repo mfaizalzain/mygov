@@ -470,6 +470,11 @@ def is_malaysia_story(title, desc, url):
 # ~24h window still fills 20 slots between runs without going stale.
 MAX_STORY_AGE_HOURS = 24
 
+# How many stories the editor may publish. Deliberately below the 20 the
+# keyword fallback fills: on most days Malaysia does not produce 20 genuinely
+# breaking stories, and padding is what made the band read as routine news.
+EDITOR_LIMIT = 10
+
 # Soft desks — real articles, but features and service copy, not breaking news.
 SOFT_PATHS = (
     "/life/", "/lifestyle/", "/gaya-hidup/", "/eat-drink/", "/food/", "/resipi/",
@@ -682,7 +687,9 @@ def extract_breaking_news(signals, limit=20):
     # keeps the call inside the free tier.
     shortlist = [(-negage, item["summary"], item["source"], item)
                  for _sc, negage, item in scored[:limit * 2]]
-    picked = editor_pick_breaking(shortlist, limit=limit)
+    # The editor returns at most EDITOR_LIMIT: a short honest list of genuine
+    # breaking news beats 20 slots padded with routine articles.
+    picked = editor_pick_breaking(shortlist, limit=EDITOR_LIMIT)
     if picked:
         print(f"  editor: {len(picked)} of {len(shortlist)} candidates cleared the impact threshold")
         return picked
@@ -695,7 +702,7 @@ def extract_breaking_news(signals, limit=20):
     return breaking
 
 
-def editor_pick_breaking(candidates, limit=20):
+def editor_pick_breaking(candidates, limit=10):
     """Gemini as a news-desk editor: rank the shortlist on impact and write the
     what/who/impact bullets. Keyword scoring gets the ordering roughly right but
     cannot tell a policy shift from a routine ministerial statement, which is
@@ -739,18 +746,28 @@ Candidates (index, source, age, headline :: summary):
 {chr(10).join(lines)}
 
 Return STRICT JSON only (no markdown fence), exactly this shape:
-{{"stories": [
-  {{"index": 0, "impact": "critical|major|notable",
+{{"items": [
+  {{"id": 1, "index": 0,
+    "summary": "one plain sentence a reader can act on",
+    "category": "nasional|politik|ekonomi|jenayah|bencana|kesihatan|sukan",
+    "urgency": "high|medium|low",
     "bullets": ["What happened", "Who is involved", "Immediate impact"]}}
 ]}}
 
 Rules:
 - index MUST be one of the indices given above. Never invent a story.
-- Order the array best-first: the story a Malaysian most needs to know now goes first.
+- id counts from 1 in the order you return, best-first: the story a Malaysian
+  most needs to know now goes first.
+- summary: one sentence under 30 words, drawn only from the headline and
+  summary given. It replaces the raw feed blurb, which is often truncated.
 - 2-3 bullets per story, each under 20 words, factual and drawn only from the
-  headline and summary given. No speculation.
+  headline and summary given. No speculation, no invented figures or names.
+- category MUST be one of the seven listed — the dashboard filters on them.
+- urgency: high = national consequence or danger to life; medium = significant
+  but contained; low = worth knowing, not urgent.
 - Drop excluded candidates entirely rather than ranking them last.
-- At most {limit} stories; return fewer if fewer genuinely qualify."""
+- At most {limit} stories; return fewer if fewer genuinely qualify. A short
+  honest list beats padding the feed with routine articles."""
 
     body = json.dumps({"contents": [{"parts": [{"text": prompt}]}],
                        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 4096}}).encode()
@@ -764,7 +781,7 @@ Rules:
 
     picked = []
     seen = set()
-    for st in (parsed.get("stories") or []):
+    for st in (parsed.get("items") or parsed.get("stories") or []):
         try:
             idx = int(st.get("index"))
         except (TypeError, ValueError):
@@ -777,7 +794,15 @@ Rules:
         item = dict(candidates[idx][3])
         bullets = [str(b).strip() for b in (st.get("bullets") or []) if str(b).strip()]
         item["bullets"] = bullets[:3]
-        item["impact"] = st.get("impact") if st.get("impact") in ("critical", "major", "notable") else "notable"
+        item["urgency"] = st.get("urgency") if st.get("urgency") in ("high", "medium", "low") else "medium"
+        # headline, url and published_at stay as the outlet filed them: a
+        # model-rewritten headline or timestamp would be unattributable.
+        summary = str(st.get("summary") or "").strip()
+        if summary:
+            item["summary"] = summary[:300]
+        cat = st.get("category")
+        if cat in ("nasional", "politik", "ekonomi", "jenayah", "bencana", "kesihatan", "sukan"):
+            item["category"] = cat
         item["rank"] = len(picked) + 1
         picked.append(item)
         if len(picked) >= limit:

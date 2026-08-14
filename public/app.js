@@ -355,7 +355,7 @@ const I18N = {
   "No trending issues match this filter.":"Tiada isu tular sepadan dengan penapis ini.",
   "No breaking news match this filter.":"Tiada berita terkini sepadan dengan penapis ini.",
   /* editor-assigned impact tiers on breaking cards */
-  "Critical":"Kritikal", "Major":"Utama", "Notable":"Ketara",
+  "Urgent":"Mendesak", "Major":"Utama", "Notable":"Perlu tahu",
   "What happened":"Apa yang berlaku",
   "Politik":"Politik", "Ekonomi":"Ekonomi", "Jenayah":"Jenayah", "Bencana":"Bencana",
   "Kesihatan":"Kesihatan", "Sukan":"Sukan", "Nasional":"Nasional",
@@ -7947,12 +7947,12 @@ function radarSlide(i, idx){
   </button>`;
 }
 
-/* Editor-assigned impact tier. Absent on older radar.json payloads and on any
-   run where the editor pass fell back to keyword ranking, so it renders as
-   nothing rather than a default badge that would overstate the story. */
-const IMPACT_LABEL = { critical:"Critical", major:"Major", notable:"Notable" };
-const impactPill = imp => IMPACT_LABEL[imp]
-  ? `<span class="pill impact-${imp}">${esc(T(IMPACT_LABEL[imp]))}</span>` : "";
+/* Editor-assigned urgency. Absent on older radar.json payloads and on any run
+   where the editor pass fell back to keyword ranking, so it renders as nothing
+   rather than a default badge that would overstate the story. */
+const URGENCY_LABEL = { high:"Urgent", medium:"Major", low:"Notable" };
+const urgencyPill = u => URGENCY_LABEL[u]
+  ? `<span class="pill urgency-${u}">${esc(T(URGENCY_LABEL[u]))}</span>` : "";
 
 function breakingSlide(i, idx){
   const bullets = Array.isArray(i.bullets) ? i.bullets.filter(Boolean) : [];
@@ -7979,7 +7979,7 @@ function breakingSlide(i, idx){
         ? `<ul class="rs-bullets">${bullets.slice(0, 2).map(b => `<li>${esc(b)}</li>`).join("")}</ul>`
         : (summaryText ? `<p class="rs-summary">${esc(summaryText)}</p>` : "")}
       <div class="radar-meta">
-        ${impactPill(i.impact)}
+        ${urgencyPill(i.urgency)}
         <span class="pill">${esc(T(i.category || "nasional"))}</span>
         ${i.url && safeUrl(i.url) ? `<span class="dim">${T("Read source")} ↗</span>` : ""}
       </div>
@@ -8063,7 +8063,7 @@ function breakingDetail(i){
           <h4 id="rd-modal-title">${esc(title)}</h4>
           ${titleAlt ? `<p class="rd-en">${esc(titleAlt)}</p>` : ""}
         </div>
-        ${impactPill(i.impact)}
+        ${urgencyPill(i.urgency)}
         <span class="pill">${esc(T(i.category || "nasional"))}</span>
       </div>
       <div class="rd-body">
