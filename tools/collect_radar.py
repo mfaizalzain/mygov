@@ -28,9 +28,12 @@ NEWS_FEEDS = [
     ("malaymail", "https://www.malaymail.com/feed/rss/malaysia", "en"),
     ("freemalaysiatoday", "https://www.freemalaysiatoday.com/category/nation/feed/", "en"),
     ("utusan", "https://www.utusan.com.my/feed/", "ms"),
-    ("bernama_en", "https://www.bernama.com/en/rss/general.php", "en"),
-    ("bernama_bm", "https://www.bernama.com/bm/rss/am.php", "ms"),
-    ("astroawani", "https://www.astroawani.com/rss/berita-malaysia.xml", "ms"),
+    # Bernama, Astro Awani, The Star, NST and The Edge all 404 their RSS
+    # endpoints (verified from CI, not just locally) — the collector had been
+    # silently running on three feeds. These three are live and national.
+    ("malaysiakini", "https://www.malaysiakini.com/rss/en/news.rss", "en"),
+    ("thevibes", "https://www.thevibes.com/rss", "en"),
+    ("kosmo", "https://www.kosmo.com.my/feed/", "ms"),
     ("sebenarnya", "https://sebenarnya.my/feed/", "ms"),
 ]
 
@@ -45,6 +48,9 @@ SOURCE_LABELS = {
     "bernama_en": "Bernama",
     "bernama_bm": "Bernama",
     "astroawani": "Astro Awani",
+    "malaysiakini": "Malaysiakini",
+    "thevibes": "The Vibes",
+    "kosmo": "Kosmo!",
 }
 
 
@@ -668,12 +674,115 @@ def extract_breaking_news(signals, limit=20):
         scored.append((best_score, -age, item))
 
     scored.sort(key=lambda x: (-x[0], -x[1]))  # consequence first, then freshness
-    breaking = []
-    for score, _, item in scored[:limit]:
-        item["rank"] = len(breaking) + 1
+    for score, _, item in scored:
         item["breaking_score"] = round(score, 2)
+
+    # Hand the editor a shortlist rather than everything: the top of the
+    # keyword ranking is already the plausible material, and a shorter prompt
+    # keeps the call inside the free tier.
+    shortlist = [(-negage, item["summary"], item["source"], item)
+                 for _sc, negage, item in scored[:limit * 2]]
+    picked = editor_pick_breaking(shortlist, limit=limit)
+    if picked:
+        print(f"  editor: {len(picked)} of {len(shortlist)} candidates cleared the impact threshold")
+        return picked
+
+    print("  editor unavailable — falling back to keyword ranking")
+    breaking = []
+    for _score, _negage, item in scored[:limit]:
+        item["rank"] = len(breaking) + 1
         breaking.append(item)
     return breaking
+
+
+def editor_pick_breaking(candidates, limit=20):
+    """Gemini as a news-desk editor: rank the shortlist on impact and write the
+    what/who/impact bullets. Keyword scoring gets the ordering roughly right but
+    cannot tell a policy shift from a routine ministerial statement, which is
+    the whole difference between a breaking feed and a list of today's articles.
+
+    Returns None on any failure so the caller keeps the deterministic order."""
+    key = gemini_key()
+    if not key or not candidates:
+        return None
+
+    lines = []
+    for idx, c in enumerate(candidates):
+        item = c[3]
+        age = c[0]
+        lines.append(
+            f"[{idx}] ({item['source_name']}, {age:.1f}h ago) {item['title'][:150]}"
+            f" :: {item['summary'][:200]}")
+
+    prompt = f"""Act as a real-time news desk editor for a Malaysian public-data dashboard.
+From the candidate headlines below, select and rank ONLY genuine BREAKING news
+from Malaysia. Every candidate was published within the last {MAX_STORY_AGE_HOURS} hours; the
+hours-ago figure for each is given and is accurate — use it, do not guess dates.
+
+Rank highest by impact:
+- Major government/policy announcements or political shifts
+- Significant macroeconomic, fiscal, regulatory or major corporate developments
+- Severe weather, critical infrastructure failures, disasters or national emergencies
+- Large-scale incidents: multiple casualties, mass evacuations, major enforcement operations
+
+Rank LOWER but do not discard: routine crime and court reporting. A single
+arrest, a molest conviction or a two-car accident is real news but it is not a
+national development — it belongs below policy, macro and emergency stories.
+Keep the strongest of them so the feed stays full on a quiet day.
+
+Exclude entirely:
+- Lifestyle, entertainment, human-interest, viral social-media and sports results
+- Op-eds, columns, scheduled press releases, ceremonial appearances, congratulations
+- Recurring updates, weekly roundups and feature articles
+
+Candidates (index, source, age, headline :: summary):
+{chr(10).join(lines)}
+
+Return STRICT JSON only (no markdown fence), exactly this shape:
+{{"stories": [
+  {{"index": 0, "impact": "critical|major|notable",
+    "bullets": ["What happened", "Who is involved", "Immediate impact"]}}
+]}}
+
+Rules:
+- index MUST be one of the indices given above. Never invent a story.
+- Order the array best-first: the story a Malaysian most needs to know now goes first.
+- 2-3 bullets per story, each under 20 words, factual and drawn only from the
+  headline and summary given. No speculation.
+- Drop excluded candidates entirely rather than ranking them last.
+- At most {limit} stories; return fewer if fewer genuinely qualify."""
+
+    body = json.dumps({"contents": [{"parts": [{"text": prompt}]}],
+                       "generationConfig": {"temperature": 0.1, "maxOutputTokens": 4096}}).encode()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
+    try:
+        d = gemini_post(url, body, timeout=90)
+        parsed = parse_json_text(d["candidates"][0]["content"]["parts"][0]["text"])
+    except Exception as e:
+        sys.stderr.write(f"  editor err: {e}\n")
+        return None
+
+    picked = []
+    seen = set()
+    for st in (parsed.get("stories") or []):
+        try:
+            idx = int(st.get("index"))
+        except (TypeError, ValueError):
+            continue
+        # The model occasionally echoes an index twice or one past the end;
+        # both would corrupt the feed, so validate rather than trust.
+        if idx < 0 or idx >= len(candidates) or idx in seen:
+            continue
+        seen.add(idx)
+        item = dict(candidates[idx][3])
+        bullets = [str(b).strip() for b in (st.get("bullets") or []) if str(b).strip()]
+        item["bullets"] = bullets[:3]
+        item["impact"] = st.get("impact") if st.get("impact") in ("critical", "major", "notable") else "notable"
+        item["rank"] = len(picked) + 1
+        picked.append(item)
+        if len(picked) >= limit:
+            break
+    return picked or None
 
 
 def fetch_signals():

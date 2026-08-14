@@ -84,9 +84,10 @@
    v55: Location search query refinement and state demographic enhancements.
    v56: Redesign website icons to modern design standards with SVG favicon and high-DPI PWA assets.
    v57: Warm the live vehicle feeds on idle so the card is populated before the user scrolls to Transport.
+   v58: Breaking news ranked by a news-desk editor pass with impact tier and what/who/impact bullets on the card.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v57";
+const VERSION    = "mygov-v58";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

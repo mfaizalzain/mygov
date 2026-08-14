@@ -354,6 +354,9 @@ const I18N = {
   "Read source":"Lihat sumber",
   "No trending issues match this filter.":"Tiada isu tular sepadan dengan penapis ini.",
   "No breaking news match this filter.":"Tiada berita terkini sepadan dengan penapis ini.",
+  /* editor-assigned impact tiers on breaking cards */
+  "Critical":"Kritikal", "Major":"Utama", "Notable":"Ketara",
+  "What happened":"Apa yang berlaku",
   "Politik":"Politik", "Ekonomi":"Ekonomi", "Jenayah":"Jenayah", "Bencana":"Bencana",
   "Kesihatan":"Kesihatan", "Sukan":"Sukan", "Nasional":"Nasional",
   "Official Sebenarnya.my fact-check":"Semakan fakta rasmi Sebenarnya.my",
@@ -7944,7 +7947,15 @@ function radarSlide(i, idx){
   </button>`;
 }
 
+/* Editor-assigned impact tier. Absent on older radar.json payloads and on any
+   run where the editor pass fell back to keyword ranking, so it renders as
+   nothing rather than a default badge that would overstate the story. */
+const IMPACT_LABEL = { critical:"Critical", major:"Major", notable:"Notable" };
+const impactPill = imp => IMPACT_LABEL[imp]
+  ? `<span class="pill impact-${imp}">${esc(T(IMPACT_LABEL[imp]))}</span>` : "";
+
 function breakingSlide(i, idx){
+  const bullets = Array.isArray(i.bullets) ? i.bullets.filter(Boolean) : [];
   const title = i.title_bm || i.title_en || i.title || "";
   const titleAlt = (i.title_en && i.title_en !== title) ? i.title_en : (i.title_bm && i.title_bm !== title ? i.title_bm : "");
   const summary = (i.summary || "").trim();
@@ -7964,8 +7975,11 @@ function breakingSlide(i, idx){
       </div>
       <h4>${esc(title)}</h4>
       ${titleAlt ? `<p class="dim">${esc(titleAlt)}</p>` : ""}
-      ${summaryText ? `<p class="rs-summary">${esc(summaryText)}</p>` : ""}
+      ${bullets.length
+        ? `<ul class="rs-bullets">${bullets.slice(0, 2).map(b => `<li>${esc(b)}</li>`).join("")}</ul>`
+        : (summaryText ? `<p class="rs-summary">${esc(summaryText)}</p>` : "")}
       <div class="radar-meta">
+        ${impactPill(i.impact)}
         <span class="pill">${esc(T(i.category || "nasional"))}</span>
         ${i.url && safeUrl(i.url) ? `<span class="dim">${T("Read source")} ↗</span>` : ""}
       </div>
@@ -8025,6 +8039,7 @@ function radarDetail(i){
 }
 
 function breakingDetail(i){
+  const bullets = Array.isArray(i.bullets) ? i.bullets.filter(Boolean) : [];
   const title = i.title_bm || i.title_en || i.title || "";
   const titleAlt = (i.title_en && i.title_en !== title) ? i.title_en : (i.title_bm && i.title_bm !== title ? i.title_bm : "");
   const summary = i.summary || "";
@@ -8048,6 +8063,7 @@ function breakingDetail(i){
           <h4 id="rd-modal-title">${esc(title)}</h4>
           ${titleAlt ? `<p class="rd-en">${esc(titleAlt)}</p>` : ""}
         </div>
+        ${impactPill(i.impact)}
         <span class="pill">${esc(T(i.category || "nasional"))}</span>
       </div>
       <div class="rd-body">
@@ -8056,6 +8072,10 @@ function breakingDetail(i){
           ${pubAgo ? `<span class="dim">· ${esc(pubAgo)}</span>` : ""}
           ${pubDateStr ? `<span class="dim mono">(${esc(pubDateStr)})</span>` : ""}
         </div>
+        ${bullets.length ? `<div class="rd-fact">
+          <span class="rd-kicker">${T("What happened")}</span>
+          <ul class="rd-bullets">${bullets.map(b => `<li>${esc(b)}</li>`).join("")}</ul>
+        </div>` : ""}
         ${summary ? `<div class="rd-fact">
           <span class="rd-kicker">${T("Summary")}</span>
           <p class="rd-facts">${esc(summary)}</p>

@@ -51,7 +51,12 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: python3 tools/kv_upload.py pull radar public/radar.json || echo "no KV copy yet - using the committed radar.json"
 
+      # One gemini-flash call per run ranks the shortlist on impact and writes
+      # the bullets. Three calls a day sits inside the free tier; without the
+      # key the collector falls back to keyword ranking rather than failing.
       - name: Refresh breaking news
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: python3 tools/collect_radar.py --news-only
 
       - name: Upload data to Cloudflare KV

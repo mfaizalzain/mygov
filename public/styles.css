@@ -1101,6 +1101,19 @@ body.modal-open{overflow:hidden!important;touch-action:none}
 .radar-breaking-slide .radar-src-tag{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--accent)}
 .radar-breaking-slide .radar-time-tag{font-family:var(--mono);font-size:11px;color:var(--fg-3);margin-left:auto}
 .radar-breaking-slide .rs-top{display:flex;align-items:center;gap:var(--s2);width:100%;margin-bottom:4px}
+/* Editor bullets: what happened / who / immediate impact. Two on the card,
+   all three in the detail sheet. Clamped so a long bullet cannot push the
+   carousel slides to different heights. */
+.radar-breaking-slide .rs-bullets{margin:6px 0 0;padding:0 0 0 14px;list-style:none}
+.radar-breaking-slide .rs-bullets li{position:relative;font-size:12px;color:var(--fg-2);line-height:1.45;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.radar-breaking-slide .rs-bullets li::before{content:"";position:absolute;left:-11px;top:7px;width:4px;height:4px;border-radius:50%;background:var(--fg-3)}
+.rd-bullets{margin:0;padding:0 0 0 16px;list-style:none}
+.rd-bullets li{position:relative;font-size:13.5px;line-height:1.6;color:var(--fg);margin-top:5px}
+.rd-bullets li::before{content:"";position:absolute;left:-12px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--fg-3)}
+/* Impact tier — colour carries the urgency, text carries the meaning. */
+.pill.impact-critical{background:color-mix(in srgb, var(--danger) 14%, transparent);color:var(--danger);border-color:transparent}
+.pill.impact-major{background:color-mix(in srgb, var(--warn) 14%, transparent);color:var(--warn);border-color:transparent}
+.pill.impact-notable{background:color-mix(in srgb, var(--fg-3) 12%, transparent);color:var(--fg-2);border-color:transparent}
 .radar-breaking-slide .rs-summary{margin:6px 0 0;font-size:12px;color:var(--fg-2);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .rd-read-btn{display:inline-flex;align-items:center;gap:6px;margin-top:var(--s4);padding:8px 16px;border-radius:var(--r);background:var(--accent-dim);color:var(--chip-fg);font-weight:600;font-size:13px;text-decoration:none;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);transition:var(--t)}
 .rd-read-btn:hover{background:var(--accent);color:#fff;border-color:transparent}
