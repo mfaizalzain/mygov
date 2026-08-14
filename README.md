@@ -12,7 +12,7 @@ served by a Cloudflare Worker that also
 proxies the reverse-geocoding, GTFS archive, flight-board, live-bus, flood,
 service-alert and air-quality calls.
 
-## AI agents: MCP connector
+## AI agents: MCP connector & OpenAPI Proxy
 
 The same data is available to AI coding agents through an official MCP plugin -
 **[mfaizalzain/mygov-mcp](https://github.com/mfaizalzain/mygov-mcp)** - exposing
@@ -20,7 +20,9 @@ weather, fuel prices, CPI/OpenDOSM, GTFS transit, live Rapid bus positions, floo
 risk, groceries, monthly tourism arrivals, the latest Rapid KL service alert and
 live air quality as **twelve read-only tools**.
 Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
-(universal plugin directory). No API key, same rate-limit rules as the app.
+(universal plugin directory). Also supports Server-Sent Events (SSE) and OpenAPI
+proxy routing for custom connected agents and Gemini workflows. No API key,
+same rate-limit rules as the app.
 
 ---
 
@@ -40,7 +42,7 @@ Published for Claude Code (`@claude-community` marketplace) and Codex/ChatGPT
 | Postcodes | Pos Malaysia | Searchable postcode → city → state reference |
 | Transport | KTMB, Prasarana, Malaysia Airports | GTFS schedules - route/stop search, nearest stops, busiest routes, LRT/MRT metro line diagram; live arrivals & departures board for 13 airports (FIDS) |
 | Live (sub-block of Public Transport) | KTMB, Prasarana | KTMB GTFS-Realtime trains + **800+ live Rapid KL buses from Prasarana's official kiosk feed** on a clustered live map, with route chips (click to filter) and tooltips |
-| Trend Radar | News + Sebenarnya.my | Top-10 hot issues in Malaysia, clustered daily by Gemini, with Sebenarnya fact-check status |
+| Trend Radar | News (Bernama, Malay Mail, FMT, Utusan, Astro Awani) + Sebenarnya.my | Dual-mode intelligence carousel: **🔥 Viral & Fact-Checks** (Top-10 hot issues clustered daily by Gemini with Sebenarnya fact-check status & claim verification) and **⚡ Breaking News** (live multi-agency breaking news wire with category filters and article reading modals) |
 | Forecasts | Derived | 14-day projections on the daily count series that measurably beat a naive guess, drawn as a dashed extension with an 80% band |
 | Travel Outlook (hero band) | mycal holiday + KPM school calendars, Gemini | the next 8 weeks of peak travel periods - school breaks, public holidays and long weekends with impact badges and a one-line English outlook each, plus tips to travel around them, with the next-holiday and school-session chips riding under the band |
 
@@ -95,18 +97,20 @@ and animated header treatments live in `public/styles.css`.
 
 ---
 
-## Trend Radar (hot issues)
+## Trend Radar (hot issues & breaking news)
 
-A daily scoop of Malaysia's hot issues and trends, fed by:
+A dual-mode intelligence hub for Malaysia's hot issues, viral claims, and real-time breaking news, fed by:
 
-- **News RSS**: MalayMail, Free Malaysia Today, Utusan
-- **Fact-check feed**: Sebenarnya.my (MCMC) - used to verify/debunk circulating claims
+- **News RSS Feeds**: Bernama (EN + BM), Astro Awani, Malay Mail, Free Malaysia Today, and Utusan Malaysia
+- **Fact-Check Feed**: Sebenarnya.my (MCMC) - used to verify/debunk circulating viral claims
+- **Google Trends Malaysia**: Real-time viral search signals
 
-The collector clusters ~100 raw signals into a ranked top-10 issue list (BM titles,
-categories, cross-source counts) using the **Gemini API** (`gemini-flash-latest`),
-then writes `public/radar.json`. Each issue carries a fact-check status
-(`verified_claim` / `debunked` / `no_check_found`) matched deterministically
-against Sebenarnya posts, plus clickable source URLs.
+### Dual-Mode Carousel UI
+
+Trend Radar provides a zero-clutter segmented switcher in its header band to toggle between two views without adding extra vertical layout sections:
+
+1. **🔥 Viral & Fact-Checks**: Top 10 viral controversies and circulating rumors clustered daily by Gemini (`gemini-flash-latest`), paired with grounded web search fact-checks and Sebenarnya post matches (`verified_claim` / `misleading` / `debunked` / `no_check_found`). Includes claim quotes, official verdicts, detailed facts, and source links.
+2. **⚡ Breaking News**: Live Malaysian breaking news wire featuring source badges (`BERNAMA`, `MALAY MAIL`, `FMT`, `UTUSAN`, `ASTRO AWANI`), relative timestamps (`15m ago`), auto-classified categories (`politik`, `ekonomi`, `jenayah`, `bencana`, `kesihatan`, `sukan`, `nasional`), and a reading modal with full summary and direct source link.
 
 ### Pipeline
 
@@ -119,16 +123,10 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
   Cloudflare auto-deploy → malaysia-at-a-glance.com/radar.json
 ```
 
-- **Collector:** `tools/collect_radar.py` - RSS fetch, Gemini clustering with
-  JSON-rescue parsing, deterministic Sebenarnya fact-check matching, URL
-  backfill. Falls back to keyword clustering if the Gemini call fails (never
-  crashes).
-- **Repo secret required:** `GOOGLE_API_KEY` (Gemini API key) - without it the
-  collector degrades to keyword clustering in CI.
-- **Workflow:** `.github/workflows/collect_radar.yml` - scheduled 01:00 UTC
-  (9 AM MYT) + manual `workflow_dispatch`, commits as `github-actions[bot]`
-  with `contents: write`.
-- The dashboard fetches `/radar.json` (same-origin) and renders issue cards.
+- **Collector:** `tools/collect_radar.py` - RSS fetch across 6 major Malaysian news outlets, Gemini clustering with JSON-rescue parsing, grounded fact-checking, breaking news HTML cleaning/deduplication, and URL backfilling. Falls back to deterministic keyword clustering if the Gemini API call fails.
+- **Repo secret required:** `GOOGLE_API_KEY` (Gemini API key) - without it the collector degrades to keyword clustering in CI.
+- **Workflow:** `.github/workflows/collect_radar.yml` - scheduled 01:00 UTC (9 AM MYT) + manual `workflow_dispatch`, commits as `github-actions[bot]` with `contents: write`.
+- The dashboard fetches `/radar.json` (same-origin) and dynamically updates carousel tracks, counters, and bilingual translations.
 
 ---
 
@@ -864,10 +862,10 @@ scroll-triggered ones). Browse available ids at
 **Experimental, and off for almost everyone.** When supported by the browser,
 the dashboard mounts on-device AI features that run Gemini Nano locally:
 - **Per-section Summarise**: Compresses section prose and structured KPIs into three bullets.
-- **Ask MyGov Assistant**: Answers natural language questions directly over in-memory datasets with interactive deep links to relevant sections.
+- **Ask MyGov Assistant**: Answers natural language questions directly over in-memory datasets with an intelligent QA extraction engine, state-specific demographic resolution (population, ethnic splits), interactive deep links, and client-side open data fallback search.
 - **My Day Brief**: Synthesizes localized weather, public transport alerts, fuel prices and holidays into a daily morning commute and living brief.
-- **Explain Metric Simply (ELI5)**: Adds plain-language citizen impact notes to technical macroeconomic indicators (OPR, CPI inflation, Real GDP).
-- **Voice Readout**: Speaks answers and briefings aloud via native Web Speech synthesis.
+- **Explain Metric Simply (ELI5)**: Adds plain-language citizen impact notes and breakdown tooltips to technical macroeconomic indicators (OPR, CPI inflation, Real GDP).
+- **Voice Readout (`aiSpeak`)**: High-performance speech synthesis engine with voice selection, queue hardening, and audio toggle.
 
 Nothing is sent anywhere: models execute purely in the browser process, so there is no new `connect-src` entry and zero server cost.
 
@@ -909,9 +907,11 @@ the source of truth; the panel carries a permanent "may be inaccurate" note.
 
 Hardening details in `app.js`:
 - **In-memory LRU caching**: Generated summaries, explanations and query answers are cached to prevent battery and compute drain on repeated opens.
+- **Intelligent Demographic & Fact Resolver**: Direct extraction of state demographics, ethnic counts, and economic indicators with fallback indexing when Gemini Nano is offline or downloading.
 - **Model output is untrusted text**: `aiRender()` and query results build the DOM with `textContent` and never `innerHTML`.
 - **Model input is untrusted too**: Scraped text and live feeds are wrapped in `<data>` tags, stripped of any closing tag, and the system prompt treats the block strictly as data content.
 - **Prompt streaming deltas**: `promptStreaming()` yields deltas, not cumulative snapshots; `aiSummarise()` and `aiAskQuery` accumulate chunks safely.
+- **Design System & Contrast Hardening**: Action and voice controls bind directly to `.btn` / `.btn-a` tokens with high-specificity contrast rules for dark and festive themes.
 
 ---
 
