@@ -235,6 +235,104 @@
    }
   }
  ],
+ "breaking_news": [
+  {
+   "rank": 1,
+   "title_bm": "Kerajaan lulus peruntukan tambahan RM500 juta naik taraf fasiliti kesihatan luar bandar",
+   "title_en": "Government approves additional RM500m allocation to upgrade rural healthcare facilities",
+   "title": "Kerajaan lulus peruntukan tambahan RM500 juta naik taraf fasiliti kesihatan luar bandar",
+   "source": "bernama_bm",
+   "source_name": "Bernama",
+   "url": "https://www.bernama.com/bm/am/news.php",
+   "pub_date": "2026-08-14T06:45:00+00:00",
+   "category": "kesihatan",
+   "summary": "Perdana Menteri mengumumkan kelulusan dana segera untuk membaik pulih klinik desa dan menaik taraf peralatan perubatan di kawasan pedalaman Sabah dan Sarawak."
+  },
+  {
+   "rank": 2,
+   "title_bm": "Bursa Malaysia dibuka tinggi disokong belian saham perbankan dan utiliti",
+   "title_en": "Bursa Malaysia opens higher supported by banking and utility stocks",
+   "title": "Bursa Malaysia opens higher supported by banking and utility stocks",
+   "source": "freemalaysiatoday",
+   "source_name": "Free Malaysia Today",
+   "url": "https://www.freemalaysiatoday.com/category/business/",
+   "pub_date": "2026-08-14T06:30:00+00:00",
+   "category": "ekonomi",
+   "summary": "Indeks FBM KLCI meningkat 4.82 mata susulan sentimen pasaran serantau yang positif dan pengukuhan nilai ringgit berbanding dolar AS."
+  },
+  {
+   "rank": 3,
+   "title_bm": "PDRM tumpas sindiket penipuan pelaburan dalam talian babit kerugian RM12.4 juta",
+   "title_en": "Police bust online investment scam syndicate involving RM12.4m losses",
+   "title": "Police bust online investment scam syndicate involving RM12.4m losses",
+   "source": "malaymail",
+   "source_name": "Malay Mail",
+   "url": "https://www.malaymail.com/news/malaysia/",
+   "pub_date": "2026-08-14T05:55:00+00:00",
+   "category": "jenayah",
+   "summary": "Jabatan Siasatan Jenayah Komersial (JSJK) menahan lapan individu termasuk dalang utama dalam beberapa siri serbuan di Lembah Klang."
+  },
+  {
+   "rank": 4,
+   "title_bm": "MET Malaysia keluar amaran ribut petir dan hujan lebat di lapan negeri petang ini",
+   "title_en": "MET Malaysia issues thunderstorm and heavy rain warning for eight states this afternoon",
+   "title": "MET Malaysia keluar amaran ribut petir dan hujan lebat di lapan negeri petang ini",
+   "source": "utusan",
+   "source_name": "Utusan Malaysia",
+   "url": "https://www.utusan.com.my/berita/",
+   "pub_date": "2026-08-14T05:20:00+00:00",
+   "category": "bencana",
+   "summary": "Amaran cuaca buruk melibatkan Perak, Selangor, Negeri Sembilan, Johor dan sebahagian kawasan pedalaman Pahang sehingga lewat malam."
+  },
+  {
+   "rank": 5,
+   "title_bm": "Projek Laluan Rel Pantai Timur (ECRL) capai 72 peratus kemajuan pembinaan",
+   "title_en": "East Coast Rail Link (ECRL) project achieves 72 per cent construction progress",
+   "title": "East Coast Rail Link (ECRL) project achieves 72 per cent construction progress",
+   "source": "bernama_en",
+   "source_name": "Bernama",
+   "url": "https://www.bernama.com/en/general/news.php",
+   "pub_date": "2026-08-14T04:40:00+00:00",
+   "category": "nasional",
+   "summary": "MRL mengesahkan jajaran Kota Bharu ke Gombak kekal mengikut jadual untuk mula beroperasi sepenuhnya menjelang Januari 2027."
+  },
+  {
+   "rank": 6,
+   "title_bm": "Kementerian Pendidikan lancar kerangka baharu pemerkasaan TVET dan STEM",
+   "title_en": "Education Ministry launches new framework to empower TVET and STEM",
+   "title": "Kementerian Pendidikan lancar kerangka baharu pemerkasaan TVET dan STEM",
+   "source": "astroawani",
+   "source_name": "Astro Awani",
+   "url": "https://www.astroawani.com/berita-malaysia/",
+   "pub_date": "2026-08-14T03:50:00+00:00",
+   "category": "nasional",
+   "summary": "Inisiatif bertujuan mempercepat kebolehpasaran graduan teknikal selaras dengan keperluan industri semikonduktor dan kecerdasan buatan."
+  },
+  {
+   "rank": 7,
+   "title_bm": "MOT jamin kadar tambang penerbangan musim cuti sekolah dipantau ketat",
+   "title_en": "Transport Ministry assures flight fares during school holidays closely monitored",
+   "title": "MOT jamin kadar tambang penerbangan musim cuti sekolah dipantau ketat",
+   "source": "utusan",
+   "source_name": "Utusan Malaysia",
+   "url": "https://www.utusan.com.my/nasional/",
+   "pub_date": "2026-08-14T03:15:00+00:00",
+   "category": "ekonomi",
+   "summary": "MAVCOM diarahkan memastikan syarikat penerbangan menambah kapasiti penerbangan domestik bagi mengekalkan harga tiket yang berpatutan."
+  },
+  {
+   "rank": 8,
+   "title_bm": "Skuad badminton negara mara ke suku akhir Kejohanan Terbuka Terbuka Dunia",
+   "title_en": "National badminton squad advances to quarter-finals of World Open",
+   "title": "Skuad badminton negara mara ke suku akhir Kejohanan Terbuka Terbuka Dunia",
+   "source": "malaymail",
+   "source_name": "Malay Mail",
+   "url": "https://www.malaymail.com/news/sports/",
+   "pub_date": "2026-08-14T02:30:00+00:00",
+   "category": "sukan",
+   "summary": "Beregu lelaki utama negara mempamerkan aksi bertenaga menewaskan pilihan ketiga dalam pertarungan sengit tiga set."
+  }
+ ],
  "total_signals": 110,
  "history_window_signals": 2060,
  "history_days": 7

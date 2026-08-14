@@ -141,14 +141,22 @@ radar_new = '''  <section class="radar-band" id="radar-band" aria-labelledby="ra
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg></div>
         <div>
           <h3 id="radar-h" data-i18n="Trend Radar">Trend Radar</h3>
-          <p data-i18n="The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.">The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.</p>
+          <p id="radar-desc" data-i18n="The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.">The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.</p>
         </div>
       </div>
       <div class="radar-band-ctl">
+        <span class="radar-count" id="radar-when"></span>
         <span class="radar-count" id="radar-count" aria-live="polite"></span>
         <button class="btn" id="radar-prev" aria-label="Previous issues">‹</button>
         <button class="btn" id="radar-next" aria-label="Next issues">›</button>
       </div>
+    </div>
+    <div class="radar-subbar">
+      <div class="radar-modes" id="radar-modes" role="tablist" aria-label="Trend radar view mode">
+        <button class="rm-btn active" id="rm-viral" role="tab" aria-selected="true" data-mode="viral"><span class="rm-icon" aria-hidden="true">🔥</span> <span data-i18n="Viral &amp; Fact-Checks">Viral &amp; Fact-Checks</span></button>
+        <button class="rm-btn" id="rm-breaking" role="tab" aria-selected="false" data-mode="breaking"><span class="rm-icon" aria-hidden="true">⚡</span> <span data-i18n="Breaking News">Breaking News</span></button>
+      </div>
+      <div class="radar-filters" id="radar-filters" role="group" aria-label="Filter trend radar"></div>
     </div>
     <div class="radar-track" id="radar-track" tabindex="0" aria-label="Trending issues carousel">
       <div class="card" style="flex:0 0 320px;min-height:200px"><div class="card-b">

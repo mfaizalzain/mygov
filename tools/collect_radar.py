@@ -26,12 +26,24 @@ NEWS_FEEDS = [
     ("malaymail", "https://www.malaymail.com/feed/rss", "en"),
     ("freemalaysiatoday", "https://www.freemalaysiatoday.com/category/nation/feed/", "en"),
     ("utusan", "https://www.utusan.com.my/feed/", "ms"),
+    ("bernama_en", "https://www.bernama.com/en/rss/general.php", "en"),
+    ("bernama_bm", "https://www.bernama.com/bm/rss/am.php", "ms"),
+    ("astroawani", "https://www.astroawani.com/rss/berita-malaysia.xml", "ms"),
     ("sebenarnya", "https://sebenarnya.my/feed/", "ms"),
 ]
 
 TRENDS_RSS = "https://trends.google.com/trending/rss?geo=MY"  # curl-able, no browser needed
 
 SAFE_URL = re.compile(r"^https?://", re.I)
+
+SOURCE_LABELS = {
+    "malaymail": "Malay Mail",
+    "freemalaysiatoday": "Free Malaysia Today",
+    "utusan": "Utusan Malaysia",
+    "bernama_en": "Bernama",
+    "bernama_bm": "Bernama",
+    "astroawani": "Astro Awani",
+}
 
 
 def _escape_json_string_controls(text):
@@ -122,9 +134,10 @@ def parse_rss(text, source, lang, limit=30):
             title = html.unescape((it.findtext("title") or "").strip())
             link = (it.findtext("link") or "").strip()
             pub = (it.findtext("pubDate") or "").strip()
+            desc = html.unescape((it.findtext("description") or "").strip())
             if title and SAFE_URL.match(link):
                 items.append({"source": source, "lang": lang, "title": title,
-                              "url": link, "pub": pub})
+                              "url": link, "pub": pub, "description": desc})
             if len(items) >= limit:
                 break
     except Exception as e:
@@ -381,6 +394,74 @@ Rules:
         return {"status": "no_check_found", "verdict": "UNVERIFIED", "claim": issue.get("claim") or title, "fact_details": issue.get("fact_details"), "reason": None, "sources": []}
 
 
+def categorize_headline(title):
+    t = (title or "").lower()
+    if any(k in t for k in ["parlimen", "menteri", "pkr", "pas", "dap", "umno", "bersatu", "pn", "ph", "bn", "pilihan raya", "kerajaan", "anwar", "kabinet", "mp", "dewan rakyat", "election", "minister", "parliament"]):
+        return "politik"
+    if any(k in t for k in ["ringgit", "bursa", "saham", "inflasi", "ekonomi", "gdp", "cpi", "bank negara", "bnm", "harga", "subsidi", "cukai", "perdagangan", "eksport", "economy", "stock", "trade", "tax"]):
+        return "ekonomi"
+    if any(k in t for k in ["polis", "pdrm", "mahkamah", "tangkap", "dadah", "samun", "bunuh", "curi", "jenayah", "penjara", "siasat", "sprm", "dakwa", "ditahan", "police", "court", "arrest", "crime"]):
+        return "jenayah"
+    if any(k in t for k in ["banjir", "tanah runtuh", "ribut", "hujan lebat", "kebakaran", "kemalangan", "bencana", "flood", "landslide", "accident", "fire"]):
+        return "bencana"
+    if any(k in t for k in ["covid", "kesihatan", "hospital", "doktor", "kkm", "denggi", "penyakit", "health", "disease", "ministry of health"]):
+        return "kesihatan"
+    if any(k in t for k in ["harimau malaya", "badminton", "bola sepak", "sukan", "olimpiad", "liga", "sport", "football"]):
+        return "sukan"
+    return "nasional"
+
+
+def extract_breaking_news(signals, limit=20):
+    """Filter raw news signals into a clean, deduplicated breaking news feed."""
+    breaking = []
+    seen_titles = set()
+
+    def clean_text(s):
+        s = html.unescape(s or "")
+        s = re.sub(r"<[^>]+>", "", s)  # strip html tags
+        s = re.sub(r"\s+", " ", s).strip()
+        return s
+
+    def title_key(t):
+        return re.sub(r"[^a-z0-9]", "", (t or "").lower())[:40]
+
+    news_signals = [s for s in signals if s.get("source") != "sebenarnya" and s.get("source") != "trends"]
+
+    for s in news_signals:
+        title = clean_text(s.get("title"))
+        if not title or len(title) < 10:
+            continue
+        tk = title_key(title)
+        if tk in seen_titles:
+            continue
+        seen_titles.add(tk)
+
+        src_key = s.get("source", "")
+        src_name = SOURCE_LABELS.get(src_key, src_key.replace("_", " ").title())
+        desc = clean_text(s.get("description") or "")
+        if len(desc) > 240:
+            desc = desc[:237] + "…"
+
+        cat = s.get("category") or categorize_headline(title)
+
+        breaking.append({
+            "rank": len(breaking) + 1,
+            "title_bm": title if s.get("lang") == "ms" else None,
+            "title_en": title if s.get("lang") == "en" else None,
+            "title": title,
+            "source": src_key,
+            "source_name": src_name,
+            "url": s.get("url", ""),
+            "pub_date": s.get("pub", ""),
+            "category": cat,
+            "summary": desc or title
+        })
+        if len(breaking) >= limit:
+            break
+
+    return breaking
+
+
 def main():
     print(f"[radar] {datetime.datetime.now():%Y-%m-%d %H:%M} collecting...")
     signals = []
@@ -437,17 +518,21 @@ def main():
 
     print(f"  grounded fact-check: {checked} issues verified with rich fact details")
 
+    breaking = extract_breaking_news(signals, limit=20)
+    print(f"  extracted breaking news: {len(breaking)} stories")
+
     payload = {
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "language": "bm-primary",
         "top_issues": issues,
+        "breaking_news": breaking,
         "total_signals": len(signals),
         "history_window_signals": len(merged),
         "history_days": HISTORY_DAYS,
     }
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=1)
-    print(f"[radar] wrote {OUT} — {len(issues)} issues from {len(signals)} signals ({len(merged)} in 7-day window)")
+    print(f"[radar] wrote {OUT} — {len(issues)} issues & {len(breaking)} breaking stories from {len(signals)} signals ({len(merged)} in 7-day window)")
 
 
 if __name__ == "__main__":

@@ -285,8 +285,17 @@ const I18N = {
   "Verdict":"Verdik",
   "Claim":"Dakwaan",
   "The facts":"Fakta",
+  "Summary":"Ringkasan",
   "Verified":"Disahkan", "Debunked":"Palsu", "Unchecked":"Belum disemak",
+  "Viral & Fact-Checks":"Isu Tular & Semakan Fakta",
+  "Breaking News":"Berita Terkini",
+  "Real-time breaking news headlines across Malaysian news agencies and official wires.":"Tajuk berita terkini masa nyata merentasi agensi berita dan sumber rasmi Malaysia.",
+  "Read full article":"Baca artikel penuh",
+  "Read source":"Lihat sumber",
   "No trending issues match this filter.":"Tiada isu tular sepadan dengan penapis ini.",
+  "No breaking news match this filter.":"Tiada berita terkini sepadan dengan penapis ini.",
+  "Politik":"Politik", "Ekonomi":"Ekonomi", "Jenayah":"Jenayah", "Bencana":"Bencana",
+  "Kesihatan":"Kesihatan", "Sukan":"Sukan", "Nasional":"Nasional",
   "Official Sebenarnya.my fact-check":"Semakan fakta rasmi Sebenarnya.my",
   "Search stops":"Cari perhentian", "Station or stop name…":"Nama stesen atau perhentian…",
   "Find stops near me":"Cari perhentian berdekatan saya",
@@ -656,6 +665,7 @@ function rerenderAll(){
   relabelAI();
   relabelShare();
   mountMetricExplainers();
+  if (typeof rerenderRadar === "function") try { rerenderRadar(); } catch {}
 }
 
 /** An <svg> referencing a sprite symbol. Decorative by default - every call
@@ -7036,6 +7046,12 @@ async function loadRadar(){
     if (i.title_bm) i.title_bm = dc(i.title_bm);
     if (i.title_en) i.title_en = dc(i.title_en);
   }
+  for (const i of (d.breaking_news || [])){
+    if (i.title_bm) i.title_bm = dc(i.title_bm);
+    if (i.title_en) i.title_en = dc(i.title_en);
+    if (i.title) i.title = dc(i.title);
+    if (i.summary) i.summary = dc(i.summary);
+  }
   return d;
 }
 
@@ -7054,7 +7070,21 @@ const RADAR_FILTERS = [
   ["debunked", "Debunked"],
   ["no_check_found", "Unchecked"],
 ];
-let radarIdx = 0, radarTimer = null, radarIssues = [], radarVisible = [], radarFilter = "all";
+
+const BREAKING_FILTERS = [
+  ["all", "All"],
+  ["politik", "Politik"],
+  ["ekonomi", "Ekonomi"],
+  ["jenayah", "Jenayah"],
+  ["bencana", "Bencana"],
+  ["kesihatan", "Kesihatan"],
+  ["nasional", "Nasional"],
+  ["sukan", "Sukan"],
+];
+
+let radarIdx = 0, radarTimer = null, radarIssues = [], radarBreaking = [], radarVisible = [];
+let radarMode = "viral"; // "viral" | "breaking"
+let radarFilter = "all";
 
 function radarSlide(i, idx){
   const fc = i.fact_check || {};
@@ -7072,8 +7102,37 @@ function radarSlide(i, idx){
       ${claimText ? `<p class="rs-claim">${esc(claimText)}</p>` : ""}
       <div class="radar-meta">
         ${fcBadge(fc.status)}
-        <span class="pill">${esc(i.category || "lain")}</span>
+        <span class="pill">${esc(T(i.category || "lain"))}</span>
         <span class="dim">${i.source_count || ((i.sources || []).length)} ${T("sources")}</span>
+      </div>
+    </div>
+  </button>`;
+}
+
+function breakingSlide(i, idx){
+  const title = i.title_bm || i.title_en || i.title || "";
+  const titleAlt = (i.title_en && i.title_en !== title) ? i.title_en : (i.title_bm && i.title_bm !== title ? i.title_bm : "");
+  const summary = (i.summary || "").trim();
+  const summaryText = summary && summary !== title ? (summary.length > 140 ? summary.slice(0, 140) + "…" : summary) : "";
+  const srcLabel = i.source_name || (i.source || "News").replace("_", " ").toUpperCase();
+  let pubAgo = "";
+  if (i.pub_date){
+    const ts = Math.floor(new Date(i.pub_date).getTime() / 1000);
+    if (!isNaN(ts) && ts > 0) pubAgo = ago(ts);
+  }
+  return `<button class="radar-slide radar-breaking-slide radar-unchecked" data-idx="${idx}">
+    <span class="rank">${i.rank}</span>
+    <div class="rs-body">
+      <div class="rs-top">
+        <span class="radar-src-tag">${esc(srcLabel)}</span>
+        ${pubAgo ? `<span class="radar-time-tag">${esc(pubAgo)}</span>` : ""}
+      </div>
+      <h4>${esc(title)}</h4>
+      ${titleAlt ? `<p class="dim">${esc(titleAlt)}</p>` : ""}
+      ${summaryText ? `<p class="rs-summary">${esc(summaryText)}</p>` : ""}
+      <div class="radar-meta">
+        <span class="pill">${esc(T(i.category || "nasional"))}</span>
+        ${i.url && safeUrl(i.url) ? `<span class="dim">${T("Read source")} ↗</span>` : ""}
       </div>
     </div>
   </button>`;
@@ -7101,7 +7160,7 @@ function radarDetail(i){
           <h4>${esc(i.title_bm)}</h4>
           ${i.title_en && i.title_en !== i.title_bm ? `<p class="rd-en">${esc(i.title_en)}</p>` : ""}
         </div>
-        <span class="pill">${esc(i.category || "lain")}</span>
+        <span class="pill">${esc(T(i.category || "lain"))}</span>
       </div>
       <div class="rd-body">
         ${claim ? `<div class="rd-fact">
@@ -7124,11 +7183,6 @@ function radarDetail(i){
           ${T("Official Sebenarnya.my fact-check")} ↗</a>` : ""}
         ${srcs.length ? `<h5 class="rd-src-h">${T("Sources")}</h5>
           <ol class="rd-srcs">${srcs.slice(0,5).map(s => {
-            /* safeUrl, not just esc: these urls come from the RSS feeds via
-               Gemini, and esc() neutralises quotes but not schemes - a
-               javascript: href would survive it intact. The collector already
-               filters on SAFE_URL; this is the second lock on the same door.
-               An unsafe url still lists the source, just not as a link. */
             const href = safeUrl(s.url);
             const label = esc(s.title || s.name);
             return `<li>${href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${label}</a>` : label}
@@ -7138,6 +7192,50 @@ function radarDetail(i){
     </div>
   </div>`;
 }
+
+function breakingDetail(i){
+  const title = i.title_bm || i.title_en || i.title || "";
+  const titleAlt = (i.title_en && i.title_en !== title) ? i.title_en : (i.title_bm && i.title_bm !== title ? i.title_bm : "");
+  const summary = i.summary || "";
+  const srcLabel = i.source_name || (i.source || "News").replace("_", " ");
+  let pubAgo = "", pubDateStr = "";
+  if (i.pub_date){
+    const d = new Date(i.pub_date);
+    if (!isNaN(d.getTime())){
+      pubAgo = ago(Math.floor(d.getTime() / 1000));
+      pubDateStr = `${ymd(i.pub_date)} · ${hhmm(i.pub_date)}`;
+    }
+  }
+  const href = safeUrl(i.url);
+  return `<div class="rd-back" id="radar-modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="rd-card card">
+      <button class="rd-x" id="radar-close" aria-label="Close">✕</button>
+      <div class="rd-head">
+        <span class="rank">${i.rank}</span>
+        <div class="rd-titles">
+          <h4>${esc(title)}</h4>
+          ${titleAlt ? `<p class="rd-en">${esc(titleAlt)}</p>` : ""}
+        </div>
+        <span class="pill">${esc(T(i.category || "nasional"))}</span>
+      </div>
+      <div class="rd-body">
+        <div class="radar-meta" style="margin-bottom:var(--s3)">
+          <span class="radar-src-tag" style="font-size:12px">${esc(srcLabel)}</span>
+          ${pubAgo ? `<span class="dim">· ${esc(pubAgo)}</span>` : ""}
+          ${pubDateStr ? `<span class="dim mono">(${esc(pubDateStr)})</span>` : ""}
+        </div>
+        ${summary ? `<div class="rd-fact">
+          <span class="rd-kicker">${T("Summary")}</span>
+          <p class="rd-facts">${esc(summary)}</p>
+        </div>` : ""}
+        ${href ? `<a class="rd-read-btn" href="${esc(href)}" target="_blank" rel="noopener">
+          ${T("Read full article")} ↗</a>` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+let rerenderRadar = null;
 
 async function initRadarCarousel(){
   const band = $("#radar-band"); if (!band) return;
@@ -7151,9 +7249,12 @@ async function initRadarCarousel(){
     return;
   }
   radarIssues = d.top_issues || [];
+  radarBreaking = d.breaking_news || [];
   const track = $("#radar-track");
   const filters = $("#radar-filters");
-  if (!radarIssues.length || !track){
+  const modes = $("#radar-modes");
+  const desc = $("#radar-desc");
+  if ((!radarIssues.length && !radarBreaking.length) || !track){
     band.hidden = true;
     return;
   }
@@ -7174,24 +7275,62 @@ async function initRadarCarousel(){
      so it never points at an empty destination */
   const navItem = $("#nav-radar-band");
   if (navItem) navItem.parentElement.hidden = false;
-  if (filters){
-    filters.innerHTML = RADAR_FILTERS.map(([val, key]) => {
+
+  const getActiveFilterList = () => {
+    if (radarMode === "viral") return RADAR_FILTERS;
+    const presentCats = new Set(radarBreaking.map(b => (b.category || "nasional").toLowerCase()));
+    return BREAKING_FILTERS.filter(([val]) => val === "all" || presentCats.has(val));
+  };
+
+  const renderFilters = () => {
+    if (!filters) return;
+    const list = getActiveFilterList();
+    filters.innerHTML = list.map(([val, key]) => {
       const active = radarFilter === val;
       return `<button class="rf${active ? " active" : ""}" data-filter="${esc(val)}" data-i18n="${esc(key)}" aria-pressed="${active}">${esc(T(key))}</button>`;
     }).join("");
-  }
+  };
+
+  const updateDesc = () => {
+    if (!desc) return;
+    if (radarMode === "viral"){
+      desc.textContent = T("The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.");
+      desc.setAttribute("data-i18n", "The hottest issues and viral claims circulating in Malaysia right now - each verified against real sources.");
+    } else {
+      desc.textContent = T("Real-time breaking news headlines across Malaysian news agencies and official wires.");
+      desc.setAttribute("data-i18n", "Real-time breaking news headlines across Malaysian news agencies and official wires.");
+    }
+  };
+
   let slides = [];
-  const visibleIssues = () => radarFilter === "all"
-    ? radarIssues.slice()
-    : radarIssues.filter(i => (i.fact_check || {}).status === radarFilter);
+  const visibleItems = () => {
+    if (radarMode === "viral"){
+      return radarFilter === "all"
+        ? radarIssues.slice()
+        : radarIssues.filter(i => (i.fact_check || {}).status === radarFilter);
+    } else {
+      return radarFilter === "all"
+        ? radarBreaking.slice()
+        : radarBreaking.filter(i => (i.category || "nasional").toLowerCase() === radarFilter);
+    }
+  };
+
   const renderTrack = () => {
-    radarVisible = visibleIssues();
-    track.innerHTML = radarVisible.length
-      ? radarVisible.map((i, idx) => radarSlide(i, idx)).join("")
-      : `<div class="radar-empty" data-i18n="No trending issues match this filter.">${esc(T("No trending issues match this filter."))}</div>`;
+    radarVisible = visibleItems();
+    if (radarVisible.length){
+      track.innerHTML = radarMode === "viral"
+        ? radarVisible.map((i, idx) => radarSlide(i, idx)).join("")
+        : radarVisible.map((i, idx) => breakingSlide(i, idx)).join("");
+    } else {
+      const emptyMsg = radarMode === "viral"
+        ? T("No trending issues match this filter.")
+        : T("No breaking news match this filter.");
+      track.innerHTML = `<div class="radar-empty">${esc(emptyMsg)}</div>`;
+    }
     slides = [...track.querySelectorAll(".radar-slide")];
     syncTrackFades();
   };
+
   const perView = () => track.clientWidth < 560 ? 1 : track.clientWidth < 900 ? 2 : 3;
   const maxIdx = () => Math.max(0, slides.length - perView());
   /* each slide is a fixed width + the track gap; this is the scroll step */
@@ -7225,6 +7364,28 @@ async function initRadarCarousel(){
   };
   $("#radar-prev").onclick = () => { prev(); start(); };
   $("#radar-next").onclick = () => { next(); start(); };
+
+  if (modes){
+    modes.addEventListener("click", e => {
+      const b = e.target.closest(".rm-btn"); if (!b) return;
+      const targetMode = b.dataset.mode;
+      if (targetMode === radarMode) return;
+      radarMode = targetMode;
+      modes.querySelectorAll(".rm-btn").forEach(btn => {
+        const on = btn === b;
+        btn.classList.toggle("active", on);
+        btn.setAttribute("aria-selected", String(on));
+      });
+      radarFilter = "all";
+      radarIdx = 0;
+      updateDesc();
+      renderFilters();
+      renderTrack();
+      render();
+      start();
+    });
+  }
+
   if (filters){
     filters.addEventListener("click", e => {
       const b = e.target.closest(".rf"); if (!b) return;
@@ -7240,6 +7401,7 @@ async function initRadarCarousel(){
       start();
     });
   }
+
   track.addEventListener("scroll", () => {
     if (!slides.length){
       $("#radar-count").textContent = "0 / 0";
@@ -7256,14 +7418,15 @@ async function initRadarCarousel(){
     $("#radar-prev").disabled = radarIdx === 0;
     $("#radar-next").disabled = radarIdx >= maxIdx();
   }, { passive:true });
+
   track.addEventListener("mouseenter", () => clearInterval(radarTimer));
   track.addEventListener("mouseleave", start);
   track.addEventListener("click", e => {
     const b = e.target.closest(".radar-slide"); if (!b) return;
-    const issue = radarVisible[Number(b.dataset.idx)];
-    if (!issue) return;
+    const item = radarVisible[Number(b.dataset.idx)];
+    if (!item) return;
     const m = document.createElement("div");
-    m.innerHTML = radarDetail(issue);
+    m.innerHTML = (radarMode === "viral") ? radarDetail(item) : breakingDetail(item);
     document.body.appendChild(m.firstElementChild);
     $("#radar-close").onclick = () => $("#radar-modal").remove();
     $("#radar-modal").onclick = e => { if (e.target.id === "radar-modal") e.target.remove(); };
@@ -7271,16 +7434,34 @@ async function initRadarCarousel(){
   addEventListener("keydown", e => {
     if (e.key === "Escape"){ const m = $("#radar-modal"); if (m) m.remove(); }
   });
+
   /* radar.json is static; refresh it on manual refresh so the band follows
      the CI pipeline without needing a full reload. */
   $("#refresh").addEventListener("click", async () => {
-    try { const nd = await loadRadar(); radarIssues = nd.top_issues || [];
+    try {
+      const nd = await loadRadar();
+      radarIssues = nd.top_issues || [];
+      radarBreaking = nd.breaking_news || [];
       updateWhen(nd);
-      radarIdx = 0; renderTrack(); render(); start();
+      radarIdx = 0;
+      renderFilters();
+      renderTrack();
+      render();
+      start();
     } catch {}
   });
+
+  rerenderRadar = () => {
+    updateDesc();
+    renderFilters();
+    renderTrack();
+    render();
+  };
+
+  renderFilters();
   renderTrack();
-  render(); start();
+  render();
+  start();
 }
 
 /* ════════════════════════════ live view ════════════════════════════ */
