@@ -12,7 +12,7 @@ Output: public/radar.json  (fetched by the dashboard's Trend Radar section)
 Gemini key: read from GOOGLE_API_KEY in ~/.hermes/.env (or env).
 Fallback: keyword-frequency clustering if the API call fails — never crash.
 """
-import json, os, re, html, sys, time, datetime, urllib.request, urllib.error
+import json, os, re, html, sys, time, datetime, email.utils, urllib.request, urllib.error
 import xml.etree.ElementTree as ET
 from collections import Counter
 
@@ -23,7 +23,9 @@ UA = {"User-Agent": "mygov-radar/0.1 (+https://malaysia-at-a-glance.com)"}
 GEMINI_MODEL = "gemini-flash-latest"
 
 NEWS_FEEDS = [
-    ("malaymail", "https://www.malaymail.com/feed/rss", "en"),
+    # /rss is Malay Mail's "All" feed — mostly world & lifestyle wire copy.
+    # The /malaysia category feed is the local desk only.
+    ("malaymail", "https://www.malaymail.com/feed/rss/malaysia", "en"),
     ("freemalaysiatoday", "https://www.freemalaysiatoday.com/category/nation/feed/", "en"),
     ("utusan", "https://www.utusan.com.my/feed/", "ms"),
     ("bernama_en", "https://www.bernama.com/en/rss/general.php", "en"),
@@ -411,10 +413,103 @@ def categorize_headline(title):
     return "nasional"
 
 
+# Section paths every one of our sources uses for its foreign desk. A URL hit
+# is unambiguous, so it drops the item outright.
+FOREIGN_PATHS = (
+    "/world/", "/dunia/", "/luar-negara/", "/luarnegara/", "/global/",
+    "/international/", "/antarabangsa/", "/world-news/",
+)
+
+# Fallback for feeds that carry no section in the URL (Bernama's general wire).
+# A foreign marker alone is not enough to drop a story — "Malaysians in Japan
+# urged to stay alert" is local news — so an item only goes if it mentions a
+# foreign place AND carries no Malaysian marker at all.
+FOREIGN_HINTS = (
+    "gaza", "israel", "palestin", "ukraine", "russia", "rusia", "china", "beijing",
+    "india", "pakistan", "bangladesh", "myanmar", "thailand", "vietnam", "philippines",
+    "filipina", "indonesia", "jakarta", "singapore", "singapura", "brunei", "japan",
+    "jepun", "korea", "taiwan", "hong kong", "united states", "u.s.", "america",
+    "washington", "trump", "britain", "uk ", "london", "france", "perancis", "germany",
+    "jerman", "italy", "spain", "turkey", "turkiye", "iran", "iraq", "syria", "yemen",
+    "saudi", "egypt", "mesir", "africa", "afrika", "kenya", "nigeria", "australia",
+    "new zealand", "canada", "brazil", "mexico", "argentina", "afghanistan", "nepal",
+    "sri lanka", "cambodia", "laos", "european union", "nato", "united nations",
+)
+
+MY_HINTS = (
+    "malaysia", "malaysian", "msia", "kuala lumpur", " kl ", "putrajaya", "selangor",
+    "johor", "penang", "pulau pinang", "perak", "kedah", "kelantan", "terengganu",
+    "pahang", "negeri sembilan", "melaka", "malacca", "perlis", "sabah", "sarawak",
+    "labuan", "ringgit", " rm", "pdrm", "kkm", "moh", "anwar", "agong", "sultan",
+    "menteri", "kementerian", "dewan rakyat", "dewan negara", "parlimen", "parliament",
+    "umno", "pkr", "dap", "pas", "bersatu", "barisan", "pakatan", "perikatan",
+    "bursa", "bank negara", "bnm", "felda", "petronas", "mara", "jpj", "spm", "upsr",
+    "rakyat", "negeri", "kampung", "bumiputera", "orang asli", "kementerian",
+)
+
+
+def is_malaysia_story(title, desc, url):
+    """True when a headline is Malaysia-relevant. Foreign wire copy on our
+    sources' shared feeds is the thing being filtered out here."""
+    u = (url or "").lower()
+    if any(p in u for p in FOREIGN_PATHS):
+        return False
+    blob = f" {(title or '').lower()} {(desc or '').lower()} "
+    if any(m in blob for m in MY_HINTS):
+        return True
+    return not any(f in blob for f in FOREIGN_HINTS)
+
+
+# A story older than this is not breaking. The band refreshes 3x a day, so a
+# ~24h window still fills 20 slots between runs without going stale.
+MAX_STORY_AGE_HOURS = 24
+
+# Soft desks — real articles, but features and service copy, not breaking news.
+SOFT_PATHS = (
+    "/life/", "/lifestyle/", "/gaya-hidup/", "/eat-drink/", "/food/", "/resipi/",
+    "/showbiz/", "/hiburan/", "/entertainment/", "/celebrity/", "/travel/",
+    "/pelancongan/", "/opinion/", "/pendapat/", "/kolumnis/", "/columnist/",
+    "/editorial/", "/rencana/", "/horoscope/", "/what-you-think/", "/review/",
+)
+
+SOFT_TITLE_HINTS = (
+    "resipi", "horoskop", "tips ", "petua", "5 cara", "review:", "ulasan:",
+    "here's how", "what to know", "things to do",
+)
+
+
+def story_age_hours(pub):
+    """Hours since publication, or None when the feed gave no usable date."""
+    if not pub:
+        return None
+    try:
+        t = email.utils.parsedate_to_datetime(pub)
+    except Exception:
+        return None
+    if t is None:
+        return None
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=datetime.timezone.utc)
+    delta = datetime.datetime.now(datetime.timezone.utc) - t
+    # Small negative skew (a source clock running ahead) still counts as fresh.
+    return max(delta.total_seconds() / 3600.0, 0.0)
+
+
+def is_soft_news(title, url):
+    u = (url or "").lower()
+    if any(p in u for p in SOFT_PATHS):
+        return True
+    t = (title or "").lower()
+    return any(h in t for h in SOFT_TITLE_HINTS)
+
+
 def extract_breaking_news(signals, limit=20):
-    """Filter raw news signals into a clean, deduplicated breaking news feed."""
-    breaking = []
+    """Build the breaking-news feed: recent, hard-news, Malaysia-only headlines,
+    newest first. The raw feeds are just "latest N per source" — without the
+    recency and soft-section filters below the band fills up with day-old
+    lifestyle copy that is not breaking anything."""
     seen_titles = set()
+    candidates = []
 
     def clean_text(s):
         s = html.unescape(s or "")
@@ -425,7 +520,7 @@ def extract_breaking_news(signals, limit=20):
     def title_key(t):
         return re.sub(r"[^a-z0-9]", "", (t or "").lower())[:40]
 
-    news_signals = [s for s in signals if s.get("source") != "sebenarnya" and s.get("source") != "trends"]
+    news_signals = [s for s in signals if s.get("source") not in ("sebenarnya", "trends")]
 
     for s in news_signals:
         title = clean_text(s.get("title"))
@@ -436,29 +531,37 @@ def extract_breaking_news(signals, limit=20):
             continue
         seen_titles.add(tk)
 
-        src_key = s.get("source", "")
-        src_name = SOURCE_LABELS.get(src_key, src_key.replace("_", " ").title())
+        url = s.get("url", "")
         desc = clean_text(s.get("description") or "")
+        if not is_malaysia_story(title, desc, url):
+            continue
+        if is_soft_news(title, url):
+            continue
+
+        age = story_age_hours(s.get("pub", ""))
+        if age is None or age > MAX_STORY_AGE_HOURS:
+            continue
+
         if len(desc) > 240:
             desc = desc[:237] + "…"
-
-        cat = s.get("category") or categorize_headline(title)
-
-        breaking.append({
-            "rank": len(breaking) + 1,
+        src_key = s.get("source", "")
+        candidates.append((age, {
             "title_bm": title if s.get("lang") == "ms" else None,
             "title_en": title if s.get("lang") == "en" else None,
             "title": title,
             "source": src_key,
-            "source_name": src_name,
-            "url": s.get("url", ""),
+            "source_name": SOURCE_LABELS.get(src_key, src_key.replace("_", " ").title()),
+            "url": url,
             "pub_date": s.get("pub", ""),
-            "category": cat,
-            "summary": desc or title
-        })
-        if len(breaking) >= limit:
-            break
+            "category": s.get("category") or categorize_headline(title),
+            "summary": desc or title,
+        }))
 
+    candidates.sort(key=lambda c: c[0])  # freshest first — this is a breaking feed
+    breaking = []
+    for _, item in candidates[:limit]:
+        item["rank"] = len(breaking) + 1
+        breaking.append(item)
     return breaking
 
 
