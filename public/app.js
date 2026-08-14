@@ -8328,54 +8328,141 @@ async function aiCreate(sysPrompt, onProgress, signal){
 function queryDashboardFactsFallback(q){
   const query = q.toLowerCase();
   
-  if (query.includes("fuel") || query.includes("minyak") || query.includes("ron95") || query.includes("ron97") || query.includes("diesel")){
-    const fuelSec = document.getElementById("fuel");
-    const kpis = fuelSec ? Array.from(fuelSec.querySelectorAll(".kpi")).map(k => `${k.querySelector(".lab")?.textContent || ''}: ${k.querySelector(".val")?.textContent || ''}`).filter(s => s.length > 2).join(" | ") : "";
-    return (LANG === "ms"
-      ? `Harga minyak mingguan terkini: ${kpis || "RON95 RM2.05, Diesel RM3.35"}. Berkuat kuasa setiap hari Khamis.`
-      : `Latest weekly fuel prices: ${kpis || "RON95 RM2.05, Diesel RM3.35"}. Changes take effect every Thursday.`) + "\n[GOTO:fuel]";
-  }
-  
-  if (query.includes("weather") || query.includes("rain") || query.includes("flood") || query.includes("cuaca") || query.includes("hujan") || query.includes("banjir") || query.includes("warning") || query.includes("amaran")){
-    const hazSec = document.getElementById("hazards");
-    const wxProse = document.getElementById("wx-prose-body")?.textContent;
-    const hazKpis = hazSec ? Array.from(hazSec.querySelectorAll(".hz-tile")).map(k => `${k.querySelector(".hz-lab")?.textContent || ''}: ${k.querySelector(".hz-val")?.textContent || ''}`).filter(s => s.length > 2).join(", ") : "";
-    return (LANG === "ms"
-      ? `Status amaran cuaca & banjir: ${hazKpis || "Tiada amaran buruk aktif"}. ${wxProse || ""}`
-      : `Weather and hazard status: ${hazKpis || "No severe warnings active"}. ${wxProse || ""}`) + "\n[GOTO:hazards]";
-  }
-  
-  if (query.includes("gdp") || query.includes("kdnk") || query.includes("inflation") || query.includes("inflasi") || query.includes("cpi") || query.includes("economy") || query.includes("ekonomi")){
-    const econSec = document.getElementById("economy");
-    const kpis = econSec ? Array.from(econSec.querySelectorAll(".kpi")).map(k => `${k.querySelector(".lab")?.textContent || ''}: ${k.querySelector(".val")?.textContent || ''}`).filter(s => s.length > 2).join(" | ") : "";
-    return (LANG === "ms"
-      ? `Statistik ekonomi terkini: ${kpis || "KDNK berkembang stabil, kadar inflasi terkawal."}`
-      : `Latest economic statistics: ${kpis || "Stable GDP growth with moderate inflation."}`) + "\n[GOTO:economy]";
-  }
-  
-  if (query.includes("transit") || query.includes("train") || query.includes("lrt") || query.includes("mrt") || query.includes("rapid") || query.includes("bus") || query.includes("bas") || query.includes("tren") || query.includes("gangguan")){
-    return (LANG === "ms"
-      ? "Perkhidmatan rangkaian rel Rapid KL (LRT, MRT, Monorail) dan bas beroperasi dengan telemetri langsung."
-      : "Rapid KL rail and bus transit networks are operating with live telemetry.") + "\n[GOTO:transport]";
+/* Intelligent multi-section open data matcher fallback */
+function queryDashboardFactsFallback(q){
+  const rawQ = String(q || "").trim();
+  const query = rawQ.toLowerCase();
+  const isMs = (LANG === "ms");
+
+  const getSectionKpis = secId => {
+    const sec = document.getElementById(secId);
+    if (!sec) return "";
+    return Array.from(sec.querySelectorAll(".kpi, .hz-tile"))
+      .map(k => {
+        const l = k.querySelector(".lab, .hz-lab")?.textContent?.replace(/\?/g, "").trim();
+        const v = k.querySelector(".val, .hz-val")?.textContent?.trim();
+        return (l && v) ? `${l}: ${v}` : null;
+      })
+      .filter(Boolean)
+      .slice(0, 4)
+      .join(" | ");
+  };
+
+  // 1. Fuel / Minyak
+  if (query.match(/\b(fuel|minyak|ron95|ron97|diesel|petrol|subsidi|bensin)\b/)){
+    const kpis = getSectionKpis("fuel");
+    return (isMs
+      ? `Harga runcit bahan api mingguan terkini: ${kpis || "RON95 RM2.05/L, RON97 RM3.19/L, Diesel RM3.35/L"}. Penetapan harga rasmi berkuat kuasa setiap hari Khamis.`
+      : `Latest weekly retail fuel prices: ${kpis || "RON95 RM2.05/L, RON97 RM3.19/L, Diesel RM3.35/L"}. Official price updates take effect every Thursday.`) + "\n[GOTO:fuel]";
   }
 
-  if (query.includes("holiday") || query.includes("cuti") || query.includes("travel") || query.includes("pelancongan")){
+  // 2. Weather / Cuaca / Flood / Rain / Hazards
+  if (query.match(/\b(weather|cuaca|rain|hujan|flood|banjir|storm|ribut|warning|amaran|quake|gempa|tsunami|metmalaysia|radar|suhu|temperature)\b/)){
+    const hazKpis = getSectionKpis("hazards");
+    const wxProse = document.getElementById("wx-prose-body")?.textContent?.trim();
+    return (isMs
+      ? `Status amaran cuaca & bencana semasa: ${hazKpis || "Tiada amaran buruk aktif"}. ${wxProse || ""}`
+      : `Current weather alerts and hazard telemetry: ${hazKpis || "No severe warnings active"}. ${wxProse || ""}`) + "\n[GOTO:hazards]";
+  }
+
+  // 3. Economy / GDP / Inflation / CPI / Unemployment / OPR / EPF
+  if (query.match(/\b(economy|ekonomi|gdp|kdnk|inflation|inflasi|cpi|unemployment|pengangguran|labour|tenaga buruh|epf|kwsp|dividend|opr|faedah|growth)\b/)){
+    const kpis = getSectionKpis("economy");
+    return (isMs
+      ? `Penunjuk ekonomi utama Malaysia: ${kpis || "KDNK berkembang mampan, inflasi teras kekal sederhana, dan pasaran buruh stabil."}`
+      : `Key Malaysian macroeconomic indicators: ${kpis || "Steady GDP growth, moderate core CPI inflation, and resilient labour participation."}`) + "\n[GOTO:economy]";
+  }
+
+  // 4. Financial Markets / Currency / Exchange Rates / USD / Ringgit / FPX
+  if (query.match(/\b(finance|kewangan|fpx|currency|currencies|mata wang|ringgit|myr|usd|sgd|gbp|eur|cny|jpy|dolar|exchange|pertukaran|bnm)\b/)){
+    const kpis = getSectionKpis("finance");
+    return (isMs
+      ? `Data telemetri kewangan & pertukaran mata wang BNM: ${kpis || "Ringgit Malaysia diniagakan stabil dengan aktiviti transaksi digital harian yang kukuh."}`
+      : `BNM financial telemetry and daily benchmark exchange rates: ${kpis || "Malaysian Ringgit benchmark rates and robust daily digital payment volumes."}`) + "\n[GOTO:finance]";
+  }
+
+  // 5. Public Transport / LRT / MRT / Rapid KL / Buses / Trains / Transit
+  if (query.match(/\b(transport|pengangkutan|transit|train|tren|lrt|mrt|monorail|rapid|bus|bas|prasarana|komuter|disruption|gangguan|route|laluan)\b/)){
+    const kpis = getSectionKpis("transport");
+    return (isMs
+      ? `Status rangkaian pengangkutan awam Rapid KL & rel: ${kpis || "Rangkaian rel LRT, MRT, Monorail dan bas beroperasi mengikut jadual dengan telemetri langsung."}`
+      : `Rapid KL rail and bus transit operational status: ${kpis || "LRT, MRT, Monorail and bus networks are operating with live GTFS telemetry."}`) + "\n[GOTO:transport]";
+  }
+
+  // 6. Highways / Traffic / EV / Vehicles / Registrations
+  if (query.match(/\b(traffic|trafik|highway|lebuhraya|plus|jam|kesesakan|ev|electric vehicle|kenderaan elektrik|car|kereta|motor|jpj|byd|tesla|proton|perodua|registrations)\b/)){
+    const kpis = getSectionKpis("mobility");
+    return (isMs
+      ? `Data mobiliti & pendaftaran kenderaan JPJ: ${kpis || "Penerimaan kenderaan elektrik (EV) meningkat dengan pemantauan kamera trafik lebuh raya utama."}`
+      : `JPJ vehicle registrations and highway mobility telemetry: ${kpis || "EV adoption metrics and live highway camera feeds across major corridors."}`) + "\n[GOTO:mobility]";
+  }
+
+  // 7. Population / Demographics / DOSM / Census / Rakyat
+  if (query.match(/\b(population|penduduk|populasi|demographic|demografi|dosm|census|banci|rakyat|warganegara|citizens|age|umur|gender|jantina)\b/)){
+    const kpis = getSectionKpis("population");
+    return (isMs
+      ? `Statistik demografi & populasi rasmi DOSM: ${kpis || "Anggaran jumlah penduduk Malaysia terkini mengikut kumpulan umur, etnik dan negeri."}`
+      : `Official DOSM population & demographic figures: ${kpis || "Latest national population estimates segmented by age cohorts, state and demographics."}`) + "\n[GOTO:population]";
+  }
+
+  // 8. Health / Blood Donation / PeKa B40 / Organ / Hospital
+  if (query.match(/\b(health|kesihatan|blood|darah|peka|peka b40|organ|pledge|ikrar|derma darah|hospital|kk|klinik|kkk|covid|screening|saringan)\b/)){
+    const kpis = getSectionKpis("health");
+    return (isMs
+      ? `Data kesihatan awam KKM: ${kpis || "Kutipan bekalan darah harian, saringan PeKa B40 dan pendaftaran ikrar organ aktif."}`
+      : `MOH public health telemetry: ${kpis || "Daily blood collection banks, PeKa B40 screenings, and registered organ pledges."}`) + "\n[GOTO:health]";
+  }
+
+  // 9. Grocery / Food / Basket / Prices / Ayam / Beras / Telur / Groceries
+  if (query.match(/\b(price|prices|harga|basket|bakul|grocery|groceries|makanan|food|ayam|chicken|egg|telur|rice|beras|pasar|district|daerah|cheapest|termurah)\b/)){
+    const kpis = getSectionKpis("prices");
+    return (isMs
+      ? `Indeks harga bakul barangan keperluan dapur KPDN: ${kpis || "Perbandingan harga barangan runcit asas harian mengikut daerah di seluruh negara."}`
+      : `KPDN household grocery basket price index: ${kpis || "Nationwide district-by-district price monitoring for daily essential kitchen staples."}`) + "\n[GOTO:prices]";
+  }
+
+  // 10. Tourism / Hotel / Guests / Airport / Flights / Pelancongan
+  if (query.match(/\b(tourist|tourists|tourism|pelancong|pelancongan|hotel|occupancy|inap|tetamu|airport|klia|flight|flights|penerbangan|guest|guests)\b/)){
+    const kpis = getSectionKpis("tourism");
+    return (isMs
+      ? `Data ketibaan pelancong & kadar penginapan hotel: ${kpis || "Kadar penghunian hotel mengikut negeri dan trend ketibaan pelawat antarabangsa."}`
+      : `International visitor arrivals & hotel occupancy telemetry: ${kpis || "State hotel occupancy percentages and tourist source market statistics."}`) + "\n[GOTO:tourism]";
+  }
+
+  // 11. Elections / Vote / PRU / Parlimen / Kerusi / SPR
+  if (query.match(/\b(election|elections|vote|undi|pru|prn|parlimen|parliament|seat|seats|kerusi|spr|parti|party|dun)\b/)){
+    const kpis = getSectionKpis("vote");
+    return (isMs
+      ? `Arkib & data pilihan raya rasmi SPR: ${kpis || "Pecahan kerusi parlimen dan statistik keputusan pilihan raya umum terkini."}`
+      : `Official EC / SPR election telemetry: ${kpis || "Parliamentary seat composition and official general election historical results."}`) + "\n[GOTO:vote]";
+  }
+
+  // 12. Holidays / School / Cuti / Takwim
+  if (query.match(/\b(holiday|holidays|cuti|sekolah|school|takwim|calendar|kalendar|raya|cny|deepavali|merdeka|gawai|kaamatan)\b/)){
     if (slowData && Array.isArray(slowData.holidays)){
       const todayIso = new Date().toISOString().slice(0, 10);
       const nextHol = slowData.holidays.find(h => h && h[0] && h[0] >= todayIso);
-      if (nextHol) return (LANG === "ms" ? `Cuti umum seterusnya ialah ${nextHol[1]} pada ${nextHol[0]}.` : `The next public holiday is ${nextHol[1]} on ${nextHol[0]}.`) + "\n[GOTO:travel-band]";
+      if (nextHol) return (isMs ? `Cuti umum Malaysia yang seterusnya ialah ${nextHol[1]} pada ${nextHol[0]}.` : `The next Malaysian public holiday is ${nextHol[1]} on ${nextHol[0]}.`) + "\n[GOTO:travel-band]";
     }
   }
 
-  if (briefData && Array.isArray(briefData.bullets) && briefData.bullets.length){
-    const b = briefData.bullets[0];
-    const t = LANG === "ms" ? (b.t_ms || b.t_en) : (b.t_en || b.t_ms);
-    return t + (b.sec ? `\n[GOTO:${b.sec}]` : "");
+  // 13. Search inside briefData bullets for word match
+  if (briefData && Array.isArray(briefData.bullets)){
+    const words = query.split(/\s+/).filter(w => w.length >= 3);
+    for (const b of briefData.bullets){
+      const t = isMs ? (b.t_ms || b.t_en) : (b.t_en || b.t_ms);
+      if (!t) continue;
+      const lower = t.toLowerCase();
+      if (words.some(w => lower.includes(w))){
+        return t + (b.sec ? `\n[GOTO:${b.sec}]` : "");
+      }
+    }
   }
 
-  return (LANG === "ms"
-    ? "Sila terokai bahagian papan pemuka di bawah untuk data rasmi terkini."
-    : "Please explore the relevant dashboard sections below for the latest official figures.");
+  // 14. Fallback for general or non-matching query: provide clear category navigation
+  return isMs
+    ? `Carian untuk "${rawQ}": Sila terokai bahagian papan pemuka di bawah (Cuaca & Amaran, Pasaran Ekonomi, Pengangkutan Awam, Mobiliti, Demografi, atau Kesihatan).`
+    : `Search for "${rawQ}": Please explore the live official sections below (Weather & Hazards, Economy, Public Transport, Mobility, Demographics, or Health).`;
 }
 
 /* Feature 1: Ask MyGov Assistant */
@@ -8605,7 +8692,7 @@ function renderAskResult(panel, rawText){
     gotoBtn.className = "ai-action-btn";
     const secObj = SECTIONS.find(s => s.id === targetSec);
     const secLabel = secObj ? T(secObj.label) : targetSec;
-    gotoBtn.textContent = `👉 ${T("Jump to")} ${secLabel}`;
+    gotoBtn.innerHTML = `<span>🎯</span> <span>${T("Jump to")} ${secLabel}</span> <span>&rarr;</span>`;
     actions.appendChild(gotoBtn);
   }
 
@@ -8613,7 +8700,7 @@ function renderAskResult(panel, rawText){
     const vBtn = document.createElement("button");
     vBtn.type = "button";
     vBtn.className = "ai-voice-btn";
-    vBtn.textContent = `🔊 ${T("Listen")}`;
+    vBtn.innerHTML = `<span>🔊</span> <span>${T("Listen")}</span>`;
     vBtn.addEventListener("click", () => aiSpeak(cleanText, vBtn));
     actions.appendChild(vBtn);
   }
