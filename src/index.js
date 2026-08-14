@@ -100,9 +100,26 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // MCP, SSE, and OpenAPI proxy to the dedicated MCP worker (mcp.malaysia-at-a-glance.com)
+    if (
+      url.pathname === "/mcp" ||
+      url.pathname === "/sse" ||
+      url.pathname === "/openapi.json" ||
+      url.pathname === "/openapi.yaml" ||
+      url.pathname.startsWith("/api/mygov_") ||
+      url.pathname.startsWith("/tools/mygov_") ||
+      (request.method === "POST" && url.pathname === "/") ||
+      (request.method === "GET" && (request.headers.get("accept") || "").includes("text/event-stream"))
+    ) {
+      const mcpUrl = new URL(request.url);
+      mcpUrl.hostname = "mcp.malaysia-at-a-glance.com";
+      return fetch(mcpUrl.toString(), request);
+    }
+
     if (url.pathname === "/api/reverse") {
       if (request.method !== "GET")
         return json({ error: "method_not_allowed" }, 405);
+
 
       const lat = Number(url.searchParams.get("lat"));
       const lon = Number(url.searchParams.get("lon"));
