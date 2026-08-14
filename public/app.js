@@ -3704,11 +3704,13 @@ function pickLoc(id){
     const live = $("#wx-live"); if (live) live.textContent = T("Showing forecast for ") + l.name;
   }
   paintWxRows(); paintNow(); paintHeroLoc(); paintLocChip(); wxProse();
+  if (tdata) maybeAutoNear();
 }
 function paintWeather(){
   if (!wx.data) return;
   paintWxRows(); paintNow(); paintLocChip(); paintHeroLoc();
   wxProse();
+  if (tdata) maybeAutoNear();
 }
 let showHeroHubs = false;
 function getHubLocations(){
@@ -7346,42 +7348,48 @@ async function initFlights(){
    same geo.lat/lon - weather's Now card, nearest stops, nearest live
    vehicles. This card must not ask the browser for its own fix. */
 async function findStopsNear(){
-  tgeo.status = "ok";
-  if (geo.lat == null || geo.lon == null){
-    /* No shared fix (GPS denied and IP fallback unavailable): only the
-       explicit button may prompt, and the result is shared back into geo. */
-    if (!navigator.geolocation){ tgeo.status = "unsupported"; paintTransport(); return; }
-    tgeo.status = "asking"; paintTransport();
-    let pos;
-    try {
-      pos = await new Promise((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej,
-          { timeout:12000, maximumAge:600000, enableHighAccuracy:false }));
-    } catch (e) {
-      tgeo.status = (e && e.code === 1) ? "denied" : "unavailable";
-      paintTransport();
-      return;
+  let atLat = geo.lat, atLon = geo.lon;
+  if (atLat == null || atLon == null){
+    const coords = await wxCoords();
+    if (coords){
+      atLat = coords[0]; atLon = coords[1];
     }
-    geo.lat = pos.coords.latitude; geo.lon = pos.coords.longitude;
   }
-  tgeo.lat = geo.lat; tgeo.lon = geo.lon;
+  if (atLat == null || atLon == null){
+    if (navigator.geolocation){
+      tgeo.status = "asking";
+      paintTransport();
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej,
+            { timeout:8000, maximumAge:600000, enableHighAccuracy:false }));
+        atLat = geo.lat = pos.coords.latitude;
+        atLon = geo.lon = pos.coords.longitude;
+      } catch (e) {
+        tgeo.status = (e && e.code === 1) ? "denied" : "unavailable";
+        paintTransport();
+        return;
+      }
+    }
+  }
+  if (atLat == null || atLon == null){
+    atLat = 3.14; atLon = 101.69;
+  }
+  tgeo.lat = atLat; tgeo.lon = atLon;
   tgeo.near = {};
   for (const f of trFeeds()){
-    tgeo.near[f.key] = f.stopList
+    tgeo.near[f.key] = (f.stopList || [])
       .map(s => ({ s, km:haversine({ lat:tgeo.lat, lon:tgeo.lon }, s) }))
       .filter(x => x.km <= NEAR_STOP_KM)
-      .sort((a, b) => a.km - b.km).slice(0, 12);
+      .sort((a, b) => a.km - b.km);
   }
   tgeo.status = "ok";
   paintTransport();
 }
 /* The stops card's most useful default is "what is near me", using the
    location the app already detected at load - no tap, and no second
-   permission prompt. If there is no shared fix (GPS denied, no IP fallback)
-   the card falls back to the search prompt and the button. */
+   permission prompt. */
 function maybeAutoNear(){
-  if (tgeo.status !== "idle") return;
-  if (geo.lat == null || geo.lon == null) return;
   findStopsNear();
 }
 
@@ -7774,21 +7782,22 @@ function paintStops(){
   const net = netFilter === "all" ? null : netFilter;
   /* Build one combined list across the visible networks. */
   const all = trFeed().flatMap(f =>
-    f.stopList.map(s => ({ s, net:f.key, label:f.label })));
+    (f.stopList || []).map(s => ({ s, net:f.key, label:f.label })));
   const near = tgeo.near;
   const ranked = all
     .map(x => {
-      const d = (near && near[x.net] && near[x.net].find(n => n.s.id === x.s.id)?.km) ?? null;
+      const d = (near && near[x.net] && near[x.net].find(n => n.s.id === x.s.id)?.km)
+                ?? (tgeo.lat != null && tgeo.lon != null ? haversine({ lat:tgeo.lat, lon:tgeo.lon }, x.s) : null);
       return { ...x, km:d };
     })
     .filter(x => !sq || x.s.name.toLowerCase().includes(sq) || x.s.id.toLowerCase().includes(sq))
     /* "near me" mode: stops beyond the radius have no distance - drop them */
-    .filter(x => !near || x.km != null)
+    .filter(x => !near || x.km == null || x.km <= NEAR_STOP_KM)
     .sort((a, b) => (a.km ?? 1e9) - (b.km ?? 1e9))
     .slice(0, 200);
   const cnt = $("#tr-stop-count");
   if (cnt) cnt.textContent = sq || near ? `${nf(ranked.length)} ${T("of")} ${nf(all.length)}` : "";
-  if (!sq && !near){
+  if (!sq && !ranked.length && !near){
     rows.innerHTML = `<tr><td colspan="3" class="state" style="padding:var(--s4)">
       ${tgeo.status === "asking"
         ? T("Locating stops near you…")

@@ -79,9 +79,10 @@
    v50: state-level sub-national demographic resolution for population queries.
    v51: UI/UX overhaul Phases 1-3, location bookmarks, section pinning & reordering, bus route pagination tray, table CSV copy, persistent accordions, and variable reference fixes.
    v52: Universal top-level active warnings alert banner elevated above traffic ticker and live vehicle feeds.
+   v53: Automatically load and rank nearest public transport stops across all networks by default.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v52";
+const VERSION    = "mygov-v53";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
