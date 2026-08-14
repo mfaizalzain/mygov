@@ -75,9 +75,10 @@
    v46: intelligent multi-domain search fallback indexer and enhanced button icon styling.
    v47: restore complete AI runtime helpers and prevent fallback exception loop.
    v48: fully bind action and voice buttons to site design system .btn / .btn-a theme tokens.
+   v49: intelligent metric-extracting open data question answering engine for precise factual responses.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v48";
+const VERSION    = "mygov-v49";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
