@@ -3599,7 +3599,20 @@ function initWxMap(coords, live, loc){
          <span class="wxp-meta">${T("Feels like")} ${nf(live.feels,1)}° · ${T("Humidity")} ${live.hum}% · ${T("Wind")} ${nf(live.wind,0)} km/h</span>`
       : `<span class="wxp-meta">${T("Today (forecast)")} · ${esc(name)}</span>`}
   </div>`;
-  L.marker(c).addTo(map).bindPopup(popup).openPopup();
+  const pinIcon = L.divIcon({
+    className: "wx-map-pin-wrap",
+    html: `
+      <div class="wx-pin-badge">
+        <span class="wx-pin-icon">${cond ? cond.icon : "📍"}</span>
+        ${live ? `<span class="wx-pin-temp">${nf(live.temp, 0)}°</span>` : ""}
+      </div>
+      <div class="wx-pin-stem"></div>
+    `,
+    iconSize: [60, 32],
+    iconAnchor: [30, 32],
+    popupAnchor: [0, -32]
+  });
+  L.marker(c, { icon: pinIcon }).addTo(map).bindPopup(popup).openPopup();
   /* Leaflet cannot size a hidden container: if the map mounted below the
      fold (mobile), invalidate once it scrolls into view. */
   if (el.offsetWidth === 0){
