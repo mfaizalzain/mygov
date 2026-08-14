@@ -462,8 +462,8 @@ def extract_breaking_news(signals, limit=20):
     return breaking
 
 
-def main():
-    print(f"[radar] {datetime.datetime.now():%Y-%m-%d %H:%M} collecting...")
+def fetch_signals():
+    """Pull every news + trends feed once. Shared by the full and news-only runs."""
     signals = []
     for source, url, lang in NEWS_FEEDS:
         try:
@@ -479,6 +479,38 @@ def main():
         signals.extend(trends)
     except Exception as e:
         sys.stderr.write(f"  trends err: {e}\n")
+    return signals
+
+
+def refresh_news_only():
+    """Cheap intraday pass: refresh only breaking_news inside the existing
+    radar.json. No Gemini calls, no history merge — the clustered top_issues
+    and their fact-checks are left exactly as the daily full run wrote them."""
+    print(f"[radar] {datetime.datetime.now():%Y-%m-%d %H:%M} news-only refresh...")
+    try:
+        with open(OUT, encoding="utf-8") as f:
+            payload = json.load(f)
+    except Exception as e:
+        sys.stderr.write(f"[radar] no existing {OUT} ({e}) — falling back to a full run\n")
+        return main()
+
+    signals = fetch_signals()
+    breaking = extract_breaking_news(signals, limit=20)
+    if not breaking:
+        sys.stderr.write("[radar] no breaking stories parsed — keeping previous feed\n")
+        return
+
+    payload["breaking_news"] = breaking
+    payload["news_updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    payload["total_signals"] = len(signals)
+    with open(OUT, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=1)
+    print(f"[radar] wrote {OUT} — {len(breaking)} breaking stories from {len(signals)} signals (issues untouched)")
+
+
+def main():
+    print(f"[radar] {datetime.datetime.now():%Y-%m-%d %H:%M} collecting...")
+    signals = fetch_signals()
 
     merged = merge_history(signals)
     print(f"  history window: {len(merged)} signals (7-day rolling)")
@@ -521,8 +553,10 @@ def main():
     breaking = extract_breaking_news(signals, limit=20)
     print(f"  extracted breaking news: {len(breaking)} stories")
 
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
     payload = {
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "generated_at": now_iso,
+        "news_updated_at": now_iso,
         "language": "bm-primary",
         "top_issues": issues,
         "breaking_news": breaking,
@@ -536,4 +570,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--news-only" in sys.argv:
+        refresh_news_only()
+    else:
+        main()

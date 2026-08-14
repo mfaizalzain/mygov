@@ -1,0 +1,61 @@
+name: Update Breaking News
+
+# Intraday refresh of the Trend Radar's breaking-news feed only. The clustered
+# top issues + Gemini fact-checks stay on their once-daily run (collect_radar)
+# — this job re-reads the RSS wires three times a day and splices the new
+# headlines into the existing radar.json, so it costs no Gemini quota.
+
+on:
+  schedule:
+    # 00:30 UTC = 08:30 MYT (morning)
+    - cron: '30 0 * * *'
+    # 07:00 UTC = 15:00 MYT (afternoon)
+    - cron: '0 7 * * *'
+    # 14:00 UTC = 22:00 MYT (night)
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+# A news-only run rewrites the same KV key as the daily radar run; serialise
+# so an overlap can't clobber a fresher payload.
+concurrency:
+  group: radar-json
+  cancel-in-progress: false
+
+jobs:
+  collect-news:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        # SHA-pinned (checkout v5.1.0, setup-python v6.3.0) so a retargeted
+        # tag cannot change what runs.
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.11'
+
+      - name: Syntax check collector
+        run: |
+          python3 -m py_compile tools/collect_radar.py
+          echo "syntax OK"
+
+      # The git copy of radar.json is stale by design (the daily run pushes to
+      # KV, not git). Pull the live payload so the issues/fact-checks we splice
+      # the fresh headlines into are the ones currently being served.
+      - name: Pull current radar.json from KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py pull radar public/radar.json || echo "no KV copy yet - using the committed radar.json"
+
+      - name: Refresh breaking news
+        run: python3 tools/collect_radar.py --news-only
+
+      - name: Upload data to Cloudflare KV
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push radar

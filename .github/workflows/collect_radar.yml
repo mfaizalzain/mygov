@@ -7,6 +7,12 @@ on:
   # Manual trigger so a delayed/skipped cron can be caught up instantly
   workflow_dispatch:
 
+# Shares radar.json with the intraday collect_news run — serialise so the two
+# can't overwrite each other's payload.
+concurrency:
+  group: radar-json
+  cancel-in-progress: false
+
 jobs:
   collect-radar:
     runs-on: ubuntu-latest

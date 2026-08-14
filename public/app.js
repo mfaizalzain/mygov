@@ -8090,13 +8090,21 @@ async function initRadarCarousel(){
   }
   band.hidden = false;
   const when = $("#radar-when");
+  /* Breaking news refreshes several times a day on its own schedule, while
+     the clustered issues are a once-daily run — stamp each mode with its own
+     time so the header never overstates how fresh the viral list is. */
+  let radarStamp = d, radarNewsStamp = d;
   const updateWhen = (dd) => {
-    if (!when || !dd.generated_at) return;
-    const t = new Date(dd.generated_at);
+    if (dd) { radarStamp = dd; radarNewsStamp = dd; }
+    const src = (radarMode === "breaking")
+      ? (radarNewsStamp.news_updated_at || radarNewsStamp.generated_at)
+      : radarStamp.generated_at;
+    if (!when || !src) return;
+    const t = new Date(src);
     if (isNaN(t)) return;
     const ts = Math.floor(t.getTime() / 1000);
-    when.textContent = `${ymd(dd.generated_at)} · ${hhmm(dd.generated_at)} · ${T("Updated")} ${ago(ts)}`;
-    when.title = `${T("Data collected")} ${ymd(dd.generated_at)} · ${hhmm(dd.generated_at)}`;
+    when.textContent = `${ymd(src)} · ${hhmm(src)} · ${T("Updated")} ${ago(ts)}`;
+    when.title = `${T("Data collected")} ${ymd(src)} · ${hhmm(src)}`;
   };
   updateWhen(d);
   const navItem = $("#nav-radar-band");
@@ -8204,6 +8212,7 @@ async function initRadarCarousel(){
       });
       radarFilter = "all";
       radarIdx = 0;
+      updateWhen();
       updateDesc();
       renderFilters();
       renderTrack();
