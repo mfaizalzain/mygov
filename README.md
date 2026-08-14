@@ -859,23 +859,25 @@ scroll-triggered ones). Browse available ids at
 
 ---
 
-## On-device summaries (Chrome Prompt API)
+## On-device AI suite (Chrome Prompt API / Gemini Nano)
 
-**Experimental, and off for almost everyone.** Each section header can show a
-**Summarise** button that runs Gemini Nano locally to compress that section's
-prose into three bullets. Nothing is sent anywhere: the model executes in the
-browser process, so there is no new `connect-src` entry and no server cost.
+**Experimental, and off for almost everyone.** When supported by the browser,
+the dashboard mounts on-device AI features that run Gemini Nano locally:
+- **Per-section Summarise**: Compresses section prose and structured KPIs into three bullets.
+- **Ask MyGov Assistant**: Answers natural language questions directly over in-memory datasets with interactive deep links to relevant sections.
+- **My Day Brief**: Synthesizes localized weather, public transport alerts, fuel prices and holidays into a daily morning commute and living brief.
+- **Explain Metric Simply (ELI5)**: Adds plain-language citizen impact notes to technical macroeconomic indicators (OPR, CPI inflation, Real GDP).
+- **Voice Readout**: Speaks answers and briefings aloud via native Web Speech synthesis.
 
-The button is only built when
-`await LanguageModel.availability() !== "unavailable"`. Everywhere else
-`mountAI()` returns before touching the DOM, so the page is byte-identical to
-what it has always been. In practice that means:
+Nothing is sent anywhere: models execute purely in the browser process, so there is no new `connect-src` entry and zero server cost.
+
+All AI controls are only built when `await LanguageModel.availability() !== "unavailable"`. Everywhere else `mountAI()` returns before touching the DOM, so the page is byte-identical to standard rendering.
 
 | | |
 |---|---|
 | Engine | Desktop Chrome 148+ only. Firefox, Safari and Edge do not implement this - Mozilla, Apple, Microsoft and the W3C all objected to it shipping. |
 | Hardware | ~22 GB free storage, plus 16 GB RAM or 4 GB VRAM. |
-| First run | Downloads a multi-GB model; the panel shows a progress bar (`monitor` → `downloadprogress`). |
+| First run | Downloads a multi-GB model; the panel shows a progress bar (`monitor` -> `downloadprogress`). |
 | Mobile | Not supported at all - which is most of this site's traffic. |
 
 ### The origin trial
@@ -897,28 +899,19 @@ if the trial is still open.
 Origin-trial tokens ship in the page and are public by design; this one is not
 a secret and does not belong in Wrangler vars.
 
-### Why it never touches the numbers
+### Grounding & Hardening
 
-The model is handed the section's *prose* - the description paragraph and the
-rendered card text - and is told never to invent, restate or round any figure.
+The model is handed structured section KPIs and prose and is strictly instructed
+never to invent, restate or round any figure not present in the data.
 Every number on this site is a published government statistic, and a ~3B
 on-device model will confidently mangle a fuel price. The rendered cards remain
 the source of truth; the panel carries a permanent "may be inaccurate" note.
 
-Two hardening details worth keeping if you touch `aiSummarise()`:
-
-- **Model output is untrusted text.** `aiRender()` builds the DOM with
-  `textContent` and never `innerHTML`. CSP does not help here - it would be
-  same-origin markup.
-- **Model input is untrusted too.** `#body-hazards` carries the Rapid KL alert,
-  which comes from `myrapid.com.my` via the `r.jina.ai` reader - two hops we do
-  not control. The scraped text is wrapped in `<data>` tags, stripped of any
-  closing tag, and the system prompt states that the block is content rather
-  than instructions.
-
-`promptStreaming()` yields **deltas, not cumulative snapshots**. Assigning each
-chunk straight to the node - as the older Chrome docs showed - renders only the
-last few words; `aiSummarise()` accumulates.
+Hardening details in `app.js`:
+- **In-memory LRU caching**: Generated summaries, explanations and query answers are cached to prevent battery and compute drain on repeated opens.
+- **Model output is untrusted text**: `aiRender()` and query results build the DOM with `textContent` and never `innerHTML`.
+- **Model input is untrusted too**: Scraped text and live feeds are wrapped in `<data>` tags, stripped of any closing tag, and the system prompt treats the block strictly as data content.
+- **Prompt streaming deltas**: `promptStreaming()` yields deltas, not cumulative snapshots; `aiSummarise()` and `aiAskQuery` accumulate chunks safely.
 
 ---
 
