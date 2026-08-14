@@ -7396,7 +7396,7 @@ function renderTransport(d){
         <span class="right">
           <span class="inp-wrap" style="display:inline-flex;width:190px">
             <input class="inp" id="fids-q" placeholder="${T("Search flight, city, airline…")}" autocomplete="off">
-            <button type="button" class="inp-x${fidsQuery ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+            <button type="button" class="inp-x${fids.q ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
           </span>
           <span class="seg" id="fids-dir" role="group" aria-label="Direction">
             <button data-dir="A" aria-pressed="true">${T("Arrivals")}</button>
@@ -7420,7 +7420,7 @@ function renderTransport(d){
         <label class="sr" for="tr-sq">${T("Search stops")}</label>
         <div class="inp-wrap">
           <input class="inp" id="tr-sq" placeholder="${T("Station or stop name…")}" autocomplete="off">
-          <button type="button" class="inp-x${trSQ ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
+          <button type="button" class="inp-x${stopQ ? " visible" : ""}" aria-label="${T("Clear")}" tabindex="-1">✕</button>
         </div>
         <button class="btn" id="tr-near" style="margin-top:var(--s2)">${ico("live")} ${T("Find stops near me")}</button>
         <div id="tr-near-st" style="font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)"></div>
