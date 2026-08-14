@@ -90,7 +90,7 @@ const I18N = {
   "Trending":"Trend",
   "7-Day Forecast":"Ramalan 7 Hari", "All locations table":"Jadual semua lokasi",
   "Next 24 hours":"24 jam seterusnya", "districts, towns & highlands":"daerah, bandar & pusat peranginan",
-  "Tomorrow":"Esok", "MET Forecast":"Ramalan MET",
+  "Tomorrow":"Esok", "MET Forecast":"Ramalan MET", "Popular locations":"Lokasi popular",
   "The full list reflects daily MET Malaysia forecasts. Click any row to view its live hourly and 7-day forecast.":"Senarai penuh memaparkan ramalan harian MET Malaysia. Klik mana-mana baris untuk melihat ramalan langsung setiap jam dan 7 hari.",
   "Weather & Warnings":"Cuaca & Amaran", "Fuel & Households":"Minyak & Isi Rumah",
   "Economy":"Ekonomi", "Public Transport":"Pengangkutan Awam", "Live Vehicles":"Kenderaan Langsung",
@@ -2784,7 +2784,23 @@ function renderWeather(d){
     paintWxSuggest();
   };
   q.onfocus = () => {
-    if (q.value.trim()) paintWxSuggest();
+    paintWxSuggest();
+  };
+  q.onkeydown = (e) => {
+    if (e.key === "Enter"){
+      e.preventDefault();
+      const term = (q.value || "").trim().toLowerCase();
+      if (!term) return;
+      const match = wx.data.locs.find(l => l.name.toLowerCase() === term)
+                 || wx.data.locs.find(l => l.name.toLowerCase().includes(term) || (LOC_TYPE[l.kind] || "").toLowerCase().includes(term));
+      if (match){
+        const p = $("#wx-suggest"); if (p) p.hidden = true;
+        pickLoc(match.id);
+        q.blur();
+      }
+    } else if (e.key === "Escape"){
+      const p = $("#wx-suggest"); if (p) p.hidden = true;
+    }
   };
   document.addEventListener("click", e => {
     if (!e.target.closest(".wx-search-wrap")){
@@ -3232,25 +3248,42 @@ function paintWxRows(pre){
   });
 }
 
+const WX_HUBS = ["Kuala Lumpur", "George Town", "Johor Bahru", "Kuching", "Kota Kinabalu", "Ipoh", "Kuantan", "Melaka", "Shah Alam", "Alor Setar"];
+
 function paintWxSuggest(){
   const p = $("#wx-suggest"), q = $("#wx-q");
   if (!p || !q || !wx.data) return;
   const term = (q.value || "").trim().toLowerCase();
-  if (!term){ p.hidden = true; p.innerHTML = ""; return; }
-  const matches = wx.data.locs.filter(l =>
-    l.name.toLowerCase().includes(term) || (LOC_TYPE[l.kind] || "").toLowerCase().includes(term)
-  ).slice(0, 8);
-  if (!matches.length){
+  let list = [];
+  let isHubs = false;
+  if (!term){
+    isHubs = true;
+    list = wx.data.locs.filter(l => WX_HUBS.some(h => l.name.toLowerCase() === h.toLowerCase()) || l.kind === "St").slice(0, 10);
+  } else {
+    const exact = [], prefix = [], sub = [];
+    for (const l of wx.data.locs){
+      const nl = l.name.toLowerCase();
+      const kl = (LOC_TYPE[l.kind] || "").toLowerCase();
+      if (nl === term) exact.push(l);
+      else if (nl.startsWith(term)) prefix.push(l);
+      else if (nl.includes(term) || kl.includes(term)) sub.push(l);
+    }
+    list = exact.concat(prefix).concat(sub).slice(0, 10);
+  }
+
+  if (!list.length){
     p.hidden = false;
     p.innerHTML = `<div class="wx-suggest-empty">${T("No location matches")} “${esc(q.value)}”</div>`;
     return;
   }
+
   p.hidden = false;
-  p.innerHTML = matches.map(l => `
-    <button type="button" class="wx-suggest-item" data-sug="${esc(l.id)}">
-      <span><b>${esc(l.name)}</b></span>
-      <span class="dim">${esc(LOC_TYPE[l.kind] || l.kind)}</span>
-    </button>`).join("");
+  p.innerHTML = (isHubs ? `<div class="wx-suggest-h">${T("Popular locations")}</div>` : "") +
+    list.map(l => `
+      <button type="button" class="wx-suggest-item" data-sug="${esc(l.id)}">
+        <span><b>${esc(l.name)}</b></span>
+        <span class="dim">${esc(LOC_TYPE[l.kind] || l.kind)}</span>
+      </button>`).join("");
   p.querySelectorAll("[data-sug]").forEach(b => {
     b.onclick = () => {
       const id = b.getAttribute("data-sug");

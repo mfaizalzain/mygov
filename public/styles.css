@@ -1133,6 +1133,8 @@ html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(18
 .wx-suggest-panel{position:absolute;top:calc(100% + 4px);right:0;width:280px;z-index:50;
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
   box-shadow:0 12px 28px rgba(0,0,0,.45);max-height:260px;overflow-y:auto}
+.wx-suggest-h{padding:6px 10px;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--fg-3);background:var(--surface);border-bottom:1px solid var(--line-soft)}
 .wx-suggest-item{display:flex;align-items:center;justify-content:space-between;width:100%;
   padding:7px 10px;border:none;background:transparent;color:var(--fg);font-size:12px;
   cursor:pointer;text-align:left;border-bottom:1px solid var(--line-soft);transition:var(--t)}
