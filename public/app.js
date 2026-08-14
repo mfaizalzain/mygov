@@ -681,6 +681,7 @@ function applyLang(){
   });
   Object.keys(secMode).forEach(id => setSecTime(id, secMode[id]));
   tick();
+  mountPins();
   if (syncNet) syncNet();
   rerenderAll();
 }
@@ -1097,7 +1098,22 @@ function mountPins(){
     pinBtn.classList.toggle("pinned", isPinned);
     pinBtn.setAttribute("title", isPinned ? T("Unpin section") : T("Pin section"));
     pinBtn.setAttribute("aria-label", isPinned ? T("Unpin section") : T("Pin section"));
-    pinBtn.innerHTML = isPinned ? "📌" : `<svg class="ico" aria-hidden="true" style="width:13px;height:13px"><use href="#i-flag"/></svg>`;
+    pinBtn.innerHTML = `<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pin"/></svg>`;
+
+    const navA = $("#nav-" + s.id);
+    if (navA){
+      let pinMark = navA.querySelector(".nav-pin-mark");
+      if (isPinned && !pinMark){
+        pinMark = document.createElement("span");
+        pinMark.className = "nav-pin-mark";
+        pinMark.textContent = "📌";
+        pinMark.style.fontSize = "10px";
+        pinMark.style.marginLeft = "3px";
+        navA.appendChild(pinMark);
+      } else if (!isPinned && pinMark){
+        pinMark.remove();
+      }
+    }
   }
 }
 

@@ -531,6 +531,8 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   color:var(--fg-3);font-size:12px;cursor:pointer;transition:var(--t);padding:0}
 .pin-btn:hover{color:var(--fg);background:var(--surface-3);border-color:var(--line)}
 .pin-btn.pinned{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+.pin-btn .ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.pin-btn.pinned .ico{stroke-width:2.2}
 
 /* Location chip and postcode search are one control group, so they sit
    together on the left. They used to be pushed to opposite ends of a full
