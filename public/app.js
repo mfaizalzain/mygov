@@ -8508,13 +8508,13 @@ async function mountAskBar(){
 }
 
 /* Native Web Speech Synthesis with Voice Matching & State Handling */
-window._activeSpeechUtterance = null;
+window._aiUtterance = null;
 
 function aiSpeak(text, btn){
   if (!("speechSynthesis" in window)) return;
 
-  // Toggle stop if already speaking
-  if (window.speechSynthesis.speaking){
+  // Toggle stop if already speaking or pending
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending){
     window.speechSynthesis.cancel();
     if (btn){
       btn.classList.remove("speaking");
@@ -8523,8 +8523,6 @@ function aiSpeak(text, btn){
     return;
   }
 
-  // Cancel prior queue and resume in case Chrome is in paused state
-  window.speechSynthesis.cancel();
   try { window.speechSynthesis.resume(); } catch {}
 
   // Strip markdown symbols, goto tags, brackets, and URLs
@@ -8539,58 +8537,49 @@ function aiSpeak(text, btn){
   if (!clean) return;
 
   const ut = new SpeechSynthesisUtterance(clean);
-  const voices = (typeof window.speechSynthesis.getVoices === "function") ? window.speechSynthesis.getVoices() : [];
-
-  // Smart voice selection with fallback chain
-  let chosenVoice = null;
-  if (LANG === "ms"){
-    chosenVoice = (voices && voices.length)
-      ? (voices.find(v => v.lang === "ms-MY" || v.lang.startsWith("ms")) ||
-         voices.find(v => v.lang === "id-ID" || v.lang.startsWith("id")) ||
-         voices.find(v => v.lang.startsWith("en")) ||
-         voices.find(v => v.default) ||
-         voices[0])
-      : null;
-    ut.lang = chosenVoice ? chosenVoice.lang : "id-ID";
-  } else {
-    chosenVoice = (voices && voices.length)
-      ? (voices.find(v => v.lang === "en-MY" || v.lang.startsWith("en-GB") || v.lang.startsWith("en-US") || v.lang.startsWith("en")) ||
-         voices.find(v => v.default) ||
-         voices[0])
-      : null;
-    ut.lang = chosenVoice ? chosenVoice.lang : "en-US";
-  }
-
-  if (chosenVoice) ut.voice = chosenVoice;
+  const targetLang = (LANG === "ms") ? "ms-MY" : "en-US";
+  ut.lang = targetLang;
   ut.rate = 1.0;
   ut.pitch = 1.0;
 
+  try {
+    const voices = window.speechSynthesis.getVoices();
+    if (Array.isArray(voices) && voices.length > 0){
+      const match = (LANG === "ms")
+        ? (voices.find(v => v.lang === "ms-MY" || v.lang.startsWith("ms")) ||
+           voices.find(v => v.lang === "id-ID" || v.lang.startsWith("id")) ||
+           voices.find(v => v.lang.startsWith("en")))
+        : (voices.find(v => v.lang === "en-MY" || v.lang.startsWith("en")));
+      if (match) ut.voice = match;
+    }
+  } catch {}
+
   const resetBtn = () => {
-    window._activeSpeechUtterance = null;
+    window._aiUtterance = null;
     if (btn){
       btn.classList.remove("speaking");
       btn.textContent = `🔊 ${T("Listen")}`;
     }
   };
 
+  ut.onstart = () => {
+    if (btn){
+      btn.classList.add("speaking");
+      btn.textContent = `⏹ ${T("Stop")}`;
+    }
+  };
   ut.onend = resetBtn;
   ut.onerror = resetBtn;
 
-  if (btn){
-    btn.classList.add("speaking");
-    btn.textContent = `⏹ ${T("Stop")}`;
+  window._aiUtterance = ut;
+
+  // Speak synchronously in user click event loop to retain browser gesture permissions
+  try {
+    window.speechSynthesis.speak(ut);
+    window.speechSynthesis.resume();
+  } catch {
+    resetBtn();
   }
-
-  window._activeSpeechUtterance = ut;
-
-  setTimeout(() => {
-    try {
-      window.speechSynthesis.resume();
-      window.speechSynthesis.speak(ut);
-    } catch {
-      resetBtn();
-    }
-  }, 50);
 }
 
 function renderAskResult(panel, rawText){
