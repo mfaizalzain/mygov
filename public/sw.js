@@ -81,9 +81,11 @@
    v52: Universal top-level active warnings alert banner elevated above traffic ticker and live vehicle feeds.
    v53: Automatically load and rank nearest public transport stops across all networks by default.
    v54: Segregate school holidays (KPM calendar) and state-specific vs nationwide public holidays in Ask MyGov AI assistant.
+   v55: Location search query refinement and state demographic enhancements.
+   v56: Redesign website icons to modern design standards with SVG favicon and high-DPI PWA assets.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v54";
+const VERSION    = "mygov-v56";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -94,6 +96,8 @@ const SHELL_ASSETS = [
   "/app.js",
   "/styles.css",
   "/manifest.webmanifest",
+  "/favicon.svg",
+  "/icons/icon.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/apple-touch-icon.png",

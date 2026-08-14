@@ -2687,6 +2687,53 @@ addEventListener("resize", syncTrackFades);
    scrollLeft (autoplay plus the prev/next buttons re-assert it on a timer),
    so a wheel write there is overwritten a frame later - and those two already
    give a mouse user visible controls. */
+/* Live vehicle/route/station chips carry a hover-and-focus tooltip that opens
+   upward, but they live inside a scrolling tray - and a scroll container clips
+   an absolutely positioned child however high its z-index, so the tip was cut
+   off at the tray edge and looked like it was hidden behind the live map. Pin
+   the open tip to viewport coordinates instead (see .tip-fixed in styles.css),
+   flipping it below the chip when there is no room above and keeping it inside
+   the viewport horizontally. Delegated, so it survives every re-render. */
+function chipTipOpen(chip){
+  const tip = chip.querySelector(":scope > .tip"); if (!tip) return;
+  tip.classList.add("tip-fixed");
+  tip.style.left = "0px"; tip.style.top = "0px";     // measure unconstrained
+  const c = chip.getBoundingClientRect(), t = tip.getBoundingClientRect(), pad = 8;
+  const left = Math.max(pad, Math.min(c.left + c.width / 2 - t.width / 2,
+                                      innerWidth - t.width - pad));
+  const above = c.top - t.height - 10;
+  tip.style.left = left + "px";
+  tip.style.top = (above < pad ? c.bottom + 10 : above) + "px";
+}
+function chipTipClose(chip){
+  const tip = chip && chip.querySelector(":scope > .tip"); if (!tip) return;
+  tip.classList.remove("tip-fixed");
+  tip.style.left = tip.style.top = "";
+}
+addEventListener("pointerover", e => {
+  const chip = e.target.closest && e.target.closest(".vchip");
+  if (chip && !chip.contains(e.relatedTarget)) chipTipOpen(chip);
+});
+addEventListener("pointerout", e => {
+  const chip = e.target.closest && e.target.closest(".vchip");
+  if (chip && !chip.contains(e.relatedTarget)) chipTipClose(chip);
+});
+addEventListener("focusin", e => {
+  const chip = e.target.closest && e.target.closest(".vchip");
+  if (chip) chipTipOpen(chip);
+});
+addEventListener("focusout", e => {
+  const chip = e.target.closest && e.target.closest(".vchip");
+  if (chip && !chip.contains(e.relatedTarget)) chipTipClose(chip);
+});
+/* A fixed tip no longer moves with its chip, so re-place it whenever the tray
+   or the page scrolls under it, and when the viewport changes size. */
+function chipTipReflow(){
+  document.querySelectorAll(".vchip .tip.tip-fixed").forEach(t => chipTipOpen(t.parentElement));
+}
+addEventListener("scroll", chipTipReflow, true);
+addEventListener("resize", chipTipReflow);
+
 const WHEEL_TRACKS = "nav.sections ul,.metro-scroll";
 addEventListener("wheel", e => {
   const t = e.target.closest && e.target.closest(WHEEL_TRACKS);

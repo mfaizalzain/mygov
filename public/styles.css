@@ -1324,6 +1324,16 @@ button.vchip{cursor:pointer}
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow);
   opacity:0;visibility:hidden;pointer-events:none;transition:var(--t)}
 .vchip:hover .tip,.vchip:focus .tip,.vchip:focus-within .tip{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);pointer-events:auto}
+/* The chip trays scroll (.vchips-tray, .scroll-y both set overflow-y:auto),
+   and an overflow container clips an absolutely positioned child no matter
+   its z-index - so the top row's tooltip was sliced off at the tray edge and
+   read as "hidden behind the map" sitting above it. While a tip is open,
+   chipTip() in app.js promotes it to viewport coordinates, where nothing can
+   clip it; left/top come from the script, so the centring transform goes. */
+.vchip .tip.tip-fixed,
+.vchip:hover .tip.tip-fixed,
+.vchip:focus .tip.tip-fixed,
+.vchip:focus-within .tip.tip-fixed{position:fixed;bottom:auto;transform:none;z-index:120}
 .vchip .tip .vrow{display:flex;justify-content:space-between;gap:var(--s2);font-size:12px;padding:2px 0;white-space:nowrap}
 .vchip .tip .link-btn{display:inline-block;margin-top:6px}
 @media (max-width:480px){ .vchip .tip{width:auto;white-space:normal} }
