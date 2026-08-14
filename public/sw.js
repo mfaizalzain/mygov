@@ -76,9 +76,10 @@
    v47: restore complete AI runtime helpers and prevent fallback exception loop.
    v48: fully bind action and voice buttons to site design system .btn / .btn-a theme tokens.
    v49: intelligent metric-extracting open data question answering engine for precise factual responses.
+   v50: state-level sub-national demographic resolution for population queries.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v49";
+const VERSION    = "mygov-v50";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

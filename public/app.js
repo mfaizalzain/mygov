@@ -8529,13 +8529,82 @@ function queryDashboardFactsFallback(q){
       : `The latest announced EPF dividend rate is ${epfVal} for Conventional Savings and 5.40% for Shariah Savings.`) + "\n[GOTO:economy]";
   }
 
-  // 6. Population / Demographics / Rakyat / Citizens
-  if (query.match(/\b(population|penduduk|populasi|demographic|demografi|dosm|census|banci|rakyat|citizens|warganegara|how many people)\b/)){
+  // 6. Population / Demographics / Rakyat / Citizens / States / Districts
+  const STATE_POP_MAP = {
+    "Johor": { pop: 4224.3, prev: 4100.9, eth: "Bumiputera Malay (55.4%)", ethMs: "Bumiputera Melayu (55.4%)", parl: 26, dun: 56, dist: 10 },
+    "Kedah": { pop: 2237.4, prev: 2192.1, eth: "Bumiputera Malay (77.8%)", ethMs: "Bumiputera Melayu (77.8%)", parl: 15, dun: 36, dist: 12 },
+    "Kelantan": { pop: 1925.3, prev: 1890.2, eth: "Bumiputera Malay (95.6%)", ethMs: "Bumiputera Melayu (95.6%)", parl: 14, dun: 45, dist: 11 },
+    "Melaka": { pop: 1057.4, prev: 1032.5, eth: "Bumiputera Malay (68.9%)", ethMs: "Bumiputera Melayu (68.9%)", parl: 6, dun: 28, dist: 3 },
+    "Negeri Sembilan": { pop: 1248.5, prev: 1221.7, eth: "Bumiputera Malay (60.1%)", ethMs: "Bumiputera Melayu (60.1%)", parl: 8, dun: 36, dist: 7 },
+    "Pahang": { pop: 1686.2, prev: 1654.8, eth: "Bumiputera Malay (75.2%)", ethMs: "Bumiputera Melayu (75.2%)", parl: 14, dun: 42, dist: 11 },
+    "Perak": { pop: 2577.9, prev: 2552.1, eth: "Bumiputera Malay (58.9%)", ethMs: "Bumiputera Melayu (58.9%)", parl: 24, dun: 59, dist: 12 },
+    "Perlis": { pop: 297.3, prev: 292.8, eth: "Bumiputera Malay (87.2%)", ethMs: "Bumiputera Melayu (87.2%)", parl: 3, dun: 15, dist: 1 },
+    "Pulau Pinang": { pop: 1808.3, prev: 1789.2, eth: "Chinese (44.9%)", ethMs: "Cina (44.9%)", parl: 13, dun: 40, dist: 5 },
+    "Sabah": { pop: 3767.0, prev: 3662.4, eth: "Bumiputera other (58.2%)", ethMs: "Bumiputera lain (58.2%)", parl: 25, dun: 73, dist: 27 },
+    "Sarawak": { pop: 2539.8, prev: 2505.7, eth: "Bumiputera other (72.4%)", ethMs: "Bumiputera lain (72.4%)", parl: 31, dun: 82, dist: 40 },
+    "Selangor": { pop: 7454.2, prev: 7408.7, eth: "Bumiputera Malay (54.7%)", ethMs: "Bumiputera Melayu (54.7%)", parl: 22, dun: 56, dist: 9 },
+    "Terengganu": { pop: 1260.9, prev: 1238.4, eth: "Bumiputera Malay (97.1%)", ethMs: "Bumiputera Melayu (97.1%)", parl: 8, dun: 32, dist: 8 },
+    "W.P. Kuala Lumpur": { pop: 2082.3, prev: 2045.1, eth: "Bumiputera Malay (41.6%)", ethMs: "Bumiputera Melayu (41.6%)", parl: 11, dun: 0, dist: 1 },
+    "W.P. Labuan": { pop: 101.1, prev: 99.8, eth: "Bumiputera other (76.8%)", ethMs: "Bumiputera lain (76.8%)", parl: 1, dun: 0, dist: 1 },
+    "W.P. Putrajaya": { pop: 121.4, prev: 118.9, eth: "Bumiputera Malay (96.2%)", ethMs: "Bumiputera Melayu (96.2%)", parl: 1, dun: 0, dist: 1 },
+  };
+
+  const STATE_SYNONYMS = [
+    { name: "Selangor", patterns: [/\bselangor\b/i, /\bshah alam\b/i] },
+    { name: "Johor", patterns: [/\bjohor\b/i, /\bjb\b/i, /\bjohor bahru\b/i] },
+    { name: "Sabah", patterns: [/\bsabah\b/i, /\bkota kinabalu\b/i] },
+    { name: "Sarawak", patterns: [/\bsarawak\b/i, /\bkuching\b/i] },
+    { name: "Perak", patterns: [/\bperak\b/i, /\bipoh\b/i] },
+    { name: "Kedah", patterns: [/\bkedah\b/i, /\balor setar\b/i] },
+    { name: "Kelantan", patterns: [/\bkelantan\b/i, /\bkota bharu\b/i] },
+    { name: "Terengganu", patterns: [/\bterengganu\b/i, /\bganu\b/i] },
+    { name: "Pahang", patterns: [/\bpahang\b/i, /\bkuantan\b/i] },
+    { name: "Pulau Pinang", patterns: [/\bpenang\b/i, /\bpulau pinang\b/i, /\bgeorge town\b/i] },
+    { name: "Negeri Sembilan", patterns: [/\bnegeri sembilan\b/i, /\bn9\b/i, /\bseremban\b/i] },
+    { name: "Melaka", patterns: [/\bmelaka\b/i, /\bmalacca\b/i] },
+    { name: "Perlis", patterns: [/\bperlis\b/i, /\bkangar\b/i] },
+    { name: "W.P. Kuala Lumpur", patterns: [/\bkuala lumpur\b/i, /\bkl\b/i, /\bwp kl\b/i] },
+    { name: "W.P. Putrajaya", patterns: [/\bputrajaya\b/i] },
+    { name: "W.P. Labuan", patterns: [/\blabuan\b/i] },
+  ];
+
+  const isPopQuery = query.match(/\b(population|penduduk|populasi|demographic|demografi|dosm|census|banci|rakyat|citizens|warganegara|how many people|berapa ramai|berapa orang|inhabitants|orang)\b/);
+  const matchedState = STATE_SYNONYMS.find(s => s.patterns.some(p => p.test(query)));
+
+  if (matchedState && (isPopQuery || query.includes("state") || query.includes("negeri"))){
+    const sName = matchedState.name;
+    const gState = dataMap.places?.state;
+    let popK = STATE_POP_MAP[sName]?.pop;
+    let prevK = STATE_POP_MAP[sName]?.prev;
+    let ethInfo = isMs ? STATE_POP_MAP[sName]?.ethMs : STATE_POP_MAP[sName]?.eth;
+    let parl = STATE_POP_MAP[sName]?.parl;
+    let dun = STATE_POP_MAP[sName]?.dun;
+    let dist = STATE_POP_MAP[sName]?.dist;
+
+    if (gState && gState.trend && gState.trend[sName]){
+      const tr = gState.trend[sName];
+      popK = tr[tr.length - 1];
+      prevK = tr.length > 1 ? tr[tr.length - 2] : null;
+    }
+
+    const yoy = (popK && prevK) ? ((popK / prevK - 1) * 100).toFixed(1) : null;
+    const popDisplay = popK >= 1000 ? `${(popK / 1000).toFixed(2)} million` : `${popK.toLocaleString()}k`;
+    const popDisplayMs = popK >= 1000 ? `${(popK / 1000).toFixed(2)} juta orang` : `${popK.toLocaleString()} ribu orang`;
+
+    // Automatically synchronize the places state view
+    placesState = sName;
+
+    return (isMs
+      ? `Jumlah anggaran penduduk ${sName} ialah ${popDisplayMs} (DOSM${yoy ? `, ${yoy > 0 ? "+" : ""}${yoy}% setahun` : ""}). Kumpulan etnik terbesar ialah ${ethInfo || "Bumiputera"}. ${sName} mempunyai ${dist || "beberapa"} daerah, ${parl || 0} kerusi Parlimen dan ${dun || 0} kerusi DUN.`
+      : `The estimated population of ${sName} is ${popDisplay} (DOSM figures${yoy ? `, ${yoy > 0 ? "+" : ""}${yoy}% y/y` : ""}). The largest demographic group is ${ethInfo || "Bumiputera"}. ${sName} comprises ${dist || "multiple"} administrative districts, ${parl || 0} Parliamentary seats, and ${dun || 0} State DUN seats.`) + "\n[GOTO:places]";
+  }
+
+  if (isPopQuery){
     const pop = getKpiVal("places", /population|penduduk/) || "34.1 million";
     const group = getKpiVal("places", /group|kumpulan/) || "Bumiputera";
     return (isMs
-      ? `Jumlah anggaran penduduk Malaysia (DOSM) adalah sekitar ${pop}, dengan kumpulan etnik terbesar ialah ${group} (~70.1%).`
-      : `Malaysia's total estimated population is ${pop} (DOSM figures), with Bumiputera as the largest demographic group (~70.1%).`) + "\n[GOTO:population]";
+      ? `Jumlah anggaran penduduk Malaysia (DOSM) adalah sekitar ${pop}, dengan kumpulan etnik terbesar ialah ${group} (~70.1%). Merangkumi 30.7 juta warganegara dan 3.4 juta bukan warganegara.`
+      : `Malaysia's total estimated population is ${pop} (DOSM figures), with Bumiputera as the largest demographic group (~70.1%). Comprises 30.7M citizens and 3.4M non-citizens across 13 states and 3 federal territories.`) + "\n[GOTO:places]";
   }
 
   // 7. Weather / Cuaca / Rain / Flood / Storm / Warnings
