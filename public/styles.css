@@ -525,7 +525,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .saved-chip-x{background:none;border:0;color:var(--fg-3);cursor:pointer;font-size:10px;padding:0 2px;line-height:1}
 .saved-chip-x:hover{color:var(--danger)}
 
-/* section pin button */
+/* section pin button & pinned section highlight */
 .pin-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
   border-radius:var(--r-sm);border:1px solid var(--line-soft);background:var(--surface-2);
   color:var(--fg-3);font-size:12px;cursor:pointer;transition:var(--t);padding:0}
@@ -533,6 +533,11 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .pin-btn.pinned{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
 .pin-btn .ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .pin-btn.pinned .ico{stroke-width:2.2}
+
+section.is-pinned{position:relative;border-radius:var(--r);
+  box-shadow:0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent);padding:var(--s3);margin-bottom:var(--s6);transition:var(--t)}
+section.is-pinned::before{content:"📌 PINNED";font-size:10px;font-family:var(--mono);font-weight:700;
+  color:var(--accent);letter-spacing:0.08em;margin-bottom:8px;display:inline-block;padding:2px 8px;border-radius:99px;background:var(--accent-dim)}
 
 /* Location chip and postcode search are one control group, so they sit
    together on the left. They used to be pushed to opposite ends of a full

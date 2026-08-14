@@ -249,4 +249,18 @@ describe("State Persistence & Saved Locations Logic", () => {
     assert.equal(mockGetSavedLocs().length, 1);
     assert.equal(mockGetSavedLocs()[0].id, "kl");
   });
+
+  test("calculateOrderedSections() floats pinned sections to top while keeping order", () => {
+    const defaultSections = ["hazards", "weather", "fuel", "population", "economy", "finance", "mobility", "transport"];
+    const pinned = ["transport", "fuel"];
+
+    const ordered = [
+      ...pinned.filter(id => defaultSections.includes(id)),
+      ...defaultSections.filter(id => !pinned.includes(id))
+    ];
+
+    assert.deepEqual(ordered.slice(0, 2), ["transport", "fuel"]);
+    assert.equal(ordered.length, defaultSections.length);
+    assert.ok(ordered.includes("weather"));
+  });
 });

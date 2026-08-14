@@ -1064,17 +1064,60 @@ function getPinnedSections(){
   } catch { return []; }
 }
 
+function applySectionOrdering(){
+  const main = document.getElementById("main");
+  const navlist = document.getElementById("navlist");
+  if (!main) return;
+  const pinned = getPinnedSections();
+
+  const defaultOrder = SECTIONS.map(s => s.id);
+  const orderedIds = [
+    ...pinned.filter(id => defaultOrder.includes(id)),
+    ...defaultOrder.filter(id => !pinned.includes(id))
+  ];
+
+  // 1. Re-order sections in main so pinned sections float to the top
+  for (const id of orderedIds){
+    const sec = document.getElementById(id);
+    if (sec){
+      const isPinned = pinned.includes(id);
+      sec.classList.toggle("is-pinned", isPinned);
+      main.appendChild(sec);
+      if (isPinned && !loaded.has(id)){
+        loadSection(id, false);
+      }
+    }
+  }
+
+  // 2. Re-order in navlist so pinned items appear first
+  if (navlist){
+    const radarLi = navlist.querySelector("#nav-radar-band")?.closest("li");
+    if (radarLi) navlist.appendChild(radarLi);
+    for (const id of orderedIds){
+      const navItem = navlist.querySelector(`#nav-${id}`)?.closest("li");
+      if (navItem){
+        navlist.appendChild(navItem);
+      }
+    }
+  }
+}
+
 function togglePinSection(id){
   let list = getPinnedSections();
   const isPinned = list.includes(id);
   if (isPinned){
     list = list.filter(x => x !== id);
   } else {
-    list.push(id);
+    list.unshift(id);
   }
   try { localStorage.setItem(PINNED_KEY, JSON.stringify(list)); } catch {}
+  applySectionOrdering();
   mountPins();
   showCopyToast(isPinned ? `📌 ${T("Unpin section")}` : `📌 ${T("Pin section")}`);
+  const sec = document.getElementById(id);
+  if (sec){
+    sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 function mountPins(){
@@ -10407,6 +10450,7 @@ function boot(){
   /* Fire-and-forget: availability() can block on a disk check, and nothing
      else in boot() depends on the result. */
   mountShare();
+  applySectionOrdering();
   mountPins();
   mountAI().catch(() => {});
   /* Live traffic marquee: loads independently of the sections - it is a
