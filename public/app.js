@@ -8507,6 +8507,67 @@ async function mountAskBar(){
     heroCopy.appendChild(card);
 }
 
+/* Native Web Speech Synthesis with Voice Matching & State Handling */
+let aiActiveUtterance = null;
+
+function aiSpeak(text, btn){
+  if (!("speechSynthesis" in window)) return;
+
+  // Toggle stop if already speaking
+  if (window.speechSynthesis.speaking){
+    window.speechSynthesis.cancel();
+    if (btn){
+      btn.classList.remove("speaking");
+      btn.textContent = `🔊 ${T("Listen")}`;
+    }
+    return;
+  }
+
+  // Cancel any prior speech
+  window.speechSynthesis.cancel();
+
+  // Strip markdown symbols, goto tags, brackets
+  const clean = String(text || "")
+    .replace(/\[GOTO:[^\]]+\]/gi, "")
+    .replace(/[*#_`~>•]/g, "")
+    .replace(/[\n\r]+/g, ". ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!clean) return;
+
+  const ut = new SpeechSynthesisUtterance(clean);
+  const targetLang = (LANG === "ms") ? "ms-MY" : "en-MY";
+  ut.lang = targetLang;
+  ut.rate = 0.95;
+  ut.pitch = 1.0;
+
+  try {
+    const voices = window.speechSynthesis.getVoices() || [];
+    const voice = voices.find(v => v.lang === targetLang || v.lang.startsWith(LANG === "ms" ? "ms" : "en")) || null;
+    if (voice) ut.voice = voice;
+  } catch {}
+
+  const resetBtn = () => {
+    aiActiveUtterance = null;
+    if (btn){
+      btn.classList.remove("speaking");
+      btn.textContent = `🔊 ${T("Listen")}`;
+    }
+  };
+
+  ut.onend = resetBtn;
+  ut.onerror = resetBtn;
+
+  if (btn){
+    btn.classList.add("speaking");
+    btn.textContent = `⏹ ${T("Stop")}`;
+  }
+
+  aiActiveUtterance = ut;
+  window.speechSynthesis.speak(ut);
+}
+
 function renderAskResult(panel, rawText){
   panel.textContent = "";
   let cleanText = rawText;
