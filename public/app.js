@@ -73,16 +73,6 @@ const I18N = {
     "flood station at risk":"flood station at risk",
     "flood stations at risk":"flood stations at risk",
     "Unhealthy Air Quality (AQI ":"Unhealthy Air Quality (AQI ",
-    /* Traffic incidents (TomTom panel) */
-    "Traffic incidents":"Traffic incidents",
-    "Source":"Source",
-    "covers urban roads; highways are in the ticker above":"covers urban roads; highways are in the ticker above",
-    "No traffic incidents reported in this region right now":"No traffic incidents reported in this region right now",
-    "Unnamed road":"Unnamed road",
-    "Accident":"Accident", "Road closed":"Road closed", "Road works":"Road works",
-    "Hazard":"Hazard", "Jam":"Jam", "Lane closed":"Lane closed",
-    "Road blocked":"Road blocked", "Flooding":"Flooding",
-    "Broken down vehicle":"Broken down vehicle", "Detour":"Detour", "Cluster":"Cluster",
   },
   ms: {
   /* Groceries (PriceCatcher) */
@@ -581,16 +571,6 @@ const I18N = {
   "Under 15":"Bawah 15", "15-64":"15-64", "65+":"65+",
   "Median income":"Pendapatan median", "Poverty":"Kemiskinan", "Gini":"Gini",
   "Income data not available yet.":"Data pendapatan belum tersedia.",
-  /* Traffic incidents (TomTom panel) */
-  "Traffic incidents":"Insiden trafik",
-  "Source":"Sumber",
-  "covers urban roads; highways are in the ticker above":"merangkumi jalan bandar; lebuh raya dalam tiker di atas",
-  "No traffic incidents reported in this region right now":"Tiada insiden trafik dilaporkan di rantau ini buat masa ini",
-  "Unnamed road":"Jalan tanpa nama",
-  "Accident":"Kemalangan", "Road closed":"Jalan ditutup", "Road works":"Kerja jalan raya",
-  "Hazard":"Bahaya", "Jam":"Kesesakan", "Lane closed":"Lorong ditutup",
-  "Road blocked":"Jalan terhalang", "Flooding":"Banjir",
-  "Broken down vehicle":"Kenderaan rosak", "Detour":"Lencongan", "Cluster":"Kluster",
 } };
 const T = s => (I18N[LANG] && I18N[LANG][s]) || s;
 /* Forecasts arrive only in Bahasa Melayu; map the common phrases to English
@@ -8764,25 +8744,14 @@ function initTrafficPause(band){
   };
 }
 /* ═══════════════════ structured traffic incidents (TomTom) ═══════════════════
-   The marquee above is the highway feed (InfoTrafikGZ). This panel shows the
-   TomTom incidentDetails v5 feed: urban + popular-destination regions, each
-   with structured incidents (accident / closure / roadworks / hazard) with
-   coordinates, road names and times. The visitor's region is picked from the
-   location pipeline (geo.osm ends with the state); chips switch regions. */
-const TINC_REGIONS = [
-  ["kl-selangor",   "Klang Valley"],
-  ["johor",         "Johor Bahru"],
-  ["penang",        "Penang"],
-  ["perak-ipoh",    "Ipoh"],
-  ["melaka",        "Melaka"],
-  ["pahang-cameron","Cameron Highlands"],
-  ["kedah-langkawi","Langkawi"],
-  ["kuantan",       "Kuantan"],
-  ["kelantan-kb",   "Kota Bharu"],
-  ["kuching",       "Kuching"],
-];
-/* OSM state name (from geo.osm "City, State") -> region slug. The collector
-   bboxes are city-centric, so a state maps to its main urban area. */
+   The marquee already carries the highway feed (InfoTrafikGZ). TomTom adds
+   structured incidents for urban + popular-destination regions - with
+   per-incident descriptions ("Stationary traffic", "Closed") and a delay
+   magnitude. To avoid a second strip (there are enough sections already),
+   these are merged into the SAME ticker, after the crowd-sourced posts, and
+   scoped to the visitor's region so they read as "near you". Only incidents
+   still active (endTime in the future) and a feed fresher than 6h count -
+   stale traffic never shows. */
 const TINC_STATE = {
   "kuala lumpur":"kl-selangor", "selangor":"kl-selangor", "putrajaya":"kl-selangor",
   "johor":"johor", "pulau pinang":"penang", "penang":"penang",
@@ -8791,97 +8760,65 @@ const TINC_STATE = {
   "kelantan":"kelantan-kb", "terengganu":"kuantan",
   "sarawak":"kuching", "kuching":"kuching", "labuan":"kuching",
 };
-/* Category colour dots: accidents red, closures orange, works amber, hazards
-   yellow, everything else grey. Readable on both themes. */
-const TINC_COL = {
-  "Accident":"#f87171", "Road closed":"#fb923c", "Road works":"#facc15",
-  "Hazard":"#eab308", "Jam":"#f97316", "Lane closed":"#fb923c",
-  "Road blocked":"#f87171", "Flooding":"#38bdf8", "Broken down vehicle":"#a78bfa",
-  "Detour":"#fb923c", "Cluster":"#94a3b8",
+/* Region display names, in the same order the collector emits regions. */
+const TINC_NAMES = {
+  "kl-selangor":"Klang Valley", "johor":"JB", "penang":"Penang",
+  "perak-ipoh":"Ipoh", "melaka":"Melaka", "pahang-cameron":"Cameron Highlands",
+  "kedah-langkawi":"Langkawi", "kuantan":"Kuantan",
+  "kelantan-kb":"Kota Bharu", "kuching":"Kuching",
 };
-let tincData = null, tincRegion = null;
+const TINC_MAX_AGE = 6 * 3600e3;   // feed older than this = yesterday's traffic
 
+function tincActive(incs){
+  const now = Date.now();
+  return incs.filter(i => {
+    if (!i.end) return true;
+    const e = Date.parse(i.end);
+    return !isFinite(e) || e > now;
+  });
+}
 function tincRegionForGeo(){
   if (!geo || !geo.osm) return null;
   const st = String(geo.osm).split(",").pop().trim().toLowerCase();
   return TINC_STATE[st] || null;
 }
-function tincCatColor(cat){
-  return TINC_COL[cat] || "#94a3b8";
-}
-function tincTime(iso){
-  if (!iso) return "";
-  const ms = Date.parse(iso);
-  if (!isFinite(ms)) return "";
-  return new Date(ms).toLocaleTimeString("en-GB",
-    { hour:"2-digit", minute:"2-digit", timeZone:"Asia/Kuala_Lumpur" });
-}
-function tincRender(){
-  const host = $(".traffic-incidents");
-  if (!host || !tincData) return;
-  /* Region chips: all regions, the active one pressed. */
-  const chips = TINC_REGIONS.map(([slug, name]) =>
-    `<button type="button" class="tinc-chip" data-slug="${slug}" role="radio"
-       aria-pressed="${slug === tincRegion}" aria-label="${esc(name)}">${esc(name)}</button>`
-  ).join("");
-  $(".tinc-chips").innerHTML = chips;
-  /* Wire chip clicks (delegate - the set is static, so bind once). */
-  [...$(".tinc-chips").querySelectorAll(".tinc-chip")].forEach(b =>
-    b.addEventListener("click", () => {
-      if (b.dataset.slug === tincRegion) return;
-      tincRegion = b.dataset.slug;
-      try { localStorage.setItem("mygov.tinc.v1", tincRegion); } catch {}
-      tincRender();
-    }));
-  const reg = tincData.regions[tincRegion];
-  const incs = reg ? reg.incidents : [];
-  /* KPI chips: per-category counts (accident / closure / works / hazard). */
-  const counts = {};
-  for (const i of incs) counts[i.catName] = (counts[i.catName] || 0) + 1;
-  const kpiOrder = ["Accident", "Road closed", "Road works", "Hazard", "Jam",
-    "Flooding", "Lane closed", "Road blocked", "Broken down vehicle", "Detour", "Cluster"];
-  const kpis = kpiOrder.filter(k => counts[k]).map(k =>
-    `<span class="tinc-kpi"><span class="kdot" style="background:${tincCatColor(k)}"></span>
-       <b>${counts[k]}</b> ${esc(T(k))}</span>`).join("");
-  $(".tinc-kpis").innerHTML = kpis;
-  /* Incident list: newest first (they arrive sorted by startTime desc). */
-  const list = $(".tinc-list");
-  const note = `<li class="tinc-note">${esc(T("Source"))}: TomTom Traffic Incidents · ${esc(T("covers urban roads; highways are in the ticker above"))}</li>`;
-  if (!incs.length){
-    list.innerHTML = `<li class="tinc-clear">✓ ${esc(T("No traffic incidents reported in this region right now"))}</li>` + note;
-  } else {
-    const items = incs.slice(0, 12).map(i => {
-      const where = [i.from, i.to].filter(Boolean).join(" → ") || T("Unnamed road");
-      const roads = (i.roads || []).length ? `<div class="tinc-item-roads">${esc(i.roads.join(" · "))}</div>` : "";
-      return `<li class="tinc-item">
-        <span class="kdot" style="background:${tincCatColor(i.catName)}" aria-hidden="true"></span>
-        <div class="tinc-item-main">
-          <div class="tinc-item-where">${esc(where)}</div>
-          ${roads}
-        </div>
-        <span class="tinc-item-when">${tincTime(i.start)}</span>
-      </li>`;
-    }).join("");
-    list.innerHTML = items + note;
-  }
-  const upd = tincData.updated ? ` · ${esc(T("Updated"))} ${ago(Math.floor(Date.parse(tincData.updated)/1000))}` : "";
-  $("#tinc-upd").textContent = `${esc(reg.name)}${upd}`;
+/* One ticker item: "🔴 Jalan A → Jalan B · Queuing traffic (Klang Valley)" */
+function tincItem(i, regionName){
+  const dot = i.catName === "Accident" ? "🔴" : i.catName === "Road closed" ? "⛔"
+    : i.catName === "Road works" ? "🚧" : i.catName === "Hazard" ? "⚠" : "🔸";
+  const where = [i.from, i.to].filter(Boolean).join(" → ") || "road";
+  const desc = (i.events && i.events[0]) ? ` · ${i.events[0]}` : "";
+  return `${dot} ${where}${desc} · ${regionName}`;
 }
 async function loadTrafficIncidents(){
-  const host = $(".traffic-incidents");
-  if (!host) return;
+  const mq = $("#traffic-mq");
+  const band = $("#traffic-band");
+  if (!mq || !band) return;
   const d = await fetch("/traffic_incidents.json", { cache:"no-store" })
     .then(r => { if (!r.ok) throw new Error("traffic incidents unavailable"); return r.json(); });
   if (!d.regions) return;
-  tincData = d;
-  /* Region: saved choice > geo-derived > kl-selangor. */
-  let saved = null;
-  try { saved = localStorage.getItem("mygov.tinc.v1"); } catch {}
-  tincRegion = (saved && d.regions[saved]) ? saved
-    : (tincRegionForGeo() && d.regions[tincRegionForGeo()]) ? tincRegionForGeo()
-    : "kl-selangor";
-  host.hidden = false;
-  tincRender();
+  /* Stale feed: hide nothing (the marquee keeps the crowd-sourced feed), just
+     skip the TomTom part. */
+  const feedMs = d.updated ? Date.parse(d.updated) : NaN;
+  if (!isFinite(feedMs) || Date.now() - feedMs > TINC_MAX_AGE) return;
+  const slug = tincRegionForGeo() || "kl-selangor";
+  const reg = d.regions[slug];
+  if (!reg) return;
+  const incs = tincActive(reg.incidents || []).slice(0, 6);
+  if (!incs.length) return;
+  const items = incs.map(i => `<span class="traffic-item"><b>${esc(TINC_NAMES[slug] || slug)}</b> ${esc(tincItem(i, TINC_NAMES[slug] || slug))}</span>`)
+    .join('<span class="traffic-sep" aria-hidden="true">◆</span>');
+  /* The highway feed renders first (loadTrafficMarquee). If it produced a run,
+     append TomTom after it; otherwise the marquee is hidden (no fresh posts)
+     and TomTom alone builds the strip. Either way the band becomes visible. */
+  const run = mq.querySelector(".traffic-run");
+  if (run){
+    run.insertAdjacentHTML("beforeend", `<span class="traffic-sep" aria-hidden="true">◆</span>${items}`);
+  } else {
+    mq.innerHTML =
+      `<span class="traffic-run">${items}</span><span class="traffic-run" aria-hidden="true">${items}</span>`;
+  }
+  band.hidden = false;
 }
 /* Flood risk: KPI row + state chips + status-coloured map. 26 stations is
    small enough to render individual markers (no clustering needed), but the

@@ -14,11 +14,13 @@ def _incident(**over):
                      "coordinates": [[101.45, 3.08], [101.46, 3.09]]},
         "properties": {
             "iconCategory": 6,
+            "magnitudeOfDelay": 2,
             "startTime": "2026-08-15T10:08:00Z",
             "endTime": "2026-08-15T10:56:00Z",
             "from": "Bandar Bukit Raja",
             "to": "Bandar Bukit Raja",
             "roadNumbers": ["3217"],
+            "events": [{"code": 108, "description": "Queuing traffic"}],
         },
     }
     base["properties"].update(over.get("properties", {}))
@@ -33,6 +35,8 @@ def test_slim_keeps_driver_fields():
     assert i["lat"] == 3.08 and i["lon"] == 101.45  # first point
     assert i["roads"] == ["3217"]
     assert i["start"].startswith("2026-08-15")
+    assert i["delay"] == 2
+    assert i["events"] == ["Queuing traffic"]
 
 
 def test_slim_drops_weather_noise():

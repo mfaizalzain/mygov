@@ -36,6 +36,7 @@ Output shape (KV key "traffic_incidents"):
           "from": "Bandar Bukit Raja", "to": "Bandar Bukit Raja",
           "start": "2026-08-15T10:08:00Z", "end": "2026-08-15T10:56:00Z",
           "roads": ["3217"],
+          "delay": 2, "events": ["Queuing traffic"],
           "lat": 3.08898, "lon": 101.44934,
           "polyline": [[101.44934,3.08898],[101.45055,3.08898]]
         }, ...
@@ -49,7 +50,9 @@ Output shape (KV key "traffic_incidents"):
 Only incident categories that matter to drivers are kept (accidents, closures,
 roadworks, hazards, congestion). Planned future incidents are excluded
 (timeValidityFilter=present). Lat/lon is the FIRST point of the LineString so
-the frontend can drop a marker without decoding polylines.
+the frontend can drop a marker without decoding polylines. `events` carries
+TomTom's per-incident descriptions ("Stationary traffic", "Closed", ...);
+`delay` is magnitudeOfDelay (0=unknown .. 4=extreme).
 """
 
 import json
@@ -102,7 +105,7 @@ KEEP_CATS = {1, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19}
 def fetch_region(bbox):
     """Fetch incidents in a bbox; returns list of incidents (slimmed) or [] on error."""
     b = ",".join(f"{x:.5f}" for x in bbox)
-    fields = "{incidents{type,geometry{type,coordinates},properties{iconCategory,startTime,endTime,from,to,roadNumbers}}}"
+    fields = "{incidents{type,geometry{type,coordinates},properties{iconCategory,magnitudeOfDelay,startTime,endTime,from,to,roadNumbers,events{description,code}}}}"
     u = (f"{BASE}?key={KEY}&bbox={b}&fields={fields}"
          f"&language=en-GB&t=1111&timeValidityFilter=present")
     req = urllib.request.Request(u, headers={"user-agent": UA})
@@ -127,6 +130,8 @@ def slim(inc):
         "start": p.get("startTime", ""),
         "end": p.get("endTime", ""),
         "roads": p.get("roadNumbers") or [],
+        "delay": p.get("magnitudeOfDelay"),
+        "events": [e.get("description", "") for e in p.get("events", []) if e.get("description")],
         "lat": lat,
         "lon": lon,
         "polyline": [[c[0], c[1]] for c in coords[:50]],  # cap size

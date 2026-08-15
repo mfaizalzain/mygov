@@ -105,9 +105,16 @@
    v68: Traffic incidents panel - region chips, KPI chips and incident list
    under the marquee, auto-selected from the location pipeline (geo.osm state),
    with a saved region choice in localStorage.
+   v69: Traffic incidents panel freshness - feed older than 6h hides the panel
+   entirely, and ended incidents (past endTime) are dropped from the list and
+   KPI counts, so yesterday's jams never show as today's.
+   v70: TomTom incidents merged INTO the marquee instead of a separate panel -
+   no new section. Region-scoped (visitor's state), active-only, fresh-only;
+   collector now also carries per-incident events descriptions ("Queuing
+   traffic") and magnitudeOfDelay.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v68";
+const VERSION    = "mygov-v70";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
