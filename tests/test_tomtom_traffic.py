@@ -30,7 +30,10 @@ def _incident(**over):
 def test_slim_keeps_driver_fields():
     i = tt.slim(_incident())
     assert i["cat"] == 6
-    assert i["catName"] == "Accident"
+    # 6 is Jam, not Accident. These tests previously asserted a hand-written
+    # map that was shifted against TomTom's published v5 taxonomy, which is
+    # how 875 of 1,084 jams came to be published as accidents.
+    assert i["catName"] == "Jam"
     assert i["from"] == "Bandar Bukit Raja"
     assert i["lat"] == 3.08 and i["lon"] == 101.45  # first point
     assert i["roads"] == ["3217"]
@@ -39,23 +42,75 @@ def test_slim_keeps_driver_fields():
     assert i["events"] == ["Queuing traffic"]
 
 
-def test_slim_drops_weather_noise():
-    """Weather (iconCategory 15) and fog (2) are not driver-relevant -> dropped."""
-    weather = tt.slim(_incident(properties={"iconCategory": 15}))
-    assert weather["cat"] == 15
-    assert weather["catName"] == "Weather"
-    # The keep filter is applied in main(), but the CATS map must cover it
-    assert 15 not in tt.KEEP_CATS
+def test_slim_drops_the_polyline():
+    """The frontend renders text, never a line - and polylines were ~90% of the file."""
+    assert "polyline" not in tt.slim(_incident())
+
+
+def test_cat_map_matches_tomtom_v5_taxonomy():
+    """Every id -> name pair here is from TomTom's published enum."""
+    assert tt.CATS[1] == "Accident"
+    assert tt.CATS[6] == "Jam"
+    assert tt.CATS[7] == "Lane closed"
+    assert tt.CATS[8] == "Road closed"
+    assert tt.CATS[9] == "Road works"
+    assert tt.CATS[11] == "Flooding"
+    assert tt.CATS[14] == "Broken down vehicle"
+    # 12, 13, 15-19 do not exist in the enum and must not be invented
+    for ghost in (12, 13, 15, 16, 17, 18, 19):
+        assert ghost not in tt.CATS
 
 
 def test_keep_cats_covers_accidents_closures_works():
-    assert 6 in tt.KEEP_CATS      # Accident
-    assert 7 in tt.KEEP_CATS      # Road closed
-    assert 8 in tt.KEEP_CATS      # Road works
-    assert 9 in tt.KEEP_CATS      # Hazard
-    assert 10 in tt.KEEP_CATS     # Jam
+    assert 1 in tt.KEEP_CATS      # Accident
+    assert 6 in tt.KEEP_CATS      # Jam
+    assert 7 in tt.KEEP_CATS      # Lane closed
+    assert 8 in tt.KEEP_CATS      # Road closed
+    assert 9 in tt.KEEP_CATS      # Road works
+    assert 11 in tt.KEEP_CATS     # Flooding - it rains here
+    assert 14 in tt.KEEP_CATS     # Broken down vehicle
     assert 2 not in tt.KEEP_CATS  # Fog
+    assert 4 not in tt.KEEP_CATS  # Rain
     assert 5 not in tt.KEEP_CATS  # Ice
+    assert 10 not in tt.KEEP_CATS  # Wind
+    # Nothing may be kept that the category map cannot name
+    assert not tt.KEEP_CATS - set(tt.CATS)
+
+
+def test_dedupe_collapses_repeats_and_reciprocals():
+    """One jam reported per road segment, in both directions, is one jam."""
+    def inc(frm, to, cat=6, event="Stationary traffic"):
+        return {"cat": cat, "from": frm, "to": to, "events": [event]}
+
+    out = tt.dedupe([
+        inc("A", "B"),
+        inc("A", "B"),            # exact repeat
+        inc("B", "A"),            # same closure, other direction
+        inc("A", "B", event="Roadworks"),   # different event -> kept
+        inc("A", "B", cat=8, event="Closed"),  # different category -> kept
+        inc("C", "D"),
+    ])
+    assert len(out) == 4
+    assert out[0]["from"] == "A" and out[0]["to"] == "B"
+
+
+def test_severity_puts_numbered_roads_and_closures_first():
+    closed_lane = {"cat": 8, "roads": [], "delay": 4}          # back street
+    closed_road = {"cat": 8, "roads": ["E1"], "delay": 4}      # trunk road
+    jam_road = {"cat": 6, "roads": ["E2"], "delay": 3}
+    works_road = {"cat": 9, "roads": ["B27"], "delay": 1}
+    order = sorted([closed_lane, jam_road, works_road, closed_road],
+                   key=tt.severity)
+    # Numbered roads lead, and within them the worst category leads
+    assert order[0] is closed_road
+    assert order[1] is works_road   # CAT_RANK: works (6) before jam (7)
+    assert order[2] is jam_road
+    assert order[-1] is closed_lane
+
+
+def test_per_region_cap_is_small_enough_to_ship():
+    """Every visitor downloads this file on every load."""
+    assert tt.PER_REGION <= 60
 
 
 def test_regions_defined():

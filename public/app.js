@@ -64,15 +64,6 @@ const I18N = {
     "Show all":"Show all",
     "Show top":"Show top",
     "routes":"routes",
-    "ACTIVE WARNINGS":"ACTIVE WARNINGS",
-    "View warnings":"View warnings",
-    "weather warning":"weather warning",
-    "weather warnings":"weather warnings",
-    "earthquake":"earthquake",
-    "earthquakes":"earthquakes",
-    "flood station at risk":"flood station at risk",
-    "flood stations at risk":"flood stations at risk",
-    "Unhealthy Air Quality (AQI ":"Unhealthy Air Quality (AQI ",
   },
   ms: {
   /* Groceries (PriceCatcher) */
@@ -96,15 +87,6 @@ const I18N = {
   "Show all":"Tunjukkan semua",
   "Show top":"Tunjukkan teratas",
   "routes":"laluan",
-  "ACTIVE WARNINGS":"AMARAN AKTIF",
-  "View warnings":"Lihat amaran",
-  "weather warning":"amaran cuaca",
-  "weather warnings":"amaran cuaca",
-  "earthquake":"gempa bumi",
-  "earthquakes":"gempa bumi",
-  "flood station at risk":"stesen banjir berisiko",
-  "flood stations at risk":"stesen banjir berisiko",
-  "Unhealthy Air Quality (AQI ":"Kualiti Udara Tidak Sihat (IPU ",
   "Cheapest district":"Daerah termurah", "Most expensive district":"Daerah termahal",
   "Basket size":"Saiz bakul", "items · priced every month":"barangan · berharga setiap bulan",
   "since":"sejak", "Grocery basket over time":"Bakul runcit mengikut masa",
@@ -238,7 +220,7 @@ const I18N = {
   "event":"peristiwa", "within Nkm - last 12h":"dalam lingkungan Nkm - 12 jam lepas",
   "no station above threshold":"tiada stesen melebihi ambang",
   "warning":"amaran", "alert":"waspada", "Unavailable":"Tidak tersedia",
-  "Details":"Butiran", "Hide":"Sembunyi",
+  "Details":"Butiran", "Hide":"Sembunyi", "Show":"Papar",
   "Weather, earthquakes, flood & more":"Cuaca, gempa bumi, banjir & lain-lain",
   "Rapid KL":"Rapid KL", "AQI":"IPU", "Air quality":"Kualiti udara",
   "Worst":"Paling teruk", "Cleanest":"Paling bersih", "cities":"bandar",
@@ -249,18 +231,17 @@ const I18N = {
   "Very unhealthy":"Sangat tidak sihat", "Hazardous":"Berbahaya",
   "Unhealthy for sensitive groups":"Tidak sihat untuk kumpulan sensitif",
   "From Malaysia":"Dari Malaysia",
-  "No earthquakes within Nkm of Malaysia in the last 3 hours.":
-    "Tiada gempa bumi dalam lingkungan Nkm dari Malaysia dalam 3 jam lepas.",
   "All Malaysia":"Seluruh Malaysia", "My area":"Kawasan saya", "Marine":"Marin",
   /* ── the merged weather + earthquake alert deck ── */
   "Weather, earthquakes & flood":"Cuaca, gempa bumi & banjir",
   "active alert":"amaran aktif", "active alerts":"amaran aktif",
   "warnings":"amaran", "quakes":"gempa bumi", "Earthquake":"Gempa bumi",
-  "from Malaysia":"dari Malaysia",
+  "from Malaysia":"dari Malaysia", "from":"dari",
   "No active warnings or earthquakes":"Tiada amaran atau gempa bumi aktif",
   "Nothing on issue in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
   "No earthquakes near Malaysia right now":"Tiada gempa bumi berhampiran Malaysia buat masa ini",
-  "No quakes within Nkm in the last 12h.":"Tiada gempa bumi dalam lingkungan Nkm dalam 12 jam lepas.",
+  "No quakes within Nkm in the last 7 days.":"Tiada gempa bumi dalam lingkungan Nkm dalam 7 hari lepas.",
+  "recent event":"kejadian terkini", "recent events":"kejadian terkini",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
   "No warnings in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
@@ -268,12 +249,17 @@ const I18N = {
   "elsewhere - try “All Malaysia”.":"di tempat lain - cuba “Seluruh Malaysia”.",
   "Other notices":"Notis lain", "No location matches":"Tiada lokasi sepadan",
   "Locating…":"Mengesan lokasi…", "Location off":"Lokasi dimatikan",
-  "use my location":"guna lokasi saya", "try again":"cuba lagi", "change":"tukar",
+  /* Not "change": that key is also a hotel table's delta column further down
+     this same object, and the later definition silently won - so the location
+     button read "perubahan" (an alteration) instead of "tukar" in BM. */
+  "use my location":"guna lokasi saya", "try again":"cuba lagi",
+  "change area":"tukar kawasan", "update":"kemas kini", "close":"tutup",
+  "as of":"pada",
   "did you mean":"maksud anda", "Not supported":"Tidak disokong",
   "Location lookup unavailable":"Carian lokasi tidak tersedia",
   "Not in the forecast list":"Tiada dalam senarai ramalan",
   "Couldn't pin your location":"Tidak dapat mengesan lokasi anda", "search below":"cari di bawah",
-  "selected area":"kawasan dipilih", "selected":"dipilih", "Near you: ":"Berdekatan anda: ",
+  "Near you: ":"Berdekatan anda: ",
   "Showing forecast for ":"Memaparkan ramalan untuk ", "of":"daripada",
   "Location":"Lokasi", "Type":"Jenis", "Min":"Min", "Max":"Maks", "Today":"Hari Ini",
   "Morning":"Pagi", "Afternoon":"Petang", "Night":"Malam", "Day":"Hari",
@@ -442,6 +428,16 @@ const I18N = {
   "Couldn't pin your location.":"Tidak dapat mengesan lokasi anda.",
   "live now":"kini", "broadcasting a position":"melaporkan kedudukan", "none reporting":"tiada laporan",
   "Live traffic":"Trafik langsung",
+  /* TomTom incident text in the ticker: the API only speaks en-GB, so the
+     handful of phrases it actually emits are translated here. */
+  "Stationary traffic":"Trafik statik", "Queuing traffic":"Trafik beratur",
+  "Slow traffic":"Trafik perlahan", "Heavy traffic":"Trafik padat",
+  "Closed":"Ditutup", "Roadworks":"Kerja jalan",
+  "New roadworks layout":"Susun atur kerja jalan baharu",
+  "Accident":"Kemalangan", "Flooding":"Banjir",
+  "Broken down vehicle":"Kenderaan rosak", "road":"jalan",
+  "Klang Valley":"Lembah Klang", "Langkawi":"Langkawi",
+  "Cameron Highlands":"Tanah Tinggi Cameron",
   "Intercity / ETS":"Antara bandar / ETS", "Komuter":"Komuter", "Service":"Perkhidmatan",
   "unclassified":"tidak diklasifikasikan",
   "Last update":"Kemaskini terakhir", "feed v":"suapan v", "Distinct routes":"Laluan berbeza",
@@ -725,6 +721,11 @@ function rerenderAll(){
      a re-render, not a re-fetch. */
   renderBrief();
   wxProse();
+  /* The ticker's TomTom half carries translated text ("Roadworks" ->
+     "Kerja jalan"), and it repaints only when the region changes - which a
+     language switch is not. Clearing the memo makes the next call rebuild. */
+  tincSlug = undefined;
+  try { renderTrafficIncidents(); } catch {}
   if (slowData) try { renderHolWidget(); } catch {}
   relabelAI();
   relabelShare();
@@ -1372,7 +1373,67 @@ async function loadWeather(){
 
    Nothing here is historical: warnings expire, earthquakes are capped at 12 h
    and JPS gauges at 24 h. An empty hazard is an all-clear, not a gap. */
-const EQ_RADIUS_KM = 500, EQ_FRESH_MS = 12 * 3600 * 1000;
+/* Two windows, deliberately.
+ *
+ * Quakes within 500 km of Malaysia happen about 1.5 times a month - 50 in the
+ * feed's 997 days, 22 in the last year. A 12-hour window against that rate put
+ * a card on screen roughly 0.3% of the year, so the feature was invisible
+ * essentially always and there was no way to tell working from broken. The
+ * deck now carries a week, which is what makes "recent earthquakes near
+ * Malaysia" a question this page answers.
+ *
+ * The Warnings badge is a different promise - "what is happening right now" -
+ * so a five-day-old quake must not sit in that count. Cards use EQ_FRESH_MS,
+ * the alert count uses EQ_ALERT_MS. */
+const EQ_RADIUS_KM = 500;
+const EQ_FRESH_MS = 7 * 24 * 3600 * 1000;
+const EQ_ALERT_MS = 24 * 3600 * 1000;
+
+/* Why there is a second earthquake source.
+ *
+ * MET's feed (via data.gov.my) stopped being live. Checked on 15 Aug 2026: an
+ * uncached fetch (cf-cache-status: BYPASS, so this is the origin's own answer)
+ * returned 836 events whose newest was six days old - and it did not contain
+ * the M6.9 that struck 15 km from Pematangsiantar in North Sumatra that
+ * morning, 268 km from the Perak coast and comfortably inside the radius this
+ * page filters on. Over the preceding 30 days MET listed 2 events within
+ * 500 km; USGS listed 8. A hazard feed that misses a M6.9 next door is not a
+ * hazard feed, so USGS runs as the live source and MET is merged in for the
+ * events it does carry (it is the Malaysian authority, and its rows carry the
+ * local bearing text - "268km SW Bagan Datuk,Perak" - that USGS has no notion
+ * of). Neither is dropped; duplicates are collapsed below. */
+/* Same-origin: earthquake.usgs.gov is not in the connect-src allowlist in
+   public/_headers, and it should not be - the Worker proxies it at
+   /api/quakes, which also edge-caches one fetch of a ~1.6 MB worldwide feed
+   across every visitor and slims it to the fields these cards use. */
+const USGS_FEED = "/api/quakes";
+/* Coast and border anchors, roughly one per stretch of Malaysia that could be
+   the nearest land to a regional quake. Distance is to the closest of them,
+   which is the same question MET's n_distancemas answers. */
+const MY_ANCHORS = [
+  { name:"Langkawi, Kedah", lat:6.35, lon:99.80 },
+  { name:"George Town, Pulau Pinang", lat:5.41, lon:100.33 },
+  { name:"Bagan Datuk, Perak", lat:4.60, lon:100.90 },
+  { name:"Klang, Selangor", lat:3.10, lon:101.60 },
+  { name:"Kota Bharu, Kelantan", lat:6.13, lon:102.24 },
+  { name:"Kuantan, Pahang", lat:3.80, lon:103.33 },
+  { name:"Johor Bahru, Johor", lat:1.50, lon:103.70 },
+  { name:"Kuching, Sarawak", lat:1.55, lon:110.35 },
+  { name:"Bintulu, Sarawak", lat:3.17, lon:113.03 },
+  { name:"Miri, Sarawak", lat:4.40, lon:114.00 },
+  { name:"Kota Kinabalu, Sabah", lat:5.98, lon:116.07 },
+  { name:"Kudat, Sabah", lat:6.90, lon:116.80 },
+  { name:"Semporna, Sabah", lat:4.48, lon:118.60 },
+];
+/* Nearest Malaysian anchor to a point: [km, "…, State"]. */
+function kmFromMalaysia(lat, lon){
+  let best = Infinity, who = null;
+  for (const a of MY_ANCHORS){
+    const d = haversine({ lat, lon }, a);
+    if (d < best){ best = d; who = a.name; }
+  }
+  return [best, who];
+}
 
 async function loadHazards(){
   const warnings = await request("weather", "/weather/warning");
@@ -1398,18 +1459,53 @@ async function loadHazards(){
     return m ? Number(m[1].replace(/,/g, "")) : null;
   };
   const nowMs = Date.now();
-  /* Live view only - within 500 km AND within the last 3 h. Malaysia is
-     seismically quiet, so this is empty on most days; that is the honest
-     answer, not a gap. */
-  const eq = (quakes || []).filter(q => q.visible !== false)
+  /* Within 500 km AND within the last week. Malaysia is seismically quiet, so
+     this is still empty on most days; that is the honest answer, not a gap. */
+  const metEq = (quakes || []).filter(q => q.visible !== false)
     .map(q => ({ q, km: eqKm(q),
                  ts: Date.parse(String(q.utcdatetime || "").replace(" ", "T") + "Z") }))
     .filter(x => x.km != null && x.km <= EQ_RADIUS_KM)
     .filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS)
-    .sort((a, b) => (b.ts || 0) - (a.ts || 0))
     .map(x => ({ t:x.q.localdatetime, lat:x.q.lat, lon:x.q.lon, dep:x.q.depth,
       loc:x.q.location_original || x.q.location, mag:x.q.magdefault,
-      near:x.q.n_distancemas, km:x.km, ts:x.ts }));
+      near:x.q.n_distancemas, km:x.km, ts:x.ts, src:"MET" }));
+
+  /* USGS, same two filters, distance computed here because their feed has no
+     notion of Malaysia. Failure is survivable - the deck falls back to
+     whatever MET had. */
+  let usgsEq = [];
+  try {
+    const g = await fetch(USGS_FEED).then(r => {
+      if (!r.ok) throw new Error("usgs unavailable"); return r.json();
+    });
+    usgsEq = (g.quakes || []).map(p => {
+      const lat = Number(p.lat), lon = Number(p.lon);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+      const [km, who] = kmFromMalaysia(lat, lon);
+      return { lat, lon, dep:p.dep, mag:p.mag, ts:p.ts,
+               loc:p.place || "", km,
+               near:`${nf(Math.round(km))}km ${T("from")} ${who}`,
+               /* MET stamps local (MYT) wall-clock; match it so the two
+                  sources' cards do not read in different time zones. */
+               t:new Date(p.ts).toLocaleString("sv-SE",
+                   { timeZone:"Asia/Kuala_Lumpur" }).replace(" ", "T"),
+               src:"USGS" };
+    }).filter(Boolean)
+      .filter(x => x.km <= EQ_RADIUS_KM)
+      .filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS);
+  } catch { /* USGS down - MET's rows still render */ }
+
+  /* Merge. The same rupture reported by both agencies differs slightly in
+     origin time and epicentre, so "same event" is a tolerance, not equality:
+     within two minutes and 150 km. MET's row wins when both have it - it is
+     the Malaysian authority and carries the local bearing text. */
+  const eq = metEq.slice();
+  for (const u of usgsEq){
+    const dup = metEq.some(m => Math.abs(m.ts - u.ts) < 120e3 &&
+      haversine({ lat:Number(m.lat), lon:Number(m.lon) }, { lat:u.lat, lon:u.lon }) < 150);
+    if (!dup) eq.push(u);
+  }
+  eq.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
   const warn = (warnings || []).filter(w => {
     if (!w.valid_to) return true;
@@ -3315,23 +3411,34 @@ function renderHazards(d){
      them are "something is happening right now", and split across tiles the
      same person had to open five disclosures. The chips and the carousel are
      paintAlerts(), mounted here. */
-  const alertN = active.length + d.eq.length + floodCards + rapidN + aqiAlert;
-  const wxBody = (alertN || notices.length) ? `<div id="wx-warn"></div>` : "";
+  /* Only quakes from the last day count as "active" - the deck shows a week of
+     them, but the badge answers "what is happening right now". */
+  const eqAlertN = d.eq.filter(q => Number.isFinite(q.ts)
+    && Date.now() - q.ts <= EQ_ALERT_MS).length;
+  const alertN = active.length + eqAlertN + floodCards + rapidN + aqiAlert;
+  /* What the carousel actually holds, which is alertN plus any quake older
+     than a day. Keeping these apart is what lets the badge stay live-only
+     without the week-old quake cards vanishing from the deck. */
+  const deckN = active.length + d.eq.length + floodCards + rapidN + aqiAlert;
+  const wxBody = (deckN || notices.length) ? `<div id="wx-warn"></div>` : "";
   /* Which single tile starts open. The deck subsumes flood and air quality
      whenever either is actually alerting, so it wins; the other two only open
      on their own when the deck has nothing at all to show. */
   const openKey = alertN > 0 ? "wx" : atRisk > 0 ? "fl"
     : aqiWorst != null && aqiWorst >= 101 ? "aq" : "";
+  const wxSub = deckN
+    ? `${active.length} ${T("warnings")} · ${d.eq.length} ${T("quakes")}` +
+      (floodCards ? ` · ${floodCards} ${T("stations at risk")}` : "") +
+      (rapidN ? ` · ${rapidN} ${T("Rapid KL")}` : "") +
+      (aqiWorst != null ? ` · ${T("AQI")} ${aqiWorst}` : "")
+    : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue"));
   const wxTile = hzTile("wx", "warn", T("Weather, earthquakes, flood & more"), alertN > 0,
     alertN ? `${alertN} ${T(alertN === 1 ? "active alert" : "active alerts")}`
+           /* Nothing live, but the deck may still hold a quake from earlier in
+              the week - saying "All clear" over visible cards reads as a bug. */
+           : deckN ? `${deckN} ${T(deckN === 1 ? "recent event" : "recent events")}`
            : T("All clear"),
-    alertN
-      ? `${active.length} ${T("warnings")} · ${d.eq.length} ${T("quakes")}` +
-        (floodCards ? ` · ${floodCards} ${T("stations at risk")}` : "") +
-        (rapidN ? ` · ${rapidN} ${T("Rapid KL")}` : "") +
-        (aqiWorst != null ? ` · ${T("AQI")} ${aqiWorst}` : "")
-      : (notices.length ? `${notices.length} ${T("all-clear notices")}` : T("nothing on issue")),
-    wxBody, openKey === "wx");
+    wxSub, wxBody, openKey === "wx");
 
   /* Flood - the map is expensive, so it is only mounted when the tile opens. */
   const fTile = !f
@@ -3359,25 +3466,6 @@ function renderHazards(d){
 
   host.innerHTML = `<div class="hz-strip">${wxTile}${fTile}${aqTile}</div>`;
   setNavBadge("hazards", alertN, "active alert", "active alerts");
-
-  // Update Universal Top Warnings Alert Band (elevated above traffic & local feeds)
-  const topBand = $("#warn-top-band");
-  if (topBand){
-    if (alertN > 0){
-      const topContent = $("#warn-top-content");
-      if (topContent){
-        const summaries = [];
-        if (active.length) summaries.push(`${active.length} ${T(active.length === 1 ? "weather warning" : "weather warnings")}`);
-        if (d.eq && d.eq.length) summaries.push(`${d.eq.length} ${T(d.eq.length === 1 ? "earthquake" : "earthquakes")}`);
-        if (atRisk > 0) summaries.push(`${atRisk} ${T(atRisk === 1 ? "flood station at risk" : "flood stations at risk")}`);
-        if (aqiAlert) summaries.push(`${T("Unhealthy Air Quality (AQI ")}${aqiWorst})`);
-        topContent.innerHTML = `<strong>${T("ACTIVE WARNINGS")}:</strong> <span class="warn-top-summary">${esc(summaries.join(" · "))}</span>`;
-      }
-      topBand.hidden = false;
-    } else {
-      topBand.hidden = true;
-    }
-  }
 
   if (wxBody) paintAlerts();
   /* Leaflet needs a laid-out container, so the map waits for the disclosure
@@ -3434,7 +3522,8 @@ function quakeCard(q){
       <a class="maplink" target="_blank" rel="noopener"
          href="https://www.google.com/maps?q=${q.lat},${q.lon}"
          aria-label="Open earthquake location in Google Maps">map &#8599;</a></p>
-    <div class="meta">${esc(String(q.t).replace("T"," "))}</div>
+    <div class="meta">${esc(String(q.t).replace("T"," "))}${
+      q.src ? ` · ${esc(q.src)}` : ""}</div>
   </div>`;
 }
 /* A flood-risk station as an alert card, so it can ride in the same deck as
@@ -3580,7 +3669,7 @@ function paintAlerts(){
        T("MET Malaysia has nothing on issue.") + " " +
        /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
           "N" rewrote that instead of the radius. */
-       T("No quakes within Nkm in the last 12h.").replace("Nkm", nf(d.eqRadius) + "km")]
+       T("No quakes within Nkm in the last 7 days.").replace("Nkm", nf(d.eqRadius) + "km")]
     : [T(wxFilter === "area" ? "Nothing on issue in your area right now"
         : wxFilter === "marine" ? "No marine warnings right now"
         : wxFilter === "quake" ? "No earthquakes near Malaysia right now"
@@ -3632,11 +3721,27 @@ function initWxCarousel(){
     const m = maxIdx();
     return m ? Math.round((i / m) * (n - 1)) + 1 : 1;
   };
+  /* Counter and buttons only - no scrolling. The scroll handler calls this
+     while the reader's own scroll is in flight, and scrolling from there would
+     fight them.
+
+     Guarded because the deck advances on an 8-second timer and anything that
+     re-renders the hazards section between ticks (a language switch, a
+     refresh, pinning a section) replaces these nodes underneath it. The timer
+     would then throw on a detached element every 8 seconds for the life of the
+     page; it retires itself instead. Returns false once the deck is gone. */
+  const paintCtl = () => {
+    const count = $("#wx-ccount");
+    if (!count || !document.contains(track)){ clearInterval(wxCtl.timer); return false; }
+    count.textContent = `${pageNum(wxCtl.idx)} / ${n}`;
+    const prev = $("#wx-prev"), next = $("#wx-next");
+    if (prev) prev.disabled = wxCtl.idx === 0;
+    if (next) next.disabled = wxCtl.idx >= maxIdx();
+    return true;
+  };
   const render = () => {
+    if (!paintCtl()) return;
     track.scrollTo({ left: wxCtl.idx * step(), behavior: "smooth" });
-    $("#wx-ccount").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
-    $("#wx-prev").disabled = wxCtl.idx === 0;
-    $("#wx-next").disabled = wxCtl.idx >= maxIdx();
   };
   const start = () => {
     clearInterval(wxCtl.timer);
@@ -3651,9 +3756,7 @@ function initWxCarousel(){
     const st = step();
     const n0 = st ? Math.round(track.scrollLeft / st) : 0;
     wxCtl.idx = Math.min(Math.max(n0, 0), maxIdx());
-    $("#wx-ccount").textContent = `${pageNum(wxCtl.idx)} / ${n}`;
-    $("#wx-prev").disabled = wxCtl.idx === 0;
-    $("#wx-next").disabled = wxCtl.idx >= maxIdx();
+    paintCtl();
   }, { passive:true });
   track.addEventListener("mouseenter", () => clearInterval(wxCtl.timer));
   track.addEventListener("mouseleave", start);
@@ -3741,6 +3844,51 @@ function paintWxSuggest(){
   });
 }
 
+/* The 16 states and federal territories, as Nominatim spells them. Used to
+   read the state back out of a geocode result's display_name, which arrives
+   as "Kuching, Kuching Division, Sarawak, 93000, Malaysia" - the position of
+   the state within that varies, so it is matched by name, not by index. */
+const MY_STATES = [
+  "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang",
+  "Perak", "Perlis", "Pulau Pinang", "Penang", "Sabah", "Sarawak",
+  "Selangor", "Terengganu", "Kuala Lumpur", "Labuan", "Putrajaya",
+];
+/* Give a hand-picked place the same positional facts a real fix would carry.
+   /api/geocode is edge-cached and already returns the label alongside the
+   coordinates, so this is one cheap request per place, not two. */
+async function resolvePickedPlace(name, id){
+  let hit = pickedPlaceCache.get(name);
+  if (hit === undefined){
+    hit = null;
+    try {
+      const r = await fetch(`/api/geocode?q=${encodeURIComponent(name)}`);
+      if (r.ok){
+        const j = await r.json();
+        if (j && Number.isFinite(j.lat) && Number.isFinite(j.lon)){
+          const parts = String(j.label || "").split(",").map(s => s.trim());
+          const state = MY_STATES.find(s =>
+            parts.some(p => p.toLowerCase() === s.toLowerCase())) || null;
+          hit = { lat:Math.round(j.lat * 100) / 100,
+                  lon:Math.round(j.lon * 100) / 100, state };
+        }
+      }
+    } catch { /* proxy unavailable - the pick still works, just without these */ }
+    pickedPlaceCache.set(name, hit);
+  }
+  /* The reader may have picked somewhere else while this was in flight. */
+  if (!hit || wx.pick !== id) return;
+  geo.lat = hit.lat; geo.lon = hit.lon;
+  geo.osm = [name, hit.state].filter(Boolean).join(", ");
+  try { localStorage.setItem(LK, JSON.stringify({ id, label:name, osm:geo.osm,
+    lat:geo.lat, lon:geo.lon })); } catch {}
+  /* Now that the state and coordinates are known, the surfaces that read them
+     can correct themselves: holidays are state-specific, and the traffic
+     ticker can match coordinates against the region boxes. */
+  if (slowData) try { renderHolWidget(); } catch {}
+  renderTrafficIncidents();
+}
+const pickedPlaceCache = new Map();
+
 /** Select a forecast location from anywhere (table, chips, hero). */
 function pickLoc(id){
   wx.pick = id;
@@ -3750,16 +3898,30 @@ function pickLoc(id){
     geo.label = l.name;
     geo.manual = true;
     geo.matchedId = id;   // wxCoords() then geocodes by name, not the old fix
-    try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name, osm:geo.osm })); } catch {}
+    /* Everything positional from the previous fix describes a different place
+       and must not survive the pick. It used to: geo.osm was carried over and
+       written back to localStorage, so choosing Kuching while the last real
+       fix was in Selangor left "…, Selangor" as the visitor's state - which is
+       what the holiday chips read to decide which state's holidays to show,
+       and what the traffic ticker read before it learned to use coordinates.
+       resolvePickedPlace() fills these back in from the chosen name. */
+    geo.osm = null; geo.lat = null; geo.lon = null;
+    try { localStorage.setItem(LK, JSON.stringify({ id:l.id, label:l.name })); } catch {}
     const live = $("#wx-live"); if (live) live.textContent = T("Showing forecast for ") + l.name;
+    resolvePickedPlace(l.name, l.id);
   }
   paintWxRows(); paintNow(); paintHeroLoc(); paintLocChip(); wxProse();
+  renderTrafficIncidents();   // the ticker follows a hand-picked place too
   if (tdata) maybeAutoNear();
 }
 function paintWeather(){
   if (!wx.data) return;
   paintWxRows(); paintNow(); paintLocChip(); paintHeroLoc();
   wxProse();
+  /* The traffic ticker's TomTom half is scoped to the visitor's region, and
+     this is the funnel every location change runs through. It no-ops unless
+     the region actually changed. */
+  renderTrafficIncidents();
   if (tdata) maybeAutoNear();
 }
 let showHeroHubs = false;
@@ -3799,15 +3961,20 @@ function paintHeroLoc(){
     : "";
 
   let html = "";
+  /* A hand-picked place used to read "Kuching ☆ change selected area", where
+     "change" opened the place picker and "selected area" was dim text that
+     looked like a third control but did nothing - while the one action a
+     reader actually wanted here, going back to auto-detect, was missing from
+     this state entirely. Same single row, both slots now real verbs. */
   if (geo.manual)
     html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a> ${bmBtn}
-            <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change")}</button>
-            <span class="dim" style="font-size:11.5px">${T("selected area")}</span>` +
+            <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change area")}</button>
+            <button class="link-btn" id="hero-loc-try">${T("use my location")}</button>` +
             (showHeroHubs ? hubsHtml : "") + savedHtml;
   else if (S === "asking") html = `<span class="loc-chip off">${ico("live")} ${T("Locating…")}</span>` + savedHtml;
   else if (S === "matched" || S === "cached")
     html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a> ${bmBtn}
-            <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change")}</button>` +
+            <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change area")}</button>` +
             (showHeroHubs ? hubsHtml : "") + savedHtml;
   else if (S === "ambiguous")
     html = `<a class="loc-chip" href="#weather">${ico("live")} ${esc(geo.label || "")}</a>
@@ -3859,14 +4026,17 @@ function paintLocChip(){
   const S = geo.status;
   const chip = (cls, text) => `<span class="loc-chip ${cls}">${text}</span>`;
   let html = "";
+  /* This chip's "change" button called locate() - it re-ran auto-detection -
+     while the hero's identically-labelled "change" opened the place picker.
+     One word, two actions, neither of them the one the label implies. The
+     button is named for what it does in each state instead. */
   if (geo.manual)
     html = chip("", `${ico("live")} ${esc(geo.label || "")}`) +
-           `<button class="link-btn" id="loc-change">${T("change")}</button>
-            <span class="dim" style="font-size:11.5px">${T("selected")}</span>`;
+           `<button class="link-btn" id="loc-try">${T("use my location")}</button>`;
   else if (S === "asking") html = chip("off", `${ico("live")} ${T("Locating…")}`);
   else if (S === "matched" || S === "cached")
     html = chip("", `${ico("live")} ${T("Near you: ")}${esc(geo.label || "")}`) +
-           `<button class="link-btn" id="loc-change">${T("change")}</button>`;
+           `<button class="link-btn" id="loc-try">${T("update")}</button>`;
   else if (S === "ambiguous")
     html = chip("", `${ico("live")} ${esc(geo.label || "")}`) +
       `<span class="dim" style="font-size:11.5px">${T("did you mean")}</span>` +
@@ -3884,7 +4054,6 @@ function paintLocChip(){
   else html = `<button class="link-btn" id="loc-try">${ico("live")} ${T("use my location")}</button>`;
   host.innerHTML = html;
   const t = $("#loc-try"); if (t) t.onclick = locate;
-  const c = $("#loc-change"); if (c) c.onclick = locate;
   host.querySelectorAll("[data-cand]").forEach(b => {
     b.onclick = () => { geo.status = "matched"; pickLoc(b.getAttribute("data-cand")); };
   });
@@ -3979,8 +4148,14 @@ async function paintNow(){
   const coords = await wxCoords();
   let live = null, om = null;
   if (coords){ om = await fetchOpenMeteo(coords[0], coords[1]); live = om ? om.current : null; }
-  const locEl = $("#wx-loc");
-  if (locEl) locEl.textContent = live && live.time ? live.time.slice(11, 16) : "";
+  /* The observation time used to be written into #wx-loc - which is where
+     paintLocChip() renders the location and its button. Both run from
+     paintWeather(), but this one writes after its awaits, so it landed last
+     and the card's location control was replaced by a bare "19:30" more often
+     than not. The time now rides in the .wx-meta line below, which costs no
+     row and no space, and #wx-loc belongs to the location chip alone. */
+  const asOf = live && live.time
+    ? `<span>${T("as of")} ${esc(live.time.slice(11, 16))}</span>` : "";
   if (!host) return;   // a re-render raced us
   if (live){
     const c = wxCond(live.code);
@@ -3994,6 +4169,7 @@ async function paintNow(){
         <span>${T("Feels like")} ${nf(live.feels,1)}°</span>
         <span>${T("Humidity")} ${live.hum}%</span>
         <span>${T("Wind")} ${nf(live.wind,0)} km/h</span>
+        ${asOf}
       </div>${today}`;
   } else if (row){
     host.innerHTML = `
@@ -8092,6 +8268,34 @@ function breakingDetail(i){
   </div>`;
 }
 
+/* Trending folds.
+ *
+ * It is a 430px carousel between the nav and the first data section, and with
+ * Travel Outlook above it the page opened on ~1,500px of preamble before any
+ * data. Folded it keeps the heading and the "updated N min ago" stamp - which
+ * is what tells you whether to open it - and the choice is remembered, so
+ * anyone who wants it open pays the cost once. It still loads either way: the
+ * freshness stamp has to be real, and the nav entry has to know whether there
+ * is anything to jump to. */
+const RADAR_FOLD_KEY = "mygov.radar.folded.v1";
+function mountRadarFold(band){
+  const btn = $("#radar-toggle");
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = "1";
+  let folded = true;
+  try { folded = localStorage.getItem(RADAR_FOLD_KEY) !== "0"; } catch {}
+  const apply = () => {
+    band.classList.toggle("is-folded", folded);
+    btn.setAttribute("aria-expanded", String(!folded));
+    btn.textContent = folded ? T("Show") : T("Hide");
+  };
+  apply();
+  btn.onclick = () => {
+    folded = !folded;
+    try { localStorage.setItem(RADAR_FOLD_KEY, folded ? "1" : "0"); } catch {}
+    apply();
+  };
+}
 let rerenderRadar = null;
 
 async function initRadarCarousel(){
@@ -8132,6 +8336,7 @@ async function initRadarCarousel(){
     when.title = `${T("Data collected")} ${ymd(src)} · ${hhmm(src)}`;
   };
   updateWhen(d);
+  mountRadarFold(band);
   const navItem = $("#nav-radar-band");
   if (navItem) navItem.parentElement.hidden = false;
 
@@ -8682,6 +8887,29 @@ function trafficClean(s){
     .replace(/\s{2,}/g, " ")
     .replace(/^[\s:,-]+|[\s:,–-]+$/g, "");
 }
+/* One strip, two feeds. The crowd-sourced highway posts and the TomTom
+   incidents load independently and finish in whatever order the network
+   decides, so neither may write the ticker directly: whichever landed first
+   used to have its items wiped by the other's innerHTML. Both park their
+   rendered items here instead, and this paints. No second row - the whole
+   point of merging them was to not add one. */
+const TBAND = { posts:[], incs:[] };
+function paintTrafficBand(){
+  const band = $("#traffic-band"), mq = $("#traffic-mq");
+  if (!band || !mq) return;
+  const items = TBAND.posts.concat(TBAND.incs);
+  /* Empty the strip as well as hiding it: a reader who moves to a region this
+     feed does not cover would otherwise be leaving the previous region's roads
+     in the DOM, hidden from sight but not from a screen reader. */
+  if (!items.length){ band.hidden = true; mq.innerHTML = ""; return; }
+  /* Duplicate the run so the loop never has a gap: a marquee only looks
+     seamless when the content is >= 2x the viewport. */
+  const html = items.join('<span class="traffic-sep" aria-hidden="true">◆</span>');
+  mq.innerHTML =
+    `<span class="traffic-run">${html}</span><span class="traffic-run" aria-hidden="true">${html}</span>`;
+  band.hidden = false;
+  initTrafficPause(band);
+}
 async function loadTrafficMarquee(){
   const band = $("#traffic-band");
   if (!band) return;
@@ -8716,14 +8944,10 @@ async function loadTrafficMarquee(){
     const text = esc(p.text).replace(TRAFFIC_URL_RE,
       m => `<a href="${encodeURI(m)}" target="_blank" rel="noopener" class="traffic-link">↗</a>`);
     return `<span class="traffic-item"><b>${t}</b> ${text}</span>`;
-  }).join('<span class="traffic-sep" aria-hidden="true">◆</span>');
-  /* Duplicate the run so the loop never has a gap: a marquee only looks
-     seamless when the content is >= 2x the viewport. */
-  $("#traffic-mq").innerHTML =
-    `<span class="traffic-run">${items}</span><span class="traffic-run" aria-hidden="true">${items}</span>`;
-  band.hidden = false;
+  });
+  TBAND.posts = items;
   band.title = `${T("Live traffic")} · ${d.updated ? ago(Math.floor(Date.parse(d.updated)/1000)) : ""}`;
-  initTrafficPause(band);
+  paintTrafficBand();
 }
 /* WCAG 2.2.2: the ticker starts moving on its own and never stops, so there
    has to be a way to stop it that does not depend on hovering. Bound once -
@@ -8752,14 +8976,39 @@ function initTrafficPause(band){
    scoped to the visitor's region so they read as "near you". Only incidents
    still active (endTime in the future) and a feed fresher than 6h count -
    stale traffic never shows. */
+/* Fallback only, for when the visitor's state is known but their coordinates
+   are not - tincRegion() prefers the bboxes, which is the only method that
+   gets a Langkawi or Cameron Highlands visitor right.
+
+   Every entry here has to be a region that actually covers where that state's
+   people are. Kedah is absent because the only Kedah region is Langkawi
+   island, and Alor Setar traffic is not Langkawi traffic; Terengganu, Negeri
+   Sembilan, Perlis, Sabah and Labuan are absent because nothing covers them.
+   Those visitors get no TomTom line at all, which is the honest outcome - the
+   old map sent them Klang Valley's jams labelled "Klang Valley". */
 const TINC_STATE = {
   "kuala lumpur":"kl-selangor", "selangor":"kl-selangor", "putrajaya":"kl-selangor",
   "johor":"johor", "pulau pinang":"penang", "penang":"penang",
-  "perak":"perak-ipoh", "melaka":"melaka", "negeri sembilan":"kl-selangor",
-  "pahang":"pahang-cameron", "kedah":"kedah-langkawi",
-  "kelantan":"kelantan-kb", "terengganu":"kuantan",
-  "sarawak":"kuching", "kuching":"kuching", "labuan":"kuching",
+  "perak":"perak-ipoh", "melaka":"melaka", "pahang":"kuantan",
+  "kelantan":"kelantan-kb", "sarawak":"kuching", "kuching":"kuching",
 };
+/* Picking a place by hand (quick hub, postcode, forecast search) gives a
+   name and nothing else - the forecast locations carry no coordinates - so
+   the bbox match cannot run and the state fallback would answer with whatever
+   state the last real fix was in. These are the places each region actually
+   covers, matched against the chosen location's name. */
+const TINC_CITY = [
+  [/kuala lumpur|putrajaya|shah alam|petaling|klang|gombak|hulu langat|sepang|kajang|subang|selayang|ampang/, "kl-selangor"],
+  [/johor bahru|iskandar|pasir gudang|kulai|pontian|skudai/, "johor"],
+  [/george town|pulau pinang|penang|butterworth|seberang|bayan lepas/, "penang"],
+  [/ipoh|kinta|gopeng|batu gajah|lumut|manjung/, "perak-ipoh"],
+  [/melaka|ayer keroh|tanjung kling/, "melaka"],
+  [/cameron|ringlet|tanah rata|brinchang/, "pahang-cameron"],
+  [/langkawi/, "kedah-langkawi"],
+  [/kuantan|gambang|balok/, "kuantan"],
+  [/kota bharu|wakaf bharu|pengkalan chepa/, "kelantan-kb"],
+  [/kuching|matang|batu kawa|padawan/, "kuching"],
+];
 /* Region display names, in the same order the collector emits regions. */
 const TINC_NAMES = {
   "kl-selangor":"Klang Valley", "johor":"JB", "penang":"Penang",
@@ -8768,6 +9017,27 @@ const TINC_NAMES = {
   "kelantan-kb":"Kota Bharu", "kuching":"Kuching",
 };
 const TINC_MAX_AGE = 6 * 3600e3;   // feed older than this = yesterday's traffic
+const TINC_NEAR_KM = 60;           // outside this, a region is not "near you"
+const TINC_SHOW = 6;               // lines in the ticker
+/* Category -> ticker glyph, on TomTom's real v5 taxonomy. The collector used
+   to ship a shifted map, so every jam arrived here as catName "Accident" and
+   got the red dot below - the icons were right, they were being handed the
+   wrong word. */
+const TINC_ICON = {
+  "Accident":"🔴", "Road closed":"⛔", "Lane closed":"🚧", "Road works":"🚧",
+  "Flooding":"🌊", "Dangerous conditions":"⚠", "Broken down vehicle":"🚗",
+  "Jam":"🔸",
+};
+/* Worst first, and roads with a number before the ones without: a six-line
+   ticker is better spent on a closed trunk road than on six consecutive
+   housing-estate lanes. The collector already sorts this way; repeating it
+   here keeps a cached older file honest. */
+const TINC_RANK = {
+  "Road closed":0, "Lane closed":1, "Accident":2, "Flooding":3,
+  "Dangerous conditions":4, "Broken down vehicle":5, "Road works":6, "Jam":7,
+};
+let tincData = null;    // last fetched feed, re-read when the location changes
+let tincSlug;           // region currently on the ticker (undefined = never painted)
 
 function tincActive(incs){
   const now = Date.now();
@@ -8777,48 +9047,102 @@ function tincActive(incs){
     return !isFinite(e) || e > now;
   });
 }
-function tincRegionForGeo(){
-  if (!geo || !geo.osm) return null;
-  const st = String(geo.osm).split(",").pop().trim().toLowerCase();
-  return TINC_STATE[st] || null;
+/* The TINC_SHOW lines the ticker gets, worst-first but not all of a kind.
+   Straight ranking gave six consecutive roadworks on the same B27 - true, and
+   useless as a traffic read. Two per category first, then whatever is left in
+   rank order to fill the window. */
+function tincPick(incs){
+  const ranked = incs.slice().sort((a, b) =>
+    ((a.roads && a.roads.length) ? 0 : 1) - ((b.roads && b.roads.length) ? 0 : 1) ||
+    (TINC_RANK[a.catName] ?? 9) - (TINC_RANK[b.catName] ?? 9));
+  const per = {}, first = [], rest = [];
+  for (const i of ranked){
+    const n = (per[i.catName] = (per[i.catName] || 0) + 1);
+    (n <= 2 ? first : rest).push(i);
+  }
+  return first.concat(rest).slice(0, TINC_SHOW);
 }
-/* One ticker item: "🔴 Jalan A → Jalan B · Queuing traffic (Klang Valley)" */
-function tincItem(i, regionName){
-  const dot = i.catName === "Accident" ? "🔴" : i.catName === "Road closed" ? "⛔"
-    : i.catName === "Road works" ? "🚧" : i.catName === "Hazard" ? "⚠" : "🔸";
-  const where = [i.from, i.to].filter(Boolean).join(" → ") || "road";
-  const desc = (i.events && i.events[0]) ? ` · ${i.events[0]}` : "";
-  return `${dot} ${where}${desc} · ${regionName}`;
+/* Which region the visitor is in.
+
+   Coordinates first: they are exact, they need no lookup table to be kept in
+   sync with the collector's region list, and they are the only thing that can
+   tell a Langkawi visitor from a Kedah one. Inside a bbox wins outright;
+   otherwise the nearest region centre wins if it is within TINC_NEAR_KM.
+
+   Knowing where someone is and having nothing for them is different from not
+   knowing at all: a visitor placed in Kota Kinabalu gets null (nothing), while
+   a visitor with no location yet gets the Klang Valley - the same Kuala Lumpur
+   default the weather card falls back to. */
+function tincRegion(d){
+  const lat = geo && geo.lat, lon = geo && geo.lon;
+  const located = lat != null && lon != null && isFinite(lat) && isFinite(lon);
+  /* A hand-picked place is an explicit statement of where the reader cares
+     about, so it outranks a coordinate fix that may be hours old. */
+  if (geo && geo.manual && geo.label){
+    const name = String(geo.label).toLowerCase();
+    for (const [re, slug] of TINC_CITY)
+      if (re.test(name) && d.regions[slug]) return slug;
+    return null;
+  }
+  if (located){
+    let best = null, bestKm = Infinity;
+    for (const slug of Object.keys(d.regions)){
+      const b = d.regions[slug].bbox;
+      if (!b || b.length !== 4) continue;
+      if (lon >= b[0] && lat >= b[1] && lon <= b[2] && lat <= b[3]) return slug;
+      const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+      const km = Math.hypot((lon - cx) * 111 * Math.cos(cy * Math.PI / 180),
+                            (lat - cy) * 111);
+      if (km < bestKm){ bestKm = km; best = slug; }
+    }
+    return (best && bestKm <= TINC_NEAR_KM) ? best : null;
+  }
+  if (geo && geo.osm){
+    const st = String(geo.osm).split(",").pop().trim().toLowerCase();
+    return (TINC_STATE[st] && d.regions[TINC_STATE[st]]) ? TINC_STATE[st] : null;
+  }
+  return d.regions["kl-selangor"] ? "kl-selangor" : null;
 }
-async function loadTrafficIncidents(){
-  const mq = $("#traffic-mq");
-  const band = $("#traffic-band");
-  if (!mq || !band) return;
-  const d = await fetch("/traffic_incidents.json", { cache:"no-store" })
-    .then(r => { if (!r.ok) throw new Error("traffic incidents unavailable"); return r.json(); });
-  if (!d.regions) return;
+/* One ticker item: "Klang Valley ⛔ Jalan A → Jalan B · Closed". The region
+   is the bold lead-in, matching how the highway posts lead with their time -
+   it used to also be repeated at the end of every line. */
+function tincItem(i){
+  const icon = TINC_ICON[i.catName] || "🔸";
+  const where = [i.from, i.to].filter(Boolean).join(" → ") || T("road");
+  const desc = (i.events && i.events[0]) ? ` · ${T(i.events[0])}` : "";
+  return `${icon} ${where}${desc}`;
+}
+/* Render from whatever was last fetched. Split from the fetch because the
+   region depends on the location pipeline, which resolves long after boot -
+   paintWeather() calls this every time that moves, so a visitor who allows
+   geolocation (or picks a postcode) gets their own roads instead of the
+   Klang Valley default the first render had to assume. */
+function renderTrafficIncidents(){
+  const d = tincData;
+  if (!d || !d.regions) return;
   /* Stale feed: hide nothing (the marquee keeps the crowd-sourced feed), just
      skip the TomTom part. */
   const feedMs = d.updated ? Date.parse(d.updated) : NaN;
   if (!isFinite(feedMs) || Date.now() - feedMs > TINC_MAX_AGE) return;
-  const slug = tincRegionForGeo() || "kl-selangor";
-  const reg = d.regions[slug];
-  if (!reg) return;
-  const incs = tincActive(reg.incidents || []).slice(0, 6);
-  if (!incs.length) return;
-  const items = incs.map(i => `<span class="traffic-item"><b>${esc(TINC_NAMES[slug] || slug)}</b> ${esc(tincItem(i, TINC_NAMES[slug] || slug))}</span>`)
-    .join('<span class="traffic-sep" aria-hidden="true">◆</span>');
-  /* The highway feed renders first (loadTrafficMarquee). If it produced a run,
-     append TomTom after it; otherwise the marquee is hidden (no fresh posts)
-     and TomTom alone builds the strip. Either way the band becomes visible. */
-  const run = mq.querySelector(".traffic-run");
-  if (run){
-    run.insertAdjacentHTML("beforeend", `<span class="traffic-sep" aria-hidden="true">◆</span>${items}`);
-  } else {
-    mq.innerHTML =
-      `<span class="traffic-run">${items}</span><span class="traffic-run" aria-hidden="true">${items}</span>`;
-  }
-  band.hidden = false;
+  const slug = tincRegion(d);
+  if (slug === tincSlug) return;            // nothing moved - don't repaint
+  tincSlug = slug;
+  const reg = slug && d.regions[slug];
+  /* ok:false means that region's fetch failed upstream, which is not the same
+     as its roads being clear - say nothing rather than "all clear". */
+  const incs = (reg && reg.ok !== false)
+    ? tincPick(tincActive(reg.incidents || []))
+    : [];
+  const name = (slug && TINC_NAMES[slug]) || slug;
+  TBAND.incs = incs.map(i =>
+    `<span class="traffic-item"><b>${esc(T(name))}</b> ${esc(tincItem(i))}</span>`);
+  paintTrafficBand();
+}
+async function loadTrafficIncidents(){
+  if (!$("#traffic-mq") || !$("#traffic-band")) return;
+  tincData = await fetch("/traffic_incidents.json", { cache:"no-store" })
+    .then(r => { if (!r.ok) throw new Error("traffic incidents unavailable"); return r.json(); });
+  renderTrafficIncidents();
 }
 /* Flood risk: KPI row + state chips + status-coloured map. 26 stations is
    small enough to render individual markers (no clustering needed), but the
@@ -9079,8 +9403,9 @@ function paintMaps(){
 const META = {
   hazards:{ title:"Warnings & Hazards",
     desc:"Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality across the major cities. Live only; nothing here is historical.",
-    how:"Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 3 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).",
+    how:"Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list, and USGS publishes a worldwide M2.5+ feed; earthquakes from both are filtered to within 500 km of Malaysia and to the last 7 days. Both sources are needed: MET's list stopped updating (on 15 Aug 2026 its newest event was six days old and it was missing that morning's M6.9 in North Sumatra, 268 km from the Perak coast), while USGS is live within minutes but has no notion of distance-to-Malaysia, which is computed here against a list of coastal anchors. Duplicates - the same rupture reported by both - are collapsed, MET's row winning because it carries the local bearing. The window is a week because quakes that close happen only about 1.5 times a month; only those from the last 24 hours count towards the section's active-alert badge. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).",
     eps:["/weather/warning","/weather/warning/earthquake",
+         "earthquake.usgs.gov 2.5_week.geojson (via /api/quakes)",
          "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)",
          "myrapid.com.my PULSE via r.jina.ai (via /api/rapid-alerts)",
          "air-quality-api.open-meteo.com (via /api/aqi)"] },

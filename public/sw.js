@@ -112,9 +112,63 @@
    no new section. Region-scoped (visitor's state), active-only, fresh-only;
    collector now also carries per-incident events descriptions ("Queuing
    traffic") and magnitudeOfDelay.
+   v71: Drop the top-of-page active-warnings band (v52). The sticky nav already
+   carries a Warnings entry with a live count badge and status dot, and the
+   hazard strip's first tile opens on "N active alerts" - the band was a third
+   copy of the same number, and unlike the nav it scrolled away. It existed
+   because Live Vehicles was rendering above Warnings: a stray </section> in
+   index.html left #live-sub outside #transport, and applySectionOrdering()
+   re-appends every section to #main, so the orphan floated to the top. The
+   sub-block is back inside Transport, which is the actual fix.
+   Also v71, TomTom: the collector's iconCategory map was hand-written and
+   shifted, so 875 of 1,084 incidents - ordinary jams - were published as
+   "Accident" and every road closure as "Road works". Replaced with TomTom's
+   published v5 taxonomy, with a CI assert so a name outside it fails the run.
+   The feed no longer ships polylines it never drew (905 KB -> 72 KB),
+   collapses one jam reported on N adjacent segments (and in both directions)
+   into one, and ranks numbered roads above housing-estate lanes. The ticker
+   picks the visitor's region from their coordinates against the region
+   bboxes instead of a state lookup that put Terengganu in Kuantan and every
+   uncovered state in the Klang Valley, and it re-picks whenever the location
+   pipeline moves - it used to run once at boot, before geo resolved, so
+   nearly everyone got the Klang Valley. Both feeds now render through one
+   painter, so whichever lands second no longer wipes the other.
+   Also v71, earthquakes: the alert was mechanically fine - feed fetches,
+   n_distancemas parses, filters apply - but its 12-hour window was set against
+   a phenomenon that happens ~1.5 times a month within 500 km, so a card was on
+   screen roughly 0.3% of the year and nobody could tell working from broken.
+   The deck now carries seven days; only the last 24 hours count towards the
+   nav badge, which still means "right now". Four files documented four
+   different windows (3h, 12h, 24h, "strictly the last 24h"); they now all
+   state the one that is implemented.
+
+   Also v71, location: picking a place by hand kept the previous fix's OSM
+   state and wrote it back to localStorage, so choosing Kuching while the last
+   fix was in Selangor left the visitor's state as Selangor - which is what the
+   holiday chips read. A pick now clears the stale position and resolves the
+   chosen place's own coordinates and state. The hero's dead "selected area"
+   text became a real "use my location" button (previously there was no way
+   back to auto-detect once you had picked), the weather card's "change" button
+   is named for what it does rather than sharing a label with a different
+   action, and the observation time stopped overwriting that whole control.
+   Also v71, USGS: MET's earthquake feed is no longer live. Checked 15 Aug 2026
+   with the cache bypassed (cf-cache-status: BYPASS, so this is the origin's
+   own answer): 836 events whose newest was six days old, and no sign of that
+   morning's M6.9 at Pematangsiantar - 268 km from the Perak coast, well inside
+   the radius this page filters on. Over the preceding 30 days MET listed 2
+   events within 500 km; USGS listed 8. USGS now runs as the live source
+   through a new /api/quakes Worker proxy (earthquake.usgs.gov is deliberately
+   not in the connect-src allowlist, and the proxy also edge-caches one fetch
+   of a 1.6 MB worldwide feed for every visitor); MET is merged in for what it
+   does carry, and duplicates are collapsed on a two-minute/150 km tolerance.
+   Cards name their source.
+
+   Also v71, Trending folds. It was 430px of carousel between the nav and the
+   first data section; folded to its heading and freshness stamp it gives back
+   ~290px, and the choice is remembered.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v70";
+const VERSION    = "mygov-v71";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

@@ -376,6 +376,60 @@ export default {
      * slims to the at-risk stations only (Danger/Warning/Alert) plus a
      * per-state summary. Edge-caches 5 min - flood telemetry updates every
      * 15 min upstream, so 5 min is a fair sharing window. */
+    /* USGS earthquakes, proxied.
+     *
+     * MET's earthquake feed (via data.gov.my) went stale: checked 15 Aug 2026
+     * with cache bypassed, its newest event was six days old and it was
+     * missing that morning's M6.9 at Pematangsiantar, 268 km from the Perak
+     * coast. USGS had it within minutes. The page merges both, but it cannot
+     * reach USGS directly - connect-src in public/_headers is a deliberate
+     * allowlist and earthquake.usgs.gov is not on it. Proxying here keeps the
+     * allowlist tight (the page only ever talks to its own origin for this),
+     * edge-caches one upstream fetch across all visitors, and slims a ~1.6 MB
+     * worldwide feed down to the handful of fields the cards use. */
+    if (url.pathname === "/api/quakes") {
+      const denied = await guard(request, url, env);
+      if (denied) return denied;
+
+      const FEED = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson";
+      const cacheKey = new Request(`${url.origin}/api/quakes`, { method: "GET" });
+      const cache = caches.default;
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+
+      let res;
+      try {
+        res = await fetch(FEED, {
+          headers: { "user-agent": UA, accept: "application/json" },
+          cf: { cacheTtl: 300, cacheEverything: true },
+        });
+      } catch {
+        return json({ error: "upstream_unreachable" }, 502);
+      }
+      if (!res.ok) return json({ error: "upstream_error", status: res.status }, 502);
+
+      let data;
+      try { data = await res.json(); }
+      catch { return json({ error: "bad_upstream_payload" }, 502); }
+
+      /* Distance filtering stays on the page, which already has the anchor
+         list and the haversine - one definition, not two that can drift. */
+      const quakes = [];
+      for (const f of (data && data.features) || []) {
+        const c = (f.geometry && f.geometry.coordinates) || [];
+        const p = f.properties || {};
+        const lon = Number(c[0]), lat = Number(c[1]);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+        if (!Number.isFinite(p.time)) continue;
+        quakes.push({ lat, lon, dep: Number(c[2]), mag: p.mag,
+                      ts: p.time, place: String(p.place || "") });
+      }
+      const out = json({ quakes, source: "https://earthquake.usgs.gov/" },
+                       200, { "cache-control": "public, max-age=300" });
+      ctx.waitUntil(cache.put(cacheKey, out.clone()));
+      return out;
+    }
+
     if (url.pathname === "/api/flood") {
       const denied = await guard(request, url, env);
       if (denied) return denied;
@@ -473,7 +527,7 @@ export default {
      * not a Malaysian alert). `n_distancemas` is the distance to the NEAREST
      * point in Malaysia ("838km S Pontian,Johor"), which makes the "does it
      * matter" filter exact: keep only events within 500 km AND within the
-     * last 12 h. Flood risk reuses the /api/flood logic inline (status
+     * last 7 days. Flood risk reuses the /api/flood logic inline (status
      * WATCH + 24 h freshness + receding-Warning/Alert exclusion) so the band
      * and the flood section can never disagree. */
     if (url.pathname === "/api/alerts") {
@@ -495,7 +549,9 @@ export default {
       const now = Date.now();
       const EARTHQUAKE_FEED = "https://api.data.gov.my/weather/warning/earthquake";
       const EQ_RADIUS_KM = 500;
-      const EQ_FRESH_MS = 12 * 3600 * 1000;
+      /* One week - same value as app.js EQ_FRESH_MS and collect_alerts.py, so
+         the three surfaces cannot disagree about what "recent" means. */
+      const EQ_FRESH_MS = 7 * 24 * 3600 * 1000;
 
       let quakes = [];
       try {
