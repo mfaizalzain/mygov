@@ -166,9 +166,21 @@
    Also v71, Trending folds. It was 430px of carousel between the nav and the
    first data section; folded to its heading and freshness stamp it gives back
    ~290px, and the choice is remembered.
+   v72: Two layout fixes.
+   The trend/breaking detail sheet's title was the only head child that could
+   shrink and the only one without flex-grow, while each pill reserved 44px to
+   clear the ✕ button. On a 375px screen that left the headline 154px and eight
+   lines tall - a narrow column beside a mostly empty header. The ✕ clearance
+   is now the head's own padding, the title has a 220px floor, and the pills
+   wrap beneath it.
+   The touch-target rule for disclosure summaries used `padding:9px 0`, which
+   also zeroed the horizontal padding of the summaries that had some - and the
+   table disclosures ("All locations table", places, election, ridership) use a
+   full .card-h as their summary. On touch their heading sat flush against the
+   card border while the table below stayed inset. Now vertical-only.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v71";
+const VERSION    = "mygov-v72";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
