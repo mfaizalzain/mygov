@@ -91,9 +91,10 @@
    hand-written regex table with figures baked into the source, so on the
    ~99% of devices without Gemini Nano it stated stale numbers as official
    ones; the brief re-summarised the Daily Brief band it was attached to.
+   v62: Implement Sovereign Ruby & Gold Bunga Raya (National Flower) brand icon redesign suite.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v61";
+const VERSION    = "mygov-v62";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
