@@ -505,6 +505,46 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   .traffic-pause{width:18px;height:18px}
   .traffic-pause::after{inset:-6px}
 }
+/* Structured traffic incidents panel (TomTom): sits under the marquee, above
+   the sections. Region chips + KPI chips + a compact incident list. Category
+   colours echo the hazards palette: accidents red, closures orange, works
+   amber, hazards yellow. */
+.traffic-incidents{max-width:1240px;margin:0 auto;padding:var(--s4) var(--s6) 0}
+.tinc-head{display:flex;align-items:baseline;gap:var(--s3);margin-bottom:var(--s3)}
+.tinc-title{display:flex;align-items:center;gap:var(--s2);font-weight:650;font-size:13px;
+  color:var(--fg);letter-spacing:.01em}
+.tinc-title .ico{width:16px;height:16px;color:var(--warn)}
+.tinc-upd{margin-left:auto;font-size:11px;color:var(--fg-3)}
+.tinc-chips{display:flex;flex-wrap:wrap;gap:var(--s2);margin-bottom:var(--s3)}
+.tinc-chip{font-size:11.5px;padding:3px 10px;border-radius:99px;cursor:pointer;
+  border:1px solid var(--line);background:var(--bg-soft);color:var(--fg-2);
+  transition:var(--t);-webkit-appearance:none;appearance:none}
+.tinc-chip:hover{color:var(--fg);border-color:var(--accent)}
+.tinc-chip[aria-pressed="true"]{background:var(--accent-dim);border-color:var(--accent);
+  color:var(--fg);font-weight:600}
+.tinc-chip:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-dim)}
+.tinc-kpis{display:flex;flex-wrap:wrap;gap:var(--s3);margin-bottom:var(--s3)}
+.tinc-kpi{display:flex;align-items:center;gap:var(--s2);font-size:12.5px;color:var(--fg-2);
+  padding:4px 11px;border-radius:var(--r-sm);border:1px solid var(--line-soft);background:var(--bg-soft)}
+.tinc-kpi b{font-variant-numeric:tabular-nums}
+.tinc-kpi .kdot{width:8px;height:8px;border-radius:50%}
+.tinc-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
+.tinc-item{display:flex;gap:var(--s3);align-items:baseline;padding:var(--s3) var(--s4);
+  border:1px solid var(--line-soft);border-radius:var(--r-md);background:var(--bg-soft)}
+.tinc-item .kdot{flex:none;align-self:center;width:9px;height:9px;border-radius:50%}
+.tinc-item-main{flex:1;min-width:0}
+.tinc-item-where{font-size:13px;color:var(--fg);font-weight:600;line-height:1.35}
+.tinc-item-roads{font-size:11.5px;color:var(--fg-3);margin-top:2px}
+.tinc-item-when{flex:none;font-size:11.5px;color:var(--fg-3);font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.tinc-clear{display:flex;align-items:center;gap:var(--s2);font-size:12.5px;color:var(--ok,#22c55e);
+  padding:var(--s3) var(--s4);border:1px dashed color-mix(in srgb,var(--ok,#22c55e) 35%,transparent);
+  border-radius:var(--r-md);background:color-mix(in srgb,var(--ok,#22c55e) 6%,transparent)}
+.tinc-note{font-size:11px;color:var(--fg-3);margin-top:var(--s2)}
+@media (max-width:620px){
+  .traffic-incidents{padding:var(--s3) var(--s4) 0}
+  .tinc-item-when{display:none}  /* keep the list scannable on phones */
+}
 /* Active-alert count on a nav item. Only Warnings uses it today; it is set
    from renderHazards()'s own alertN, so the nav and the tile can never
    disagree. Hidden at zero - a "0" badge reads as an alert at a glance. */

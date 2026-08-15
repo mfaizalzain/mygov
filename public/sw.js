@@ -102,9 +102,12 @@
    v67: TomTom traffic incidents collector - traffic_incidents.json added to
    the data-bundle exclusion list (structured urban/destination incidents,
    complementing the highway-only InfoTrafikGZ feed).
+   v68: Traffic incidents panel - region chips, KPI chips and incident list
+   under the marquee, auto-selected from the location pipeline (geo.osm state),
+   with a saved region choice in localStorage.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v67";
+const VERSION    = "mygov-v68";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
