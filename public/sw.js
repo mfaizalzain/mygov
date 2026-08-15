@@ -9,7 +9,7 @@
  *   Freshness is driven by the app's own 15-minute TTL in index.html, which is
  *   the "revalidate" half of SWR moved into a rate-limit-aware layer.
  */
-/* BUMP whenever /app.js or /styles.css changes. Since v15 they are precached
+/* BUMP whenever /index.html, /app.js or /styles.css changes. Since v15 they are precached
    SHELL_ASSETS served cache-first, so without a bump a returning visitor keeps
    running the previous build indefinitely - the shell only refetches when the
    cache name changes. v16: rapidCard href hardening + the summariser.
@@ -95,9 +95,16 @@
    v63: Ensure 100% transparent background across all vector SVGs and PNG assets with drop-shadow brand mark styling for light/dark theme adaptability.
    v64: Add multi-resolution transparent favicon.ico (16x16, 32x32, 48x48) and favicon-32/16 PNG fallbacks.
    v65: Ensure 100% solid opacity across flower interior (petals, navy core, gold veins) with outer transparent background for light and dark themes.
+   v66: Header brand mark scaled up against the title lockup (42px desktop,
+   38px under 620px, matching intrinsic img attrs), and the active-warnings
+   band drops its duplicate warning emoji - the .warn-top-tag badge already
+   carries the icon.
+   v67: TomTom traffic incidents collector - traffic_incidents.json added to
+   the data-bundle exclusion list (structured urban/destination incidents,
+   complementing the highway-only InfoTrafikGZ feed).
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v65";
+const VERSION    = "mygov-v67";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -229,6 +236,7 @@ self.addEventListener("fetch", event => {
       url.pathname === "/transport_history.json" || url.pathname === "/cars.json" ||
       url.pathname === "/tourism.json" || url.pathname === "/travel.json" ||
       url.pathname === "/rapid_alerts.json" || url.pathname === "/traffic.json" ||
+      url.pathname === "/traffic_incidents.json" ||
       url.pathname === "/feed.xml") return;
 
   // Everything else (icons, vendor scripts): cache first.
