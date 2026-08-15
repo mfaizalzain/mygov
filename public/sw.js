@@ -178,9 +178,15 @@
    table disclosures ("All locations table", places, election, ridership) use a
    full .card-h as their summary. On touch their heading sat flush against the
    card border while the table below stayed inset. Now vertical-only.
+   v73: The postcode field was the only flexible item in its row, so the
+   "2,932 postcodes · type to filter" counter took its width straight out of
+   the input - 391px down to 179px the moment it appeared. The counter drops
+   the "type to filter" half (the placeholder already says it), the field gets
+   a 180px floor, and the counter ellipsises before the field gives. Also
+   "1 matches" -> "1 match".
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v72";
+const VERSION    = "mygov-v73";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

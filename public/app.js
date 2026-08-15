@@ -314,7 +314,7 @@ const I18N = {
   "Postcode lookup":"Carian poskod", "postcode → city → state":"poskod → bandar → negeri",
   "Search postcode, city or state…":"Cari poskod, bandar atau negeri…",
   "Postcode":"Poskod", "City":"Bandar", "State":"Negeri",
-  "matches":"padanan", "postcodes":"poskod", "type to filter":"taip untuk menapis",
+  "match":"padanan", "matches":"padanan", "postcodes":"poskod",
   "No postcodes match ":"Tiada poskod sepadan ",
   "valid":"sah", "No active warnings":"Tiada amaran aktif",
   "Previous warnings":"Amaran sebelumnya", "Next warnings":"Amaran seterusnya",
@@ -6023,8 +6023,14 @@ function paintPos(){
     ? posData.filter(r => r[0].includes(term) ||
         r[1].toLowerCase().includes(term) || r[2].toLowerCase().includes(term))
     : [];
-  if (host.hidden && !term) { cnt.textContent = term ? "" : `${nf(posData.length)} ${T("postcodes")} · ${T("type to filter")}`; return; }
-  cnt.textContent = term ? `${nf(rows.length)} ${T("matches")}` : `${nf(posData.length)} ${T("postcodes")}`;
+  /* Just the count. It used to append "· type to filter", which the input's
+     own placeholder ("Postcode, city or state…") already says - and at 212px
+     of nowrap text in a 420px row it was squeezing the field it labelled from
+     391px down to 179px. */
+  if (host.hidden && !term) { cnt.textContent = `${nf(posData.length)} ${T("postcodes")}`; return; }
+  cnt.textContent = term
+    ? `${nf(rows.length)} ${T(rows.length === 1 ? "match" : "matches")}`
+    : `${nf(posData.length)} ${T("postcodes")}`;
   host.hidden = !term;
   if (!term) { host.innerHTML = ""; return; }
   const show = rows.slice(0, 60);
