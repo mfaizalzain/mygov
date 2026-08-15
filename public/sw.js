@@ -94,9 +94,10 @@
    v62: Implement Sovereign Ruby & Gold Bunga Raya (National Flower) brand icon redesign suite.
    v63: Ensure 100% transparent background across all vector SVGs and PNG assets with drop-shadow brand mark styling for light/dark theme adaptability.
    v64: Add multi-resolution transparent favicon.ico (16x16, 32x32, 48x48) and favicon-32/16 PNG fallbacks.
+   v65: Ensure 100% solid opacity across flower interior (petals, navy core, gold veins) with outer transparent background for light and dark themes.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v64";
+const VERSION    = "mygov-v65";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
