@@ -29,7 +29,7 @@ same rate-limit rules as the app.
 
 | Section | Source | Contents |
 | --- | --- | --- |
-| Warnings & Hazards | MET Malaysia, JPS, Prasarana (myRapid), Open-Meteo | Everything currently on issue, as a **status strip** of three tiles. The first merges severe-weather warnings, **earthquakes within 500 km of Malaysia in the last 12 hours** (filtered using MET Malaysia's official `n_distancemas` and UTC timestamps), flood-risk stations, the **latest Rapid KL service alert** and **live air quality** into **one alert carousel** (filter chips: all / weather / earthquakes / my area / marine; Rapid + AQI ride under All Malaysia only). The second is water-level stations at danger / warning / alert from JPS telemetry with status map. The third is air quality for **18 major cities as comparison cards** (Open-Meteo US AQI & PM2.5, sorted worst-first with multi-tier resilient fallback). Live only - nothing here is historical |
+| Warnings & Hazards | MET Malaysia, JPS, Prasarana (myRapid), Open-Meteo | Everything currently on issue, as a **status strip** of three tiles. The first merges severe-weather warnings, **earthquakes within 500 km of Malaysia in the last 7 days** from **MET Malaysia and USGS** (only the last 24 hours count towards the section's active-alert badge; MET's rows are filtered on its own `n_distancemas` field, USGS rows on distance to the nearest of 13 coastal anchors, and the same rupture reported by both is collapsed), flood-risk stations, the **latest Rapid KL service alert** and **live air quality** into **one alert carousel** (filter chips: all / weather / earthquakes / my area / marine; Rapid + AQI ride under All Malaysia only). The second is water-level stations at danger / warning / alert from JPS telemetry with status map. The third is air quality for **18 major cities as comparison cards** (Open-Meteo US AQI & PM2.5, sorted worst-first with multi-tier resilient fallback). Live only - nothing here is historical |
 | Weather | MET Malaysia, Open-Meteo | Unified Weather Station: live current conditions at your location with interactive mini-map & live condition pin badge (temperature, feels-like, humidity, wind), a **24-hour hourly forecast timeline** (hour, condition icon, temperature, rain probability % with color pills), a dynamic **7-day daily forecast outlook** (daily high/low temperature range, rain probability, conditions), instant location search with auto-complete suggestions & popular Malaysian hubs, and a collapsed-by-default **360-location table** from MET Malaysia |
 | Household | Ministry of Finance, KPDN | Weekly RON95 / RON97 / diesel ceiling prices, household income, and the PriceCatcher groceries basket (a merged **Groceries sub-block** with per-district price levels) |
 | Economy | DOSM (OpenDOSM), EPF | Headline vs core CPI by expenditure division, year-on-year inflation by state, unemployment, quarterly real GDP, latest EPF dividend |
@@ -147,7 +147,9 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 | Hotels | `collect_hotel.yml`, quarterly 3rd 02:30 UTC (Jan/Apr/Jul/Oct) | `public/hotel.json` | Paid Accommodation Survey infographic - occupancy rate (AOR), average room rate (ARR) and hotel guests (domestic/international) for all 16 states, current quarter vs a year earlier. Only the latest quarter is public on the portal, so the collector probes newest-first (same pattern as tourism) and the dashboard shows the current quarter only |
 | Travel Outlook | `collect_travel.yml`, weekly Mon 01:30 UTC | `public/travel.json` | next 8 weeks of peak travel periods from the holiday + KPM school calendars - school breaks, public holidays, long weekends with impact levels and one English line each (Gemini, deterministic fallback) |
 | Rapid KL alerts | `collect_rapid.yml`, every 10 min | `public/rapid_alerts.json` | the **latest** myRapid PULSE service alert (title, excerpt, link, MYT timestamp). The source is behind Incapsula (a JS-challenge WAF; its wp-json also returns 401 for anonymous reads), so the collector scrapes it through the **r.jina.ai reader proxy** - run from GitHub's IP pool because jina's free tier rate-limits Cloudflare Worker egress to null |
-| Live hazards | `collect_hazards.yml`, every 10 min | `public/aqi.json`, `public/flood.json`, `public/alerts.json` | Open-Meteo air quality for 18 cities, JPS at-risk flood gauges, and the combined earthquake + flood summary. These were previously aggregated inside the Worker on every request; the scheduled collector keeps them KV-first with a live Worker fallback |
+| Live hazards | `collect_hazards.yml`, every 10 min | `public/aqi.json`, `public/flood.json`, `public/alerts.json` | Open-Meteo air quality for 18 cities, JPS at-risk flood gauges, and the combined earthquake + flood summary (MET **and USGS** - see the earthquake note below). These were previously aggregated inside the Worker on every request; the scheduled collector keeps them KV-first with a live Worker fallback |
+| Highway traffic | `collect_traffic.yml`, every 10 min | `public/traffic.json` | InfoTrafikGZ Telegram posts - the concessionaires' own highway reports (PLUS, KESAS, LDP, MEX, KL-Karak). Cleaned of channel boilerplate; the ticker shows only the last 2 hours |
+| Urban traffic | `collect_tomtom_traffic.yml`, hourly 06:00-23:00 MYT | `public/traffic_incidents.json` | TomTom Traffic Incident Details v5 for **10 urban and destination regions** - the city streets the highway feed never mentions. Categories come from TomTom's published v5 taxonomy (a CI assert fails the run on any name outside it), one jam reported across adjacent segments and both directions is collapsed into one, closures and jams outrank roadworks, and each region is capped at 40 with two thirds of the slots held back from roadworks - they never expire and would otherwise crowd out everything live. ~53 KB |
 | Election Results | `collect_election.yml`, manual | `public/election.json` | Latest election per category from SPR's MySPRSemak JSON API (CSRF token + UUID ids from the page, then per-seat POSTs): PRU-15 parliamentary (208 seats - SPR omits Kedah P.017 and the federal-territory seats), the latest state election for **all 13 states** (10 via the pru-dun dropdown, Perlis/Perak/Pahang embedded in PRU-15's DUN payload), and the latest by-election. ~810 requests, one-time per election; results never change once published |
 
 > Each workflow uploads **only its own key** (`kv_upload.py push <key>`). An
@@ -438,7 +440,7 @@ public/
   icons/                generated PNGs (192, 512, apple-touch)
   vendor/               self-hosted Chart.js, Leaflet (SRI-pinned)
 src/
-  index.js              Worker: static assets + /api/reverse, /api/geocode, /api/gtfs, /api/fids, /api/rapid, /api/flood, /api/alerts, /api/rapid-alerts, /api/aqi
+  index.js              Worker: static assets + /api/reverse, /api/geocode, /api/gtfs, /api/fids, /api/rapid, /api/flood, /api/alerts, /api/rapid-alerts, /api/aqi, /api/quakes
 tools/
   make-icons.mjs        regenerates the icons (no image dependencies)
   collect_radar.py      Trend Radar collector (see above)
@@ -450,14 +452,17 @@ tools/
   collect_rapid.py      latest Rapid KL PULSE alert via r.jina.ai → public/rapid_alerts.json
   collect_hotel.py      quarterly Paid Accommodation Survey infographic → public/hotel.json
   collect_election.py   latest SPR election results per category → public/election.json
+  collect_traffic.py    InfoTrafikGZ highway posts → public/traffic.json
+  collect_tomtom_traffic.py  TomTom urban incidents by region → public/traffic_incidents.json
+  collect_alerts.py     MET + USGS earthquakes and JPS flood summary → public/alerts.json
   embed_seo.py          injects live values into index.html + writes feed.xml
 wrangler.jsonc
 ```
 
 The Worker serves `public/` through the `ASSETS` binding and owns the API
 routes - `/api/reverse`, `/api/geocode`, `/api/gtfs`, `/api/fids`,
-`/api/rapid`, `/api/flood`, `/api/alerts`, `/api/rapid-alerts` and
-`/api/aqi`. Everything else is static.
+`/api/rapid`, `/api/flood`, `/api/alerts`, `/api/rapid-alerts`, `/api/aqi`
+and `/api/quakes`. Everything else is static.
 
 > Static assets are served by Cloudflare's asset router **without invoking the
 > Worker**, so response headers for them come from `public/_headers`, not from
@@ -545,6 +550,63 @@ worst-first plus the cleanest for comparison, and edge-caches 10 minutes
 (the model updates hourly). The frontend features a resilient 3-tier fallback (Worker KV -> static `aqi.json` -> direct client-side Open-Meteo batch query) ensuring zero data dropouts. The page renders one comparison card per city;
 the alert deck only gains an AQI card when the worst city is Unhealthy
 (US AQI 101+, the haze threshold).
+
+### Earthquakes: why two sources
+
+MET Malaysia publishes a global earthquake list through data.gov.my, and it
+is the obvious source for a Malaysian dashboard. It stopped being live.
+
+Checked on 15 Aug 2026 with the cache bypassed (`cf-cache-status: BYPASS`, so
+this was the origin's own answer): 836 events whose newest was **six days
+old**, and no sign of that morning's **M6.9 at Pematangsiantar** in North
+Sumatra - 268 km from the Perak coast, comfortably inside the 500 km radius
+the page filters on. Over the preceding 30 days MET listed **2** events within
+500 km; USGS listed **8**.
+
+So USGS runs as the live source, through `/api/quakes`. It is proxied rather
+than fetched directly because `connect-src` in `public/_headers` is a
+deliberate allowlist and `earthquake.usgs.gov` is not on it - and proxying
+also edge-caches one fetch of a ~1.6 MB worldwide feed across every visitor
+and slims it to the fields the cards use. MET is still merged in for the
+events it does carry: it is the Malaysian authority, and its rows carry the
+local bearing text ("268km SW Bagan Datuk, Perak") that USGS has no notion
+of. The same rupture reported by both differs slightly in origin time and
+epicentre, so "same event" is a tolerance - two minutes and 150 km - and
+MET's row wins. Cards name their source.
+
+Two windows, deliberately: the deck carries **7 days** because quakes that
+close happen about 1.5 times a month, and a 12-hour window (what this used
+to be) put a card on screen roughly 0.3% of the year - the feature was
+invisible, and there was no way to tell working from broken. The nav badge
+counts only the last **24 hours**, because "active alert" has to keep
+meaning *now*.
+
+### The traffic ticker
+
+The strip under the nav merges two feeds into one row - deliberately one row;
+the page has enough bands above the fold already.
+
+**Highway posts** come from the InfoTrafikGZ Telegram channel, which is the
+concessionaires' own reporting (PLUS, KESAS, LDP, MEX, KL-Karak) and almost
+exclusively highways. **Urban incidents** come from TomTom's Traffic Incident
+Details v5 for 10 regions, which is the city-street layer the highway feed
+never mentions - and it is scoped to the visitor's region, matched from their
+coordinates against each region's bounding box (a hand-picked place is matched
+by name, since MET's forecast locations carry no coordinates). A visitor in a
+state no region covers is shown nothing rather than another state's roads.
+
+Both sources are held to the same **2-hour** freshness rule. A live-traffic
+strip has no room to timestamp itself beyond each post's own clock, so an old
+report does not merely fail to help - it misleads. That rule is why the TomTom
+collector runs hourly rather than a few times a day.
+
+The two are **interleaved**, not concatenated. Appended, the TomTom half was
+9,917px into a 12,587px strip on a 110s cycle - about 87 seconds before one
+appeared. (And before that it was unreachable at any duration: both duplicated
+`.traffic-run` spans were animated by `-50%` of their *own* width, so each slid
+half its width and snapped back, and only the first half of the list ever
+crossed the window. It is `-100%` now - one full run, which is the seamless
+case the duplicate span exists for.)
 
 ### Security
 
