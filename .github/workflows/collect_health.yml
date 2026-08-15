@@ -1,9 +1,13 @@
 name: Update KKM Health Data
 
 on:
-  # Runs daily at 00:30 UTC (8:30 AM MYT)
+  # 21:07 UTC = 05:07 MYT the following morning, ahead of the radar run at
+  # 21:19 so the brief that chains off it reads same-morning health figures.
+  # Moved off 00:30 UTC with the rest of the morning block: GitHub was
+  # delivering that slot ~2.5h late (03:01-03:05), which is the lag this
+  # repo sees across the whole 00:00-04:00 UTC window and on :00 / :30.
   schedule:
-    - cron: '30 0 * * *'
+    - cron: '7 21 * * *'
   # Manual trigger so a delayed/skipped cron can be caught up instantly
   workflow_dispatch:
 

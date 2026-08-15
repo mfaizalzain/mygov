@@ -1,15 +1,27 @@
 name: Update Insights + Forecasts
 
 on:
-  # 01:30 UTC, after the radar collector at 01:00 so the brief can cite the
-  # day's top issues.
-  schedule:
-    - cron: '30 1 * * *'
+  # Chained to the radar collector rather than scheduled 30 minutes after it.
+  # The old '30 1 * * *' assumed radar (01:00) would always land first, but
+  # GitHub delivers each cron 1-2.5h late by an independent amount: on 14 Aug
+  # radar fired 03:20 and this ran 03:31, an eleven-minute margin that was
+  # luck, not design. Whenever the draws inverted, the brief was built from
+  # yesterday's radar and nothing said so. workflow_run makes the ordering a
+  # guarantee, and the brief inherits radar's ~05:20 MYT slot for free.
+  workflow_run:
+    workflows: ["Update Trend Radar"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
   collect-insights:
     runs-on: ubuntu-latest
+    # A failed radar run leaves radar.json stale, so building a brief on top
+    # of it would quietly cite yesterday's issues as today's. Manual dispatch
+    # stays unconditional so a bad morning can still be caught up by hand.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
     env:
@@ -37,11 +49,14 @@ jobs:
 
       # The collector reads the other collectors' output. Those live in KV
       # (refreshed on each collector's schedule); the git-committed copies are
-      # only the cold-start fallback and would be stale here - the slow-data
-      # run at 00:30 UTC publishes yesterday's exchange rate, and a brief
-      # built from the committed file would cite the day-before-yesterday
-      # figure. Pull the freshest KV copies first (|| true: if KV is empty on
-      # a brand-new namespace the committed fallbacks still work).
+      # only the cold-start fallback and would be stale here - a brief built
+      # from the committed files would cite figures a day or more behind.
+      # Pull the freshest KV copies first (|| true: if KV is empty on a
+      # brand-new namespace the committed fallbacks still work).
+      #
+      # At this slot (~21:20 UTC) the newest slow.json is its 12:35 UTC run,
+      # which carries the last Bank Negara reference of the Malaysian day
+      # (17:00 MYT) - the right rate for a brief read the next morning.
       - name: Pull freshest collector data from KV
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

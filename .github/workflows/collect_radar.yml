@@ -1,9 +1,16 @@
 name: Update Trend Radar
 
 on:
-  # Runs daily at 01:00 UTC (9:00 AM MYT)
+  # 21:19 UTC = 05:19 MYT the following morning. GitHub delivers this repo's
+  # crons 1-2.5h late (worst in the 00:00-04:00 UTC block, and worst of all on
+  # the :00 / :30 boundaries), so a nominal 01:00 UTC slot was actually firing
+  # at ~03:20 and pushing the morning brief that hangs off it to ~11:30 MYT.
+  # Scheduling off-boundary and outside that block lands it in the early
+  # morning where it belongs. Times here are best-effort, never guaranteed -
+  # collect_insights therefore chains off this run's completion rather than
+  # assuming a fixed offset.
   schedule:
-    - cron: '0 1 * * *'
+    - cron: '19 21 * * *'
   # Manual trigger so a delayed/skipped cron can be caught up instantly
   workflow_dispatch:
 

@@ -46,6 +46,19 @@ import urllib.request
 OUT_FC = "public/forecasts.json"
 OUT_IN = "public/insights.json"
 
+# Runners are UTC, and this collector now fires at ~21:20 UTC so the brief
+# lands in the Malaysian early morning - which is already the *next* day in
+# MYT. dt.date.today() would stamp the previous date, so "Today in brief"
+# would carry yesterday's date on the morning it is read, and PROMPT would be
+# handed the wrong day to write about. Malaysia is a fixed UTC+8 with no DST,
+# so a plain offset is exact and keeps the stdlib-only rule.
+MYT = dt.timezone(dt.timedelta(hours=8))
+
+
+def today_myt():
+    return dt.datetime.now(MYT).date().isoformat()
+
+
 HORIZON = 14        # two full weekly cycles
 SEASON = 7
 MIN_GAIN = 0.05     # a forecast must beat naive by 5% to be worth publishing
@@ -171,7 +184,7 @@ def deholiday(vals, t0, holidays):
 
 def build_forecasts(slow, health, holidays):
     """Forecast every daily count series that beats naive by MIN_GAIN."""
-    fc = {"generated": dt.date.today().isoformat(),
+    fc = {"generated": today_myt(),
           "horizon": HORIZON, "ridership": {}, "blood": {}}
     sources = [("ridership", (slow.get("mobility") or {}).get("rid")),
                ("blood", (health or {}).get("don"))]
@@ -388,7 +401,7 @@ Rules:
 def build_brief(slow, health, prices, radar, fc, hits):
     facts = build_facts(slow, health, prices, radar, fc, hits)
     key = gemini_key()
-    out = {"generated": dt.date.today().isoformat(), "bullets": []}
+    out = {"generated": today_myt(), "bullets": []}
     if not key:
         sys.stderr.write("  no GOOGLE_API_KEY - writing empty brief\n")
         out["error"] = "no key"
