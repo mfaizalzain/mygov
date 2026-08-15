@@ -345,7 +345,7 @@ describe("traffic incidents marquee logic", () => {
   test("worst-first pick spreads categories instead of six of a kind", () => {
     const TINC_RANK = {
       "Road closed": 0, "Lane closed": 1, "Accident": 2, "Flooding": 3,
-      "Dangerous conditions": 4, "Broken down vehicle": 5, "Road works": 6, "Jam": 7,
+      "Dangerous conditions": 4, "Broken down vehicle": 5, "Jam": 6, "Road works": 7,
     };
     const tincPick = incs => {
       const ranked = incs.slice().sort((a, b) =>
@@ -367,7 +367,7 @@ describe("traffic incidents marquee logic", () => {
     // Two of each lead; the remaining slots are filled in rank order rather
     // than left empty, so the ticker is never six lines of one category.
     assert.deepEqual(picked.slice(0, 4).map(i => i.catName),
-      ["Road works", "Road works", "Jam", "Jam"]);
+      ["Jam", "Jam", "Road works", "Road works"]);
     assert.ok(picked.filter(i => i.catName === "Jam").length >= 2);
     assert.ok(picked.filter(i => i.catName === "Road works").length < 6);
     // A numbered road always beats an unnumbered lane closure

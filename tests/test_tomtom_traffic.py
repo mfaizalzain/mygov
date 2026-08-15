@@ -103,8 +103,9 @@ def test_severity_puts_numbered_roads_and_closures_first():
                    key=tt.severity)
     # Numbered roads lead, and within them the worst category leads
     assert order[0] is closed_road
-    assert order[1] is works_road   # CAT_RANK: works (6) before jam (7)
-    assert order[2] is jam_road
+    # A jam is happening now; a roadworks layout has been there for weeks
+    assert order[1] is jam_road
+    assert order[2] is works_road
     assert order[-1] is closed_lane
 
 
@@ -123,3 +124,29 @@ def test_regions_defined():
     for _, _, bbox in tt.REGIONS:
         assert len(bbox) == 4
         assert all(isinstance(x, (int, float)) for x in bbox)
+
+
+def test_take_holds_slots_back_from_roadworks():
+    """Roadworks never expire, so on rank alone they fill a region."""
+    works = [{"cat": 9, "from": f"W{i}"} for i in range(30)]
+    jams = [{"cat": 6, "from": f"J{i}"} for i in range(30)]
+    # Ranked order puts jams first now, but feed works first to prove the cap
+    out = tt.take(works + jams, 12)
+    assert len(out) == 12
+    assert sum(1 for i in out if i["cat"] == 9) == 12 // tt.ROADWORKS_SHARE
+    assert sum(1 for i in out if i["cat"] == 6) == 12 - 12 // tt.ROADWORKS_SHARE
+
+
+def test_take_lets_roadworks_spill_rather_than_ship_a_short_region():
+    """If roadworks are all there is, a half-empty ticker helps nobody."""
+    works = [{"cat": 9, "from": f"W{i}"} for i in range(30)]
+    out = tt.take(works, 12)
+    assert len(out) == 12
+    assert all(i["cat"] == 9 for i in out)
+
+
+def test_jams_outrank_roadworks_for_a_live_ticker():
+    assert tt.CAT_RANK[6] < tt.CAT_RANK[9]
+    # ...but never above the things that block a road
+    for blocking in (8, 7, 1, 11):
+        assert tt.CAT_RANK[blocking] < tt.CAT_RANK[6]
