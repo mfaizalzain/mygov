@@ -1765,44 +1765,6 @@ html[data-text="large"] table{font-size:14px}
 @media (prefers-reduced-motion:reduce){.ai-prog i{transition:none}}
 html[data-text="large"] .ai-panel{font-size:15px}
 
-/* ═══════════════ on-device interactive AI ═══════════════ */
-.ai-ask-card{margin:var(--s3) 0 var(--s4);border:1px solid var(--line-soft);
-  border-radius:var(--r);background:var(--surface);padding:var(--s3) var(--s4);box-shadow:var(--shadow-sm)}
-.ai-ask-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s2);gap:var(--s2)}
-.ai-ask-title{display:flex;align-items:center;gap:var(--s2);font-size:13px;font-weight:650;color:var(--fg)}
-.ai-ask-badge{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:99px;
-  background:rgba(59,130,246,.12);color:var(--accent);font-weight:600;border:1px solid rgba(59,130,246,.25)}
-.ai-ask-form{display:flex;gap:var(--s2);margin-bottom:var(--s2)}
-.ai-ask-wrap{position:relative;display:flex;flex:1;align-items:center;min-width:0}
-.ai-ask-inp{flex:1;width:100%;height:34px;padding:0 28px 0 var(--s3);border-radius:var(--r-sm);border:1px solid var(--line-soft);
-  background:var(--surface-2);color:var(--fg);font-size:12.5px;outline:none;transition:border-color .15s,box-shadow .15s}
-.ai-ask-inp:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-.ai-ask-wrap .inp-x{right:8px}
-.ai-ask-btn{height:34px;padding:0 var(--s3);font-size:12px;flex:none;font-weight:600;cursor:pointer}
-.ai-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:var(--s2)}
-.ai-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;
-  background:var(--surface-2);border:1px solid var(--line-soft);color:var(--fg-2);font-size:11px;
-  cursor:pointer;transition:all .15s;text-align:left;user-select:none}
-.ai-chip:hover{background:var(--surface-3);color:var(--fg);border-color:var(--line)}
-.ai-chip:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-dim)}
-.ai-ask-result{margin-top:var(--s2);padding:var(--s3);border-radius:var(--r-sm);
-  background:var(--surface-2);border-left:3px solid var(--accent);border-top:1px solid var(--line-soft);
-  border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);font-size:12.5px;
-  color:var(--fg-2);line-height:1.45}
-.ai-ask-result[hidden]{display:none}
-.ai-ask-result p{margin:0 0 var(--s2)}
-.ai-ask-result p:last-child{margin-bottom:0}
-.ai-ask-actions{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s2);align-items:center}
-.ai-action-btn{font-size:11.5px;padding:4px 10px;text-decoration:none}
-.ai-voice-btn{font-size:11.5px;padding:4px 10px}
-.ai-voice-btn.speaking{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
-
-/* Morning brief synthesizer */
-.ai-brief-card{margin-top:var(--s2);padding:var(--s3);border-radius:var(--r-sm);
-  background:var(--surface-2);border-left:3px solid var(--accent);border-top:1px solid var(--line);
-  border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.45}
-.ai-brief-card[hidden]{display:none}
-
 /* Explain metric inline button and popup */
 .ai-explain-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
   border-radius:50%;font-size:10.5px;font-weight:700;margin-left:5px;padding:0;background:var(--surface-3);
@@ -1816,8 +1778,6 @@ html[data-text="large"] .ai-panel{font-size:15px}
   border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
   font-size:12px;color:var(--fg-2);line-height:1.5;text-transform:none;letter-spacing:normal;font-weight:normal}
 .ai-explain-pop[hidden]{display:none}
-html[data-text="large"] .ai-ask-inp{font-size:13.5px;height:38px}
-html[data-text="large"] .ai-ask-result{font-size:13.5px}
 
 /* ── Election results section ─────────────────────────────────────── */
 .wchip{display:inline-flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap}
