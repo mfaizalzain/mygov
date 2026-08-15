@@ -125,7 +125,7 @@ GitHub Actions (collect_radar.yml)     Hermes cron (digest, 10 PM MYT)
 
 - **Collector:** `tools/collect_radar.py` - RSS fetch across 6 major Malaysian news outlets, Gemini clustering with JSON-rescue parsing, grounded fact-checking, breaking news HTML cleaning/deduplication, and URL backfilling. Falls back to deterministic keyword clustering if the Gemini API call fails.
 - **Repo secret required:** `GOOGLE_API_KEY` (Gemini API key) - without it the collector degrades to keyword clustering in CI.
-- **Workflow:** `.github/workflows/collect_radar.yml` - scheduled 01:00 UTC (9 AM MYT) + manual `workflow_dispatch`, commits as `github-actions[bot]` with `contents: write`.
+- **Workflow:** `.github/workflows/collect_radar.yml` - scheduled 21:19 UTC (05:19 MYT the next morning) + manual `workflow_dispatch`, commits as `github-actions[bot]` with `contents: write`.
 - The dashboard fetches `/radar.json` (same-origin) and dynamically updates carousel tracks, counters, and bilingual translations.
 
 ---
@@ -138,11 +138,11 @@ JSON the dashboard reads same-origin (served from the Cloudflare edge):
 
 | Collector | Workflow | Writes | Contents |
 | --- | --- | --- | --- |
-| KKM health | `collect_health.yml`, daily 00:30 UTC | `public/health.json` | blood donations (3y), organ pledges, PeKa B40 |
-| Slow data | `collect_slow.yml`, 00:30 + 12:30 UTC | `public/slow.json` | fuel, finance (incl. payment instruments), mobility, economy (incl. FDI flows), population, public holidays |
+| KKM health | `collect_health.yml`, daily 21:07 UTC (05:07 MYT next day) | `public/health.json` | blood donations (3y), organ pledges, PeKa B40 |
+| Slow data | `collect_slow.yml`, 4x daily 01:35 / 04:35 / 09:35 / 12:35 UTC (just after each BNM reference rate: 09:35 / 12:35 / 17:35 / 20:35 MYT) | `public/slow.json` | fuel, finance (incl. payment instruments), mobility, economy (incl. FDI flows), population, public holidays |
 | PriceCatcher | `collect_prices.yml`, daily 13:30 UTC | `public/prices.json` | grocery basket index, per-item prices, 166 districts |
 | Places | `collect_geo.yml`, weekly Mon 14:00 UTC | `public/geo.json` | state/district population + composition (ethnicity, sex, age), 222 parliament + 600 DUN seats with income, poverty, gini, unemployment per seat; district-level median income, poverty and gini from the OpenAPI |
-| Insights | `collect_insights.yml`, daily 01:30 UTC | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
+| Insights | `collect_insights.yml`, chained to `collect_radar.yml` completion (~21:25 UTC / 05:25 MYT) | `public/forecasts.json`, `public/insights.json` | 14-day forecasts for the series that pass a backtest, plus a bilingual daily briefing |
 | Car sales | `collect_cars.yml`, monthly 6th 02:30 UTC | `public/cars.json` | JPJ granular registrations - YTD totals, monthly fuel mix + EV share, top makers **and top EV makers** (current + previous year) |
 | Tourism | `collect_tourism.yml`, monthly 2nd 02:30 UTC | `public/tourism.json` | Tourism Malaysia visitor-arrivals PDF - top-51 table with month, y/y vs 2025 and 2019, YTD (May 2026 seeded) |
 | Hotels | `collect_hotel.yml`, quarterly 3rd 02:30 UTC (Jan/Apr/Jul/Oct) | `public/hotel.json` | Paid Accommodation Survey infographic - occupancy rate (AOR), average room rate (ARR) and hotel guests (domestic/international) for all 16 states, current quarter vs a year earlier. Only the latest quarter is public on the portal, so the collector probes newest-first (same pattern as tourism) and the dashboard shows the current quarter only |
