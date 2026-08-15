@@ -87,9 +87,13 @@
    v58: Breaking news ranked by a news-desk editor pass with impact tier and what/who/impact bullets on the card.
    v59: Breaking feed capped at 10 editor-picked stories with urgency tier, editor summary and assigned category.
    v60: Drop the source count from trend cards; show every outlet in the detail sheet even when its URL is unresolved.
+   v61: Remove Ask MyGov and My Day Brief. The assistant answered from a
+   hand-written regex table with figures baked into the source, so on the
+   ~99% of devices without Gemini Nano it stated stale numbers as official
+   ones; the brief re-summarised the Daily Brief band it was attached to.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v60";
+const VERSION    = "mygov-v61";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
