@@ -552,12 +552,17 @@ section.is-pinned::before{content:"📌 PINNED";font-size:10px;font-family:var(-
 /* compact postcode utility */
 .pos-util{position:relative;display:flex;align-items:center;gap:var(--s2);max-width:420px;flex:1;min-width:240px}
 .pos-util .pos-ico{font-size:13px;color:var(--fg-3)}
-.pos-util .inp{flex:1;min-width:0;padding:8px 30px 8px var(--s3);border-radius:var(--r-sm);
+/* A floor under the field. It is the only flexible item in the row, so every
+   character the count grows by came straight out of the input's width. */
+.pos-util .inp{flex:1;min-width:min(180px,100%);padding:8px 30px 8px var(--s3);border-radius:var(--r-sm);
   border:1px solid var(--line);background:var(--surface);color:var(--fg);
   font-size:12.5px;transition:var(--t)}
 .pos-util .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
 .pos-util .inp-x{right:10px}
-.pos-util .pos-count{font-size:11px;font-family:var(--mono);color:var(--fg-3);white-space:nowrap}
+/* The count yields before the field does: on a narrow phone it ellipsises
+   rather than pushing the input below its floor. */
+.pos-util .pos-count{font-size:11px;font-family:var(--mono);color:var(--fg-3);
+  white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .pos-panel{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
   box-shadow:0 12px 32px rgba(0,0,0,.45);max-height:300px;overflow:auto}
