@@ -1050,16 +1050,31 @@ body.modal-open{overflow:hidden!important;touch-action:none}
   border:1px solid var(--line);background:var(--surface-2);color:var(--fg-2);font-size:13px;
   cursor:pointer;display:grid;place-items:center;transition:var(--t)}
 .rd-x:hover{background:var(--surface-3);color:var(--fg);border-color:var(--line)}
-.rd-head{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s6) var(--s6) var(--s4);
+/* The head is rank · title · category pill (breaking news adds an urgency
+   pill). The title used to be the only child that could shrink and the only
+   one with no flex-grow, so it never claimed the free space while each pill
+   reserved 44px to clear the ✕ button - on a 375px screen that left the title
+   154px and eight lines tall, a narrow column beside a mostly empty header.
+   The ✕ clearance now belongs to the head once, as padding, and the title
+   grows; the pills wrap under it when there is no room. */
+.rd-head{display:flex;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;
+  padding:var(--s6) calc(var(--s6) + 34px) var(--s4) var(--s6);
   border-bottom:1px solid var(--line-soft)}
 .rd-head .rank{flex:none;width:30px;height:30px;border-radius:99px;display:grid;place-items:center;
   background:var(--bg-2);border:1px solid var(--line);font-family:var(--mono);
   font-size:13px;font-weight:700;color:var(--fg-2)}
-.rd-head h4{margin:0;font-size:17px;line-height:1.35;letter-spacing:-.015em;font-weight:680;
-  padding-right:34px}
-.rd-titles{min-width:0}
+.rd-head h4{margin:0;font-size:17px;line-height:1.35;letter-spacing:-.015em;font-weight:680}
+/* A floor under the title, so the pills wrap beneath it rather than squeezing
+   it into a column - which is what happened on a phone, and on desktop
+   whenever breaking news carried an urgency pill as well as a category one.
+   It has to be min-width, not the flex basis: a basis still shrinks, so the
+   pills stayed on the line and took the space anyway. 220px rather than the
+   260 a headline would ideally get, because 30px of rank badge plus this has
+   to fit a 375px screen or the badge itself wraps to its own line. min() keeps
+   it from overflowing a container narrower than the floor. */
+.rd-titles{flex:1 1 220px;min-width:min(220px,100%)}
 .rd-en{margin:4px 0 0;color:var(--fg-3);font-size:12.5px;line-height:1.45}
-.rd-head .pill{flex:none;margin:2px 44px 0 0;text-transform:capitalize}
+.rd-head .pill{flex:none;margin:2px 0 0;text-transform:capitalize}
 .rd-body{padding:var(--s4) var(--s6) var(--s6)}
 .rd-verdict{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--s4);
   border-radius:var(--r);border:1px solid var(--line-soft);margin-bottom:var(--s4)}
@@ -1649,8 +1664,16 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
      the hero copy below it. */
   .hero-loc{min-height:44px}
   .hero-loc .link-btn, #wx-loc .link-btn{min-height:44px;padding:9px 10px}
+  /* Vertical only. This used to be `padding:9px 0`, which also zeroed the
+     horizontal padding of any summary that had some - and the table
+     disclosures ("All locations table", the places, election and ridership
+     tables) use a full `.card-h` as their summary. On touch their heading and
+     row-count sat flush against the card border while the table below them
+     stayed properly inset, which read as a broken card. The summaries this
+     rule was written for (details.meta, .wx-other) have no horizontal padding
+     to preserve, so they are unaffected. */
   details.meta summary,details.dt summary,.wx-other summary{min-height:36px;
-    padding:9px 0;align-items:center}
+    padding-top:9px;padding-bottom:9px;align-items:center}
   details.dt summary,.wx-other summary{display:inline-flex}
 }
 @media (prefers-reduced-motion:reduce){
