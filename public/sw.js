@@ -92,9 +92,10 @@
    ~99% of devices without Gemini Nano it stated stale numbers as official
    ones; the brief re-summarised the Daily Brief band it was attached to.
    v62: Implement Sovereign Ruby & Gold Bunga Raya (National Flower) brand icon redesign suite.
+   v63: Ensure 100% transparent background across all vector SVGs and PNG assets with drop-shadow brand mark styling for light/dark theme adaptability.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v62";
+const VERSION    = "mygov-v63";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
