@@ -431,8 +431,17 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 
 /* live traffic marquee: a slim ticker strip under the nav, amber-accented
    like the warnings so it reads as "heads up", scrolling continuously and
-   pausing on hover/focus. Two duplicated .traffic-run spans translate 0→-50%
-   for a seamless loop; the run is 2x content by construction. */
+   pausing on hover/focus.
+
+   Two duplicated .traffic-run spans sit side by side and BOTH translate by
+   -100%, which is one full run: when the first has left the window the second
+   is exactly where the first began, so the loop is seamless and every item
+   gets its turn. It used to be -50%, on the belief that "the run is 2x content
+   by construction" - but the painter puts the whole list in each of the two
+   runs, not twice inside one, so each run slid half its own width and snapped
+   back. Only the first half of the list ever crossed the window: the highway
+   posts were ~79% of the strip's width, so they looped forever and the TomTom
+   incidents in the tail were never reachable, no matter how long you watched. */
 .traffic-band{display:flex;align-items:center;gap:var(--s3);max-width:1240px;margin:0 auto;
   padding:var(--s1) var(--s6);overflow:hidden;border-bottom:1px solid var(--line-soft);
   background:linear-gradient(90deg,rgba(251,191,36,.08),transparent 55%)}
@@ -465,7 +474,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 .traffic-pause::after{content:"";position:absolute;inset:-4px}
 .traffic-pause:hover{color:var(--fg);border-color:var(--line)}
 .traffic-pause:focus-visible{outline:none;border-color:var(--accent);color:var(--fg)}
-@keyframes mq{to{transform:translateX(-50%)}}
+@keyframes mq{to{transform:translateX(-100%)}}
 /* On phones the ticker sat a notch above the surrounding body text and used the
    desktop gutter, so it read as the loudest thing on the page. Drop it to the
    small-print size, match .wrap's narrower padding, and shrink the tag/separator

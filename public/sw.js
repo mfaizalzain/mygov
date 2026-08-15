@@ -184,9 +184,29 @@
    the "type to filter" half (the placeholder already says it), the field gets
    a 180px floor, and the counter ellipsises before the field gives. Also
    "1 matches" -> "1 match".
+   v74: The traffic ticker never actually showed its TomTom half.
+   The marquee animates each of two duplicated .traffic-run spans by -50% of
+   its OWN width, on the belief that "the run is 2x content by construction" -
+   but the painter puts the whole list in each of the two runs, not twice
+   inside one. So each run slid half its width and snapped back, and only the
+   first half of the list ever crossed the window. The highway posts were ~79%
+   of a 12,587px strip, so they looped forever and the TomTom incidents in the
+   tail were unreachable no matter how long you watched. Now -100%, which is
+   one full run: when the first has left, the second is exactly where it began.
+   The two sources are also interleaved rather than concatenated, so one of
+   each is on screen within seconds instead of 87.
+   Nothing older than two hours rides the strip now, from either source (was
+   3h for the highway posts and 6h for the TomTom feed), and the collector
+   moved to hourly 06:00-23:00 MYT so that rule does not just hide the layer.
+   Jams also outrank roadworks: ranking roadworks higher read as "severity" and
+   was wrong for a live feed - a roadworks layout is the same for weeks, a jam
+   is what is happening now. Measured 15 Aug, 22:45: Klang Valley shipped 19
+   active roadworks and 21 already-ended jams; Penang shipped 30 of 40 as
+   roadworks. The collector now holds two thirds of each region's slots back
+   from roadworks, which never expire and would otherwise crowd out the rest.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v73";
+const VERSION    = "mygov-v74";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

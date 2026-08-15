@@ -114,7 +114,18 @@ KEEP_CATS = {1, 3, 6, 7, 8, 9, 11, 14}
 # magnitudeOfDelay cannot express that: 4 means "undefined", which is what
 # closures carry, so sorting on delay alone puts closures in the same bucket
 # as unknowns.
-CAT_RANK = {8: 0, 7: 1, 1: 2, 11: 3, 3: 4, 14: 5, 9: 6, 6: 7}
+# Jams outrank roadworks. This was the other way round at first, which read
+# sensibly as "severity" and was wrong for a live ticker: roadworks are
+# semi-permanent - the same B27 layout is there for weeks - while a jam is the
+# thing happening now. Measured 15 Aug 2026 at 22:45 MYT, Klang Valley shipped
+# 19 active roadworks and 21 jams that had already ended, so the ticker was
+# 100% roadworks; at peak the roadworks were still taking the top slots out of
+# 388 candidates. Closures, accidents and flooding stay above both.
+CAT_RANK = {8: 0, 7: 1, 1: 2, 11: 3, 3: 4, 14: 5, 6: 6, 9: 7}
+# ...and even ranked last they can crowd a region out, because there are simply
+# a lot of them and they never expire. At most this fraction of a region's
+# slots goes to roadworks; the rest is held for incidents that are live.
+ROADWORKS_SHARE = 3
 # Only the first N of each region survive, worst-first. The frontend shows at
 # most a handful in the ticker, and the whole file is fetched by every visitor
 # on every load - 1,084 incidents with polylines was 905 KB of payload to
@@ -223,6 +234,33 @@ def severity(i):
             -(d if d != 4 else 3))
 
 
+def take(kept, limit):
+    """Fill a region's slots worst-first, holding some back from roadworks.
+
+    Roadworks never expire, so on rank alone they can fill a region and leave
+    nothing for the incidents a driver is actually deciding around. They get at
+    most limit/ROADWORKS_SHARE slots - unless there is nothing else to fill
+    with, in which case the spill takes the remainder rather than shipping a
+    half-empty region.
+    """
+    cap = max(1, limit // ROADWORKS_SHARE)
+    out, spill, used = [], [], 0
+    for i in kept:
+        if len(out) >= limit:
+            break
+        if i.get("cat") == 9:          # Road works
+            if used >= cap:
+                spill.append(i)
+                continue
+            used += 1
+        out.append(i)
+    for i in spill:
+        if len(out) >= limit:
+            break
+        out.append(i)
+    return out
+
+
 def main():
     if not KEY:
         sys.exit("tomtom: TOMTOM_API_KEY not set")
@@ -244,11 +282,12 @@ def main():
             # Count before the cap, so the dashboard can say "40 of 132"
             # rather than implying the region only has what it was sent.
             "total": len(kept),
-            "incidents": kept[:PER_REGION],
+            "incidents": take(kept, PER_REGION),
         }
         total += len(kept)
         print(f"tomtom: {slug}: {len(incs)} raw -> {len(kept)} kept "
-              f"-> {len(kept[:PER_REGION])} sent{'' if ok else ' (FETCH FAILED)'}")
+              f"-> {len(out_regions[slug]['incidents'])} sent"
+              f"{'' if ok else ' (FETCH FAILED)'}")
         time.sleep(0.3)  # be gentle; 10 regions per run
 
     out = {

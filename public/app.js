@@ -8899,11 +8899,33 @@ function trafficClean(s){
    used to have its items wiped by the other's innerHTML. Both park their
    rendered items here instead, and this paints. No second row - the whole
    point of merging them was to not add one. */
+/* Nothing older than two hours rides the ticker, from either source. It is a
+   live-traffic strip: a report from this morning is not just useless, it is
+   misleading, because the strip has no room to timestamp itself beyond the
+   post's own clock. The TomTom half is bounded by the age of the whole feed
+   (its incidents are only as current as the last poll), which is why the
+   collector runs hourly - a 2h rule against a 3h collection gap would hide the
+   layer more often than it showed it. */
+const TRAFFIC_MAX_AGE = 2 * 3600e3;
 const TBAND = { posts:[], incs:[] };
 function paintTrafficBand(){
   const band = $("#traffic-band"), mq = $("#traffic-mq");
   if (!band || !mq) return;
-  const items = TBAND.posts.concat(TBAND.incs);
+  /* Interleaved, not appended.
+   *
+   * The TomTom half used to be concatenated after the highway posts, which
+   * made it invisible in practice: measured on the live site, the strip was
+   * 12,587px wide against a 291px window on a 110s cycle, and the first TomTom
+   * item sat 9,917px in - about 87 seconds of watching before one appeared. It
+   * was in the DOM the whole time, which is exactly why it looked like it was
+   * working. Alternating the two sources puts one of each on screen within the
+   * first few seconds, and the region-scoped ones lead because they are the
+   * ones picked for where the reader actually is. */
+  const items = [];
+  for (let i = 0; i < Math.max(TBAND.incs.length, TBAND.posts.length); i++){
+    if (TBAND.incs[i]) items.push(TBAND.incs[i]);
+    if (TBAND.posts[i]) items.push(TBAND.posts[i]);
+  }
   /* Empty the strip as well as hiding it: a reader who moves to a region this
      feed does not cover would otherwise be leaving the previous region's roads
      in the DOM, hidden from sight but not from a screen reader. */
@@ -8921,11 +8943,11 @@ async function loadTrafficMarquee(){
   if (!band) return;
   const d = await fetch("/traffic.json", { cache:"no-store" })
     .then(r => { if (!r.ok) throw new Error("traffic unavailable"); return r.json(); });
-  /* Only the last 3 hours: an old jam is worse than no jam, and the ticker
-     has no room to say "this is stale". p.time carries a real UTC offset, so
+  /* Only the last 2 hours: an old jam is worse than no jam, and the ticker has
+     no room to say "this is stale". p.time carries a real UTC offset, so
      Date.parse is exact - p.ts is MYT wall-clock stored as an epoch and is
      8h off a true instant, so it must not be used for this. */
-  const cutoff = Date.now() - 3 * 3600e3;
+  const cutoff = Date.now() - TRAFFIC_MAX_AGE;
   const posts = (d.posts || [])
     .filter(p => { const t = Date.parse(p.time); return isFinite(t) && t >= cutoff; })
     .map(p => ({ ...p, text: trafficClean(p.text) }))
@@ -9022,7 +9044,7 @@ const TINC_NAMES = {
   "kedah-langkawi":"Langkawi", "kuantan":"Kuantan",
   "kelantan-kb":"Kota Bharu", "kuching":"Kuching",
 };
-const TINC_MAX_AGE = 6 * 3600e3;   // feed older than this = yesterday's traffic
+const TINC_MAX_AGE = TRAFFIC_MAX_AGE;   // same 2h rule as the highway posts
 const TINC_NEAR_KM = 60;           // outside this, a region is not "near you"
 const TINC_SHOW = 6;               // lines in the ticker
 /* Category -> ticker glyph, on TomTom's real v5 taxonomy. The collector used
@@ -9036,11 +9058,14 @@ const TINC_ICON = {
 };
 /* Worst first, and roads with a number before the ones without: a six-line
    ticker is better spent on a closed trunk road than on six consecutive
-   housing-estate lanes. The collector already sorts this way; repeating it
-   here keeps a cached older file honest. */
+   housing-estate lanes. Jams sit above roadworks - roadworks are the same
+   layout for weeks, a jam is what is happening now - which also stops the
+   ticker going all-roadworks late in the evening once the jams have cleared.
+   The collector already sorts this way; repeating it here keeps a cached
+   older file honest. */
 const TINC_RANK = {
   "Road closed":0, "Lane closed":1, "Accident":2, "Flooding":3,
-  "Dangerous conditions":4, "Broken down vehicle":5, "Road works":6, "Jam":7,
+  "Dangerous conditions":4, "Broken down vehicle":5, "Jam":6, "Road works":7,
 };
 let tincData = null;    // last fetched feed, re-read when the location changes
 let tincSlug;           // region currently on the ticker (undefined = never painted)
