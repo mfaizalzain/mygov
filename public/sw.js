@@ -99,9 +99,22 @@
    38px under 620px, matching intrinsic img attrs), and the active-warnings
    band drops its duplicate warning emoji - the .warn-top-tag badge already
    carries the icon.
+   v67: TomTom traffic incidents collector - traffic_incidents.json added to
+   the data-bundle exclusion list (structured urban/destination incidents,
+   complementing the highway-only InfoTrafikGZ feed).
+   v68: Traffic incidents panel - region chips, KPI chips and incident list
+   under the marquee, auto-selected from the location pipeline (geo.osm state),
+   with a saved region choice in localStorage.
+   v69: Traffic incidents panel freshness - feed older than 6h hides the panel
+   entirely, and ended incidents (past endTime) are dropped from the list and
+   KPI counts, so yesterday's jams never show as today's.
+   v70: TomTom incidents merged INTO the marquee instead of a separate panel -
+   no new section. Region-scoped (visitor's state), active-only, fresh-only;
+   collector now also carries per-incident events descriptions ("Queuing
+   traffic") and magnitudeOfDelay.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
    the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v66";
+const VERSION    = "mygov-v70";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -233,6 +246,7 @@ self.addEventListener("fetch", event => {
       url.pathname === "/transport_history.json" || url.pathname === "/cars.json" ||
       url.pathname === "/tourism.json" || url.pathname === "/travel.json" ||
       url.pathname === "/rapid_alerts.json" || url.pathname === "/traffic.json" ||
+      url.pathname === "/traffic_incidents.json" ||
       url.pathname === "/feed.xml") return;
 
   // Everything else (icons, vendor scripts): cache first.

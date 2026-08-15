@@ -48,6 +48,7 @@ FILES = {
     "travel": "public/travel.json",
     "rapid": "public/rapid_alerts.json",
     "traffic": "public/traffic.json",
+    "traffic_incidents": "public/traffic_incidents.json",
     "fids": "public/fids.json",
     "election": "public/election.json",
     "aqi": "public/aqi.json",

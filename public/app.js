@@ -8743,6 +8743,83 @@ function initTrafficPause(band){
     btn.firstElementChild.textContent = paused ? "⏸" : "▶";
   };
 }
+/* ═══════════════════ structured traffic incidents (TomTom) ═══════════════════
+   The marquee already carries the highway feed (InfoTrafikGZ). TomTom adds
+   structured incidents for urban + popular-destination regions - with
+   per-incident descriptions ("Stationary traffic", "Closed") and a delay
+   magnitude. To avoid a second strip (there are enough sections already),
+   these are merged into the SAME ticker, after the crowd-sourced posts, and
+   scoped to the visitor's region so they read as "near you". Only incidents
+   still active (endTime in the future) and a feed fresher than 6h count -
+   stale traffic never shows. */
+const TINC_STATE = {
+  "kuala lumpur":"kl-selangor", "selangor":"kl-selangor", "putrajaya":"kl-selangor",
+  "johor":"johor", "pulau pinang":"penang", "penang":"penang",
+  "perak":"perak-ipoh", "melaka":"melaka", "negeri sembilan":"kl-selangor",
+  "pahang":"pahang-cameron", "kedah":"kedah-langkawi",
+  "kelantan":"kelantan-kb", "terengganu":"kuantan",
+  "sarawak":"kuching", "kuching":"kuching", "labuan":"kuching",
+};
+/* Region display names, in the same order the collector emits regions. */
+const TINC_NAMES = {
+  "kl-selangor":"Klang Valley", "johor":"JB", "penang":"Penang",
+  "perak-ipoh":"Ipoh", "melaka":"Melaka", "pahang-cameron":"Cameron Highlands",
+  "kedah-langkawi":"Langkawi", "kuantan":"Kuantan",
+  "kelantan-kb":"Kota Bharu", "kuching":"Kuching",
+};
+const TINC_MAX_AGE = 6 * 3600e3;   // feed older than this = yesterday's traffic
+
+function tincActive(incs){
+  const now = Date.now();
+  return incs.filter(i => {
+    if (!i.end) return true;
+    const e = Date.parse(i.end);
+    return !isFinite(e) || e > now;
+  });
+}
+function tincRegionForGeo(){
+  if (!geo || !geo.osm) return null;
+  const st = String(geo.osm).split(",").pop().trim().toLowerCase();
+  return TINC_STATE[st] || null;
+}
+/* One ticker item: "🔴 Jalan A → Jalan B · Queuing traffic (Klang Valley)" */
+function tincItem(i, regionName){
+  const dot = i.catName === "Accident" ? "🔴" : i.catName === "Road closed" ? "⛔"
+    : i.catName === "Road works" ? "🚧" : i.catName === "Hazard" ? "⚠" : "🔸";
+  const where = [i.from, i.to].filter(Boolean).join(" → ") || "road";
+  const desc = (i.events && i.events[0]) ? ` · ${i.events[0]}` : "";
+  return `${dot} ${where}${desc} · ${regionName}`;
+}
+async function loadTrafficIncidents(){
+  const mq = $("#traffic-mq");
+  const band = $("#traffic-band");
+  if (!mq || !band) return;
+  const d = await fetch("/traffic_incidents.json", { cache:"no-store" })
+    .then(r => { if (!r.ok) throw new Error("traffic incidents unavailable"); return r.json(); });
+  if (!d.regions) return;
+  /* Stale feed: hide nothing (the marquee keeps the crowd-sourced feed), just
+     skip the TomTom part. */
+  const feedMs = d.updated ? Date.parse(d.updated) : NaN;
+  if (!isFinite(feedMs) || Date.now() - feedMs > TINC_MAX_AGE) return;
+  const slug = tincRegionForGeo() || "kl-selangor";
+  const reg = d.regions[slug];
+  if (!reg) return;
+  const incs = tincActive(reg.incidents || []).slice(0, 6);
+  if (!incs.length) return;
+  const items = incs.map(i => `<span class="traffic-item"><b>${esc(TINC_NAMES[slug] || slug)}</b> ${esc(tincItem(i, TINC_NAMES[slug] || slug))}</span>`)
+    .join('<span class="traffic-sep" aria-hidden="true">◆</span>');
+  /* The highway feed renders first (loadTrafficMarquee). If it produced a run,
+     append TomTom after it; otherwise the marquee is hidden (no fresh posts)
+     and TomTom alone builds the strip. Either way the band becomes visible. */
+  const run = mq.querySelector(".traffic-run");
+  if (run){
+    run.insertAdjacentHTML("beforeend", `<span class="traffic-sep" aria-hidden="true">◆</span>${items}`);
+  } else {
+    mq.innerHTML =
+      `<span class="traffic-run">${items}</span><span class="traffic-run" aria-hidden="true">${items}</span>`;
+  }
+  band.hidden = false;
+}
 /* Flood risk: KPI row + state chips + status-coloured map. 26 stations is
    small enough to render individual markers (no clustering needed), but the
    same marker styling family as the live vehicles map keeps the theme
@@ -9994,6 +10071,9 @@ function boot(){
   /* Live traffic marquee: loads independently of the sections - it is a
      nav-adjacent strip, not a section sub-block. */
   loadTrafficMarquee().catch(() => {});
+  /* Structured traffic incidents panel: same independence - it sits under the
+     marquee and above the sections, and its region choice is its own. */
+  loadTrafficIncidents().catch(() => {});
   setInterval(tick, 30000);
 }
 /* boot() used to wait for the deferred Chart.js global before running - up to

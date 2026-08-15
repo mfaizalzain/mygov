@@ -264,3 +264,92 @@ describe("State Persistence & Saved Locations Logic", () => {
     assert.ok(ordered.includes("weather"));
   });
 });
+
+/* ═══════════════════════ structured traffic incidents ═══════════════════════
+   Pure-logic mirrors of the tinc* helpers in public/app.js (the render path
+   needs a DOM; these cover the decision logic against the real collector
+   output shape). The TomTom incidents are merged into the marquee, scoped to
+   the visitor's region, active-only, fresh-only. */
+
+const TINC_STATE = {
+  "kuala lumpur": "kl-selangor", "selangor": "kl-selangor", "putrajaya": "kl-selangor",
+  "johor": "johor", "pulau pinang": "penang", "penang": "penang",
+  "perak": "perak-ipoh", "melaka": "melaka", "negeri sembilan": "kl-selangor",
+  "pahang": "pahang-cameron", "kedah": "kedah-langkawi",
+  "kelantan": "kelantan-kb", "terengganu": "kuantan",
+  "sarawak": "kuching", "kuching": "kuching", "labuan": "kuching",
+};
+
+const TINC_NAMES = {
+  "kl-selangor": "Klang Valley", "johor": "JB", "penang": "Penang",
+  "perak-ipoh": "Ipoh", "melaka": "Melaka", "pahang-cameron": "Cameron Highlands",
+  "kedah-langkawi": "Langkawi", "kuantan": "Kuantan",
+  "kelantan-kb": "Kota Bharu", "kuching": "Kuching",
+};
+
+describe("traffic incidents marquee logic", () => {
+  const geoState = osm => String(osm).split(",").pop().trim().toLowerCase();
+
+  test("OSM state maps to the right region slug", () => {
+    assert.equal(TINC_STATE[geoState("Kajang, Selangor")], "kl-selangor");
+    assert.equal(TINC_STATE[geoState("Kuala Lumpur")], "kl-selangor");
+    assert.equal(TINC_STATE[geoState("Johor Bahru, Johor")], "johor");
+    assert.equal(TINC_STATE[geoState("George Town, Penang")], "penang");
+    assert.equal(TINC_STATE[geoState("Ipoh, Perak")], "perak-ipoh");
+    assert.equal(TINC_STATE[geoState("Kuching, Sarawak")], "kuching");
+  });
+
+  test("every state maps to a region the collector emits", () => {
+    const collectorSlugs = new Set([
+      "kl-selangor", "johor", "penang", "perak-ipoh", "melaka",
+      "pahang-cameron", "kedah-langkawi", "kuantan", "kelantan-kb", "kuching",
+    ]);
+    for (const slug of Object.values(TINC_STATE)) assert.ok(collectorSlugs.has(slug), slug);
+    // every region has a display name
+    for (const slug of collectorSlugs) assert.ok(TINC_NAMES[slug], `no name for ${slug}`);
+  });
+
+  test("ticker item text: category emoji, road, description, region", () => {
+    const tincItem = (i, regionName) => {
+      const dot = i.catName === "Accident" ? "🔴" : i.catName === "Road closed" ? "⛔"
+        : i.catName === "Road works" ? "🚧" : i.catName === "Hazard" ? "⚠" : "🔸";
+      const where = [i.from, i.to].filter(Boolean).join(" → ") || "road";
+      const desc = (i.events && i.events[0]) ? ` · ${i.events[0]}` : "";
+      return `${dot} ${where}${desc} · ${regionName}`;
+    };
+    const t = tincItem({ catName: "Accident", from: "Jalan A", to: "Jalan B",
+      events: ["Queuing traffic"] }, "Klang Valley");
+    assert.ok(t.startsWith("🔴"));
+    assert.ok(t.includes("Jalan A → Jalan B"));
+    assert.ok(t.includes("Queuing traffic"));
+    assert.ok(t.endsWith("· Klang Valley"));
+  });
+
+  test("ended incidents are filtered out of the active list (no stale traffic)", () => {
+    const now = Date.now();
+    const iso = ms => new Date(ms).toISOString();
+    const tincActive = incs => incs.filter(i => {
+      if (!i.end) return true;
+      const e = Date.parse(i.end);
+      return !isFinite(e) || e > now;
+    });
+    const incs = [
+      { end: iso(now - 3600e3) },   // ended 1h ago -> drop
+      { end: iso(now + 7200e3) },   // ongoing -> keep
+      {},                            // no end -> keep (assume ongoing)
+    ];
+    const active = tincActive(incs);
+    assert.equal(active.length, 2);
+    assert.equal(active[0].end, incs[1].end);
+    assert.equal(active[1].end, undefined);
+  });
+
+  test("a feed older than the max age is treated as stale (skipped)", () => {
+    const TINC_MAX_AGE = 6 * 3600e3;
+    const now = Date.now();
+    const fresh = now - 2 * 3600e3;
+    const stale = now - 10 * 3600e3;
+    assert.ok(now - fresh <= TINC_MAX_AGE, "fresh feed should be within window");
+    assert.ok(now - stale > TINC_MAX_AGE, "stale feed should be outside window");
+  });
+});
