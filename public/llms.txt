@@ -8,7 +8,7 @@
 
 ## Sections
 
-- [Warnings & Hazards](https://malaysia-at-a-glance.com/#hazards): Everything currently on issue - MET severe-weather warnings, earthquakes within 500 km in the last 24 hours, JPS river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality (US AQI for 18 major cities, worst-first with the cleanest for comparison; an alert card only appears when the worst city is Unhealthy, AQI 101+). Live only, no history.
+- [Warnings & Hazards](https://malaysia-at-a-glance.com/#hazards): Everything currently on issue - MET severe-weather warnings, earthquakes within 500 km in the last 7 days from MET and USGS (only the last 24 hours count as an active alert), JPS river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality (US AQI for 18 major cities, worst-first with the cleanest for comparison; an alert card only appears when the worst city is Unhealthy, AQI 101+). Live only, no history.
 - [Weather](https://malaysia-at-a-glance.com/#weather): Current conditions at your location plus the seven-day MET outlook, air temperature and rainfall for 360 Malaysian locations.
 - [Household](https://malaysia-at-a-glance.com/#fuel): Weekly retail fuel prices (RON95, RON97, diesel), the PriceCatcher groceries basket and household income.
 - [Population](https://malaysia-at-a-glance.com/#population): National totals since 1970, then by state, district and constituency - median income, poverty, inequality and unemployment per parliamentary and state seat.

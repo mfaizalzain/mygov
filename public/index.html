@@ -162,13 +162,6 @@
   </ul>
 </nav>
 
-<!-- Active emergency & severe weather warnings banner: universal nationwide alerts placed above traffic & local vehicle reports -->
-<div class="warn-top-band" id="warn-top-band" hidden>
-  <span class="warn-top-tag" aria-hidden="true"><svg class="ico"><use href="#i-warn"/></svg></span>
-  <div class="warn-top-content" id="warn-top-content"></div>
-  <a href="#hazards" class="warn-top-jump" id="warn-top-jump" data-i18n="View warnings">View warnings ↗</a>
-</div>
-
 <!-- Live traffic marquee: crowd-sourced road reports scrolling under the
      nav. Loaded independently (not a section sub-block); hidden until data
      arrives. -->
@@ -291,6 +284,11 @@
         <span class="radar-count" id="radar-count" aria-live="polite"></span>
         <button class="btn" id="radar-prev" aria-label="Previous issues">‹</button>
         <button class="btn" id="radar-next" aria-label="Next issues">›</button>
+        <!-- Trending is 430px of cards sitting between the nav and the first
+             data section, so it starts folded to its headline and remembers
+             whichever way you leave it. -->
+        <button class="btn" id="radar-toggle" aria-expanded="false"
+                aria-controls="radar-track" data-i18n="Show">Show</button>
       </div>
     </div>
     <div class="radar-subbar">
@@ -316,7 +314,7 @@
           <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality across the major cities. Live only; nothing here is historical.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list; the earthquakes are filtered to within 500 km of Malaysia (MET's own n_distancemas field) and to the last 24 hours. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+). A hazard with nothing to report shows an all-clear rather than an empty table.</p>
+            <p>Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list, and USGS publishes a worldwide M2.5+ feed; earthquakes from both are filtered to within 500 km of Malaysia and to the last 7 days. Both sources are needed: MET's list stopped updating (on 15 Aug 2026 its newest event was six days old and it was missing that morning's M6.9 in North Sumatra, 268 km from the Perak coast), while USGS is live within minutes but has no notion of distance-to-Malaysia, which is computed here against a list of coastal anchors. Duplicates - the same rupture reported by both - are collapsed, MET's row winning because it carries the local bearing. The window is a week because quakes that close happen only about 1.5 times a month; only those from the last 24 hours count towards the section's active-alert badge. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+). A hazard with nothing to report shows an all-clear rather than an empty table.</p>
             <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li><li><code>GET myrapid.com.my PULSE via r.jina.ai (via /api/rapid-alerts)</code></li><li><code>GET air-quality-api.open-meteo.com (via /api/aqi)</code></li></ul>
           </details>
         </div>
@@ -499,8 +497,10 @@
         <span class="sec-time" id="time-transport"></span>
       </div>
       <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-    </section>
-    <!-- Live Vehicles: a merged sub-block of its parent section. -->
+    <!-- Live Vehicles: a merged sub-block of its parent section. It must stay
+         INSIDE #transport - applySectionOrdering() re-appends every section to
+         #main, so a sub-block left outside one floats to the very top of the
+         page, above Warnings. -->
       <div class="sec-sub" id="live-sub" aria-labelledby="h-live">
         <div class="sec-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
@@ -540,7 +540,7 @@
 <!-- /SEO:SNAP -->
             <h3>Sections</h3>
             <ul>
-              <li><strong>Warnings &amp; Hazards</strong> - everything currently on issue: severe-weather warnings, earthquakes within 500 km in the last 24 hours, and river gauges above their flood thresholds.</li>
+              <li><strong>Warnings &amp; Hazards</strong> - everything currently on issue: severe-weather warnings, earthquakes within 500 km in the last 7 days (MET and USGS), and river gauges above their flood thresholds.</li>
               <li><strong>Weather</strong> - seven-day forecast for every state, district and town in Malaysia.</li>
               <li><strong>Household</strong> - weekly RON95/RON97/diesel pump prices, the PriceCatcher groceries basket and household income statistics.</li>
               <li><strong>Population</strong> - national totals by year and composition, plus state, district and constituency population and living standards.</li>

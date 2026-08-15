@@ -271,13 +271,16 @@ describe("State Persistence & Saved Locations Logic", () => {
    output shape). The TomTom incidents are merged into the marquee, scoped to
    the visitor's region, active-only, fresh-only. */
 
+/* Fallback map only - app.js prefers the region bboxes against the visitor's
+   coordinates. States with no region that covers where their people live
+   (Kedah, whose only region is Langkawi island) or no region at all
+   (Terengganu, Negeri Sembilan, Perlis, Sabah, Labuan) are deliberately
+   absent: those visitors get no line rather than another state's traffic. */
 const TINC_STATE = {
   "kuala lumpur": "kl-selangor", "selangor": "kl-selangor", "putrajaya": "kl-selangor",
   "johor": "johor", "pulau pinang": "penang", "penang": "penang",
-  "perak": "perak-ipoh", "melaka": "melaka", "negeri sembilan": "kl-selangor",
-  "pahang": "pahang-cameron", "kedah": "kedah-langkawi",
-  "kelantan": "kelantan-kb", "terengganu": "kuantan",
-  "sarawak": "kuching", "kuching": "kuching", "labuan": "kuching",
+  "perak": "perak-ipoh", "melaka": "melaka", "pahang": "kuantan",
+  "kelantan": "kelantan-kb", "sarawak": "kuching", "kuching": "kuching",
 };
 
 const TINC_NAMES = {
@@ -299,6 +302,13 @@ describe("traffic incidents marquee logic", () => {
     assert.equal(TINC_STATE[geoState("Kuching, Sarawak")], "kuching");
   });
 
+  test("states with no covering region resolve to nothing, not to KL", () => {
+    for (const osm of ["Kota Kinabalu, Sabah", "Kangar, Perlis",
+                       "Kuala Terengganu, Terengganu", "Seremban, Negeri Sembilan",
+                       "Alor Setar, Kedah"])
+      assert.equal(TINC_STATE[geoState(osm)], undefined, osm);
+  });
+
   test("every state maps to a region the collector emits", () => {
     const collectorSlugs = new Set([
       "kl-selangor", "johor", "penang", "perak-ipoh", "melaka",
@@ -309,20 +319,61 @@ describe("traffic incidents marquee logic", () => {
     for (const slug of collectorSlugs) assert.ok(TINC_NAMES[slug], `no name for ${slug}`);
   });
 
-  test("ticker item text: category emoji, road, description, region", () => {
-    const tincItem = (i, regionName) => {
-      const dot = i.catName === "Accident" ? "🔴" : i.catName === "Road closed" ? "⛔"
-        : i.catName === "Road works" ? "🚧" : i.catName === "Hazard" ? "⚠" : "🔸";
+  test("ticker item text: category emoji, road, description", () => {
+    const TINC_ICON = {
+      "Accident": "🔴", "Road closed": "⛔", "Lane closed": "🚧", "Road works": "🚧",
+      "Flooding": "🌊", "Dangerous conditions": "⚠", "Broken down vehicle": "🚗",
+      "Jam": "🔸",
+    };
+    const tincItem = i => {
+      const icon = TINC_ICON[i.catName] || "🔸";
       const where = [i.from, i.to].filter(Boolean).join(" → ") || "road";
       const desc = (i.events && i.events[0]) ? ` · ${i.events[0]}` : "";
-      return `${dot} ${where}${desc} · ${regionName}`;
+      return `${icon} ${where}${desc}`;
     };
-    const t = tincItem({ catName: "Accident", from: "Jalan A", to: "Jalan B",
-      events: ["Queuing traffic"] }, "Klang Valley");
-    assert.ok(t.startsWith("🔴"));
+    const t = tincItem({ catName: "Jam", from: "Jalan A", to: "Jalan B",
+      events: ["Queuing traffic"] });
+    assert.ok(t.startsWith("🔸"));            // a jam is not an accident
     assert.ok(t.includes("Jalan A → Jalan B"));
     assert.ok(t.includes("Queuing traffic"));
-    assert.ok(t.endsWith("· Klang Valley"));
+    // The region is the bold lead-in, so it must not also be repeated here
+    assert.ok(!t.includes("Klang Valley"));
+    assert.equal(tincItem({ catName: "Road closed", from: "A", to: "B",
+      events: ["Closed"] })[0], "⛔");
+  });
+
+  test("worst-first pick spreads categories instead of six of a kind", () => {
+    const TINC_RANK = {
+      "Road closed": 0, "Lane closed": 1, "Accident": 2, "Flooding": 3,
+      "Dangerous conditions": 4, "Broken down vehicle": 5, "Road works": 6, "Jam": 7,
+    };
+    const tincPick = incs => {
+      const ranked = incs.slice().sort((a, b) =>
+        ((a.roads && a.roads.length) ? 0 : 1) - ((b.roads && b.roads.length) ? 0 : 1) ||
+        (TINC_RANK[a.catName] ?? 9) - (TINC_RANK[b.catName] ?? 9));
+      const per = {}, first = [], rest = [];
+      for (const i of ranked){
+        const n = (per[i.catName] = (per[i.catName] || 0) + 1);
+        (n <= 2 ? first : rest).push(i);
+      }
+      return first.concat(rest).slice(0, 6);
+    };
+    const works = n => Array.from({ length: n },
+      (_, k) => ({ catName: "Road works", roads: ["B27"], from: "W" + k }));
+    const jams = n => Array.from({ length: n },
+      (_, k) => ({ catName: "Jam", roads: ["E2"], from: "J" + k }));
+    const picked = tincPick(works(8).concat(jams(4)));
+    assert.equal(picked.length, 6, "the window is filled, not left short");
+    // Two of each lead; the remaining slots are filled in rank order rather
+    // than left empty, so the ticker is never six lines of one category.
+    assert.deepEqual(picked.slice(0, 4).map(i => i.catName),
+      ["Road works", "Road works", "Jam", "Jam"]);
+    assert.ok(picked.filter(i => i.catName === "Jam").length >= 2);
+    assert.ok(picked.filter(i => i.catName === "Road works").length < 6);
+    // A numbered road always beats an unnumbered lane closure
+    const mixed = tincPick([{ catName: "Road closed", roads: [], from: "lane" },
+                            { catName: "Jam", roads: ["E1"], from: "trunk" }]);
+    assert.equal(mixed[0].from, "trunk");
   });
 
   test("ended incidents are filtered out of the active list (no stale traffic)", () => {
@@ -351,5 +402,82 @@ describe("traffic incidents marquee logic", () => {
     const stale = now - 10 * 3600e3;
     assert.ok(now - fresh <= TINC_MAX_AGE, "fresh feed should be within window");
     assert.ok(now - stale > TINC_MAX_AGE, "stale feed should be outside window");
+  });
+});
+
+/* ── earthquake alert ─────────────────────────────────────────────────────
+   MET's feed is a global list (~836 events going back years), most of them
+   nowhere near Malaysia. Two filters decide what the hazard deck shows -
+   distance parsed out of `n_distancemas` ("613km SE Semporna,Sabah") and age -
+   and a third, tighter age cut decides what counts as an *active* alert in the
+   nav badge. These had drifted apart across four files and three different
+   documented windows, which is how "is this even working?" became unanswerable
+   by looking at the page. */
+
+const EQ_RADIUS_KM = 500;
+const EQ_FRESH_MS = 7 * 24 * 3600 * 1000;
+const EQ_ALERT_MS = 24 * 3600 * 1000;
+
+const eqKm = q => {
+  const m = String(q.n_distancemas || "").match(/([\d,]+)\s*km/i);
+  return m ? Number(m[1].replace(/,/g, "")) : null;
+};
+const eqFilter = (quakes, nowMs) => (quakes || [])
+  .filter(q => q.visible !== false)
+  .map(q => ({ q, km: eqKm(q),
+               ts: Date.parse(String(q.utcdatetime || "").replace(" ", "T") + "Z") }))
+  .filter(x => x.km != null && x.km <= EQ_RADIUS_KM)
+  .filter(x => Number.isFinite(x.ts) && nowMs - x.ts <= EQ_FRESH_MS)
+  .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+describe("earthquake alert", () => {
+  const now = Date.parse("2026-08-15T12:00:00Z");
+  const at = (hoursAgo, over) => ({
+    utcdatetime: new Date(now - hoursAgo * 3600e3).toISOString().slice(0, 19),
+    n_distancemas: "120km SE Semporna,Sabah",
+    magdefault: 5.1, location_original: "Sulawesi", ...over,
+  });
+
+  test("distance is parsed from MET's own n_distancemas string", () => {
+    assert.equal(eqKm({ n_distancemas: "613km SE Semporna,Sabah" }), 613);
+    // Thousands separators appear beyond 1,000 km and must not truncate to 7
+    assert.equal(eqKm({ n_distancemas: "7,823km NE Pitas,Sabah" }), 7823);
+    assert.equal(eqKm({ n_distancemas: "" }), null);
+    assert.equal(eqKm({}), null);
+  });
+
+  test("keeps quakes inside 500 km, drops the rest of the globe", () => {
+    const out = eqFilter([
+      at(2, { n_distancemas: "120km SE Semporna,Sabah" }),
+      at(2, { n_distancemas: "7,823km NE Pitas,Sabah" }),
+      at(2, { n_distancemas: "501km E Kudat,Sabah" }),
+      at(2, { n_distancemas: "500km E Kudat,Sabah" }),   // boundary is inclusive
+    ], now);
+    assert.deepEqual(out.map(x => x.km), [120, 500]);
+  });
+
+  test("the deck window is a week - the rate is ~1.5 events a month", () => {
+    const out = eqFilter([at(1), at(13), at(24 * 6), at(24 * 8)], now);
+    // 8 days old drops out; 6 days old does not. A 12h window kept only the
+    // first two, which is why the card was empty ~99.7% of the year.
+    assert.deepEqual(out.map(x => Math.round((now - x.ts) / 3600e3)), [1, 13, 144]);
+  });
+
+  test("only the last 24h counts as an active alert in the badge", () => {
+    const deck = eqFilter([at(1), at(30), at(24 * 5)], now);
+    assert.equal(deck.length, 3, "all three stay in the deck");
+    const alerting = deck.filter(x => now - x.ts <= EQ_ALERT_MS);
+    assert.equal(alerting.length, 1, "only the one-hour-old quake is 'active'");
+  });
+
+  test("hidden and undated rows are skipped", () => {
+    assert.equal(eqFilter([at(1, { visible: false })], now).length, 0);
+    assert.equal(eqFilter([at(1, { utcdatetime: "" })], now).length, 0);
+    assert.equal(eqFilter([at(1, { utcdatetime: "not a date" })], now).length, 0);
+  });
+
+  test("newest first, so the deck leads with the most recent event", () => {
+    const out = eqFilter([at(50), at(2), at(20)], now);
+    assert.deepEqual(out.map(x => Math.round((now - x.ts) / 3600e3)), [2, 20, 50]);
   });
 });

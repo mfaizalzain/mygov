@@ -2,12 +2,15 @@ name: Collect TomTom Traffic Incidents
 
 on:
   schedule:
-    # 6x/day at 07:00, 09:00, 11:00, 14:00, 17:00, 21:00 MYT (UTC-8)
-    # catches morning peak, midday, evening peak, late evening.
+    # 7x/day at 06:00, 07:00, 09:00, 11:00, 14:00, 17:00, 21:00 MYT (UTC+8)
+    # catches the early start, morning peak, midday, evening peak, late
+    # evening. The frontend hides this layer when the feed is over 6h old, so
+    # the run times also have to keep the gaps under that: 21:00 -> 06:00 is
+    # the only one that does not, and overnight there is nothing to show.
     # Traffic incidents don't need 5-min freshness for a dashboard - the
     # InfoTrafikGZ Telegram feed (collect_traffic.yml) already covers that
     # for highways. This is the structured urban/destination layer.
-    - cron: '0 23,1,3,6,9,13 * * *'
+    - cron: '0 22,23,1,3,6,9,13 * * *'
   workflow_dispatch:
 
 permissions:
@@ -42,7 +45,22 @@ jobs:
           assert d.get('total', 0) >= 0, 'total missing'
           assert all(isinstance(r.get('incidents'), list) for r in d['regions'].values()), \
               'region incidents not a list'
+          # Every category name must come from TomTom's published v5 taxonomy.
+          # A hand-rolled map here once relabelled every jam as an accident.
+          VALID = {'Accident', 'Dangerous conditions', 'Jam', 'Lane closed',
+                   'Road closed', 'Road works', 'Flooding', 'Broken down vehicle'}
+          bad = {i['catName'] for r in d['regions'].values()
+                 for i in r['incidents']} - VALID
+          assert not bad, f'unknown category names: {bad}'
+          assert not any('polyline' in i for r in d['regions'].values()
+                         for i in r['incidents']), 'polyline must not be shipped'
+          failed = [k for k, r in d['regions'].items() if not r.get('ok')]
+          assert len(failed) < len(d['regions']), f'every region failed: {failed}'
+          if failed:
+              print('WARN: regions that failed to fetch:', ', '.join(failed))
+          import os
           print('OK:', d['total'], 'incidents across', len(d['regions']), 'regions |',
+                round(os.path.getsize('public/traffic_incidents.json') / 1024), 'KB |',
                 ', '.join(f"{k}:{v}" for k, v in (d.get('byCat') or {}).items()))
           PY
 
