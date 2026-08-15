@@ -3371,7 +3371,7 @@ function renderHazards(d){
         if (d.eq && d.eq.length) summaries.push(`${d.eq.length} ${T(d.eq.length === 1 ? "earthquake" : "earthquakes")}`);
         if (atRisk > 0) summaries.push(`${atRisk} ${T(atRisk === 1 ? "flood station at risk" : "flood stations at risk")}`);
         if (aqiAlert) summaries.push(`${T("Unhealthy Air Quality (AQI ")}${aqiWorst})`);
-        topContent.innerHTML = `<strong>⚠️ ${T("ACTIVE WARNINGS")}:</strong> <span class="warn-top-summary">${esc(summaries.join(" · "))}</span>`;
+        topContent.innerHTML = `<strong>${T("ACTIVE WARNINGS")}:</strong> <span class="warn-top-summary">${esc(summaries.join(" · "))}</span>`;
       }
       topBand.hidden = false;
     } else {

@@ -379,7 +379,7 @@ html[data-theme="light"][data-season="merdeka"] header{
 #install{display:none}
 #install.show{display:inline-flex}
 .brand{display:flex;align-items:center;gap:var(--s3);min-width:0}
-.mark{width:36px;height:36px;flex:none;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
+.mark{width:42px;height:42px;flex:none;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
 .brand h1{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
 .brand p{margin:0;font-size:11.5px;color:var(--fg-3)}
 .hd-r{margin-left:auto;display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
@@ -1607,6 +1607,9 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
      when the PWA prompt appears. */
   .hd{min-height:0;gap:var(--s2);flex-wrap:nowrap}
   .brand{gap:var(--s2);flex:0 1 auto}
+  /* The desktop mark is sized against a two-line lockup; on phones the tagline
+     is hidden, so keep it a touch smaller to hold the single-row header. */
+  .mark{width:38px;height:38px}
   .brand>div{min-width:0}
   .brand h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hd-r{flex:0 0 auto;gap:4px;flex-wrap:nowrap}

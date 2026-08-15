@@ -23,8 +23,8 @@ jobs:
           # Need the base commit to diff against; a shallow clone has neither.
           fetch-depth: 0
 
-      # The service worker precaches /app.js and /styles.css cache-first and
-      # keys the cache on a hand-written VERSION constant. If the shell changes
+      # The service worker precaches /index.html, /app.js and /styles.css
+      # cache-first and keys the cache on a hand-written VERSION constant. If the shell changes
       # and VERSION does not, every returning visitor keeps running the old
       # build indefinitely and there is no remote lever to pull them off it.
       # That failure mode is silent, permanent, and currently prevented only by
@@ -42,7 +42,12 @@ jobs:
             exit 0
           fi
 
-          changed=$(git diff --name-only "${BEFORE}" HEAD -- public/app.js public/styles.css)
+          # Keep this list in step with SHELL_ASSETS in public/sw.js: every
+          # precached file that is hand-edited carries the same staleness risk.
+          # index.html is precached too, and markup-only changes (an attribute,
+          # a new element) used to slip through this gate unbumped.
+          changed=$(git diff --name-only "${BEFORE}" HEAD -- \
+            public/app.js public/styles.css public/index.html)
           if [ -z "${changed}" ]; then
             echo "App shell unchanged - nothing to check."
             exit 0
@@ -64,7 +69,7 @@ jobs:
           echo "  sw.js VERSION after:  ${after_v}"
 
           if [ "${before_v}" = "${after_v}" ]; then
-            echo "::error file=public/sw.js::public/app.js or public/styles.css changed but public/sw.js VERSION did not. Returning visitors are served the precached shell cache-first, so without a bump they keep running the previous build indefinitely. Bump VERSION (and add a line to the changelog comment above it)."
+            echo "::error file=public/sw.js::A precached shell file (public/index.html, public/app.js or public/styles.css) changed but public/sw.js VERSION did not. Returning visitors are served the precached shell cache-first, so without a bump they keep running the previous build indefinitely. Bump VERSION (and add a line to the changelog comment above it)."
             exit 1
           fi
 
