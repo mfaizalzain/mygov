@@ -17,10 +17,16 @@ spend zero API budget on data that changes at most daily:
 Run:  python3 tools/collect_slow.py
 Writes: public/slow.json  (committed by the GitHub Action, auto-deployed)
 
+  python3 tools/collect_slow.py --fx-only
+Refreshes only finance.fxLatest / fxPrev inside an existing public/series.json
+(three API calls instead of ~20). See fx_only() for why.
+
 The app reads slow.json same-origin and only falls back to the live API when
-it is missing or older than STALE_DAYS. The Action runs four times a day,
-just after each Bank Negara reference rate lands (09:35 / 12:35 / 17:35 /
-20:35 MYT), so the daily series stay within a few hours of current.
+it is missing or older than STALE_DAYS. The Action runs the full collection
+once a day (20:35 MYT, after the last Bank Negara reference rate lands) and
+the --fx-only path at the three earlier rate times (09:35 / 12:35 / 17:35
+MYT), so the FX hero stays current without re-fetching quarterly and annual
+series four times a day.
 """
 import datetime as dt
 import json
@@ -38,6 +44,9 @@ OUT = "public/slow.json"
 # for data most never scroll to. See readSeries() in public/app.js.
 OUT_SERIES = "public/series.json"
 STALE_DAYS = 5
+# Currencies tracked by the dashboard (order = column order in the compact
+# rows; the API returns ~27, these are the ones shown).
+FX_KEYS = ["usd", "gbp", "eur", "sgd", "idr", "cny", "jpy", "thb", "aud"]
 
 
 def fetch(family, path, params):
@@ -197,6 +206,74 @@ def school_holidays():
     return out
 
 
+def fx_latest_prev():
+    """Newest BNM middle-rate reference + the same reference a trading day back.
+
+    BNM publishes four references a trading day - 09:00, 11:30 (best counter
+    rates), 12:00 and 17:00. data.gov.my carries an official middle rate for
+    three of them (11:30 is buy/sell only, and covers fewer currencies), so the
+    dashboard's "latest" is the newest of those three. Two rows each: the newest
+    snapshot plus the previous one, for the day-over-day hero.
+    """
+    fx_snaps = {}
+    for t, did in (("0900", "exchangerates_daily_0900"),
+                   ("1200", "exchangerates_daily_1200"),
+                   ("1700", "exchangerates_daily_1700")):
+        rows = fetch("catalogue", "data-catalogue/", {
+            "id": did, "filter": "middle@rate_type", "sort": "-date", "limit": 2})
+        fx_snaps[t] = rows or []
+    best_t, best_rows = max(fx_snaps.items(),
+                            key=lambda kv: ((kv[1][0]["date"] if kv[1] else ""), kv[0]))
+
+    def snap(r):
+        return {"date": r["date"], "t": best_t,
+                **{k: num(r.get(k)) for k in FX_KEYS}}
+
+    return (snap(best_rows[0]) if best_rows else None,
+            snap(best_rows[1]) if len(best_rows) > 1 else None)
+
+
+def fx_only():
+    """Patch just finance.fxLatest / fxPrev into an existing series.json.
+
+    The FX hero is the only thing this collector carries that moves four times
+    a day. Everything else is weekly (fuel), monthly (CPI, registrations,
+    payment instruments), quarterly (GDP, EPF, FDI) or annual (hh_income,
+    population), so the old 4x/day full run spent ~20 data.gov.my calls to
+    refresh three. This path spends three and leaves every other series exactly
+    as the last full run left it.
+
+    Requires a series.json that is already current: the workflow pulls the live
+    copy from KV first, because nothing commits the collector's output back to
+    git - the repo's copy is only as fresh as the last manual commit, and
+    pushing that would roll the other series backwards.
+    """
+    try:
+        with open(OUT_SERIES, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, ValueError) as e:
+        raise SystemExit(f"fx-only: cannot read {OUT_SERIES}: {e}")
+    if not isinstance(doc.get("finance"), dict) or "fx" not in doc["finance"]:
+        raise SystemExit(f"fx-only: {OUT_SERIES} has no finance block - "
+                         "run a full collection first")
+    try:
+        latest, prev = fx_latest_prev()
+    except Exception as e:
+        raise SystemExit(f"fx-only: fetch failed: {e}")
+    if latest is None:
+        raise SystemExit("fx-only: no FX snapshot returned; series.json untouched")
+    before = doc["finance"].get("fxLatest") or {}
+    doc["finance"]["fxLatest"] = latest
+    doc["finance"]["fxPrev"] = prev
+    doc["generated"] = dt.date.today().isoformat()
+    with open(OUT_SERIES, "w") as f:
+        json.dump(doc, f, separators=(",", ":"))
+    sys.stderr.write(
+        f"fx-only: {before.get('date')} {before.get('t')} -> "
+        f"{latest['date']} {latest['t']} "
+        f"(wrote {OUT_SERIES}, {len(open(OUT_SERIES).read())} bytes)\n")
+
+
 def main():
     today = dt.date.today().isoformat()
     try:
@@ -208,35 +285,13 @@ def main():
         hh_latest = hh_rows[-1][0][:10] if hh_rows else None
 
         # ── finance (data-catalogue) ───────────────────────────────────
-        # Currencies tracked by the dashboard (order = column order in the
-        # compact rows; the API returns ~27, these are the ones shown).
-        FX_KEYS = ["usd", "gbp", "eur", "sgd", "idr", "cny", "jpy", "thb", "aud"]
         fx = fetch("catalogue", "data-catalogue/", {"id": "exchangerates", "sort": "-date"})
         fxd = fetch("catalogue", "data-catalogue/", {
             "id": "exchangerates_daily_1200", "filter": "middle@rate_type",
             "date_start": days_back(3 * 365) + "@date", "sort": "date"})
-        # BNM publishes four references a trading day - 09:00, 11:30 (best
-        # counter rates), 12:00 and 17:00. data.gov.my carries an official
-        # middle rate for the three reference times (11:30 is buy/sell only,
-        # and covers fewer currencies), so the dashboard's "latest" is the
-        # newest of those three. Two rows each: the newest snapshot plus the
-        # same reference a trading day earlier, for the day-over-day hero.
-        fx_snaps = {}
-        for t, did in (("0900", "exchangerates_daily_0900"),
-                       ("1200", "exchangerates_daily_1200"),
-                       ("1700", "exchangerates_daily_1700")):
-            rows = fetch("catalogue", "data-catalogue/", {
-                "id": did, "filter": "middle@rate_type", "sort": "-date", "limit": 2})
-            fx_snaps[t] = rows or []
-        best_t, best_rows = max(fx_snaps.items(),
-                                key=lambda kv: ((kv[1][0]["date"] if kv[1] else ""), kv[0]))
-
-        def fx_snap(r, t):
-            return {"date": r["date"], "t": t,
-                    **{k: num(r.get(k)) for k in FX_KEYS}}
-
-        fx_latest = fx_snap(best_rows[0], best_t) if best_rows else None
-        fx_prev = fx_snap(best_rows[1], best_t) if len(best_rows) > 1 else None
+        # Shared with the --fx-only path, which re-runs exactly this much three
+        # more times a day and patches the result into series.json.
+        fx_latest, fx_prev = fx_latest_prev()
         fpx = fetch("catalogue", "data-catalogue/", {
             "id": "trnsc_daily_fpx", "filter": "both@model", "sort": "date"})
         pinst = fetch("catalogue", "data-catalogue/", {
@@ -385,4 +440,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--fx-only" in sys.argv[1:]:
+        fx_only()
+    else:
+        main()

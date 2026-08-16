@@ -1,16 +1,20 @@
 name: Update Slow Data (fuel, finance, mobility, economy, population)
 
 on:
-  # Runs four times a day, just after each Bank Negara reference rate lands
-  # (09:35 / 12:35 / 17:35 / 20:35 MYT), so the FX hero stays on the newest
-  # published snapshot instead of showing the 12:00 rate all day. The other
-  # business-daily series (FPX, ridership) only get fresher for it.
+  # Four slots, one per Bank Negara reference rate (09:35 / 12:35 / 17:35 /
+  # 20:35 MYT), but only the last does the full collection. The FX hero is the
+  # only series here that moves four times a day - fuel is weekly, CPI and
+  # registrations monthly, GDP/EPF/FDI quarterly, hh_income and population
+  # annual - so the earlier three run --fx-only, which costs three API calls
+  # against data.gov.my instead of ~20. The full run sits at 20:35 MYT, after
+  # the last reference rate, so it picks up the freshest FX itself.
   schedule:
-    - cron: '35 1 * * *'
-    - cron: '35 4 * * *'
-    - cron: '35 9 * * *'
-    - cron: '35 12 * * *'
-  # Manual trigger so a delayed/skipped cron can be caught up instantly
+    - cron: '35 1 * * *'    # 09:35 MYT - FX only
+    - cron: '35 4 * * *'    # 12:35 MYT - FX only
+    - cron: '35 9 * * *'    # 17:35 MYT - FX only
+    - cron: '35 12 * * *'   # 20:35 MYT - full collection
+  # Manual trigger so a delayed/skipped cron can be caught up instantly.
+  # A dispatch always runs the full collection.
   workflow_dispatch:
 
 jobs:
@@ -34,11 +38,51 @@ jobs:
           python3 -m py_compile tools/collect_slow.py
           echo "syntax OK"
 
+      # Anything that is not the 20:35 MYT slot is an FX-only refresh. A
+      # workflow_dispatch has an empty github.event.schedule and runs full, so
+      # a missed cron can always be caught up completely.
+      - name: Decide run mode
+        id: mode
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ -z "$SCHEDULE" ] || [ "$SCHEDULE" = "35 12 * * *" ]; then
+            echo "full=true" >> "$GITHUB_OUTPUT"
+            echo "mode: full collection"
+          else
+            echo "full=false" >> "$GITHUB_OUTPUT"
+            echo "mode: FX only ($SCHEDULE)"
+          fi
+
+      # --fx-only patches the live series.json rather than rebuilding it, so it
+      # has to start from the live copy. Nothing commits collector output back
+      # to git, so the checked-out public/series.json is only as fresh as the
+      # last manual commit - pushing that would roll the other series back.
+      - name: Pull current series.json from KV
+        if: steps.mode.outputs.full == 'false'
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py pull series public/series.json
+
+      - name: Refresh FX snapshot only
+        if: steps.mode.outputs.full == 'false'
+        run: python3 tools/collect_slow.py --fx-only
+
+      - name: Upload series to Cloudflare KV
+        if: steps.mode.outputs.full == 'false'
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: python3 tools/kv_upload.py push series
+
       - name: Run collector (non-real-time datasets)
+        if: steps.mode.outputs.full == 'true'
         run: |
           python3 tools/collect_slow.py
 
       - name: Build SEO snapshot + feed
+        if: steps.mode.outputs.full == 'true'
         run: python3 tools/embed_seo.py
 
       # Only the keys this job regenerated (slow.json, feed.xml, seo_snap) -
@@ -46,6 +90,7 @@ jobs:
       # other collectors' files over fresher KV. The Worker serves
       # slow.json/feed.xml and splices the SEO snapshot at request time.
       - name: Upload data to Cloudflare KV
+        if: steps.mode.outputs.full == 'true'
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
