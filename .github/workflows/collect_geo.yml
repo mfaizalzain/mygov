@@ -1,10 +1,15 @@
 name: Update Geography (population + constituencies)
 
 on:
-  # The underlying tables are annual, so this only needs to catch a new
-  # release: weekly, Monday 14:00 UTC (10 PM MYT).
+  # The underlying tables (population_state/district/parlimen/dun, plus the
+  # constituency socioeconomics) are annual - DOSM's Current Population
+  # Estimates land around July. Weekly meant 52 runs a year, 51 of which
+  # re-downloaded four byte-identical Parquet files. Monthly caps staleness at
+  # ~31 days on data that is a year old by construction; the extra July/August
+  # slots catch the actual release inside a week without paying for it all year.
   schedule:
-    - cron: '0 14 * * 1'
+    - cron: '0 14 8 * *'              # 8th of each month, 22:00 MYT
+    - cron: '0 14 15,22,29 7,8 *'     # weekly through the release window
   workflow_dispatch:
 
 jobs:
