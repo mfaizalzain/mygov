@@ -1510,6 +1510,9 @@ details.hz-tile[open] .hz-hint::after{content:"\00b7  " attr(data-open) "  \25B4
 .alert.heat{border-left-color:var(--danger);
   background:linear-gradient(180deg,rgba(248,113,113,.08),var(--surface) 55%)}
 .alert.adv{border-left-color:var(--fg-3)}
+/* An event the deck still carries for context but which is no longer live -
+   a quake past the 24 h alert window. Neutral stripe, no alert tint. */
+.alert.past{border-left-color:var(--line);background:var(--surface)}
 .alert.info{border-left-color:var(--ok);
   background:linear-gradient(180deg,rgba(52,211,153,.06),var(--surface) 55%)}
 .wx-other{margin-top:var(--s3)}

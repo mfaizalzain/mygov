@@ -3513,7 +3513,13 @@ function quakeCard(q){
   const m = Number(q.mag) || 0;
   const color = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--info)";
   const cls = m >= 6 ? "heat" : m >= 5 ? "storm" : "rain";
-  return `<div class="alert ${cls}">
+  /* Past the alert window the event is history, not something happening now.
+     The deck still carries it for the week (that is what makes "recent quakes
+     near Malaysia" answerable), but it must not keep wearing alert colours
+     for six more days - a red card with no age on it reads as an alert that
+     never clears. `past` mutes the stripe; the meta line leads with the age. */
+  const stale = Number.isFinite(q.ts) && Date.now() - q.ts > EQ_ALERT_MS;
+  return `<div class="alert ${stale ? "past" : cls}">
     <h4><span class="alert-ico" aria-hidden="true">🌐</span> M${nf(q.mag,1)} ${txt(q.loc || "-")}
       <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${T("Earthquake")}</span></h4>
     <p>${q.km == null ? "" : `${nf(q.km)} km ${T("from Malaysia")}`}${
@@ -3522,7 +3528,8 @@ function quakeCard(q){
       <a class="maplink" target="_blank" rel="noopener"
          href="https://www.google.com/maps?q=${q.lat},${q.lon}"
          aria-label="Open earthquake location in Google Maps">map &#8599;</a></p>
-    <div class="meta">${esc(String(q.t).replace("T"," "))}${
+    <div class="meta">${Number.isFinite(q.ts) ? esc(relTime(q.ts)) + " · " : ""}${
+      esc(String(q.t).replace("T"," "))}${
       q.src ? ` · ${esc(q.src)}` : ""}</div>
   </div>`;
 }
