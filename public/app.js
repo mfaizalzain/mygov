@@ -241,6 +241,9 @@ const I18N = {
   "Nothing on issue in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
   "No earthquakes near Malaysia right now":"Tiada gempa bumi berhampiran Malaysia buat masa ini",
   "No quakes within Nkm in the last 7 days.":"Tiada gempa bumi dalam lingkungan Nkm dalam 7 hari lepas.",
+  /* "Recent earthquakes" is already keyed above, for the weather table. */
+  "in the last 7 days":"dalam 7 hari lepas",
+  "None in the last 24 hours - see the recent ones below.":"Tiada dalam 24 jam lepas - lihat yang terkini di bawah.",
   "recent event":"kejadian terkini", "recent events":"kejadian terkini",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
@@ -3665,7 +3668,18 @@ function paintAlerts(){
   const d = hzData; const w = $("#wx-warn"); if (!d || !w) return;
   const filt = ALERT_FILTERS[wxFilter] || ALERT_FILTERS.all;
   const active = d.warn.filter(x => !x.info && filt.warn(x));
-  const quakes = d.eq.filter(filt.eq);
+  /* The deck answers "what is happening now", so only a quake inside the
+     alert window rides in it. Muting an older card's colour was not enough:
+     a two-day-old event still sat in a carousel headed "everything currently
+     on issue", between a live storm warning and a river above its danger
+     mark, and read as one more thing going wrong. Past the window it moves
+     below the deck instead - still on the page, because quakes this close
+     happen about 1.5 times a month and dropping them at 24 h leaves the
+     earthquake feature empty on ~99.7% of days, which is the state this
+     section was rebuilt to get out of. One click, not one glance. */
+  const eqAll = d.eq.filter(filt.eq);
+  const quakes = eqAll.filter(q => Number.isFinite(q.ts) && Date.now() - q.ts <= EQ_ALERT_MS);
+  const pastQuakes = eqAll.filter(q => !quakes.includes(q));
   const notices = d.warn.filter(x => x.info);
   /* Flood stations ride in the same deck under "All Malaysia", worst first;
      the full station list and map stay in the flood tile. */
@@ -3677,7 +3691,8 @@ function paintAlerts(){
   /* "N active elsewhere" counts the cards this carousel actually renders
      (flood cards are capped at 6), not every at-risk station - the flood
      tile carries the full station count for its map. */
-  const total = d.warn.filter(x => !x.info).length + d.eq.length +
+  const total = d.warn.filter(x => !x.info).length +
+    d.eq.filter(q => Number.isFinite(q.ts) && Date.now() - q.ts <= EQ_ALERT_MS).length +
     floods.length +
     (d.rapid ? 1 : 0) +
     (d.aqi && d.aqi.worst && d.aqi.worst.aqi >= 101 ? 1 : 0);
@@ -3695,17 +3710,24 @@ function paintAlerts(){
     .concat(floods.map(floodCard))
     .concat(inAll && d.rapid ? [rapidCard(d.rapid)] : [])
     .concat(inAll && aqiAlert ? [aqiCard(d.aqi)] : []);
+  /* With older quakes moved below the deck, an empty deck must not claim
+     there have been none - the list underneath would contradict it on the
+     same screen. */
   const empty = wxFilter === "all"
     ? [T("No active warnings or earthquakes"),
        T("MET Malaysia has nothing on issue.") + " " +
-       /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
-          "N" rewrote that instead of the radius. */
-       T("No quakes within Nkm in the last 7 days.").replace("Nkm", nf(d.eqRadius) + "km")]
+       (pastQuakes.length
+         ? T("None in the last 24 hours - see the recent ones below.")
+         /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
+            "N" rewrote that instead of the radius. */
+         : T("No quakes within Nkm in the last 7 days.").replace("Nkm", nf(d.eqRadius) + "km"))]
     : [T(wxFilter === "area" ? "Nothing on issue in your area right now"
         : wxFilter === "marine" ? "No marine warnings right now"
         : wxFilter === "quake" ? "No earthquakes near Malaysia right now"
         : "No active weather warnings"),
-       `${total} ${T("active")} ${T("elsewhere - try “All Malaysia”.")}`];
+       wxFilter === "quake" && pastQuakes.length
+         ? T("None in the last 24 hours - see the recent ones below.")
+         : `${total} ${T("active")} ${T("elsewhere - try “All Malaysia”.")}`];
   const FILT = [["all",T("All Malaysia")],["weather",T("Weather")],["quake",T("Earthquakes")],
                 ["area",T("My area")],["marine",T("Marine")]];
   w.innerHTML = `<div class="chips mb" id="wx-filters">` +
@@ -3723,6 +3745,10 @@ function paintAlerts(){
         </div>`
       : `<div class="chips"><span class="chip chip-ok">✅ ${empty[0]}</span>
          <span class="dim" style="font-size:11.5px">${empty[1]}</span></div>`) +
+    (pastQuakes.length ? `<details class="wx-other">
+        <summary>${T("Recent earthquakes")} - ${pastQuakes.length} ${T("in the last 7 days")}</summary>
+        <div class="grid g2" style="margin-top:var(--s2)">${pastQuakes.map(quakeCard).join("")}</div>
+      </details>` : "") +
     (notices.length ? `<details class="wx-other">
         <summary>${T("Other notices")} - ${notices.length} ${T("all clear")}</summary>
         <div class="grid g2" style="margin-top:var(--s2)">${notices.map(warnCard).join("")}</div>
