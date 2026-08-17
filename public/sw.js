@@ -205,8 +205,23 @@
    roadworks. The collector now holds two thirds of each region's slots back
    from roadworks, which never expire and would otherwise crowd out the rest.
    Note: this bump is now enforced by .github/workflows/ci.yml, which fails
-   the build if app.js or styles.css changed and VERSION did not. */
-const VERSION    = "mygov-v74";
+   the build if app.js or styles.css changed and VERSION did not.
+   v75: Two hazard-deck fixes, one of which is this bump.
+   The quake-age fix (3ba946b: a quake past 24 h drops its alert tint and
+   leads with its age) shipped to the origin without a VERSION bump. CI caught
+   it and failed, but Pages deploys off the branch regardless of CI, so the
+   fixed app.js sat at the origin while every returning visitor kept being
+   served the pre-fix copy out of the v74 shell cache - cache-first, no expiry,
+   no remote lever. Two days on, the 15 Aug M6.9 was still wearing a red
+   stripe with no age on it for anyone who had visited before: the fix was
+   live and invisible at the same time. This bump is what actually delivers
+   it. A red CI run on main means the shell needs a bump, not a re-deploy.
+   Also v75: MET re-issues a standing bulletin per validity window instead of
+   amending one row, so the strong winds and rough seas warning arrived three
+   times on 17 Aug with identical text and drew three identical storm cards.
+   Identical heading, body and instruction now collapse to one card carrying
+   the widest window in force. */
+const VERSION    = "mygov-v75";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

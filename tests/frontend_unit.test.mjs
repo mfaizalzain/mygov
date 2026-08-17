@@ -481,3 +481,65 @@ describe("earthquake alert", () => {
     assert.deepEqual(out.map(x => Math.round((now - x.ts) / 3600e3)), [2, 20, 50]);
   });
 });
+
+/* MET re-issues a standing bulletin once per validity window instead of
+   amending the one row, so the same warning arrives several times with
+   identical text. Mirrors the dedup in loadHazards (public/app.js). */
+function warnDedupe(rows){
+  const wkey = w => [w.title, w.head, w.text, w.instr || ""].join("\u0000");
+  const wend = w => { const t = new Date(w.to).getTime(); return isNaN(t) ? -Infinity : t; };
+  const wstart = w => { const t = new Date(w.from).getTime(); return isNaN(t) ? Infinity : t; };
+  const byKey = new Map();
+  for (const w of rows){
+    const k = wkey(w), prev = byKey.get(k);
+    if (!prev || wend(w) > wend(prev) ||
+        (wend(w) === wend(prev) && wstart(w) < wstart(prev))) byKey.set(k, w);
+  }
+  return [...byKey.values()].sort((a, b) => Number(a.info) - Number(b.info));
+}
+
+describe("weather warning deduplication", () => {
+  const storm = over => ({
+    title: "Strong Winds and Rough Seas Warning",
+    head: "FIRST CATEGORY WARNING ON STRONG WINDS AND ROUGH SEAS",
+    text: "SECTION A: FOR MALAYSIAN WATERS", instr: "", info: false, ...over,
+  });
+
+  test("one bulletin re-issued three times draws one card", () => {
+    // The three rows MET actually shipped on 17 Aug 2026, byte-identical text.
+    const out = warnDedupe([
+      storm({ from: "2026-08-17T00:00:00", to: "2026-08-21T00:00:00" }),
+      storm({ from: "2026-08-19T00:00:00", to: "2026-08-21T00:00:00" }),
+      storm({ from: "2026-08-17T16:00:00", to: "2026-08-17T21:00:00" }),
+    ]);
+    assert.equal(out.length, 1);
+    /* Widest window in force: latest `to`, earliest `from` among those. It is
+       a window MET published, not a union invented here. */
+    assert.equal(out[0].from, "2026-08-17T00:00:00");
+    assert.equal(out[0].to, "2026-08-21T00:00:00");
+  });
+
+  test("different warnings survive - only identical text collapses", () => {
+    const out = warnDedupe([
+      storm({ from: "2026-08-17T00:00:00", to: "2026-08-21T00:00:00" }),
+      storm({ from: "2026-08-17T00:00:00", to: "2026-08-21T00:00:00" }),
+      { title: "Thunderstorms Warning", head: "THUNDERSTORMS WARNING",
+        text: "over Perak (Hulu Perak)", instr: "", info: false,
+        from: "2026-08-17T18:00:00", to: "2026-08-17T21:00:00" },
+      { title: "Thunderstorms Warning", head: "THUNDERSTORMS WARNING",
+        text: "over Sabah (Tawau)", instr: "", info: false,
+        from: "2026-08-17T18:00:00", to: "2026-08-17T21:00:00" },
+    ]);
+    assert.equal(out.length, 3, "two states named separately are two warnings");
+  });
+
+  test("undated all-clear notices are kept and sort last", () => {
+    const out = warnDedupe([
+      { title: "No Advisory", head: "No Advisory", text: "No Tropical Cyclone",
+        instr: "", info: true, from: null, to: null },
+      storm({ from: "2026-08-17T00:00:00", to: "2026-08-21T00:00:00" }),
+    ]);
+    assert.equal(out.length, 2);
+    assert.equal(out[1].info, true, "notices collapse below the real warnings");
+  });
+});

@@ -1507,7 +1507,7 @@ async function loadHazards(){
   }
   eq.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
-  const warn = (warnings || []).filter(w => {
+  const warn0 = (warnings || []).filter(w => {
     if (!w.valid_to) return true;
     const t = new Date(w.valid_to).getTime();
     return isNaN(t) || t >= nowMs;
@@ -1521,7 +1521,31 @@ async function loadHazards(){
              headBm:w.heading_bm || "", textBm:w.text_bm || "", instrBm:w.instruction_bm || "",
              from:w.valid_from, to:w.valid_to, info,
              dated: real(w.valid_from) && real(w.valid_to) };
-  }).sort((a,b) => Number(a.info) - Number(b.info));
+  });
+
+  /* MET re-issues a standing bulletin once per validity window rather than
+     amending the one row, so the same warning arrives several times with
+     byte-identical text and different from/to. On 17 Aug 2026 the strong
+     winds and rough seas warning shipped three times - 17th→21st, 19th→21st
+     and 17th 16:00→21:00 - and the deck drew three identical storm cards,
+     which reads as three separate things going wrong.
+
+     Same heading, body and instruction means one event, so collapse them and
+     keep the widest window in force: latest `to`, and among those the
+     earliest `from` (the 17th→21st row above). That window is one MET
+     actually published, not a union invented here. Distinct warnings differ
+     in their text - two thunderstorm warnings name different states - so
+     nothing real is lost. */
+  const wkey = w => [w.title, w.head, w.text, w.instr || ""].join("\u0000");
+  const wend = w => { const t = new Date(w.to).getTime(); return isNaN(t) ? -Infinity : t; };
+  const wstart = w => { const t = new Date(w.from).getTime(); return isNaN(t) ? Infinity : t; };
+  const byKey = new Map();
+  for (const w of warn0){
+    const k = wkey(w), prev = byKey.get(k);
+    if (!prev || wend(w) > wend(prev) ||
+        (wend(w) === wend(prev) && wstart(w) < wstart(prev))) byKey.set(k, w);
+  }
+  const warn = [...byKey.values()].sort((a,b) => Number(a.info) - Number(b.info));
 
   return { warn, eq, flood, rapid, aqi, eqRadius:EQ_RADIUS_KM };
 }
