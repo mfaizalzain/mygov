@@ -100,6 +100,24 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    /* www -> apex 301. Both hosts are custom domains on this worker (see
+     * wrangler.jsonc), so without a redirect Google indexes www as an
+     * "alternate page with proper canonical tag" and reports it under
+     * "not indexed" reasons. One hop to the canonical host kills that class
+     * of GSC warning. Preserve path + query; keep 301 (permanent) so the
+     * crawler drops www entirely. */
+    if (url.hostname === "www.malaysia-at-a-glance.com") {
+      const target = new URL(request.url);
+      target.hostname = "malaysia-at-a-glance.com";
+      return new Response(null, {
+        status: 301,
+        headers: {
+          location: target.toString(),
+          "cache-control": "public, max-age=3600",
+        },
+      });
+    }
+
     // MCP, SSE, and OpenAPI proxy to the dedicated MCP worker (mcp.malaysia-at-a-glance.com)
     if (
       url.pathname === "/mcp" ||
@@ -1030,7 +1048,16 @@ export default {
     if (url.pathname === "/" || url.pathname === "/index.html") {
       const snap = await env.MYGOV_DATA.get("seo_snap");
       if (snap != null) {
-        const res = await env.ASSETS.fetch(request);
+        /* Fetch the ASSET for "/" even when asked for "/index.html": the
+         * static-assets handler answers /index.html with a 307 to "/", and
+         * Google flags 307 (temporary semantics) on an indexed URL as "Page
+         * with redirect". Serving "/" content directly keeps the canonical
+         * URL the crawler sees identical to the one that renders. */
+        const assetReq = new Request(
+          url.pathname === "/" ? request : new URL("/", request.url),
+          request,
+        );
+        const res = await env.ASSETS.fetch(assetReq);
         if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
           const html = await res.text();
           /* Two things worth keeping here:
@@ -1068,6 +1095,14 @@ export default {
     // Everything else is a static asset. Security headers for those come from
     // public/_headers - the asset router serves them without running this
     // Worker, so setting headers here would have no effect.
+    // /index.html would make the assets handler answer a 307 to "/" (Google
+    // flags temporary redirects on indexed URLs) - rewrite to "/" so the
+    // canonical URL and the served URL are the same, no redirect.
+    if (url.pathname === "/index.html") {
+      const root = new URL("/", request.url);
+      const req = new Request(root, request);
+      return env.ASSETS.fetch(req);
+    }
     return env.ASSETS.fetch(request);
   },
 };
