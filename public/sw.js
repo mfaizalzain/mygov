@@ -231,8 +231,18 @@
    within 500 km, expiring them at 24 h would leave the earthquake feature
    empty on ~99.7% of days, which is what the week-long window exists to
    avoid. The empty-deck line changes with it: it can no longer say there
-   have been no quakes in seven days while listing some underneath. */
-const VERSION    = "mygov-v76";
+   have been no quakes in seven days while listing some underneath.
+   v77: The earthquake window is 24 hours, and there is only one of them.
+   v76 kept older quakes on the page in a collapsed list. They should not be
+   on the page at all: if nothing has happened, that is the answer, and the
+   section already works that way for warnings and river gauges. The week was
+   justified on a scarcity measured against MET's feed while it was stale -
+   the fault USGS was added to fix. Re-measured against USGS over the year to
+   17 Aug 2026, same 500 km filter: 88 events on 76 separate days, so a
+   24-hour window has something to show about one day in five. EQ_ALERT_MS is
+   gone with the split - badge and deck count the same events now, and the
+   collapsed "Recent earthquakes" block v76 added is removed. */
+const VERSION    = "mygov-v77";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

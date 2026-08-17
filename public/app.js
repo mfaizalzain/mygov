@@ -240,10 +240,7 @@ const I18N = {
   "No active warnings or earthquakes":"Tiada amaran atau gempa bumi aktif",
   "Nothing on issue in your area right now":"Tiada amaran untuk kawasan anda buat masa ini",
   "No earthquakes near Malaysia right now":"Tiada gempa bumi berhampiran Malaysia buat masa ini",
-  "No quakes within Nkm in the last 7 days.":"Tiada gempa bumi dalam lingkungan Nkm dalam 7 hari lepas.",
-  /* "Recent earthquakes" is already keyed above, for the weather table. */
-  "in the last 7 days":"dalam 7 hari lepas",
-  "None in the last 24 hours - see the recent ones below.":"Tiada dalam 24 jam lepas - lihat yang terkini di bawah.",
+  "No quakes within Nkm in the last 24 hours.":"Tiada gempa bumi dalam lingkungan Nkm dalam 24 jam lepas.",
   "recent event":"kejadian terkini", "recent events":"kejadian terkini",
   "active":"aktif", "No active weather warnings":"Tiada amaran cuaca aktif",
   "MET Malaysia has nothing on issue.":"MET Malaysia tiada amaran pada masa ini.",
@@ -1376,21 +1373,24 @@ async function loadWeather(){
 
    Nothing here is historical: warnings expire, earthquakes are capped at 12 h
    and JPS gauges at 24 h. An empty hazard is an all-clear, not a gap. */
-/* Two windows, deliberately.
+/* One window, 24 hours - the same promise as everything else in this section.
  *
- * Quakes within 500 km of Malaysia happen about 1.5 times a month - 50 in the
- * feed's 997 days, 22 in the last year. A 12-hour window against that rate put
- * a card on screen roughly 0.3% of the year, so the feature was invisible
- * essentially always and there was no way to tell working from broken. The
- * deck now carries a week, which is what makes "recent earthquakes near
- * Malaysia" a question this page answers.
+ * This used to be two: a week for the cards, a day for the badge. The week was
+ * justified on scarcity - "quakes near Malaysia happen ~1.5 times a month, so
+ * a short window leaves the card empty almost always". That rate was measured
+ * against MET's feed while it was stale, which is the fault USGS was added to
+ * fix. Re-measured against USGS over the 365 days to 17 Aug 2026, same 500 km
+ * anchor filter: 88 events, on 76 distinct days. A 24-hour window is populated
+ * about one day in five, so it is not an invisible feature and there was never
+ * much to buy with the extra six days.
  *
- * The Warnings badge is a different promise - "what is happening right now" -
- * so a five-day-old quake must not sit in that count. Cards use EQ_FRESH_MS,
- * the alert count uses EQ_ALERT_MS. */
+ * What the week did buy was a hazard deck showing things that were not
+ * happening. If nothing has happened, the honest answer is that nothing has
+ * happened - not a three-day-old event kept on screen so the section looks
+ * busy. Everything else here already works that way: warnings expire, JPS
+ * gauges are capped at 24 h, an empty hazard is an all-clear. */
 const EQ_RADIUS_KM = 500;
-const EQ_FRESH_MS = 7 * 24 * 3600 * 1000;
-const EQ_ALERT_MS = 24 * 3600 * 1000;
+const EQ_FRESH_MS = 24 * 3600 * 1000;
 
 /* Why there is a second earthquake source.
  *
@@ -3438,15 +3438,11 @@ function renderHazards(d){
      them are "something is happening right now", and split across tiles the
      same person had to open five disclosures. The chips and the carousel are
      paintAlerts(), mounted here. */
-  /* Only quakes from the last day count as "active" - the deck shows a week of
-     them, but the badge answers "what is happening right now". */
-  const eqAlertN = d.eq.filter(q => Number.isFinite(q.ts)
-    && Date.now() - q.ts <= EQ_ALERT_MS).length;
-  const alertN = active.length + eqAlertN + floodCards + rapidN + aqiAlert;
-  /* What the carousel actually holds, which is alertN plus any quake older
-     than a day. Keeping these apart is what lets the badge stay live-only
-     without the week-old quake cards vanishing from the deck. */
-  const deckN = active.length + d.eq.length + floodCards + rapidN + aqiAlert;
+  /* One window now, so the badge and the deck count the same events - every
+     quake d.eq holds is inside 24 h. The two used to differ because the deck
+     carried a week the badge deliberately excluded. */
+  const alertN = active.length + d.eq.length + floodCards + rapidN + aqiAlert;
+  const deckN = alertN;
   const wxBody = (deckN || notices.length) ? `<div id="wx-warn"></div>` : "";
   /* Which single tile starts open. The deck subsumes flood and air quality
      whenever either is actually alerting, so it wins; the other two only open
@@ -3540,12 +3536,12 @@ function quakeCard(q){
   const m = Number(q.mag) || 0;
   const color = m >= 6 ? "var(--danger)" : m >= 5 ? "var(--warn)" : "var(--info)";
   const cls = m >= 6 ? "heat" : m >= 5 ? "storm" : "rain";
-  /* Past the alert window the event is history, not something happening now.
-     The deck still carries it for the week (that is what makes "recent quakes
-     near Malaysia" answerable), but it must not keep wearing alert colours
-     for six more days - a red card with no age on it reads as an alert that
-     never clears. `past` mutes the stripe; the meta line leads with the age. */
-  const stale = Number.isFinite(q.ts) && Date.now() - q.ts > EQ_ALERT_MS;
+  /* loadHazards already drops anything past the window, so this normally
+     never fires. It survives for the seam: a section payload is cached for
+     TTL (15 min), so a quake can cross 24 h while the cached copy is still on
+     screen. For those few minutes the card goes neutral rather than sitting
+     there in alert colours. The meta line leads with the age either way. */
+  const stale = Number.isFinite(q.ts) && Date.now() - q.ts > EQ_FRESH_MS;
   return `<div class="alert ${stale ? "past" : cls}">
     <h4><span class="alert-ico" aria-hidden="true">🌐</span> M${nf(q.mag,1)} ${txt(q.loc || "-")}
       <span class="pill" style="color:${color};border:1px solid ${color}55;background:${color}18">${T("Earthquake")}</span></h4>
@@ -3668,18 +3664,7 @@ function paintAlerts(){
   const d = hzData; const w = $("#wx-warn"); if (!d || !w) return;
   const filt = ALERT_FILTERS[wxFilter] || ALERT_FILTERS.all;
   const active = d.warn.filter(x => !x.info && filt.warn(x));
-  /* The deck answers "what is happening now", so only a quake inside the
-     alert window rides in it. Muting an older card's colour was not enough:
-     a two-day-old event still sat in a carousel headed "everything currently
-     on issue", between a live storm warning and a river above its danger
-     mark, and read as one more thing going wrong. Past the window it moves
-     below the deck instead - still on the page, because quakes this close
-     happen about 1.5 times a month and dropping them at 24 h leaves the
-     earthquake feature empty on ~99.7% of days, which is the state this
-     section was rebuilt to get out of. One click, not one glance. */
-  const eqAll = d.eq.filter(filt.eq);
-  const quakes = eqAll.filter(q => Number.isFinite(q.ts) && Date.now() - q.ts <= EQ_ALERT_MS);
-  const pastQuakes = eqAll.filter(q => !quakes.includes(q));
+  const quakes = d.eq.filter(filt.eq);
   const notices = d.warn.filter(x => x.info);
   /* Flood stations ride in the same deck under "All Malaysia", worst first;
      the full station list and map stay in the flood tile. */
@@ -3691,8 +3676,7 @@ function paintAlerts(){
   /* "N active elsewhere" counts the cards this carousel actually renders
      (flood cards are capped at 6), not every at-risk station - the flood
      tile carries the full station count for its map. */
-  const total = d.warn.filter(x => !x.info).length +
-    d.eq.filter(q => Number.isFinite(q.ts) && Date.now() - q.ts <= EQ_ALERT_MS).length +
+  const total = d.warn.filter(x => !x.info).length + d.eq.length +
     floods.length +
     (d.rapid ? 1 : 0) +
     (d.aqi && d.aqi.worst && d.aqi.worst.aqi >= 101 ? 1 : 0);
@@ -3710,24 +3694,17 @@ function paintAlerts(){
     .concat(floods.map(floodCard))
     .concat(inAll && d.rapid ? [rapidCard(d.rapid)] : [])
     .concat(inAll && aqiAlert ? [aqiCard(d.aqi)] : []);
-  /* With older quakes moved below the deck, an empty deck must not claim
-     there have been none - the list underneath would contradict it on the
-     same screen. */
   const empty = wxFilter === "all"
     ? [T("No active warnings or earthquakes"),
        T("MET Malaysia has nothing on issue.") + " " +
-       (pastQuakes.length
-         ? T("None in the last 24 hours - see the recent ones below.")
-         /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
-            "N" rewrote that instead of the radius. */
-         : T("No quakes within Nkm in the last 7 days.").replace("Nkm", nf(d.eqRadius) + "km"))]
+       /* "Nkm", not "N": the sentence starts with "No", and replacing a bare
+          "N" rewrote that instead of the radius. */
+       T("No quakes within Nkm in the last 24 hours.").replace("Nkm", nf(d.eqRadius) + "km")]
     : [T(wxFilter === "area" ? "Nothing on issue in your area right now"
         : wxFilter === "marine" ? "No marine warnings right now"
         : wxFilter === "quake" ? "No earthquakes near Malaysia right now"
         : "No active weather warnings"),
-       wxFilter === "quake" && pastQuakes.length
-         ? T("None in the last 24 hours - see the recent ones below.")
-         : `${total} ${T("active")} ${T("elsewhere - try “All Malaysia”.")}`];
+       `${total} ${T("active")} ${T("elsewhere - try “All Malaysia”.")}`];
   const FILT = [["all",T("All Malaysia")],["weather",T("Weather")],["quake",T("Earthquakes")],
                 ["area",T("My area")],["marine",T("Marine")]];
   w.innerHTML = `<div class="chips mb" id="wx-filters">` +
@@ -3745,10 +3722,6 @@ function paintAlerts(){
         </div>`
       : `<div class="chips"><span class="chip chip-ok">✅ ${empty[0]}</span>
          <span class="dim" style="font-size:11.5px">${empty[1]}</span></div>`) +
-    (pastQuakes.length ? `<details class="wx-other">
-        <summary>${T("Recent earthquakes")} - ${pastQuakes.length} ${T("in the last 7 days")}</summary>
-        <div class="grid g2" style="margin-top:var(--s2)">${pastQuakes.map(quakeCard).join("")}</div>
-      </details>` : "") +
     (notices.length ? `<details class="wx-other">
         <summary>${T("Other notices")} - ${notices.length} ${T("all clear")}</summary>
         <div class="grid g2" style="margin-top:var(--s2)">${notices.map(warnCard).join("")}</div>
@@ -9491,7 +9464,7 @@ function paintMaps(){
 const META = {
   hazards:{ title:"Warnings & Hazards",
     desc:"Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality across the major cities. Live only; nothing here is historical.",
-    how:"Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list, and USGS publishes a worldwide M2.5+ feed; earthquakes from both are filtered to within 500 km of Malaysia and to the last 7 days. Both sources are needed: MET's list stopped updating (on 15 Aug 2026 its newest event was six days old and it was missing that morning's M6.9 in North Sumatra, 268 km from the Perak coast), while USGS is live within minutes but has no notion of distance-to-Malaysia, which is computed here against a list of coastal anchors. Duplicates - the same rupture reported by both - are collapsed, MET's row winning because it carries the local bearing. The window is a week because quakes that close happen only about 1.5 times a month; only those from the last 24 hours count towards the section's active-alert badge. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).",
+    how:"Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list, and USGS publishes a worldwide M2.5+ feed; earthquakes from both are filtered to within 500 km of Malaysia and to the last 24 hours. Both sources are needed: MET's list stopped updating (on 15 Aug 2026 its newest event was six days old and it was missing that morning's M6.9 in North Sumatra, 268 km from the Perak coast), while USGS is live within minutes but has no notion of distance-to-Malaysia, which is computed here against a list of coastal anchors. Duplicates - the same rupture reported by both - are collapsed, MET's row winning because it carries the local bearing. The window is 24 hours, the same promise the rest of this section makes: if nothing has happened, the section says so rather than keeping an older event on screen. Measured against USGS over the year to 17 Aug 2026, 88 events fall inside 500 km on 76 separate days, so that window has something to show roughly one day in five. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).",
     eps:["/weather/warning","/weather/warning/earthquake",
          "earthquake.usgs.gov 2.5_week.geojson (via /api/quakes)",
          "publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)",
