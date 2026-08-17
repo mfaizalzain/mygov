@@ -415,8 +415,7 @@ describe("traffic incidents marquee logic", () => {
    by looking at the page. */
 
 const EQ_RADIUS_KM = 500;
-const EQ_FRESH_MS = 7 * 24 * 3600 * 1000;
-const EQ_ALERT_MS = 24 * 3600 * 1000;
+const EQ_FRESH_MS = 24 * 3600 * 1000;
 
 const eqKm = q => {
   const m = String(q.n_distancemas || "").match(/([\d,]+)\s*km/i);
@@ -456,18 +455,22 @@ describe("earthquake alert", () => {
     assert.deepEqual(out.map(x => x.km), [120, 500]);
   });
 
-  test("the deck window is a week - the rate is ~1.5 events a month", () => {
-    const out = eqFilter([at(1), at(13), at(24 * 6), at(24 * 8)], now);
-    // 8 days old drops out; 6 days old does not. A 12h window kept only the
-    // first two, which is why the card was empty ~99.7% of the year.
-    assert.deepEqual(out.map(x => Math.round((now - x.ts) / 3600e3)), [1, 13, 144]);
+  test("the window is 24 hours - if it did not happen, nothing is shown", () => {
+    const out = eqFilter([at(1), at(13), at(23), at(25), at(24 * 6)], now);
+    /* This was a week, on the argument that a short window left the card
+       empty almost always. That rate was measured against MET's feed while
+       it was stale; re-measured against USGS over the year to 17 Aug 2026,
+       88 events fall inside 500 km on 76 separate days - about one day in
+       five. The week only bought a hazard deck showing things that were not
+       happening. */
+    assert.deepEqual(out.map(x => Math.round((now - x.ts) / 3600e3)), [1, 13, 23]);
   });
 
-  test("only the last 24h counts as an active alert in the badge", () => {
+  test("badge and deck now count the same events - one window, not two", () => {
     const deck = eqFilter([at(1), at(30), at(24 * 5)], now);
-    assert.equal(deck.length, 3, "all three stay in the deck");
-    const alerting = deck.filter(x => now - x.ts <= EQ_ALERT_MS);
-    assert.equal(alerting.length, 1, "only the one-hour-old quake is 'active'");
+    assert.equal(deck.length, 1, "only the one-hour-old quake survives the filter");
+    const alerting = deck.filter(x => now - x.ts <= EQ_FRESH_MS);
+    assert.equal(alerting.length, deck.length, "nothing in the deck is stale");
   });
 
   test("hidden and undated rows are skipped", () => {
@@ -477,8 +480,10 @@ describe("earthquake alert", () => {
   });
 
   test("newest first, so the deck leads with the most recent event", () => {
-    const out = eqFilter([at(50), at(2), at(20)], now);
-    assert.deepEqual(out.map(x => Math.round((now - x.ts) / 3600e3)), [2, 20, 50]);
+    // All inside the 24 h window - ordering is what is under test here, not
+    // the cutoff, which the window test above covers.
+    const out = eqFilter([at(20), at(2), at(11)], now);
+    assert.deepEqual(out.map(x => Math.round((now - x.ts) / 3600e3)), [2, 11, 20]);
   });
 });
 
