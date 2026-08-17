@@ -220,8 +220,19 @@
    amending one row, so the strong winds and rough seas warning arrived three
    times on 17 Aug with identical text and drew three identical storm cards.
    Identical heading, body and instruction now collapse to one card carrying
-   the widest window in force. */
-const VERSION    = "mygov-v75";
+   the widest window in force.
+   v76: A quake past the alert window leaves the deck entirely.
+   v75 muted its stripe, which was not enough: a two-day-old event still sat
+   in a carousel headed "everything currently on issue", between a live storm
+   warning and a river above its danger mark, and read as one more thing
+   going wrong. The deck now carries only quakes inside EQ_ALERT_MS; older
+   ones move to a collapsed "Recent earthquakes" list directly below it,
+   beside the all-clear notices. Nothing is dropped - at ~1.5 events a month
+   within 500 km, expiring them at 24 h would leave the earthquake feature
+   empty on ~99.7% of days, which is what the week-long window exists to
+   avoid. The empty-deck line changes with it: it can no longer say there
+   have been no quakes in seven days while listing some underneath. */
+const VERSION    = "mygov-v76";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
