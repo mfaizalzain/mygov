@@ -72,11 +72,22 @@ def snapshot(radar, health, slow):
             f"RON97 RM{f2(fl.get('ron97'))}, diesel RM{f2(fl.get('diesel'))} "
             f"({html.escape(str(fl.get('date', '-')))}).</li>")
 
-    # ── finance: latest business-day USD/MYR ─────────────────────────
-    fxd = (slow or {}).get("finance", {}).get("fxd", []) if slow else []
-    if fxd:
+    # ── finance: latest published USD/MYR ────────────────────────────
+    # fxLatest is the newest BNM middle reference and is patched four times a
+    # trading day by collect_slow.py --fx-only; fxd is the 12:00 chart series
+    # and only moves on the one full run a day, so preferring it here left the
+    # crawler-facing snapshot a day (or a weekend) behind the live hero.
+    fin = (slow or {}).get("finance", {}) if slow else {}
+    snap = fin.get("fxLatest") or {}
+    fxd = fin.get("fxd", [])
+    if snap.get("usd") is not None:
+        date, usd = snap.get("date", "-"), snap["usd"]
+    elif fxd:
         # rows are [date, usd, sgd, eur, gbp, hkd-ish …]; USD is index 1
         date, usd = fxd[-1][0], fxd[-1][1]
+    else:
+        date = usd = None
+    if usd is not None:
         lines.append(
             f"<li><strong>Finance</strong> - USD/MYR {f2(usd)} "
             f"(business-day rate, {html.escape(str(date))}).</li>")

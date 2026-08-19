@@ -214,6 +214,10 @@ def fx_latest_prev():
     three of them (11:30 is buy/sell only, and covers fewer currencies), so the
     dashboard's "latest" is the newest of those three. Two rows each: the newest
     snapshot plus the previous one, for the day-over-day hero.
+
+    Also returns the newest 12:00 row in fxd's own shape, so --fx-only can keep
+    the daily chart moving with the hero instead of waiting for the one full
+    run a day.
     """
     fx_snaps = {}
     for t, did in (("0900", "exchangerates_daily_0900"),
@@ -229,8 +233,13 @@ def fx_latest_prev():
         return {"date": r["date"], "t": best_t,
                 **{k: num(r.get(k)) for k in FX_KEYS}}
 
+    noon = fx_snaps["1200"]
+    noon_row = ([noon[0]["date"]] + [num(noon[0].get(k)) for k in FX_KEYS]
+                if noon and noon[0].get("usd") is not None else None)
+
     return (snap(best_rows[0]) if best_rows else None,
-            snap(best_rows[1]) if len(best_rows) > 1 else None)
+            snap(best_rows[1]) if len(best_rows) > 1 else None,
+            noon_row)
 
 
 def fx_only():
@@ -257,7 +266,7 @@ def fx_only():
         raise SystemExit(f"fx-only: {OUT_SERIES} has no finance block - "
                          "run a full collection first")
     try:
-        latest, prev = fx_latest_prev()
+        latest, prev, noon_row = fx_latest_prev()
     except Exception as e:
         raise SystemExit(f"fx-only: fetch failed: {e}")
     if latest is None:
@@ -265,12 +274,23 @@ def fx_only():
     before = doc["finance"].get("fxLatest") or {}
     doc["finance"]["fxLatest"] = latest
     doc["finance"]["fxPrev"] = prev
+    # Carry the same refresh into the 12:00 chart series: replace the row for
+    # that date if it is already there (a later reference can revise it),
+    # otherwise append. Only ever touches the tail, so the three-year window
+    # the full run built stays exactly as it was.
+    fxd = doc["finance"].get("fxd")
+    if noon_row and isinstance(fxd, list):
+        if fxd and str(fxd[-1][0]) == str(noon_row[0]):
+            fxd[-1] = noon_row
+        elif not fxd or str(noon_row[0]) > str(fxd[-1][0]):
+            fxd.append(noon_row)
     doc["generated"] = dt.date.today().isoformat()
     with open(OUT_SERIES, "w") as f:
         json.dump(doc, f, separators=(",", ":"))
     sys.stderr.write(
         f"fx-only: {before.get('date')} {before.get('t')} -> "
         f"{latest['date']} {latest['t']} "
+        f"(fxd tail {fxd[-1][0] if isinstance(fxd, list) and fxd else '-'}) "
         f"(wrote {OUT_SERIES}, {len(open(OUT_SERIES).read())} bytes)\n")
 
 
@@ -291,7 +311,7 @@ def main():
             "date_start": days_back(3 * 365) + "@date", "sort": "date"})
         # Shared with the --fx-only path, which re-runs exactly this much three
         # more times a day and patches the result into series.json.
-        fx_latest, fx_prev = fx_latest_prev()
+        fx_latest, fx_prev, _ = fx_latest_prev()
         fpx = fetch("catalogue", "data-catalogue/", {
             "id": "trnsc_daily_fpx", "filter": "both@model", "sort": "date"})
         pinst = fetch("catalogue", "data-catalogue/", {
@@ -299,8 +319,13 @@ def main():
         ir = fetch("catalogue", "data-catalogue/", {"id": "interestrates", "sort": "-date"})
 
         def fxrows(rows):
-            return [[r["date"]] + [num(r.get(k)) for k in FX_KEYS]
-                    for r in (rows or []) if r.get("usd") is not None]
+            # The monthly catalogue is fetched newest-first (the daily one is
+            # not), so sort here rather than at each call site - a chart fed
+            # descending rows draws its x axis backwards.
+            return sorted(
+                ([r["date"]] + [num(r.get(k)) for k in FX_KEYS]
+                 for r in (rows or []) if r.get("usd") is not None),
+                key=lambda row: row[0])
 
         avg = fxrows([r for r in (fx or []) if r.get("indicator") == "avg"])
         dly = fxrows(fxd)
