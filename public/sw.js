@@ -241,8 +241,14 @@
    17 Aug 2026, same 500 km filter: 88 events on 76 separate days, so a
    24-hour window has something to show about one day in five. EQ_ALERT_MS is
    gone with the split - badge and deck count the same events now, and the
-   collapsed "Recent earthquakes" block v76 added is removed. */
-const VERSION    = "mygov-v77";
+   collapsed "Recent earthquakes" block v76 added is removed.
+
+   v78: /series.json and /hotel.json join the never-intercepted data bundles.
+   They were absent, so the SW served them cache-first and a returning
+   visitor's exchange-rate card stayed on the copy their first visit cached -
+   the 2026-08-10 slow.json regression again, on the bundle finance moved to.
+   The bump also evicts the stale copies already sitting in v77's shell. */
+const VERSION    = "mygov-v78";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
@@ -366,10 +372,19 @@ self.addEventListener("fetch", event => {
    * because the cache-first branch below served a slow.json cached during
    * an earlier visit, ignoring the no-store hint (caches.match ignores
    * cache mode). Offline fallback for these is the app's live-API chain,
-   * not the SW. */
-  if (url.pathname === "/slow.json" || url.pathname === "/health.json" ||
+   * not the SW.
+   *
+   * series.json and hotel.json were missing from this list and so hit the
+   * cache-first branch below - the same regression, on the bundle the FX
+   * card actually reads since v19 split finance out of slow.json. A visitor
+   * kept whatever series.json their first visit cached until the next
+   * VERSION bump, which is why the exchange-rate card could sit days behind
+   * KV while a hard reload changed nothing. Anything the collectors publish
+   * belongs here; only the shell does not. */
+  if (url.pathname === "/slow.json" || url.pathname === "/series.json" ||
+      url.pathname === "/health.json" ||
       url.pathname === "/radar.json" || url.pathname === "/prices.json" ||
-      url.pathname === "/geo.json" ||
+      url.pathname === "/geo.json" || url.pathname === "/hotel.json" ||
       url.pathname === "/insights.json" || url.pathname === "/forecasts.json" ||
       url.pathname === "/transport_history.json" || url.pathname === "/cars.json" ||
       url.pathname === "/tourism.json" || url.pathname === "/travel.json" ||
