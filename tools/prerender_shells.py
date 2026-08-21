@@ -14,17 +14,24 @@ import io, re, sys
 P = "public/index.html"
 src = io.open(P, encoding="utf-8").read()
 
-# ── extract SECTIONS + META from the inline script ──────────────────────
-m = re.search(r"const SECTIONS = (\[.*?\n\]);", src, re.S)
+# ── extract SECTIONS + META from app.js ─────────────────────────────────
+# The app's JS moved out of index.html into public/app.js (2026-08-12, so the
+# CSP could drop inline scripts entirely); this generator kept reading the
+# HTML and exited "SECTIONS not found" on every run since. Both files are
+# read now: shells/nav/radar splice into index.html, the section list comes
+# from app.js.
+APPJS = "public/app.js"
+appsrc = io.open(APPJS, encoding="utf-8").read()
+m = re.search(r"const SECTIONS = (\[.*?\n\]);", appsrc, re.S)
 if not m:
-    sys.exit("SECTIONS not found")
+    sys.exit("SECTIONS not found in public/app.js")
 sections = []
 for sm in re.finditer(r"\{\s*id:\"(\w+)\",\s*label:\"([^\"]+)\",\s*icon:\"(\w+)\",\s*family:\"([^\"]+)\"\s*\}", m.group(1)):
     sections.append({"id": sm.group(1), "label": sm.group(2), "icon": sm.group(3)})
 
-mm = re.search(r"const META = (\{.*?\n\});", src, re.S)
+mm = re.search(r"const META = (\{.*?\n\});", appsrc, re.S)
 if not mm:
-    sys.exit("META not found")
+    sys.exit("META not found in public/app.js")
 meta_block = mm.group(1)
 meta = {}
 for km in re.finditer(r"(\w+):\{\s*title:\"([^\"]*)\",\s*desc:\"([^\"]*)\",\s*how:\"([^\"]*)\",\s*eps:\[(.*?)\]\s*\}", meta_block, re.S):
@@ -135,7 +142,7 @@ for s in sections:
 shell_html = "\n".join(shells)
 
 # ── radar band: visible with a skeleton track (no late unhide) ──────────
-radar_new = '''  <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
+radar_new = '''  <section class="radar-band is-folded" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
       <div class="radar-band-t">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg></div>
@@ -151,6 +158,7 @@ radar_new = '''  <section class="radar-band" id="radar-band" aria-labelledby="ra
         <button class="btn" id="radar-next" aria-label="Next issues">›</button>
       </div>
     </div>
+    <p class="radar-fold-note" data-i18n="Folded - trending issues and breaking news load with the page; Show opens the carousel.">Folded - trending issues and breaking news load with the page; Show opens the carousel.</p>
     <div class="radar-subbar">
       <div class="radar-modes" id="radar-modes" role="tablist" aria-label="Trend radar view mode">
         <button class="rm-btn active" id="rm-viral" role="tab" aria-selected="true" data-mode="viral"><span class="rm-icon" aria-hidden="true">🔥</span> <span data-i18n="Viral &amp; Fact-Checks">Viral &amp; Fact-Checks</span></button>

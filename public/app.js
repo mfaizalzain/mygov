@@ -221,6 +221,8 @@ const I18N = {
   "no station above threshold":"tiada stesen melebihi ambang",
   "warning":"amaran", "alert":"waspada", "Unavailable":"Tidak tersedia",
   "Details":"Butiran", "Hide":"Sembunyi", "Show":"Papar",
+  "Folded - trending issues and breaking news load with the page; Show opens the carousel.": "Dilipat - isu tren dan berita terkini dimuatkan bersama halaman; Buka untuk melihat karusel.",
+  "No live traffic reports right now": "Tiada laporan trafik langsung buat masa ini",
   "Weather, earthquakes, flood & more":"Cuaca, gempa bumi, banjir & lain-lain",
   "Rapid KL":"Rapid KL", "AQI":"IPU", "Air quality":"Kualiti udara",
   "Worst":"Paling teruk", "Cleanest":"Paling bersih", "cities":"bandar",
@@ -1982,7 +1984,7 @@ async function loadBrief(){
 function renderBrief(){
   const band = $("#brief-band"), list = $("#brief-list");
   if (!band || !list) return;
-  if (!briefData){ band.hidden = true; return; }
+  if (!briefData){ band.setAttribute("hidden", ""); return; }
   const note = $("#brief-note");
   if (note) note.textContent = ymd(briefData.generated);
   list.innerHTML = briefData.bullets.map(b => {
@@ -1992,7 +1994,7 @@ function renderBrief(){
     const target = b.sec && document.getElementById(b.sec) ? b.sec : null;
     return `<li>${target ? `<a href="#${esc(target)}">${text}</a>` : text}</li>`;
   }).join("");
-  band.hidden = false;
+  band.removeAttribute("hidden");
 }
 
 /* Holiday + school chips (state-aware). Reads slow.json's holidays[] - each
@@ -2022,7 +2024,7 @@ function renderHolWidget(){
         nEl = $("#hol-next"), sEl = $("#hol-school");
   if (!band || !slowData) return;
   const hol = (slowData.holidays || []).filter(h => h && h[0]);
-  if (!hol.length){ band.hidden = true; return; }
+  if (!hol.length){ band.setAttribute("hidden", ""); return; }
   const slug = holSlug();
   const today = new Date();
   const todayIso = isoOf(Math.floor(today.getTime() / DAY_MS));
@@ -2091,7 +2093,7 @@ function renderHolWidget(){
           name: s.name, meta: `${span(s)} · ${whenTxt(daysTo(s.start))}`,
         }))), T("No school breaks on record"));
   } else { sEl.hidden = true; holPanel("#hol-school-panel", "", [], ""); }
-  band.hidden = false;
+  band.removeAttribute("hidden");
 }
 /* Fill one chip dropdown. Rows are {name, meta}; an empty list still renders
    the panel with its empty line, so a chip never opens onto nothing. */
@@ -3028,10 +3030,12 @@ function setNavBadge(id, n, keyOne, keyMany){
   b.setAttribute("aria-hidden", "true");
   const a = $("#nav-" + id);
   if (a){
-    const base = T((SECTIONS.find(s => s.id === id) || {}).label || id);
-    if (n) a.setAttribute("aria-label",
-      `${base} - ${n} ${T(n === 1 ? st.keyOne : st.keyMany)}`);
-    else a.removeAttribute("aria-label");
+    /* The accessible name must match the visible text ("Warnings 8") or
+       voice-control users who say "Warnings" get no match (Lighthouse
+       label-content-name-mismatch). The badge is aria-hidden decoration;
+       the count reaches screen readers through each section's own live
+       regions instead, so no information is lost. */
+    a.removeAttribute("aria-label");
   }
 }
 /* Sections whose body element has a different id than the section (the
@@ -4012,9 +4016,13 @@ function paintHeroLoc(){
       geo.candidates.slice(1).map(c =>
         `<button class="chip" data-cand="${esc(c.id)}">${esc(c.name)}</button>`).join("") + savedHtml;
   else if (S === "denied") html = `<span class="loc-chip off">${ico("live")} ${T("Location off")}</span>
-      <button class="link-btn" id="hero-loc-try">${T("use my location")}</button>` + hubsHtml + savedHtml;
+      <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change area")}</button>
+      <button class="link-btn" id="hero-loc-try">${T("use my location")}</button>` +
+      (showHeroHubs ? hubsHtml : "") + savedHtml;
   else if (S === "unavailable") html = `<span class="loc-chip off">${ico("live")} ${T("Couldn't pin your location")}</span>
-      <button class="link-btn" id="hero-loc-try">${T("try again")}</button>` + hubsHtml + savedHtml;
+      <button class="link-btn" id="hero-loc-change">${showHeroHubs ? (T("close") || "close") : T("change area")}</button>
+      <button class="link-btn" id="hero-loc-try">${T("try again")}</button>` +
+      (showHeroHubs ? hubsHtml : "") + savedHtml;
   else if (S === "nomatch") html = `<span class="loc-chip off">${ico("live")} ${esc(geo.osm || T("Not in the forecast list"))}</span>
       <a class="link-btn" href="#weather">${T("search below")}</a>` + hubsHtml + savedHtml;
   else if (S === "noproxy") html = `<span class="loc-chip off">${ico("live")} ${T("Location lookup unavailable")}</span>
@@ -4244,14 +4252,14 @@ function wxHoursHTML(om){
     const cls = pr >= 50 ? " wx-rain" : pr >= 30 ? " wx-maybe" : "";
     const isNow = i === 0;
     const nowTag = isNow ? `<span class="dim" style="font-size:10px;margin-right:2px">${T("Now")}</span>` : "";
-    chips.push(`<span class="wx-h${isNow ? " now" : ""}${cls}" ${isNow ? 'aria-current="time"' : ""}>
+    chips.push(`<span class="wx-h${isNow ? " now" : ""}${cls}">
       ${nowTag}<b>${wxHourLab(h.time[i0 + i])}</b> ${c.icon} ${nf(h.temperature_2m[i0 + i], 0)}°
       ${pr >= 20 ? `<i>💧${pr}%</i>` : ""}</span>`);
   }
   return `<div class="wx-hours-wrap">
     <div class="wx-hours-h"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-temp"/></svg>
       ${T("Next 24 hours")}</div>
-    <div class="wx-hours" role="list" aria-label="${T("Next 24 hours")}">${chips.join("")}</div>
+    <div class="wx-hours" role="group" aria-label="${T("Next 24 hours")}">${chips.join("")}</div>
   </div>`;
 }
 
@@ -4475,19 +4483,24 @@ function wxRainClause(h, i0, n){
 }
 async function wxProse(){
   const host = $("#wx-prose");
-  if (!host || !wx.data){ if (host) host.hidden = true; return; }
+  /* The band ships unhidden with a skeleton, so its slot is stable from first
+     paint. A transient miss (no hourly yet, geocode still resolving, upstream
+     blip) must not HIDE it - that re-collapsed the slot and shifted everything
+     below when a later paint refilled it. Once shown, it stays shown; the
+     skeleton simply remains until real prose lands. */
+  if (!host || !wx.data){ return; }
   const l = wx.data.locs.find(x => x.id === wx.pick);
   const name = l ? l.name : (geo.label || "");
   const coords = await wxCoords();
-  if (!name || !coords){ host.hidden = true; return; }
+  if (!name || !coords){ return; }
   const om = await fetchOpenMeteo(coords[0], coords[1]);
-  if (!om || !om.hourly || !om.hourly.time){ host.hidden = true; return; }
+  if (!om || !om.hourly || !om.hourly.time){ return; }
   const h = om.hourly;
   const nowMs = Date.now();
   let i0 = h.time.findIndex(t => Date.parse(String(t) + "+08:00") >= nowMs - 30 * 60 * 1000);
   if (i0 < 0) i0 = 0;
   const n = Math.min(12, h.time.length - i0);
-  if (n < 1){ host.hidden = true; return; }
+  if (n < 1){ return; }
   const code = om.current ? om.current.code : h.weather_code[i0];
   const cls = WMO_CLASS[code] || "clear";
   const adj = T(WMO_PROSE[cls]);
@@ -4502,7 +4515,7 @@ async function wxProse(){
   if (body) body.textContent =
     `${T("Next few hours in")} ${name}: ${adj} ${T("now")}, ${temp}°. ${wxRainClause(h, i0, n)}.`;
   if (note) note.textContent = om.current.time ? om.current.time.slice(11, 16) : "";
-  host.hidden = false;
+  host.removeAttribute("hidden");
 }
 
 /* ════════════════════════════ fuel view ════════════════════════════ */
@@ -8318,8 +8331,18 @@ function mountRadarFold(band){
   const btn = $("#radar-toggle");
   if (!btn || btn.dataset.wired) return;
   btn.dataset.wired = "1";
+  /* The band SHIPS folded (server honours the mygov_rf cookie, so the state
+     is already correct at first paint). Adoption here only reads storage:
+     localStorage wins for the offline/SW-cached shell, the cookie mirrors the
+     same choice for the server. Unfolding from JS alone measured as layout
+     shift whenever the visitor's choice differed from the default. */
   let folded = true;
   try { folded = localStorage.getItem(RADAR_FOLD_KEY) !== "0"; } catch {}
+  if (!folded){
+    band.classList.remove("is-folded");
+    const note = band.querySelector(".radar-fold-note");
+    if (note) note.hidden = true;
+  }
   const apply = () => {
     band.classList.toggle("is-folded", folded);
     btn.setAttribute("aria-expanded", String(!folded));
@@ -8329,6 +8352,10 @@ function mountRadarFold(band){
   btn.onclick = () => {
     folded = !folded;
     try { localStorage.setItem(RADAR_FOLD_KEY, folded ? "1" : "0"); } catch {}
+    /* Mirror the choice into a cookie so the next server-rendered document
+       carries the right fold state. 1-year lifetime, host-only, values are
+       the literals 0/1 - nothing user-supplied ever reaches it. */
+    try { document.cookie = "mygov_rf=" + (folded ? "1" : "0") + ";max-age=31536000;path=/;samesite=lax;secure"; } catch {}
     apply();
   };
 }
@@ -8959,12 +8986,23 @@ function paintTrafficBand(){
   /* Empty the strip as well as hiding it: a reader who moves to a region this
      feed does not cover would otherwise be leaving the previous region's roads
      in the DOM, hidden from sight but not from a screen reader. */
-  if (!items.length){ band.hidden = true; mq.innerHTML = ""; return; }
+  if (!items.length){
+    /* The band's slot is reserved from first paint (it ships with a loading
+       shimmer), so hiding it on an empty feed would shift the page. An
+       explicit all-clear line keeps the height and answers "why is this
+       here" - same pattern as the hazards deck's quiet-day tile. */
+    mq.innerHTML = `<span class="traffic-run"><span class="traffic-item">${esc(T("No live traffic reports right now"))}</span></span>`;
+    return;
+  }
   /* Duplicate the run so the loop never has a gap: a marquee only looks
      seamless when the content is >= 2x the viewport. */
   const html = items.join('<span class="traffic-sep" aria-hidden="true">◆</span>');
+  /* The duplicate run is decoration for the loop seam: aria-hidden keeps it
+     from screen readers and inert drops it from tab order (it contains the
+     same links as the visible run - focusable duplicates were a Lighthouse
+     aria-hidden-focus failure). */
   mq.innerHTML =
-    `<span class="traffic-run">${html}</span><span class="traffic-run" aria-hidden="true">${html}</span>`;
+    `<span class="traffic-run">${html}</span><span class="traffic-run" aria-hidden="true" inert>${html}</span>`;
   band.hidden = false;
   initTrafficPause(band);
 }
@@ -10375,7 +10413,13 @@ function boot(){
     savePref(LK_TEXT, textLarge ? "1" : "0"); applyText(); rerenderAll(); };
   geo.status = "waiting";     // resolved once weather data lands
   initPosUtil();
-  initRadarCarousel();
+  /* The radar band ships folded, so its carousel is below-fold content by
+     default: pull its init (radar.json fetch + paint) off the critical boot
+     path onto idle - it was competing with weather/fuel for the main thread
+     during first paint. A visitor who unfolds immediately still gets the
+     carousel within ~2.5s worst case. */
+  if ("requestIdleCallback" in window) requestIdleCallback(initRadarCarousel, { timeout: 2500 });
+  else setTimeout(initRadarCarousel, 800);
   initInputClearHandlers();
   initDetailsPersistence();
   /* Global table copy delegation */
@@ -10415,6 +10459,14 @@ function boot(){
      viewport and IntersectionObserver would fire immediately. Once the eager
      sections are painted the page is full-height and the rest load on scroll. */
   loadAll(false).then(() => {
+    /* Settled repaint: the eager chain resolves weather + fuel + travel, and
+       the location pipeline may still be finishing around the same moment.
+       One extra paint here converges the hero (chip state, wx prose, holiday
+       chips, travel card) to its final layout in a single step instead of
+       leaving stage-order mismatches as residual shift. */
+    try { if (wx.data) paintWeather(); } catch {}
+    try { if (slowData) renderHolWidget(); } catch {}
+    try { if (dataMap.travel) LOADERS.travel.render(dataMap.travel); } catch {}
     const obs = new IntersectionObserver(entries => {
       for (const e of entries) if (e.isIntersecting && LAZY.has(e.target.id)){
         obs.unobserve(e.target);

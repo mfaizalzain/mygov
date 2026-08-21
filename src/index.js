@@ -1081,12 +1081,43 @@ export default {
                 /<!-- SEO:SNAP -->[\s\S]*?<!-- \/SEO:SNAP -->/,
                 () => `<!-- SEO:SNAP -->\n${inert}\n<!-- /SEO:SNAP -->`)
             : html;
+          /* Fold-state passthrough: the shipped document folds the Trend
+             Radar band; a returning visitor who chose Show last time carries
+             a mygov_rf=0 cookie, and the replace below re-unfolds the band in
+             the served HTML so the state is correct at FIRST PAINT instead
+             of being corrected by JS a beat later (measured layout shift).
+             The value is regex-extracted from a strict [01] class - nothing
+             else in the cookie ever touches the markup. */
+          const rf = /(?:^|;\s*)mygov_rf=([01])/.exec(request.headers.get("cookie") || "");
+          const outFolded = rf && rf[1] === "0"
+            ? out.replace('<section class="radar-band is-folded" id="radar-band"',
+                          '<section class="radar-band" id="radar-band"')
+            : out;
+          /* Brief-band truth: the section ships with a loading skeleton; when
+             KV has no fresh insights (collector down, Gemini quiet day) it is
+             stripped HERE so the browser never collapses it after paint -
+             the same first-paint-truth principle as the fold cookie above.
+             Freshness rule mirrors the client loader: generated today or
+             within the last 3 days. A malformed file strips the band too -
+             the client would have hidden it anyway. */
+          let briefOk = false;
+          try {
+            const ins = await env.MYGOV_DATA.get("insights");
+            if (ins){
+              const g = (JSON.parse(ins).generated) || "";
+              const t = Date.parse(g + "T00:00:00Z");
+              briefOk = !isNaN(t) && (Date.now() - t) < 3 * 86400000;
+            }
+          } catch { briefOk = false; }
+          const outBrief = briefOk
+            ? outFolded
+            : outFolded.replace(/<section class="brief" id="brief-band"[\s\S]*?<\/section>\s*/, "");
           // Preserve the asset's headers (CSP, HSTS, X-Frame-Options, and the
           // _headers cache-control) - building a fresh Response here used to
           // drop every security header from the served homepage.
           const headers = new Headers(res.headers);
           headers.delete("content-length");  // body changes; length is stale
-          return new Response(out, { status: 200, headers });
+          return new Response(outBrief, { status: 200, headers });
         }
         return res;
       }

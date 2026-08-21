@@ -833,6 +833,40 @@ node tools/make-icons.mjs
 
 ---
 
+## Pre-ship gate (mandatory)
+
+Every UI/feature change passes this BEFORE it is pushed. Performance silently
+regressed from 98 to 63 in production once already (2026-08-21) - layout
+discipline erodes one feature at a time, and the only defence is measuring on
+every ship.
+
+```bash
+npx wrangler dev &          # if not already running
+bash tools/lighthouse_gate.sh http://127.0.0.1:8788
+```
+
+The gate runs Lighthouse (mobile preset - the strict one) against the local
+build and fails unless:
+
+- performance >= 90 and CLS <= 0.05 (mobile)
+- accessibility = 100, best-practices = 100, seo = 100
+
+Rules that keep it green:
+
+1. **Every dynamic slot ships with its final height** - a skeleton or reserved
+   min-height in the static HTML, mirrored to the real content's size. JS
+   reveals with `removeAttribute("hidden")`, never by growing a container.
+2. **Data-dependent visibility is decided server-side** when possible: the
+   Worker strips the brief band when KV insights are stale and honours the
+   `mygov_rf` cookie for the radar fold, so the first paint is already final.
+3. **User-initiated expansion is the only post-paint growth** - panels that
+   open on click are exempt from CLS by definition; anything that grows on
+   its own timer is not.
+4. Re-run `python3 tools/prerender_shells.py` after any SECTIONS/META change,
+   then `node --check` the extracted inline script.
+
+---
+
 ## Deploying
 
 The site deploys automatically: this GitHub repo is connected to the

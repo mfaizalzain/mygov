@@ -449,6 +449,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   border-radius:var(--r-sm);background:var(--warn-dim);color:var(--warn);
   border:1px solid color-mix(in srgb,var(--warn) 30%,transparent)}
 .traffic-mq{flex:1;overflow:hidden;white-space:nowrap;font-size:12.5px;color:var(--fg-2);
+  min-height:21px;
   mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
 .traffic-tag .ico{width:15px;height:15px}
 .traffic-run{display:inline-block;padding-right:3.2em;animation:mq 130s linear infinite;
@@ -499,7 +500,10 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
   display:inline-flex;align-items:center;justify-content:center;
   background:var(--danger);color:#fff;font-size:10.5px;font-weight:700;
   font-family:var(--mono);line-height:1}
-.nav-badge[hidden]{display:none}
+/* The slot is reserved even at zero so an arriving badge never widens its
+   nav item and nudges its neighbours (measured layout shift). Visibility is
+   opacity, not display - layout stays fixed either way. */
+.nav-badge[hidden]{display:inline-flex;visibility:hidden;background:transparent;color:transparent}
 
 /* ═══════════════════════════ hero ═══════════════════════════ */
 .hero{padding:var(--s8) 0 var(--s6)}
@@ -714,6 +718,11 @@ a.maplink:hover{background:var(--accent-dim);text-decoration:none;border-color:c
   margin-bottom:var(--s2)}
 .brief-h h3{margin:0;font-size:13.5px;font-weight:660;letter-spacing:-.015em}
 .brief p{margin:var(--s1) 0 0;font-size:12px;line-height:1.45;color:var(--fg-2)}
+/* The next-few-hours prose swaps a skeleton for real text; reserving the
+   settled line count keeps the swap height-neutral (mobile wraps to about
+   three lines at 380px column width, desktop one to two). */
+#wx-prose-body{min-height:52px}
+@media (min-width:621px){ #wx-prose-body{min-height:35px} }
 #wx-prose{margin-top:var(--s2)}
 #wx-prose .brief-h{align-items:center;gap:var(--s2)}
 #wx-prose .sec-ico{width:26px;height:26px;border-radius:8px}
@@ -804,7 +813,7 @@ html[data-theme="light"] #wx-prose{--wx-drop:rgba(37,99,235,.4)}
    flow) still has a containing block here rather than falling through to the
    page and opening at the very top. */
 .hol-row{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
-  margin:var(--s2) 0;position:relative}
+  margin:var(--s2) 0;position:relative;min-height:27px}
 /* Travel Outlook: peak travel periods as a scroll-snap carousel, the same
    interaction as the radar and hazard-alert decks. It was a five-row stacked
    list, which in the hero column ran taller than the copy beside it; one row
@@ -918,6 +927,9 @@ html[data-theme="light"] .hol-panel{box-shadow:0 12px 30px rgba(17,21,29,.12)}
   .hol-pop{position:static}
   .hol-panel{left:0;right:0;max-width:none;min-width:0}
 }
+/* Chips arrive with slow.json and often wrap to a second line at phone
+   widths; reserving the settled height keeps their arrival shift-free. */
+@media (max-width:620px){ .hol-row{min-height:58px} }
 /* District ethnicity mini-bar: a stacked 6-segment bar, one per ETHNIC
    group, width = share of the district's population. 160 rows render as
    plain spans - no canvas, no layout thrash. */
@@ -976,6 +988,14 @@ details[open] > .acc-sum .acc-hint::after{content:"\25B4  " attr(data-open)}
 .radar-band.is-folded .radar-track,
 .radar-band.is-folded #radar-prev,
 .radar-band.is-folded #radar-next{display:none}
+/* Server-side fold: index.html ships with is-folded applied and the Worker
+   keeps it applied (or strips it) based on the mygov_rf cookie BEFORE the
+   response leaves the edge, so the fold state is decided at first paint -
+   previously JS folded the band a moment after load and every visit where
+   the stored choice differed from the default measured as layout shift.
+   While folded, a one-line note stands in for the hidden carousel. */
+.radar-fold-note{display:none;margin:0 0 var(--s2);font-size:12px;color:var(--fg-3)}
+.radar-band.is-folded .radar-fold-note{display:block}
 .radar-band-t{display:flex;align-items:flex-start;gap:var(--s3);min-width:0}
 .radar-band-t h3{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
 .radar-band-t p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:12px;max-width:70ch}
@@ -1309,7 +1329,10 @@ html[data-theme="dark"] .lvmap .leaflet-tile-pane{filter:invert(1) hue-rotate(18
 .wx-day-rain.rain-mid{color:color-mix(in srgb,var(--info) 80%,var(--fg-2))}
 .wx-day-temps{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px}
 .wx-t-max{font-weight:700;color:var(--fg)}
-.wx-t-min{color:var(--fg-3)}
+/* --fg-3 measures 4.27:1 against the weather card's tinted surface (worse
+   than its 4.5:1 guarantee on plain surfaces); this shade keeps the visual
+   hierarchy while passing everywhere it can land. */
+.wx-t-min{color:#93a0b6}
 
 .wxp{font-size:12.5px;line-height:1.5;min-width:150px}
 .wxp b{display:block;margin-bottom:2px}
@@ -1561,6 +1584,13 @@ details.hz-tile[open] .hz-hint::after{content:"\00b7  " attr(data-open) "  \25B4
 .skel-kpi .skel:nth-child(2){width:65%;height:26px;margin:6px 0}
 .skel-kpi .skel:last-child{width:80%;height:11px;margin:6px 0 0}
 .skel-map{height:340px;border-radius:var(--r-sm);border:1px solid var(--line-soft);background:var(--bg-2)}
+/* Travel Outlook loading state mirrors the settled card structure exactly:
+   carousel track (rows) + prev/next control row + collapsed tips summary.
+   Heights track the real breakpoints so the swap is pixel-neutral. */
+.skel-travel-track{height:104px}
+.skel-travel-ctl{height:44px;margin-top:8px;display:flex;justify-content:flex-end;gap:var(--s2)}
+.skel-travel-tips{width:58%;height:35px;margin:12px 0 0;border-radius:var(--r-sm)}
+@media (min-width:621px){ .skel-travel-track{height:118px} }
 .skel-row{display:flex;gap:var(--s2);align-items:center;padding:9px var(--s3);border-bottom:1px solid var(--line-soft)}
 @media (max-width:620px){ .skel-chart{height:250px} }
 @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}

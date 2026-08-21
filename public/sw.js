@@ -251,7 +251,11 @@
    v79: the live FX fallback path (used when KV is cold, e.g. a deploy window)
    now keeps all 9 currencies (cny/jpy/thb/aud were truncated to 6 columns,
    blanking those lines in the chart until the next KV push). */
-const VERSION    = "mygov-v79";
+/* v80: Phase-0 CLS/a11y pass - hero slots ship pre-rendered skeletons (wx
+   prose, brief, holiday row, two-card travel skeleton), Trend Radar ships
+   folded with the state mirrored server-side via the mygov_rf cookie, radar
+   init moves off the critical boot path, marquee clone is inert. */
+const VERSION    = "mygov-v80";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

@@ -8,6 +8,11 @@
 <meta name="theme-color" id="tc" content="#0a0c10">
 <meta name="color-scheme" content="dark light">
 <link rel="manifest" href="/manifest.webmanifest">
+<!-- Resource hints: weather + geocoding go to these origins on almost every
+     load; opening the connections early overlaps the ~120ms DNS+TLS with the
+     HTML/CSS download instead of serialising behind first render. -->
+<link rel="preconnect" href="https://api.data.gov.my" crossorigin>
+<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32">
@@ -165,9 +170,9 @@
 <!-- Live traffic marquee: crowd-sourced road reports scrolling under the
      nav. Loaded independently (not a section sub-block); hidden until data
      arrives. -->
-<div class="traffic-band" id="traffic-band" hidden>
+<div class="traffic-band" id="traffic-band">
   <span class="traffic-tag" aria-hidden="true"><svg class="ico"><use href="#i-traffic"/></svg></span>
-  <div class="traffic-mq" id="traffic-mq" role="marquee" aria-label="Live traffic reports"></div>
+  <div class="traffic-mq" id="traffic-mq" role="marquee" aria-label="Live traffic reports"><span class="skel" style="display:block;width:46%;height:13px;margin:0"></span></div>
   <!-- WCAG 2.2.2 (Pause, Stop, Hide): anything that moves automatically for
        more than five seconds needs a mechanism to stop it. Hovering pauses the
        ticker, but hover does not exist on touch and does not help someone who
@@ -204,23 +209,23 @@
            daily digest. Composed deterministically from the Open-Meteo hourly
            data (rain probability, WMO code, temperature); hidden until both a
            location and hourly data exist. -->
-      <section class="brief" id="wx-prose" aria-labelledby="wx-prose-h" hidden>
+      <section class="brief" id="wx-prose" aria-labelledby="wx-prose-h">
         <div class="brief-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-weather"/></svg></div>
           <h3 id="wx-prose-h" data-i18n="Next few hours">Next few hours</h3>
           <span class="brief-note" id="wx-prose-note"></span>
         </div>
-        <p id="wx-prose-body"></p>
+        <p id="wx-prose-body"><span class="skel" style="display:block;width:92%;height:14px;margin:5px 0"></span><span class="skel" style="display:block;width:58%;height:14px;margin:7px 0 0"></span></p>
       </section>
       <!-- Daily briefing. Hidden until insights.json produces grounded bullets;
            a missing, stale or empty file leaves no trace on the page. -->
-      <section class="brief" id="brief-band" aria-labelledby="brief-h" hidden>
+      <section class="brief" id="brief-band" aria-labelledby="brief-h">
         <div class="brief-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-brief"/></svg></div>
           <h3 id="brief-h" data-i18n="Today in brief">Today in brief</h3>
           <span class="brief-note" id="brief-note"></span>
         </div>
-        <ul class="brief-list" id="brief-list"></ul>
+        <ul class="brief-list" id="brief-list"><li><span class="skel" style="display:block;width:88%;height:18px;margin:0"></span></li><li><span class="skel" style="display:block;width:70%;height:18px;margin:0"></span></li><li><span class="skel" style="display:block;width:79%;height:18px;margin:0"></span></li><li><span class="skel" style="display:block;width:60%;height:18px;margin:0"></span></li><li><span class="skel" style="display:block;width:52%;height:18px;margin:0"></span></li></ul>
       </section>
     </div>
     <!-- Travel Outlook occupies the hero's right column - the slot the 8-card
@@ -253,7 +258,7 @@
          answers "when is the next one", the panel answers "and after that?"
          without sending anyone to a calendar. Buttons, not spans, so they are
          keyboard reachable and announce their expanded state. -->
-    <div class="hol-row" id="hol-band" hidden>
+    <div class="hol-row" id="hol-band">
       <span class="hol-chip" id="hol-today" hidden></span>
       <span class="hol-pop">
         <button type="button" class="hol-chip hol-next" id="hol-next" hidden
@@ -266,11 +271,11 @@
         <div class="hol-panel" id="hol-school-panel" hidden></div>
       </span>
     </div>
-    <div id="body-travel"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div>
+    <div id="body-travel"><div class="card"><div class="card-b"><div class="skel-travel-track"><span class="skel" style="display:block;width:26%;height:14px;margin:2px 0 8px"></span><span class="skel" style="display:block;width:86%;height:13px;margin:8px 0"></span><span class="skel" style="display:block;width:62%;height:13px;margin:8px 0 0"></span></div><div class="skel-travel-ctl"><span class="skel" style="display:block;width:48px;height:44px;margin:0"></span><span class="skel" style="display:block;width:48px;height:44px;margin:0"></span></div><div class="skel skel-travel-tips"></div></div></div></div>
     </section>
   </div>
 
-  <section class="radar-band" id="radar-band" aria-labelledby="radar-h">
+  <section class="radar-band is-folded" id="radar-band" aria-labelledby="radar-h">
     <div class="radar-band-h">
       <div class="radar-band-t">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg></div>
@@ -291,6 +296,7 @@
                 aria-controls="radar-track" data-i18n="Show">Show</button>
       </div>
     </div>
+    <p class="radar-fold-note" data-i18n="Folded - trending issues and breaking news load with the page; Show opens the carousel.">Folded - trending issues and breaking news load with the page; Show opens the carousel.</p>
     <div class="radar-subbar">
       <div class="radar-modes" id="radar-modes" role="tablist" aria-label="Trend radar view mode">
         <button class="rm-btn active" id="rm-viral" role="tab" aria-selected="true" data-mode="viral"><span class="rm-icon" aria-hidden="true">🔥</span> <span data-i18n="Viral &amp; Fact-Checks">Viral &amp; Fact-Checks</span></button>
@@ -314,8 +320,8 @@
           <p>Everything currently on issue for Malaysia - severe-weather warnings, earthquakes within 500 km, river gauges above their flood thresholds, the latest Rapid KL service alert, and live air quality across the major cities. Live only; nothing here is historical.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list, and USGS publishes a worldwide M2.5+ feed; earthquakes from both are filtered to within 500 km of Malaysia and to the last 24 hours. Both sources are needed: MET's list stopped updating (on 15 Aug 2026 its newest event was six days old and it was missing that morning's M6.9 in North Sumatra, 268 km from the Perak coast), while USGS is live within minutes but has no notion of distance-to-Malaysia, which is computed here against a list of coastal anchors. Duplicates - the same rupture reported by both - are collapsed, MET's row winning because it carries the local bearing. The window is 24 hours, the same promise the rest of this section makes: if nothing has happened, the section says so rather than keeping an older event on screen. Measured against USGS over the year to 17 Aug 2026, 88 events fall inside 500 km on 76 separate days, so that window has something to show roughly one day in five. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+). A hazard with nothing to report shows an all-clear rather than an empty table.</p>
-            <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li><li><code>GET myrapid.com.my PULSE via r.jina.ai (via /api/rapid-alerts)</code></li><li><code>GET air-quality-api.open-meteo.com (via /api/aqi)</code></li></ul>
+            <p>Six feeds in one view. MET publishes severe-weather warnings and a global earthquake list, and USGS publishes a worldwide M2.5+ feed; earthquakes from both are filtered to within 500 km of Malaysia and to the last 24 hours. Both sources are needed: MET's list stopped updating (on 15 Aug 2026 its newest event was six days old and it was missing that morning's M6.9 in North Sumatra, 268 km from the Perak coast), while USGS is live within minutes but has no notion of distance-to-Malaysia, which is computed here against a list of coastal anchors. Duplicates - the same rupture reported by both - are collapsed, MET's row winning because it carries the local bearing. The window is 24 hours, the same promise the rest of this section makes: if nothing has happened, the section says so rather than keeping an older event on screen. Measured against USGS over the year to 17 Aug 2026, 88 events fall inside 500 km on 76 separate days, so that window has something to show roughly one day in five. Warnings and earthquakes share one card carousel - filterable by weather, earthquakes, your area or marine - with flood-risk stations riding in the same deck under All Malaysia. Flood risk is JPS gauge telemetry, counting only stations that reported within 24 hours, and keeps its own tile because it mounts a map. The latest Rapid KL service alert (myrapid.com.my PULSE, behind Incapsula, fetched through the r.jina.ai reader) rides in the deck as one card, newest post only. Air quality is Open-Meteo's hourly model (free, open, keyless - the official APIMS feed blocks non-browser clients) polled for 18 major cities: every city always shows as a comparison card in its own tile, and the deck only gains an alert card when the worst city is Unhealthy (US AQI 101+).</p>
+            <ul><li><code>GET /weather/warning</code></li><li><code>GET /weather/warning/earthquake</code></li><li><code>GET earthquake.usgs.gov 2.5_week.geojson (via /api/quakes)</code></li><li><code>GET publicinfobanjir.water.gov.my latestreadingstrendabc.json (via /api/flood)</code></li><li><code>GET myrapid.com.my PULSE via r.jina.ai (via /api/rapid-alerts)</code></li><li><code>GET air-quality-api.open-meteo.com (via /api/aqi)</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-hazards"></span>
@@ -346,7 +352,7 @@
           <p>What a household pays - weekly retail fuel prices, the PriceCatcher groceries basket, and how Malaysian household income has grown over time.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Fuel prices are set weekly by the Ministry of Finance and fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.</p>
+            <p>Fuel prices are set weekly by the Ministry of Finance and take effect every Thursday; they are fetched server-side-filtered to the price level series. Groceries are a fixed basket of everyday items priced daily by KPDN enumerators - the Groceries block below carries the full methodology. Household income comes from the Household Income Survey.</p>
             <ul><li><code>GET /data-catalogue?id=fuelprice</code></li><li><code>GET /data-catalogue?id=hh_income</code></li></ul>
           </details>
         </div>
@@ -384,6 +390,7 @@
         <span class="sec-time" id="time-population"></span>
       </div>
       <div id="body-places"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
+            <!-- Health & Donations: a merged sub-block of its parent section. -->
       <div class="sec-sub" id="election-sub" aria-labelledby="h-election">
         <div class="sec-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-vote"/></svg></div>
@@ -402,6 +409,7 @@
         <div id="body-election"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div>
       </div>
             <!-- Health & Donations: a merged sub-block of its parent section. -->
+
       <div class="sec-sub" id="health-sub" aria-labelledby="h-health">
         <div class="sec-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-health"/></svg></div>
@@ -441,14 +449,12 @@
             <details class="meta">
               <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
               <p data-i18n="Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Hotel data comes from the quarterly Paid Accommodation Survey infographic (occupancy rate, room rate and guests for all 16 states, current quarter vs a year earlier), extracted by a quarterly collector into hotel.json. Data provided by Tourism Malaysia.">Tourism Malaysia publishes a monthly top-51 arrivals table as a PDF on data.tourism.gov.my. The files are public - no login - and a monthly GitHub Action extracts the table with pymupdf into tourism.json. Growth columns compare against the same month in 2025 and 2019 (pre-pandemic). Hotel data comes from the quarterly Paid Accommodation Survey infographic (occupancy rate, room rate and guests for all 16 states, current quarter vs a year earlier), extracted by a quarterly collector into hotel.json. Data provided by Tourism Malaysia.</p>
-              <ul><li><code>GET data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf</code></li>
-              <li><code>GET data.tourism.gov.my/frontend/pdf/{year}/hotel_survey/paid_accommodation/infografik_hotel_Q{q}_{year}.pdf</code></li></ul>
+              <ul><li><code>GET data.tourism.gov.my/frontend/pdf/{year}/visitor_arrivals/top_51_{m}_{year}_visitor.pdf</code></li><li><code>GET data.tourism.gov.my/frontend/pdf/{year}/hotel_survey/paid_accommodation/infografik_hotel_Q{q}_{year}.pdf</code></li></ul>
             </details>
           </div>
           <span class="sec-time" id="time-tourism"></span>
         </div>
         <div id="body-tourism"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-        <div id="body-hotel" hidden><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div></div></div></div>
       </div>
     </section>
     <section id="finance" aria-labelledby="h-finance">
@@ -458,8 +464,8 @@
           <p>Exchange rates and interest rates from Bank Negara Malaysia, plus the pulse of online payments from PayNet - the daily FPX totals and monthly value by payment instrument.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Exchange rates are Bank Negara's reference rates - either the daily 12:00 middle rate or the published monthly average. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.</p>
-            <ul><li><code>GET /data-catalogue?id=exchangerates</code></li><li><code>GET /data-catalogue?id=exchangerates_daily_1200&amp;filter=middle@rate_type</code></li><li><code>GET /data-catalogue?id=interestrates</code></li><li><code>GET /data-catalogue?id=trnsc_daily_fpx&amp;filter=both@model</code></li><li><code>GET /data-catalogue?id=payment_instruments</code></li></ul>
+            <p>Exchange rates are Bank Negara's reference rates, published four times a trading day (09:00, 11:30, 12:00 and 17:00 MYT). The headline number is the newest published middle reference; the daily chart plots the 12:00 mid-day series; the monthly view is the published monthly average. The 11:30 best-counter rates carry no official midpoint and are not charted. Interest rates cover commercial and investment banks; the OPR itself isn't published in this catalogue, so the chart shows the commercial base rate, which tracks it. FPX figures are PayNet's daily transaction value and volume; payment instruments are the monthly value and count split by debit, credit, charge, cheque and e-money.</p>
+            <ul><li><code>GET /data-catalogue?id=exchangerates</code></li><li><code>GET /data-catalogue?id=exchangerates_daily_0900&amp;filter=middle@rate_type</code></li><li><code>GET /data-catalogue?id=exchangerates_daily_1200&amp;filter=middle@rate_type</code></li><li><code>GET /data-catalogue?id=exchangerates_daily_1700&amp;filter=middle@rate_type</code></li><li><code>GET /data-catalogue?id=interestrates</code></li><li><code>GET /data-catalogue?id=trnsc_daily_fpx&amp;filter=both@model</code></li><li><code>GET /data-catalogue?id=payment_instruments</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-finance"></span>
@@ -487,20 +493,17 @@
       <div class="sec-h">
         <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-transport"/></svg></div>
         <div><h3 id="h-transport">Public Transport</h3>
-          <p>Scheduled bus and train routes for KTMB and Rapid KL - the busiest lines, and how many stops and trips each network runs.</p>
+          <p>Scheduled bus and train routes for KTMB, Rapid KL and Rapid Penang - the busiest lines, how many stops and trips each network runs, and how many trips people actually take every day.</p>
           <details class="meta">
             <summary>Data source &amp; methodology</summary>
-            <p>Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips and stops are read, never the largest file.</p>
-            <ul><li><code>GET /gtfs-static/ktmb</code></li><li><code>GET /gtfs-static/prasarana?category=rapid-bus-kl</code></li></ul>
+            <p>Schedules come from GTFS-static feeds published by each operator. They arrive as ZIP archives and are parsed in your browser - only routes, trips, stops and the calendar are read, never the largest file. Trip counts are departures on one ordinary weekday. Every feed ships its weekday, Saturday and Sunday patterns together, so counting the file's rows would add separate days into a total nobody can travel on; both Rapid KL feeds are also frequency-based, listing one template per direction plus a headway, so the Kelana Jaya line appears in the file as 6 trips rather than the ~350 it runs. Penang's bus feed is the opposite - a plain row per trip, so its count reads directly. Daily ridership by service comes from the government data catalogue's ridership_headline series - anonymous tap-in/out totals from the operators' ticketing systems, published by Prasarana and the Ministry of Transport. It counts journeys taken, not unique passengers, and is audited monthly before release.</p>
+            <ul><li><code>GET /gtfs-static/ktmb</code></li><li><code>GET /gtfs-static/prasarana?category=rapid-bus-kl</code></li><li><code>GET /data-catalogue?id=ridership_headline</code></li></ul>
           </details>
         </div>
         <span class="sec-time" id="time-transport"></span>
       </div>
       <div id="body-transport"><div class="card"><div class="card-b"><div class="skel" style="width:94%"></div><div class="skel" style="width:72%"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div><div class="skel skel-chart"></div></div></div></div>
-    <!-- Live Vehicles: a merged sub-block of its parent section. It must stay
-         INSIDE #transport - applySectionOrdering() re-appends every section to
-         #main, so a sub-block left outside one floats to the very top of the
-         page, above Warnings. -->
+            <!-- Live Vehicles: a merged sub-block of its parent section. -->
       <div class="sec-sub" id="live-sub" aria-labelledby="h-live">
         <div class="sec-h">
           <div class="sec-ico" aria-hidden="true"><svg class="ico" style="width:20px;height:20px" aria-hidden="true" focusable="false"><use href="#i-live"/></svg></div>
@@ -508,7 +511,7 @@
             <p data-i18n="Trains and buses currently reporting their position, straight from the operators' live feeds.">Trains and buses currently reporting their position, straight from the operators' live feeds.</p>
             <details class="meta">
               <summary data-i18n="Data source &amp; methodology">Data source &amp; methodology</summary>
-              <p data-i18n="Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.">Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.</p>
+              <p data-i18n="Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). The section opens on the Klang Valley feed, with KTMB trains and Rapid Penang one chip away (or All for the full board). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.">Trains come from KTM's GTFS-realtime feed, decoded in your browser by a small wire-format reader; it is intermittently empty even mid-service, which is why buses use a different source. Buses come from Prasarana's official live kiosk feed - the same data the myrapidbus site shows - for both the Klang Valley (800+ buses) and Penang (200+). The section opens on the Klang Valley feed, with KTMB trains and Rapid Penang one chip away (or All for the full board). Route codes in the live feeds are matched against the operators' published schedules to name each route and its endpoints; the Klang Valley matches on route id, Penang on route number. A vehicle whose last reported position is over 15 minutes old is left off the map and the counts, and noted underneath. Buses are aggregated into route chips and the map clusters positions until you zoom in.</p>
               <ul><li><code>GET /gtfs-realtime/vehicle-position/ktmb</code></li><li><code>GET myrapidbus.prasarana.com.my kiosk feed (via /api/rapid)</code></li></ul>
             </details>
           </div>
