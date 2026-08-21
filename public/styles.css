@@ -22,6 +22,20 @@
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --t:170ms cubic-bezier(.2,.7,.3,1);
+  --t-slow:280ms cubic-bezier(.22,.9,.28,1);
+  /* Phase-1 elevation: three layers instead of one - a hairline top light,
+     a tight contact shadow and a wide ambient. Cards read as raised planes
+     without a single hard border doing all the work. */
+  --shadow-1:0 1px 0 rgba(255,255,255,.03) inset, 0 1px 2px rgba(0,0,0,.35),
+    0 6px 16px -8px rgba(0,0,0,.45);
+  --shadow-2:0 1px 0 rgba(255,255,255,.04) inset, 0 2px 4px rgba(0,0,0,.35),
+    0 12px 32px -12px rgba(0,0,0,.55);
+  --r-lg:18px;
+  /* fluid display ramp: hero and section titles scale with the viewport
+     between breakpoints instead of jumping at them (mobile overrides below
+     still pin the compact sizes, so skeletons and mirrors are untouched) */
+  --fs-hero:clamp(23px,1.1vw + 19px,28px);
+  --fs-sec:clamp(20px,.6vw + 17px,23px);
 }
 html[data-theme="light"]{
   --bg:#f4f6fa; --bg-2:#eef1f6; --surface:#ffffff; --surface-2:#f7f9fc; --surface-3:#e8ecf3;
@@ -37,6 +51,10 @@ html[data-theme="light"]{
   --grid:rgba(17,21,29,.07);
   color-scheme:light;
   --shadow:0 1px 2px rgba(16,24,40,.06), 0 8px 24px -12px rgba(16,24,40,.14);
+  --shadow-1:0 1px 0 rgba(255,255,255,.7) inset, 0 1px 2px rgba(16,24,40,.05),
+    0 6px 16px -8px rgba(16,24,40,.1);
+  --shadow-2:0 1px 0 rgba(255,255,255,.8) inset, 0 2px 4px rgba(16,24,40,.05),
+    0 12px 32px -12px rgba(16,24,40,.16);
 }
 html[data-theme="light"] body{
   background-image:
@@ -392,7 +410,7 @@ html[data-theme="light"][data-season="merdeka"] header{
 .btn{display:inline-flex;align-items:center;gap:var(--s2);padding:8px var(--s3);
   border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface-2);
   cursor:pointer;font-size:13px;font-weight:550;transition:var(--t);white-space:nowrap}
-.btn:hover:not(:disabled){background:var(--surface-3);border-color:#2e3548;transform:translateY(-1px)}
+.btn:hover:not(:disabled){background:var(--surface-3);border-color:#2e3548;transform:translateY(-1px);box-shadow:var(--shadow-1)}
 .btn:active:not(:disabled){transform:translateY(0)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .btn-a{background:var(--accent);border-color:var(--accent);color:#04241f;font-weight:650}
@@ -507,7 +525,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
 
 /* ═══════════════════════════ hero ═══════════════════════════ */
 .hero{padding:var(--s8) 0 var(--s6)}
-.hero h2{margin:0 0 var(--s2);font-size:22px;font-weight:680;letter-spacing:-.025em;line-height:1.2}
+.hero h2{margin:0 0 var(--s2);font-size:var(--fs-hero);font-weight:680;letter-spacing:-.025em;line-height:1.2}
 .hero p{margin:0;color:var(--fg-2);font-size:13.5px;max-width:62ch}
 /* Above 1100px the copy caps out at 62ch and would leave the right half of
    the hero empty, so the Travel Outlook band moves up beside it and the daily
@@ -590,9 +608,9 @@ section.is-pinned::before{content:"📌 PINNED";font-size:10px;font-family:var(-
    now - so these rules serve the sections only; there is no .kpis grid. */
 .kpi{background:linear-gradient(180deg,var(--surface),var(--bg-2));
   border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);
-  box-shadow:var(--shadow);transition:var(--t)}
-.kpi:hover{transform:translateY(-2px);border-color:var(--line)}
-.kpi .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+  box-shadow:var(--shadow-1);transition:var(--t-slow)}
+.kpi:hover{transform:translateY(-2px);border-color:var(--line);box-shadow:var(--shadow-2)}
+.kpi .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
   color:var(--fg-3);font-weight:650;display:inline-flex;align-items:center;gap:5px}
 .kpi .lab .ico{width:13px;height:13px;stroke-width:2}
 /* the value/sub shimmer while a KPI is still pending - sized to the type it
@@ -601,7 +619,8 @@ section.is-pinned::before{content:"📌 PINNED";font-size:10px;font-family:var(-
 .skel-val{display:block;height:28px;width:62%;margin:6px 0 0;border-radius:7px}
 .skel-sub{display:block;height:17px;width:82%;margin:5px 0 0}
 .kpi-load{min-height:123px}
-.kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1}
+.kpi .val{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1.1;
+  font-variant-numeric:tabular-nums}
 .kpi .sub{font-size:11.5px;color:var(--fg-3);margin-top:var(--s1)}
 .kpi-t{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
 .up{color:var(--danger)} .down{color:var(--ok)} .neutral{color:var(--fg-3)}
@@ -629,7 +648,7 @@ section{padding-top:var(--s8)}
 .sec-sub{margin-top:var(--s8);padding-top:var(--s6);border-top:1px solid var(--line-soft)}
 .sec-ico{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
   background:var(--accent-dim);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);font-size:18px}
-.sec-h h3{margin:0;font-size:20px;font-weight:680;letter-spacing:-.025em}
+.sec-h h3{margin:0;font-size:var(--fs-sec);font-weight:680;letter-spacing:-.025em}
 .sec-h p{margin:var(--s1) 0 0;color:var(--fg-2);font-size:13.5px;max-width:76ch}
 .sec-time{margin-left:auto;flex:none;font-size:11px;font-family:var(--mono);color:var(--fg-3);
   background:var(--bg-2);border:1px solid var(--line-soft);border-radius:99px;padding:4px 10px;
@@ -649,8 +668,8 @@ details.meta code{font-family:var(--mono);font-size:12px;color:var(--fg-2);
 details.meta p{margin:var(--s2) 0 0;color:var(--fg-3);font-size:12px;max-width:76ch}
 
 .card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
-  box-shadow:var(--shadow);overflow:hidden;transition:var(--t)}
-.card:hover{border-color:var(--line)}
+  box-shadow:var(--shadow-1);overflow:hidden;transition:var(--t)}
+.card:hover{border-color:var(--line);box-shadow:var(--shadow-2);transform:translateY(-1px)}
 .card-h{padding:var(--s3) var(--s4);border-bottom:1px solid var(--line-soft);
   display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
 .card-h h4{margin:0;font-size:13.5px;font-weight:640}
@@ -671,7 +690,7 @@ details.dt .dt-body{margin-top:var(--s2)}
    a bar above them rather than being repeated in four card headers */
 .hbar{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;
   background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
-  padding:var(--s3) var(--s4);box-shadow:var(--shadow)}
+  padding:var(--s3) var(--s4);box-shadow:var(--shadow-1)}
 .hbar .hstamp{font-size:11.5px;color:var(--fg-3);font-family:var(--mono)}
 .hbar .right{margin-left:auto;display:flex;gap:var(--s2);align-items:center}
 .hbar label{font-size:11.5px;color:var(--fg-2);white-space:nowrap}
@@ -1455,7 +1474,8 @@ html[data-theme="light"] .tw-sticky table td:first-child{
   background:var(--surface);box-shadow:2px 0 6px -2px rgba(17,21,29,.1)}
 html[data-theme="light"] .tw-sticky table thead th:first-child{background:var(--surface-2)}
 tbody tr:nth-child(even) td:first-child{background:inherit}
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px;
+  font-variant-numeric:tabular-nums}
 thead th{position:sticky;top:0;z-index:1;background:var(--surface-2);text-align:left;
   padding:9px var(--s3);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
   color:var(--fg-3);font-weight:650;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -1738,11 +1758,11 @@ footer{border-top:1px solid var(--line-soft);margin-top:56px;padding:var(--s6) 0
 }
 /* larger text mode */
 html[data-text="large"] body{font-size:16px}
-html[data-text="large"] .hero h2{font-size:24px}
+html[data-text="large"] .hero h2{font-size:30px}
 html[data-text="large"] .hero p{font-size:14.5px}
-html[data-text="large"] .sec-h h3{font-size:22px}
+html[data-text="large"] .sec-h h3{font-size:25px}
 html[data-text="large"] .sec-h p{font-size:15px}
-html[data-text="large"] .kpi .val{font-size:28px}
+html[data-text="large"] .kpi .val{font-size:32px}
 html[data-text="large"] .kpi .lab{font-size:11.5px}
 html[data-text="large"] .card-h h4{font-size:15px}
 html[data-text="large"] table{font-size:14px}

@@ -658,6 +658,35 @@ function applySeason(){
       : (dark ? "#0a0c10" : "#f4f6fa");
   }
 }
+/* Phase-1 design system: the basemap follows the app theme. Dark gets
+   CARTO's dark_all - the same style family as the UI, and img-src already
+   allows the host - while light keeps the classic OSM raster. The per-map
+   OSM->CARTO tileerror fallbacks stay as the outage path. */
+const themedMaps = new Set();
+function themedTiles(){
+  const dark = document.documentElement.dataset.theme !== "light";
+  const attribution = dark
+    ? '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    : '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>';
+  return dark
+    ? L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        { maxZoom: 20, subdomains: "abcd", attribution })
+    : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19, attribution });
+}
+function retileMap(map){
+  if (!window.L || !map) return;
+  /* removed instances stay in the Set (their container div is still in the
+     DOM), but Leaflet nulls _map on remove() - prune them instead of throwing
+     on them, and never let one dead map abort the whole re-tile loop */
+  if (!map._map){ themedMaps.delete(map); return; }
+  try {
+    let base = null;
+    map.eachLayer(l => { if (!base && l instanceof L.TileLayer) base = l; });
+    if (base) map.removeLayer(base);
+    themedTiles().addTo(map);
+  } catch { themedMaps.delete(map); }
+}
 function applyTheme(){
   const dark = themeMode === "dark" ||
     (themeMode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -667,6 +696,8 @@ function applyTheme(){
     b.setAttribute("aria-label", "Theme: " + themeMode);
   }
   applySeason();
+  /* basemaps follow the theme: swap the tile layer on every live map */
+  for (const m of [...themedMaps]) retileMap(m);
 }
 function applyText(){
   document.documentElement.dataset.text = textLarge ? "large" : "normal";
@@ -4390,9 +4421,8 @@ function initWxMap(coords, live, loc){
   const map = L.map(el, { attributionControl:true, zoomControl:true });
   wxMapInst = map;
   enableTouchFriendlyMap(map, el);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' })
-    .addTo(map);
+  themedMaps.add(map);
+  themedTiles().addTo(map);
   map.setView(c, 11);
   const name = loc ? loc.name : (geo.label || "");
   const cond = live ? wxCond(live.code) : null;
@@ -7952,9 +7982,8 @@ function paintRailMap(rail, el){
   if (railMapInst){ railMapInst.invalidateSize(); return; }
   const map = L.map(el, { scrollWheelZoom:false }).setView([3.12, 101.68], 11);
   enableTouchFriendlyMap(map, el);
-  const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map);
+  themedMaps.add(map);
+  const tiles = themedTiles().addTo(map);
   const fallback = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
     maxZoom: 20, subdomains: "abcd", attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
   });
@@ -9312,9 +9341,8 @@ function paintFloodMap(d){
   if (floodMap){ floodMap.remove(); floodMap = null; }
   const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 6);
   enableTouchFriendlyMap(map, el);
-  const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map);
+  themedMaps.add(map);
+  const tiles = themedTiles().addTo(map);
   const fallback = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
     maxZoom: 20, subdomains: "abcd", attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
   });
@@ -9419,9 +9447,9 @@ function paintMaps(){
     if (lvMaps[f.key]){ lvMaps[f.key].remove(); delete lvMaps[f.key]; }
     const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 7);
     enableTouchFriendlyMap(map, el);
-    const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19, attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
+    themedMaps.add(map);
+  themedMaps.add(map);
+    const tiles = themedTiles().addTo(map);
     /* The public OSM tile server intermittently answers 503 (rate limiting).
        Retry failed tiles with exponential backoff; if the server stays down
        (circuit breaker), swap to the dark CARTO basemap so the map never
