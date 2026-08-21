@@ -2001,6 +2001,9 @@ async function readForecasts(){
    hidden unless real bullets arrive, so a missing key, a rate-limited call or
    a quiet day all degrade to "no band" rather than to an empty box. */
 let briefData = null;
+/* Tri-state: null = not fetched yet (never touch the server-shipped band),
+   false = fetched and genuinely absent/stale (hide it), object = bullets. */
+let briefKnown = false;
 async function loadBrief(){
   try {
     const r = await fetch("insights.json", { cache:"no-store" });
@@ -2010,12 +2013,17 @@ async function loadBrief(){
       (Date.now() - Date.parse(j.generated + "T00:00:00Z")) < 3 * DAY_MS;
     briefData = (fresh && Array.isArray(j.bullets) && j.bullets.length) ? j : null;
   } catch { briefData = null; }
+  briefKnown = true;
   return briefData;
 }
 function renderBrief(){
   const band = $("#brief-band"), list = $("#brief-list");
   if (!band || !list) return;
-  if (!briefData){ band.setAttribute("hidden", ""); return; }
+  /* Before the insights fetch resolves we do not know whether bullets exist,
+     so leave whatever the Worker shipped alone - hiding the shell's band here
+     and re-showing it in loadBrief() measured as two full layout shifts on a
+     real network (the local gate never saw it: localhost wins that race). */
+  if (!briefData){ if (briefKnown) band.setAttribute("hidden", ""); return; }
   const note = $("#brief-note");
   if (note) note.textContent = ymd(briefData.generated);
   list.innerHTML = briefData.bullets.map(b => {

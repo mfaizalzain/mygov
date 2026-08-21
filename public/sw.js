@@ -255,7 +255,7 @@
    prose, brief, holiday row, two-card travel skeleton), Trend Radar ships
    folded with the state mirrored server-side via the mygov_rf cookie, radar
    init moves off the critical boot path, marquee clone is inert. */
-const VERSION    = "mygov-v81";
+const VERSION    = "mygov-v82";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
