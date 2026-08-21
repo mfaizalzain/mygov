@@ -1784,7 +1784,7 @@ async function loadFinance(){
   /* Each month has five rows (start/low/high/avg/end); chart the monthly
      average of Bank Negara's daily reference rates. */
   const avg = (fx || []).filter(r => r.indicator === "avg")
-    .map(r => [r.date, r.usd, r.gbp, r.eur, r.sgd, r.idr])
+    .map(r => [r.date, r.usd, r.gbp, r.eur, r.sgd, r.idr, r.cny, r.jpy, r.thb, r.aud])
     .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   /* PayNet's monthly instruments, compacted to per-instrument columns. */
   const pay = { months: [], value: {}, volume: {} };
@@ -1801,7 +1801,7 @@ async function loadFinance(){
     fx: avg,
     fxLatest, fxPrev,
     /* Same column order as the monthly rows, so one painter serves both. */
-    fxd: (fxd || []).map(r => [r.date, r.usd, r.gbp, r.eur, r.sgd, r.idr])
+    fxd: (fxd || []).map(r => [r.date, r.usd, r.gbp, r.eur, r.sgd, r.idr, r.cny, r.jpy, r.thb, r.aud])
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
     fpx: (fpx || []).map(r => [r.date, r.value, r.volume])
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),

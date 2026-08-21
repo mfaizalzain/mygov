@@ -247,8 +247,11 @@
    They were absent, so the SW served them cache-first and a returning
    visitor's exchange-rate card stayed on the copy their first visit cached -
    the 2026-08-10 slow.json regression again, on the bundle finance moved to.
-   The bump also evicts the stale copies already sitting in v77's shell. */
-const VERSION    = "mygov-v78";
+   The bump also evicts the stale copies already sitting in v77's shell.
+   v79: the live FX fallback path (used when KV is cold, e.g. a deploy window)
+   now keeps all 9 currencies (cny/jpy/thb/aud were truncated to 6 columns,
+   blanking those lines in the chart until the next KV push). */
+const VERSION    = "mygov-v79";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);
