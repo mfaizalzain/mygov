@@ -759,6 +759,7 @@ function rerenderAll(){
      language switch is not. Clearing the memo makes the next call rebuild. */
   tincSlug = undefined;
   try { renderTrafficIncidents(); } catch {}
+  try { enhanceTables(); } catch {}
   if (slowData) try { renderHolWidget(); } catch {}
   relabelAI();
   relabelShare();
@@ -984,6 +985,122 @@ function sortable(table, getRows, render){
     th.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); go(); } };
   });
 }
+
+/* Give a freshly rendered card's tables Phase-2 powers. Only the card's MAIN
+   table gets the CSV chip (sub-tables inside <details> stay quiet); every
+   table with 2+ columns becomes sortable. Idempotent - re-renders re-run it. */
+function enhanceTables(scope){
+  (scope || document).querySelectorAll(".card").forEach(card => {
+    const table = card.querySelector(".tw table, table");
+    if (!table) return;
+    makeSortable(table);
+    if (card.querySelector(".csv-btn")) return;
+    const right = card.querySelector(".card-h .right");
+    if (!right || table.rows.length < 3) return;
+    const b = document.createElement("button");
+    b.className = "csv-btn";
+    b.type = "button";
+    b.textContent = T("Copy CSV");
+    b.setAttribute("aria-label", T("Copy this table as CSV"));
+    right.appendChild(b);
+  });
+}
+
+/* Phase-2 interactivity: make ANY table sortable without touching its render
+   function. DOM-based (the three bespoke sortable() call sites keep their
+   richer behaviour): first click sorts ascending, second descending, third
+   restores the rendered order. Numeric columns are detected from the .num
+   class already on th elements; cells are compared numerically when both
+   sides parse, otherwise naturally. Keyboard and aria-sort included. */
+function makeSortable(table){
+  if (!table || table.dataset.sortable) return;
+  /* The three bespoke sortable() call sites attach their own richer handlers;
+     running both would fight over aria-sort and double-sort every click. */
+  if (table.querySelector("th.sortable")) return;
+  const headRow0 = table.tHead && table.tHead.rows[0];
+  if (!headRow0 || !table.tBodies[0] || table.tBodies[0].rows.length < 2) return;
+  table.dataset.sortable = "1";
+  const headRow = headRow0;
+  const cols = [...headRow.cells];
+  if (cols.length < 2) return;
+  /* Numeric detection from CONTENT, not markup: renderers rarely tag .num,
+     so sample up to 12 rows per column - a column where every non-empty
+     cell parses as a number sorts numerically. */
+  const numeric = cols.map((c, i) => {
+    let saw = 0, num = 0;
+    for (const tr of [...table.tBodies[0].rows].slice(0, 12)){
+      const cell = tr.cells[i]; if (!cell) continue;
+      const t = (cell.getAttribute("data-sort") ?? cell.textContent).trim();
+      if (!t) continue;
+      saw++;
+      if (/^[\-+]?[\d.,]+\s*%?$/.test(t.replace(/[\u202f\u00a0 ]/g, ""))) num++;
+    }
+    return saw >= 2 && num === saw;
+  });
+  let col = -1, dir = 1;
+  const body = table.tBodies[0];
+  if (!body) return;
+  const initial = [...body.rows];
+  const apply = () => {
+    const rows = [...body.rows];
+    if (col >= 0){
+      const numCol = !!numeric[col] ||
+        !!(cols[col].classList && cols[col].classList.contains("num"));
+      const val = tr => {
+        const c = tr.cells[col];
+        if (!c) return "";
+        const b = c.getAttribute("data-sort") ?? c.textContent.trim();
+        return numCol ? parseFloat(b.replace(/[^\d.eE+-]/g, "")) : b;
+      };
+      rows.sort((a, b) => {
+        let x = val(a), y = val(b);
+        const nx = Number(x), ny = Number(y);
+        if (numCol || (!isNaN(nx) && !isNaN(ny) && x !== "" && y !== ""))
+          return (nx - ny) * dir || String(x).localeCompare(String(y)) * dir;
+        return String(x).localeCompare(String(y), undefined, { numeric:true }) * dir;
+      });
+      rows.forEach(tr => body.appendChild(tr));
+    } else {
+      initial.forEach(tr => body.appendChild(tr));
+    }
+    cols.forEach((c, i) => {
+      c.removeAttribute("aria-sort");
+      c.classList.toggle("sorted", i === col);
+      c.classList.toggle("desc", i === col && dir === -1);
+    });
+    if (col >= 0) cols[col].setAttribute("aria-sort", dir === 1 ? "ascending" : "descending");
+  };
+  cols.forEach((c, i) => {
+    if (c.tagName !== "TH") return;
+    c.classList.add("can-sort");
+    if (!c.hasAttribute("tabindex")){ c.setAttribute("tabindex", "0"); c.setAttribute("role", "button"); }
+    const go = () => { dir = i === col ? -dir : 1; col = i === col && dir === 1 ? -1 : i; apply(); };
+    c.addEventListener("click", go);
+    c.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); go(); } });
+  });
+}
+/* Sortable hint: a caret appears on hover/focus only, so tables stay quiet. */
+
+/* Copy a card's table as CSV. One delegated listener covers every card,
+   including ones rendered later; the clipboard write keeps a toast fallback
+   like shareCopy does. */
+document.addEventListener("click", async e => {
+  const btn = e.target.closest && e.target.closest(".csv-btn");
+  if (!btn) return;
+  const card = btn.closest(".card");
+  const table = card && (card.querySelector("table:not([hidden])") ||
+                         document.getElementById(btn.dataset.csvTable || ""));
+  if (!table){ toast(T("Nothing to copy")); return; }
+  const csv = [...table.querySelectorAll("tr")]
+    .filter(tr => !tr.closest("[hidden]") && tr.offsetParent !== null)
+    .map(tr => [...tr.cells]
+      .map(c => '"' + c.textContent.trim().replace(/[\u2191\u2193\u2195]/g, "").replace(/\s+/g, " ").replace(/"/g, '""') + '"')
+      .join(",")).join("\n");
+  try {
+    await navigator.clipboard.writeText(csv);
+    toast(T("Copied as CSV"));
+  } catch { toast(T("Could not copy - select the address bar instead")); }
+});
 
 /* ════════════════════════════ Details Persistence ════════════════════════════ */
 const DETAILS_KEY = "mygov.details.v1";
@@ -2031,7 +2148,10 @@ function renderBrief(){
     /* Only link to a section that exists - the model picks `sec` from a list
        in the prompt, and a typo there must not produce a dead anchor. */
     const target = b.sec && document.getElementById(b.sec) ? b.sec : null;
-    return `<li>${target ? `<a href="#${esc(target)}">${text}</a>` : text}</li>`;
+    /* Severity glyph: warn/err recolour the bullet dot when the collector
+       tags it; anything else keeps the calm accent dot. */
+    const tone = b.tone === "warn" || b.tone === "err" ? " " + b.tone : "";
+    return `<li class="${tone.trim()}">${target ? `<a href="#${esc(target)}">${text}</a>` : text}</li>`;
   }).join("");
   band.removeAttribute("hidden");
 }
@@ -2738,6 +2858,89 @@ function chart(id, cfg){
   cv.dataset.charted = "1";
   charts[id] = new Chart(cv.getContext("2d"), cfg);
 }
+/* Phase-2: ONE crosshair shared by every chart. A single absolutely-
+   positioned line plus readout chip live in each .chart wrapper on demand;
+   pointermove finds the nearest index via Chart.js scale math. No per-chart
+   config, no extra listeners per chart beyond one delegated move handler. */
+const xhState = new WeakMap();   // canvas -> last index, for bar-row sync
+function ensureCrosshair(cv){
+  const wrap = cv.closest(".chart");
+  if (!wrap) return null;
+  let el = wrap.querySelector(":scope > .xhair");
+  if (!el){
+    el = document.createElement("div");
+    el.className = "xhair";
+    el.innerHTML = '<i></i><span class="xhair-tip"></span>';
+    wrap.appendChild(el);
+  }
+  return el;
+}
+function chartIndexAt(cv, clientX){
+  const ch = charts[cv.id]; if (!ch) return -1;
+  const xs = ch.scales && ch.scales.x; if (!xs) return -1;
+  const rect = cv.getBoundingClientRect();
+  const x = clientX - rect.left;
+  // prefer a real category lookup; fall back to even slicing
+  let idx = -1;
+  try {
+    const v = xs.getValueForPixel(x);
+    idx = ch.data.labels ? ch.data.labels.indexOf(v) : -1;
+  } catch {}
+  if (idx < 0){
+    const area = ch.chartArea; if (!area) return -1;
+    const n = (ch.data.labels || []).length; if (!n) return -1;
+    idx = Math.round((x - area.left) / ((area.right - area.left) / Math.max(1, n - 1)));
+  }
+  return idx >= 0 && idx < (ch.data.labels || []).length ? idx : -1;
+}
+function paintCrosshair(cv, idx){
+  const el = ensureCrosshair(cv); if (!el) return;
+  const ch = charts[cv.id];
+  const wrap = cv.closest(".chart");
+  const tip = el.querySelector(".xhair-tip");
+  if (idx < 0 || !ch || !ch.chartArea){ el.classList.remove("on"); return; }
+  const xs = ch.scales.x, ys = ch.scales.y;
+  const px = xs.getPixelForValue(ch.data.labels[idx]);
+  const rel = px / cv.getBoundingClientRect().width * 100;
+  el.style.setProperty("--x", rel + "%");
+  el.classList.add("on");
+  // readout: label + every dataset value at this index
+  const parts = [String(ch.data.labels[idx])];
+  (ch.config.type === "bar" ? ch.data.datasets.slice().reverse() : ch.data.datasets)
+    .forEach(ds => {
+      const v = ds.data[idx];
+      if (v == null) return;
+      parts.push(ds.label ? ds.label + " " + nf(v, Math.abs(v) < 10 ? 2 : 0) : nf(v, Math.abs(v) < 10 ? 2 : 0));
+    });
+  if (tip) tip.textContent = parts.join(" · ");
+}
+let xhRAF = 0;
+document.addEventListener("pointermove", e => {
+  const cv = e.target.closest && e.target.closest(".chart canvas");
+  clearTimeout(xhRAF);
+  xhRAF = setTimeout(() => {
+    document.querySelectorAll(".chart .xhair.on").forEach(x => {
+      if (!x.parentElement.contains(e.target)) x.classList.remove("on");
+    });
+    if (!cv) return;
+    const idx = chartIndexAt(cv, e.clientX);
+    paintCrosshair(cv, idx);
+    /* bar <-> table sync: highlight the matching row while hovering a bar */
+    const syncSel = cv.dataset.syncRows;
+    if (syncSel && charts[cv.id] && charts[cv.id].config.type === "bar"){
+      const tbl = document.getElementById(syncSel);
+      if (tbl){
+        tbl.querySelectorAll("tr.hl").forEach(tr => tr.classList.remove("hl"));
+        const trs = tbl.querySelectorAll("tbody tr");
+        if (trs[idx]) trs[idx].classList.add("hl");
+      }
+    }
+  }, 40);
+}, { passive:true });
+document.addEventListener("pointerleave", () => {
+  document.querySelectorAll(".chart .xhair.on").forEach(x => x.classList.remove("on"));
+}, true);
+
 /** Vertical gradient fill under a line, built from the canvas context. */
 function grad(ctx, area, hex){
   if (!area) return "transparent";
@@ -6301,7 +6504,7 @@ function renderTourism(d){
     <div class="card">
       <div class="card-h"><h4>${T("Arrivals by country")} · ${isYTD ? "YTD " + (d.asOf ? d.asOf.year : "2026") : esc(d.asOf ? d.asOf.label : "")}</h4>
         <span class="sub">${isYTD ? T("ranked by YTD visitor arrivals") : T("ranked by monthly arrivals")}</span></div>
-      <div class="card-b"><div class="tw tw-sticky"><table>
+      <div class="card-b"><div class="tw tw-sticky"><table id="tourism-top-table">
         <thead><tr>
           <th class="num">#</th><th>${T("Country")}</th>
           <th class="num">${esc(yearCol)}</th>
@@ -6325,6 +6528,11 @@ function renderTourism(d){
     </div>`;
 
   const cData = top10.map(r => isYTD ? r.ytd26 : r.cur);
+  /* hovering a bar highlights its row in the top-10 table beside it */
+  queueMicrotask(() => {
+    const cv = document.getElementById("tourism-chart");
+    if (cv) cv.dataset.syncRows = "tourism-top-table";
+  });
   chart("tourism-chart", {
     type: "bar",
     data: {
@@ -9771,6 +9979,7 @@ async function loadSection(id, force){
     if (cached){
       try {
         cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
+        try { enhanceTables(document.getElementById(id)); } catch {}
         mountMetricExplainers();
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
         dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
@@ -9787,6 +9996,7 @@ async function loadSection(id, force){
       const data = await cfg.load();
       const rec = cacheSet(id, data);
       cfg.render(data); if (cfg.after) cfg.after(data);
+      try { enhanceTables(document.getElementById(id)); } catch {}
       mountMetricExplainers();
       loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
       dataDate[id] = cfg.asOf ? cfg.asOf(data) : null;
