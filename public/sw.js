@@ -254,8 +254,13 @@
 /* v80: Phase-0 CLS/a11y pass - hero slots ship pre-rendered skeletons (wx
    prose, brief, holiday row, two-card travel skeleton), Trend Radar ships
    folded with the state mirrored server-side via the mygov_rf cookie, radar
-   init moves off the critical boot path, marquee clone is inert. */
-const VERSION    = "mygov-v83";
+   init moves off the critical boot path, marquee clone is inert.
+   v83: Phase-2 interactivity - sortable tables, CSV copy, chart crosshair
+   (see the v83 note below).
+   v84: Phase-3 - .wx-t-min min-temp color uses --fg-2 (the old #93a0b6
+   failed 2.26:1 on the light theme's tinted today-card; --fg-2 passes
+   5.91:1 dark / 6.62:1 light on that same background). */
+const VERSION    = "mygov-v84";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

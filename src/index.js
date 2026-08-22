@@ -1046,7 +1046,13 @@ export default {
      * it into the served HTML so crawlers see fresh values while git stays
      * human-only. Falls back to whatever is in the committed file. */
     if (url.pathname === "/" || url.pathname === "/index.html") {
-      const snap = await env.MYGOV_DATA.get("seo_snap");
+      /* The two KV reads below are independent - fetch them in parallel so
+         the critical path is one KV round-trip, not two sequential ones
+         (~50-100ms off TTFB on the homepage, which is the LCP element). */
+      const [snap, insightsRaw] = await Promise.all([
+        env.MYGOV_DATA.get("seo_snap"),
+        env.MYGOV_DATA.get("insights"),
+      ]);
       if (snap != null) {
         /* Fetch the ASSET for "/" even when asked for "/index.html": the
          * static-assets handler answers /index.html with a 307 to "/", and
@@ -1102,9 +1108,8 @@ export default {
              the client would have hidden it anyway. */
           let briefOk = false;
           try {
-            const ins = await env.MYGOV_DATA.get("insights");
-            if (ins){
-              const g = (JSON.parse(ins).generated) || "";
+            if (insightsRaw){
+              const g = (JSON.parse(insightsRaw).generated) || "";
               const t = Date.parse(g + "T00:00:00Z");
               briefOk = !isNaN(t) && (Date.now() - t) < 3 * 86400000;
             }
