@@ -25,45 +25,20 @@ let LANG = "en", themeMode = "system", textLarge = false;
 const I18N = {
   /* Keys that are not themselves the English text need an explicit source. */
   en: {
+    "footerB":" (MET Malaysia · MOF · DOSM · BNM · MoH · Immigration · KTMB · Prasarana). Reverse geocoding by ",
     "hero":"Weather, fuel prices, warnings and transport updates for your area - fetched live from the Malaysian Government Open API.",
     "footerA":"Data: ",
-    "footerB":" (MET Malaysia · MOF · DOSM · BNM · MoH · Immigration · KTMB · Prasarana). Reverse geocoding by ",
     "footerC":" contributors. Data is fetched directly by your browser and cached locally for 15 minutes to respect the API's 4-requests-per-minute limit. No analytics, no tracking.",
     "bmc":"Support this project on Buy Me a Coffee",
-    /* applyLang() overwrites every [data-i18n] node with T(key), and T falls
-       back to the key itself - so an abstract key with no `en` entry renders
-       literally ("flood-desc") for English readers while BM looks fine. */
     "flood-desc":"Water level stations currently at danger, warning or alert - live telemetry from the Department of Irrigation and Drainage.",
     "flood-how":"JPS publishes its live gauge telemetry as a static JSON feed on the public info banjir site. Only stations whose gauge reported within the last 24 hours count as current - the feed also carries dead gauges with readings months old, and those are excluded so the map shows today's risk only. Each station's status is its water level against its own danger/warning/alert thresholds.",
     "verified_claim":"Verified claim",
     "misleading":"Misleading",
     "no_check_found":"Not checked yet",
-    "Claim":"Claim",
-    "The facts":"The facts",
     "Verified":"Verified", "Debunked":"Debunked", "Unchecked":"Unchecked",
-    "No trending issues match this filter.":"No trending issues match this filter.",
-    "LRT & MRT network":"LRT & MRT network",
-    "Rapid KL rail - click a station to open it on the map":"Rapid KL rail - click a station to open it on the map",
-    "stns":"stns",
-    "Use two fingers to pan map":"Use two fingers to pan map",
-    "Search bus route":"Search bus route",
-    "Search bus route (e.g. 750, T801, 101)...":"Search bus route (e.g. 750, T801, 101)...",
-    "matching":"matching",
-    "Quick hubs":"Quick hubs",
-    "Copy CSV":"Copy CSV",
-    "Copied":"Copied",
-    "rows as CSV":"rows as CSV",
-    "Now":"Now",
-    "Bookmark location":"Bookmark location",
-    "Remove bookmark":"Remove bookmark",
-    "Saved places":"Saved places",
-    "Pin section":"Pin section",
-    "Unpin section":"Unpin section",
-    "Pin":"Pin",
-    "Unpin":"Unpin",
-    "Show all":"Show all",
-    "Show top":"Show top",
-    "routes":"routes",
+    /* applyLang() overwrites every [data-i18n] node with T(key), and T falls
+       back to the key itself - so an abstract key with no `en` entry renders
+       literally ("flood-desc") for English readers while BM looks fine. */
   },
   ms: {
   /* Groceries (PriceCatcher) */
@@ -76,7 +51,6 @@ const I18N = {
   "Copy CSV":"Salin CSV",
   "Copied":"Disalin",
   "rows as CSV":"baris sebagai CSV",
-  "Now":"Kini",
   "Bookmark location":"Tandakan lokasi",
   "Remove bookmark":"Buang tanda",
   "Saved places":"Lokasi disimpan",
@@ -87,7 +61,6 @@ const I18N = {
   "Show all":"Tunjukkan semua",
   "Show top":"Tunjukkan teratas",
   "routes":"laluan",
-  "Cheapest district":"Daerah termurah", "Most expensive district":"Daerah termahal",
   "Basket size":"Saiz bakul", "items · priced every month":"barangan · berharga setiap bulan",
   "since":"sejak", "Grocery basket over time":"Bakul runcit mengikut masa",
   "equal-weighted, not CPI":"pemberat sama rata, bukan IHP",
@@ -195,7 +168,6 @@ const I18N = {
   "water level vs station thresholds":"aras air vs ambang stesen",
   "Last feed update":"Kemaskini suapan terakhir", "JPS telemetry":"Telemetri JPS",
   "Flood risk map":"Peta risiko banjir", "Danger red · Warning amber · Alert yellow":"Bahaya merah · Amaran amber · Waspada kuning",
-  "Station":"Stesen", "River":"Sungai", "Water level":"Aras air", "Trend":"Trend",
   "Last reading":"Bacaan terakhir", "stations at risk":"stesen berisiko",
   "danger":"bahaya",
   "Flood":"Banjir", "Flood Risk":"Risiko Banjir",
@@ -390,7 +362,6 @@ const I18N = {
  "seats counted":"kerusi dikira", "constituencies with results":"kawasan yang ada keputusan",
  "leading party":"parti peneraju", "seats won":"kerusi dimenangi",
  "Seats by party":"Kerusi mengikut parti", "Election category":"Kategori pilihan raya",
- "Parliament":"Parlimen", "State":"Negeri", "By-election":"Pilihan Raya Kecil",
  "Seats":"Kerusi", "Constituency":"Kawasan", "Polling day":"Hari mengundi",
  "Winner":"Pemenang", "Majority":"Majoriti", "Vote share":"Kongsi undi",
  "each seat's vote share by party colour":"kongsi undi setiap kerusi mengikut warna parti",
@@ -529,7 +500,6 @@ const I18N = {
   "Seat level":"Peringkat kerusi",
   "Seat":"Kerusi",
   "Citizens":"Warganegara",
-  "Median income":"Pendapatan median",
   "Poverty":"Kemiskinan",
   "Gini":"Gini",
   "Participation":"Penyertaan",
@@ -10643,6 +10613,14 @@ function relabelShare(){
   }
 }
 
+/* Phase-3: run a bit of boot work when the main thread goes idle. The eager
+   weather/fuel window is the contended one - anything that cannot change
+   what first paint looks like belongs after it. setTimeout fallback for
+   browsers without requestIdleCallback (same pattern as warmLive). */
+const whenIdle = (fn, timeout) => {
+  if ("requestIdleCallback" in window) requestIdleCallback(fn, { timeout });
+  else setTimeout(fn, timeout ? Math.min(timeout / 2, 900) : 800);
+};
 function boot(){
   loadPrefs();
   buildShell();
@@ -10667,7 +10645,7 @@ function boot(){
   if ("requestIdleCallback" in window) requestIdleCallback(initRadarCarousel, { timeout: 2500 });
   else setTimeout(initRadarCarousel, 800);
   initInputClearHandlers();
-  initDetailsPersistence();
+  whenIdle(initDetailsPersistence, 2000);
   /* Global table copy delegation */
   document.addEventListener("click", e => {
     const btn = e.target.closest(".btn-csv");
@@ -10746,18 +10724,22 @@ function boot(){
      cached after the first section loads it. */
   initHolPanels();
   readSlow().then(() => { renderHolWidget(); applySeason(); });
-  /* Fire-and-forget: availability() can block on a disk check, and nothing
-     else in boot() depends on the result. */
-  mountShare();
-  applySectionOrdering();
-  mountPins();
-  mountAI().catch(() => {});
+  /* Fire-and-forget: nothing else in boot() depends on the result, and no
+     visitor has ever needed the Share button within the first second. */
+  whenIdle(mountShare, 2200);
+  /* Ordering (moves sections per saved prefs) and nav pins are re-layout
+     work; neither participates in first paint. */
+  whenIdle(applySectionOrdering, 2000);
+  whenIdle(mountPins, 2000);
+  /* Fire-and-forget + non-critical: availability() can block on a disk
+     check. Off the critical path entirely. */
+  whenIdle(() => { mountAI().catch(() => {}); }, 3000);
   /* Live traffic marquee: loads independently of the sections - it is a
      nav-adjacent strip, not a section sub-block. */
   loadTrafficMarquee().catch(() => {});
   /* Structured traffic incidents panel: same independence - it sits under the
      marquee and above the sections, and its region choice is its own. */
-  loadTrafficIncidents().catch(() => {});
+  whenIdle(() => { loadTrafficIncidents().catch(() => {}); }, 2500);
   setInterval(tick, 30000);
 }
 /* boot() used to wait for the deferred Chart.js global before running - up to

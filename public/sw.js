@@ -260,7 +260,7 @@
    v84: Phase-3 - .wx-t-min min-temp color uses --fg-2 (the old #93a0b6
    failed 2.26:1 on the light theme's tinted today-card; --fg-2 passes
    5.91:1 dark / 6.62:1 light on that same background). */
-const VERSION    = "mygov-v84";
+const VERSION    = "mygov-v85";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

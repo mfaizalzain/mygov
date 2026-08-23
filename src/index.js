@@ -1045,6 +1045,20 @@ export default {
      * collector writes the snapshot to KV (`seo_snap`); the Worker splices
      * it into the served HTML so crawlers see fresh values while git stays
      * human-only. Falls back to whatever is in the committed file. */
+    /* Minified shell assets: tools/minify_assets.sh generates app.min.js /
+       styles.min.css from the hand-edited sources. Serve the .min copy when
+       it exists (it ships in the same deploy), else fall back to source -
+       local dev without a build keeps working either way. */
+    const MINIFIED = {
+      "/app.js": "/app.min.js",
+      "/styles.css": "/styles.min.css",
+    };
+    if (MINIFIED[url.pathname]) {
+      const minRes = await env.ASSETS.fetch(
+        new Request(new URL(MINIFIED[url.pathname], request.url)));
+      if (minRes.ok) return minRes;
+      return env.ASSETS.fetch(new Request(request));
+    }
     if (url.pathname === "/" || url.pathname === "/index.html") {
       /* The two KV reads below are independent - fetch them in parallel so
          the critical path is one KV round-trip, not two sequential ones
