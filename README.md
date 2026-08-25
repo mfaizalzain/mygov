@@ -1016,8 +1016,10 @@ Skip link, `:focus-visible` outlines throughout, `aria-label`s on icon-only
 controls, keyboard-operable sortable table headers (`Enter`/`Space`),
 `aria-current` on the active nav item, `aria-sort` on sorted columns, and
 real `<button>`s for selectable weather rows with an `aria-live` region
-announcing location changes. `prefers-reduced-motion` is honoured - it disables
-chart animations, counter count-ups and smooth scrolling. Every chart has a
+announcing location changes. Scroll-reveal animations use transform/opacity only
+so they never shift layout, and KPI sparklines are decorative inline SVG marked
+`aria-hidden`. `prefers-reduced-motion` is honoured - it disables
+chart animations, counter count-ups, scroll-reveal transitions and smooth scrolling. Every chart has a
 "View data table" alternative for users who can't use tooltips. Body text is
 `#e8ecf4` on `#0a0c10` (~16:1 contrast); the dimmest supporting text stays
 above 4.5:1 in both themes.

@@ -730,6 +730,7 @@ function rerenderAll(){
   tincSlug = undefined;
   try { renderTrafficIncidents(); } catch {}
   try { enhanceTables(); } catch {}
+  try { initReveal(); } catch {}
   if (slowData) try { renderHolWidget(); } catch {}
   relabelAI();
   relabelShare();
@@ -2828,6 +2829,36 @@ function chart(id, cfg){
   cv.dataset.charted = "1";
   charts[id] = new Chart(cv.getContext("2d"), cfg);
 }
+/* Phase-4: scroll-reveal — cards and KPI blocks fade-and-rise once when they
+   first enter the viewport. Transform/opacity only, so layout never shifts
+   (CLS-safe); prefers-reduced-motion skips the effect entirely; the .rv-init
+   hidden state is applied ONLY to elements already below the fold, so
+   above-the-fold content paints immediately and skeletons are untouched. */
+function initReveal(){
+  if (reduceMotion() || !("IntersectionObserver" in window)) return;
+  const vh = window.innerHeight || 800;
+  const els = document.querySelectorAll(".card, .kpi, .chips");
+  let armed = 0;
+  els.forEach(el => {
+    if (el.dataset.rv) return;
+    el.dataset.rv = "1";
+    /* Only elements comfortably below the fold get the pre-hidden state;
+       everything else must paint instantly (no artificial entrance delay). */
+    if (el.getBoundingClientRect().top > vh * 0.9){
+      el.classList.add("rv-init"); armed++;
+    }
+  });
+  if (!armed) return;
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("rv-in");
+      io.unobserve(e.target);
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+  document.querySelectorAll(".rv-init:not(.rv-in)").forEach(el => io.observe(el));
+}
+
 /* Phase-2: ONE crosshair shared by every chart. A single absolutely-
    positioned line plus readout chip live in each .chart wrapper on demand;
    pointermove finds the nearest index via Chart.js scale math. No per-chart
@@ -7004,7 +7035,8 @@ function renderPlaces(g){
     <div class="grid g4 mb">
       <div class="kpi"><div class="lab">${T("Population")}</div>
         <div class="val" data-count="${cur != null ? cur * 1000 : 0}" data-dec="0">0</div>
-        <div class="sub">${yr} · ${T("estimates")}</div></div>
+        ${sparkline(trend)}
+        <div class="sub">${yr} · ${T("estimates")} · ${trend.length} ${T("years")}</div></div>
       <div class="kpi"><div class="lab">${T("Year-on-year")}</div>
         <div class="val" style="font-size:22px">${yoy == null ? "-" :
           `<span class="${yoy > 0 ? "down" : "up"}">${yoy > 0 ? "▲" : "▼"} ${nf(Math.abs(yoy), 2)}%</span>`}</div>
@@ -8308,6 +8340,31 @@ function animateCounters(root){
   root.querySelectorAll("[data-count]").forEach(n => {
     countTo(n, Number(n.dataset.count), Number(n.dataset.dec || 0));
   });
+}
+
+/* Phase-4: KPI sparklines — an inline SVG polyline of the underlying series,
+   drawn under a KPI value. Pure SVG string, no Chart.js instance, no fetch
+   beyond what its section already loaded. Returns "" for degenerate input. */
+function sparkline(series, opts){
+  opts = opts || {};
+  const data = (series || []).filter(v => v != null && isFinite(v));
+  if (data.length < 3) return "";
+  const w = opts.w || 96, h = opts.h || 26, pad = 2;
+  const min = Math.min(...data), max = Math.max(...data);
+  const span = (max - min) || 1;
+  const pts = data.map((v, i) => {
+    const x = pad + i / (data.length - 1) * (w - pad * 2);
+    const y = h - pad - (v - min) / span * (h - pad * 2);
+    return x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
+  const up = data[data.length - 1] >= data[0];
+  const col = opts.color || (up ? "var(--ok)" : "var(--danger)");
+  const last = pts.split(" ").pop().split(",");
+  const dot = `<circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="${col}"/>`;
+  return `<svg class="spark ${opts.cls || ""}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"
+    aria-hidden="true" focusable="false"><polyline points="${pts}"
+    fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round"
+    stroke-linecap="round"/>${dot}</svg>`;
 }
 
 /* ════════════════════════════ trend radar carousel ════════════════════════════ */
@@ -9950,6 +10007,7 @@ async function loadSection(id, force){
       try {
         cfg.render(cached.d); if (cfg.after) cfg.after(cached.d);
         try { enhanceTables(document.getElementById(id)); } catch {}
+      try { initReveal(); } catch {}
         mountMetricExplainers();
         loaded.add(id); stamps[id] = cached.t; dataMap[id] = cached.d;
         dataDate[id] = cfg.asOf ? cfg.asOf(cached.d) : null;
@@ -9967,6 +10025,7 @@ async function loadSection(id, force){
       const rec = cacheSet(id, data);
       cfg.render(data); if (cfg.after) cfg.after(data);
       try { enhanceTables(document.getElementById(id)); } catch {}
+      try { initReveal(); } catch {}
       mountMetricExplainers();
       loaded.add(id); stamps[id] = rec.t; dataMap[id] = data;
       dataDate[id] = cfg.asOf ? cfg.asOf(data) : null;

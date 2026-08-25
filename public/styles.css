@@ -516,7 +516,7 @@ nav.sections a[aria-current="true"]{color:var(--fg);background:var(--surface-2);
    disagree. Hidden at zero - a "0" badge reads as an alert at a glance. */
 .nav-badge{min-width:17px;height:17px;padding:0 5px;border-radius:99px;flex:none;
   display:inline-flex;align-items:center;justify-content:center;
-  background:var(--danger);color:#fff;font-size:10.5px;font-weight:700;
+  background:var(--danger);color:#3b0a0a;font-size:10.5px;font-weight:700;
   font-family:var(--mono);line-height:1}
 /* The slot is reserved even at zero so an arriving badge never widens its
    nav item and nudges its neighbours (measured layout shift). Visibility is
@@ -1918,3 +1918,11 @@ html[data-text="large"] .ai-panel{font-size:15px}
 .hv-bar{height:10px;border-radius:3px;background:rgba(128,128,128,.14);overflow:hidden}
 .hv-bar i{display:block;height:100%;border-radius:3px}
 .hv-num{font-size:12.5px;font-family:var(--mono);color:var(--fg-2);text-align:right}
+
+/* ── Phase-4: scroll-reveal + sparklines ─────────────────────────────────── */
+.rv-init{opacity:0;transform:translateY(14px)}
+.rv-init.rv-in{opacity:1;transform:none;
+  transition:opacity var(--t-slow) ease-out, transform var(--t-slow) cubic-bezier(.22,.9,.28,1)}
+@media (prefers-reduced-motion: reduce){ .rv-init{opacity:1;transform:none} }
+.spark{display:block;margin-top:4px}
+.spark polyline{opacity:.85}
