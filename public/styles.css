@@ -1926,3 +1926,8 @@ html[data-text="large"] .ai-panel{font-size:15px}
 @media (prefers-reduced-motion: reduce){ .rv-init{opacity:1;transform:none} }
 .spark{display:block;margin-top:4px}
 .spark polyline{opacity:.85}
+
+/* ── Phase-4b: Places state bubble map ─────────────────────────────────── */
+.mini-map{height:300px;border-radius:var(--r-sm);overflow:hidden;
+  border:1px solid var(--line)}
+@media (max-width:620px){ .mini-map{height:240px} }

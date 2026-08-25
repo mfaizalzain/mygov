@@ -272,6 +272,14 @@ host, not `storage.data.gov.my`):
   `hh_inequality_*`, `lfs_*` at both levels) *are* on the OpenAPI and come
   over the catalogue API.
 
+
+The Places explorer also renders a **state bubble map**: one Leaflet circle per
+state and territory, sized by population and coloured by median district
+household income (teal affluent through red strained). Clicking a bubble
+switches the explorer to that state. Coordinates are static rounded centroids;
+every figure comes from `geo.json`, which the section has already loaded - no
+extra requests.
+
 `tools/collect_geo.py` reads the Parquet with pandas/pyarrow (same deps as
 `collect_prices.py`) and writes `public/geo.json` (~150 KB) weekly -
 `.github/workflows/collect_geo.yml`, Monday 14:00 UTC. The dashboard's Places

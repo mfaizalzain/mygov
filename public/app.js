@@ -533,6 +533,7 @@ const I18N = {
   "No upcoming peak periods in the next 8 weeks.":"Tiada tempoh puncak dalam 8 minggu akan datang.",
   "Affluent vs poorest districts":"Daerah paling makmur vs termiskin",
   "median household income":"pendapatan isi rumah median",
+  "States at a glance":"Negeri sepintas lalu", "bubble size = population · colour = median income":"saiz gelembung = penduduk · warna = pendapatan sederhana",
   "Most affluent":"Paling makmur", "Poorest":"Termiskin",
   "income gap":"jurang pendapatan", "Top group":"Kumpulan teratas",
   "Ethnicity":"Etnik", "Male":"Lelaki", "Age":"Umur",
@@ -6930,6 +6931,7 @@ function initTravelCarousel(){
    geo.json is the weekly collector's output (tools/collect_geo.py): state
    trends and composition, districts, and parliament/DUN seats with per-seat
    socioeconomics. Values arrive in thousands of people, as published. */
+let placesMapInst = null;
 let placesState = "";
 let placesLevel = "parlimen";     // parlimen | dun
 let placesDQ = "", placesSQ = ""; // district / seat search terms
@@ -7069,6 +7071,11 @@ function renderPlaces(g){
       </div>
     </div>
     <div class="card mb">
+      <div class="card-h"><h4>${T("States at a glance")}</h4>
+        <span class="sub">${g.district.year} · ${T("bubble size = population · colour = median income")}</span></div>
+      <div class="card-b"><div id="places-map-host" class="mini-map"></div></div>
+    </div>
+    <div class="card mb">
       <div class="card-h"><h4>${T("Affluent vs poorest districts")}</h4>
         <span class="sub">${T("median household income")} · ${g.district.year}</span></div>
       <div class="card-b">
@@ -7162,6 +7169,7 @@ function renderPlaces(g){
   sortable($("#places-seat-table"), () => placesSeatRows(g), rows => paintPlacesSeats(g, rows));
   paintPlacesDistricts(g); paintPlacesSeats(g);
   paintPlacesCharts(g);
+  try { paintPlacesMap(g); } catch {}
   animateCounters($("#body-places"));
 }
 
@@ -8365,6 +8373,76 @@ function sparkline(series, opts){
     aria-hidden="true" focusable="false"><polyline points="${pts}"
     fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round"
     stroke-linecap="round"/>${dot}</svg>`;
+}
+
+/* Phase-4b: Places state map - a bubble map of Malaysia's states and
+   territories. Circle size encodes population, colour encodes median
+   district household income (teal affluent -> amber -> red strained).
+   Coordinates are static centroids (Nominatim, rounded); all figures come
+   from geo.json which the section has already fetched - no new requests.
+   Clicking a bubble switches the explorer to that state's chip. */
+const MY_STATE_COORDS = {
+  "Johor":[2.023,103.311], "Kedah":[5.810,100.672], "Kelantan":[5.402,102.064],
+  "Melaka":[2.329,102.288], "Negeri Sembilan":[2.783,102.193],
+  "Pahang":[3.617,102.599], "Perak":[4.812,100.980], "Perlis":[6.487,100.258],
+  "Pulau Pinang":[5.407,100.256], "Sabah":[5.426,117.033],
+  "Sarawak":[2.502,112.955], "Selangor":[3.208,101.304],
+  "Terengganu":[4.863,102.995], "W.P. Kuala Lumpur":[3.152,101.694],
+  "W.P. Labuan":[5.317,115.220], "W.P. Putrajaya":[2.938,101.692],
+};
+function incomeColor(inc){
+  if (inc == null) return "#94a3b8";
+  if (inc >= 8000) return "#2dd4bf";      /* --accent: affluent */
+  if (inc >= 6000) return "#34d399";      /* --ok */
+  if (inc >= 4500) return "#fbbf24";      /* --warn */
+  return "#f87171";                        /* --danger */
+}
+function placesStateRows(g){
+  const byState = {};
+  for (const d of g.district.list){
+    const a = byState[d.s] || (byState[d.s] = { p:0, inc:[], pov:[] });
+    a.p += d.p || 0;
+    if (d.inc != null) a.inc.push(d.inc);
+    if (d.pov != null) a.pov.push(d.pov);
+  }
+  return byState;
+}
+function paintPlacesMap(g){
+  const host = $("#places-map-host"); if (!host) return;
+  const mount = () => {
+    if (!window.L){ loadVendor("leaflet").then(mount).catch(() => {}); return; }
+    if (placesMapInst){ placesMapInst.remove(); placesMapInst = null; }
+    const map = L.map(host, { scrollWheelZoom:false })
+      .setView([3.9, 108.0], 6);
+    enableTouchFriendlyMap(map, host);
+    themedMaps.add(map);
+    themedTiles().addTo(map);
+    const byState = placesStateRows(g);
+    const pops = Object.values(byState).map(a => a.p).filter(v => v > 0);
+    const maxP = Math.max.apply(null, pops.concat([1]));
+    for (const [s, c] of Object.entries(MY_STATE_COORDS)){
+      const a = byState[s]; if (!a) continue;
+      const med = a.inc.length
+        ? a.inc.slice().sort((x,y) => x-y)[Math.floor(a.inc.length/2)] : null;
+      const r = 8 + Math.sqrt(a.p / maxP) * 22;
+      const m = L.circleMarker(c, {
+        radius:r, weight:1.5, color:"#0a0c10",
+        fillColor:incomeColor(med), fillOpacity:.75,
+      }).addTo(map);
+      m.bindPopup(`<b>${esc(s)}</b><br>` +
+        `${T("Population")}: ${nf(a.p * 1000)}<br>` +
+        `${T("median household income")}: ${med == null ? "-" : "RM " + nf(med, 0)}` +
+        (a.pov.length ? `<br>${T("poverty")}: ${nf(Math.max.apply(null, a.pov), 1)}%` : ""));
+      m.on("click", () => {
+        placesState = s;
+        renderPlaces(g);
+        document.getElementById("population")?.scrollIntoView({ behavior:"smooth" });
+      });
+    }
+    placesMapInst = map;
+  };
+  if (whenVisible(host, "placesMapWait", mount)) return;
+  mount();
 }
 
 /* ════════════════════════════ trend radar carousel ════════════════════════════ */
@@ -9581,7 +9659,7 @@ function paintFloodMap(d){
   const el = document.getElementById("flood-map"); if (!el) return;
   if (whenVisible(el, "mapWait", () => paintFloodMap(d))) return;
   if (!window.L){ loadVendor("leaflet").then(() => paintFloodMap(d)).catch(() => {}); return; }
-  if (floodMap){ floodMap.remove(); floodMap = null; }
+if (floodMap){ floodMap.remove(); floodMap = null; }
   const map = L.map(el, { scrollWheelZoom:false }).setView([3.5, 102.5], 6);
   enableTouchFriendlyMap(map, el);
   themedMaps.add(map);
