@@ -80,14 +80,17 @@ def parse_latest(md):
         if "am" in dm.group(6).lower() and hh == 12:
             hh = 0
         # Posted times are MYT (UTC+8, no DST). MON is 0-based (mirrors the
-        # worker's JS map) but datetime months are 1-based - +1 here. The
-        # datetime is built in UTC (hour - 8), so epoch must come from
-        # calendar.timegm - .timestamp() would reinterpret it as local time.
+        # worker's JS map) but datetime months are 1-based - +1 here. Build the
+        # timestamp in MYT, then subtract a timedelta(hours=8) so the hour and
+        # CALENDAR DAY roll together. The old inline `hh - 8` passed a negative
+        # hour (e.g. 4am MYT -> -4) and crashed with "hour must be in 0..23" on
+        # any early-morning alert (12:00am-7:59am MYT).
         import calendar
         import datetime as dt
-        ts = calendar.timegm(dt.datetime(
+        myt = dt.datetime(
             int(dm.group(3)), MON[dm.group(1).lower()] + 1, int(dm.group(2)),
-            hh - 8, int(dm.group(5))).timetuple())
+            hh, int(dm.group(5)))
+        ts = calendar.timegm((myt - dt.timedelta(hours=8)).timetuple())
     return {
         "title": tm.group(1).strip(),
         "url": tm.group(2).strip(),
