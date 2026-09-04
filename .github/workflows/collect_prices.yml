@@ -49,24 +49,38 @@ jobs:
       - name: Validate output
         run: |
           python3 - <<'PY'
-          import json, sys
+          import json, sys, math
           d = json.load(open('public/prices.json'))
           nat = (d.get('basket') or {}).get('national') or []
+          partial = d.get('partial')
           errs = []
           if d['basket']['n'] < 80:
               errs.append(f"basket too small: {d['basket']['n']} items")
-          if len(nat) < 6 or any(v is None for v in nat):
-              errs.append(f"index has gaps: {nat}")
-          elif not all(40 < v < 250 for v in nat):
-              errs.append(f"index out of plausible range: {nat}")
+          # Allow AT MOST one trailing null: the current month is still being
+          # collected and is legitimately incomplete (the collector flags it via
+          # `partial`). Any null before the end, or more than one, is a real gap.
+          real_nat = [v for v in nat if v is not None]
+          null_idx = [i for i, v in enumerate(nat) if v is None]
+          if len(nat) < 6:
+              errs.append(f"index too short: {nat}")
+          elif null_idx and null_idx != list(range(len(nat) - len(null_idx), len(nat))):
+              errs.append(f"index has internal gaps: {nat}")
+          elif len(null_idx) > 1:
+              errs.append(f"index has more than one null: {nat}")
+          elif not real_nat:
+              errs.append(f"index empty: {nat}")
+          elif not all(40 < v < 250 for v in real_nat):
+              errs.append(f"index out of plausible range: {real_nat}")
           if len(d.get('districts') or {}) < 100:
               errs.append(f"only {len(d.get('districts') or {})} districts")
           if len(d.get('items') or []) < 80:
               errs.append(f"only {len(d.get('items') or [])} items")
           if errs:
               sys.exit('prices: validation failed -> ' + '; '.join(errs))
+          last_ok = real_nat[-1] if real_nat else None
           print(f"ok: {d['basket']['n']} items, {len(d['districts'])} districts, "
-                f"index {nat[0]} -> {nat[-1]}, asOf {d['asOf']}")
+                f"index {real_nat[0]} -> {last_ok}, asOf {d['asOf']}" +
+                (f", partial {partial}" if partial else ""))
           PY
 
       # Only the `prices` key: an unfiltered push would also re-upload the

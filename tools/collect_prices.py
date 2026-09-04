@@ -186,8 +186,12 @@ def load(months):
 
 
 def build_basket(obs, months):
-    """The fixed basket: items priced in every month of the window and stocked
-    widely enough that a district-level median means something."""
+    """The fixed basket: items priced in every month of the index window and
+    stocked widely enough that a district-level median means something.
+
+    `months` is the index window (the fully-published months to build the basket
+    over). A sparse, still-being-collected trailing month is excluded by the
+    caller BEFORE this is invoked - see `_index_months` in main()."""
     per_month = obs.groupby("item_code").ym.nunique()
     everywhere = set(per_month[per_month == len(months)].index)
 
@@ -200,6 +204,32 @@ def build_basket(obs, months):
     sys.stderr.write(f"  basket: {len(basket)} items "
                      f"(in all {len(months)} months, >={MIN_DISTRICT_COVERAGE:.0%} districts)\n")
     return basket
+
+
+def _index_months(obs, months):
+    """Return the months the basket/index should be built over.
+
+    A trailing month that is still being collected is sparse: it has a small
+    fraction of the observations and items of a full month, so demanding every
+    basket item appear in it collapses the basket (e.g. ~290 items -> ~47).
+    When the last month is incomplete, drop it from the index window but keep
+    it in `months` (the payload) so the UI can show it as the partial month.
+
+    `months` is the ordered window passed by main(); returns (index_months,
+    partial_ym) where index_months is the list to build the basket over and
+    partial_ym is the trailing month to flag, or None if none is partial."""
+    if len(months) < 2:
+        return months, None
+
+    last, prev = months[-1], months[-2]
+    n_obs = {ym: len(g) for ym, g in obs.groupby("ym")}
+    # A month that is still being collected carries a small share of a full
+    # month's observations. Compare the last month to the month before it: if
+    # the newest is clearly incomplete (< half the prior month's observations),
+    # treat it as partial and build the index over the completed months.
+    if n_obs.get(prev, 0) and n_obs.get(last, 0) < 0.5 * n_obs[prev]:
+        return months[:-1], last
+    return months, None
 
 
 def jevons(medians, months, base_ym):
@@ -222,18 +252,32 @@ def main():
 
     wanted = month_keys(args.months)
     obs, items, premises, months = load(wanted)
-    basket = build_basket(obs, months)
+    # A trailing month still being collected is sparse; build the basket and
+    # index over the completed months only, keeping the partial month in the
+    # payload (flagged) so the UI can show it as work-in-progress.
+    index_months, partial_ym = _index_months(obs, months)
+    basket = build_basket(obs, index_months)
     if not basket:
         raise SystemExit("prices: empty basket, refusing to write")
 
     b = obs[obs.item_code.isin(basket)]
-    latest_ym = months[-1]
+    # The spatial snapshot (district index / cheapest / itemGeo) reflects a
+    # *complete* month. When the trailing month is partial, use the last full
+    # index month so those sections don't collapse to near-empty.
+    spatial_ym = index_months[-1]
     as_of = str(obs.date.max())[:10]
+    # The index window may exclude the partial trailing month; `months` (the
+    # payload array) is what the chart labels use, so the index series must be
+    # reindexed onto `months` to stay positionally aligned (null for a partial).
+    # reindex fills missing slots with NaN; map through r() to null them so
+    # json.dump emits null (not a literal NaN, which is invalid JSON).
+    idx = lambda s: [r(v, 2) for v in s.reindex(months)]
 
     # ── 1. national + per-state index over time (Jevons, fixed basket) ────
     nat_med = b.pivot_table(index="ym", columns="item_code",
-                            values="price", aggfunc="median").reindex(months)
-    national, n_nat = jevons(nat_med, months, months[0])
+                            values="price", aggfunc="median").reindex(index_months)
+    national, n_nat = jevons(nat_med, index_months, index_months[0])
+    national = idx(pd.Series(national, index=index_months))
 
     # Each state's index is built from the items priced there in every month,
     # which is not quite the same set everywhere. A state's own series is
@@ -243,9 +287,10 @@ def main():
     states = {}
     for state, g in b.groupby("state"):
         piv = g.pivot_table(index="ym", columns="item_code",
-                            values="price", aggfunc="median").reindex(months)
-        series, n = jevons(piv, months, months[0])
+                            values="price", aggfunc="median").reindex(index_months)
+        series, n = jevons(piv, index_months, index_months[0])
         if series and n >= MIN_DISTRICT_ITEMS:
+            series = idx(pd.Series(series, index=index_months))
             states[state] = {"idx": series, "n": n}
 
     # ── 2. per-item monthly medians + MoM / YoY ───────────────────────────
@@ -255,9 +300,14 @@ def main():
         col = nat_med[code] if code in nat_med.columns else None
         if col is None:
             continue
-        pts = [r(col.get(ym), 2) for ym in months]
-        cur, prev = pts[-1], (pts[-2] if len(pts) > 1 else None)
-        first = pts[0]
+        pts = [r(col.get(ym), 2) for ym in index_months]
+        # Pad the item series onto `months` so the UI table lines up (null for
+        # the partial month), then compute MoM/YoY from the last two real points.
+        pts = idx(pd.Series(pts, index=index_months))
+        real_pts = [p for p in pts if p is not None]
+        cur = real_pts[-1] if real_pts else None
+        prev = real_pts[-2] if len(real_pts) > 1 else None
+        first = real_pts[0] if real_pts else None
         m = meta.loc[code]
         item_rows.append({
             "c": int(code),
@@ -275,8 +325,8 @@ def main():
     # ── 3. spatial price level per district (100 = national average) ──────
     # Ratio to the national median *per item*, then geometric mean, so a
     # district is never penalised for stocking a different slice of the
-    # basket. Latest month only - this is a snapshot, not a trend.
-    cur_month = b[b.ym == latest_ym]
+    # basket. Latest FULL month only - this is a snapshot, not a trend.
+    cur_month = b[b.ym == spatial_ym]
     nat_now = cur_month.groupby("item_code").price.median()
     # `n` (observation count) rides along for itemGeo below. The district index
     # itself deliberately does NOT filter on it - adding a floor here would
@@ -363,8 +413,9 @@ def main():
         "generated": dt.date.today().isoformat(),
         "asOf": as_of,
         "months": months,
-        # The newest month is still being collected; the UI should mark it.
-        "partial": latest_ym if latest_ym == month_keys(1)[0] else None,
+        # A trailing month still being collected - flagged so the UI marks the
+        # final point as work-in-progress. Derived from the sparse-month check.
+        "partial": partial_ym,
         "method": {
             "time": "jevons_fixed_basket",
             "space": "geomean_relative_to_national_median",
