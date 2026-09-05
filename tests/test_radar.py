@@ -1,5 +1,6 @@
 import datetime as dt
 import email.utils
+import json
 import os
 import sys
 import unittest
@@ -122,6 +123,98 @@ class TestRadar(unittest.TestCase):
         self.assertEqual(breaking[1]["category"], "politik")
         # Descriptions arrive as feed HTML and must be cleaned before display.
         self.assertNotIn("<p>", breaking[1]["summary"])
+
+
+class TestParseJsonTruncation(unittest.TestCase):
+    """Regression tests for the MAX_TOKENS truncation repair (see commit for
+    the 2026-09-05 viral-list fix).
+
+    Root cause: Gemini's finishReason=MAX_TOKENS cuts the response mid-JSON.
+    The old parse_json_text balanced-brace scan then threw 'no JSON object
+    found', which every caller treated as total failure -> the crude keyword
+    cluster (single garbage words like 'Makluman', 'Tidak', 'Snapshot' as
+    'top issues'), plus the grounded fact-check and the breaking-news editor
+    each silently returning nothing. These fixtures are the exact truncated
+    shapes (mid-string, mid-key, mid-value) and must now recover the complete
+    leading structure instead of failing.
+    """
+    def test_mid_string_value(self):
+        # Fact-check cut mid fact_details value.
+        t = ('{"claim": "Sindiket penipuan dikesan menggunakan dokumen Pesanan '
+             'Kerajaan palsu.", "verdict": "TRUE", "fact_details": "Jabatan Alam '
+             'Sekitar Wilayah Persekutuan Kuala Lumpur (JAS WPKL) mengesahkan telah '
+             'mengesan sekurang-kurangnya tiga percubaan penipuan membabitkan')
+        parsed = cr.parse_json_text(t)
+        self.assertEqual(parsed["verdict"], "TRUE")
+        self.assertIn("claim", parsed)
+
+    def test_cluster_truncated(self):
+        # Clustered issues cut inside the first issue's fact_data.
+        t = ('{"top_issues": [{"rank": 1, "title_bm": "Penipuan Pesanan Palsu", '
+             '"title_en": "Fake order scam", "category": "jenayah", "claim": '
+             '"Dokumen palsu", "fact_details": "Butiran penuh masih')
+        parsed = cr.parse_json_text(t)
+        self.assertIn("top_issues", parsed)
+        self.assertEqual(parsed["top_issues"][0]["rank"], 1)
+
+    def test_editor_truncated(self):
+        # Breaking-news editor cut inside the bullets array.
+        t = ('{"items": [{"id": 1, "index": 0, "summary": "Menteri umumkan dasar '
+             'baru", "category": "nasional", "urgency": "high", "bullets": '
+             '["Apa yang berlaku", "Siapa terlibat"')
+        parsed = cr.parse_json_text(t)
+        self.assertIn("items", parsed)
+        self.assertEqual(parsed["items"][0]["id"], 1)
+
+    def test_complete_json_still_parses(self):
+        # A well-formed response must be unaffected by the new repair path.
+        t = '{"verdict": "TRUE", "claim": "x", "sources": ["SEBENARNYA.MY"]}'
+        parsed = cr.parse_json_text(t)
+        self.assertEqual(parsed["verdict"], "TRUE")
+
+    def test_deeply_nested_truncation(self):
+        # Nested array inside object inside array, cut mid-string.
+        t = ('{"top_issues": [{"rank": 1, "sources": [{"name": "malaymail", '
+             '"title": "Some headline here that keeps going and may get"')
+        parsed = cr.parse_json_text(t)
+        self.assertIn("top_issues", parsed)
+        self.assertEqual(parsed["top_issues"][0]["rank"], 1)
+
+    def test_gemini_post_retries_on_max_tokens(self):
+        # The auto-retry on MAX_TOKENS must bump the budget, not resend the
+        # same truncation.
+        calls = {"n": 0}
+        req_bodies = []
+
+        def fake_urlopen(req, timeout=None):
+            body = req.data.decode()
+            req_bodies.append(body)
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return _FakeResp({"candidates": [{"finishReason": "MAX_TOKENS"}]})
+            return _FakeResp({"candidates": [{"finishReason": "STOP",
+                                              "content": {"parts": [{"text": "{}"}]}}]})
+
+        with mock.patch.object(cr.urllib.request, "urlopen", side_effect=fake_urlopen):
+            d = cr.gemini_post("http://x", json.dumps({
+                "generationConfig": {"maxOutputTokens": 8192}}).encode())
+        self.assertEqual(calls["n"], 2)
+        # Second request carried a doubled budget.
+        self.assertIn("maxOutputTokens\": 16384", req_bodies[1])
+
+
+class _FakeResp:
+    def __init__(self, d):
+        self._d = d
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def read(self):
+        return json.dumps(self._d).encode()
 
 
 if __name__ == "__main__":

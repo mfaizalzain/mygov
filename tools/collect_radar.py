@@ -83,8 +83,77 @@ def _escape_json_string_controls(text):
     return "".join(out)
 
 
+def _rebalance_json(s):
+    """Close any unterminated {/[ in the correct nesting order (LIFO).
+
+    Gemini truncating at MAX_TOKENS can stop anywhere, leaving an object whose
+    open braces/brackets never close. A flat brace-count rebalance is WRONG for
+    a key followed by an open array ({ ... [ ...) — the ] must close before the
+    }, so we close by actual nesting order.
+    """
+    stack = []
+    in_str = False
+    esc = False
+    for ch in s:
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch in "{[":
+            stack.append(ch)
+        elif ch in "}]":
+            if stack:
+                stack.pop()
+    closer = {"{": "}", "[": "]"}
+    return s + "".join(closer.get(c, "") for c in reversed(stack))
+
+
+def _repair_truncated_json(text):
+    """Best-effort recovery of a JSON object cut mid-stream by MAX_TOKENS.
+
+    Tries progressively shorter cut points (after complete string literals,
+    after commas/colons) and closes open structures, returning the first
+    parseable object. Returns None if nothing recovers.
+    """
+    cands = {len(text)}
+    for m in re.finditer(r'"(?:\\.|[^"\\])*"', text):
+        cands.add(m.end())
+    for m in re.finditer(r"[,:]", text):
+        cands.add(m.end() + 1)
+
+    def try_parse(s):
+        s2 = _rebalance_json(s)
+        s2 = re.sub(r",\s*([}\]])", r"\1", s2)
+        s2 = _rebalance_json(s2)
+        try:
+            return json.loads(s2)
+        except Exception:
+            return None
+
+    for p in sorted(cands, reverse=True):
+        if p > len(text):
+            continue
+        res = try_parse(text[:p])
+        if res is not None:
+            return res
+    return None
+
+
 def parse_json_text(text):
-    """Parse Gemini JSON that may be wrapped in fences or contain stray text."""
+    """Parse Gemini JSON that may be wrapped in fences, contain stray text,
+    or be TRUNCATED mid-stream (Gemini's finishReason=MAX_TOKENS).
+
+    Previously a truncated response threw 'no JSON object found', which the
+    callers treated as total failure -> the crude keyword cluster (single
+    garbage words like 'Makluman'). Now a truncation recovers the complete
+    leading entries instead of discarding the whole response.
+    """
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
     text = _escape_json_string_controls(text)
     text = re.sub(r",\s*([}\]])", r"\1", text)
@@ -103,18 +172,39 @@ def parse_json_text(text):
             depth -= 1
             if depth == 0:
                 return json.loads(text[start:idx + 1])
+    # Balanced-brace scan found no complete object: the response was likely
+    # truncated at MAX_TOKENS. Recover the complete leading structure.
+    repaired = _repair_truncated_json(text[start:])
+    if repaired is not None:
+        return repaired
     raise ValueError("no JSON object found")
 
 
 def gemini_post(url, body, timeout=90, tries=3):
-    """POST to Gemini, retrying transient failures."""
+    """POST to Gemini, retrying transient failures AND MAX_TOKENS truncation.
+
+    MAX_TOKENS is not transient: the SAME prompt keeps hitting the cap, so a
+    plain retry repeats the cut. On the first MAX_TOKENS we bump maxOutputTokens
+    (double it, capped at 16384) in a fresh body and retry — this lets a large
+    response complete instead of truncating mid-JSON and dumping the caller to
+    the keyword fallback.
+    """
     last = None
     for attempt in range(tries):
         try:
-            req = urllib.request.Request(
+            r = urllib.request.Request(
                 url, data=body, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                return json.load(r)
+            with urllib.request.urlopen(r, timeout=timeout) as resp:
+                d = json.load(resp)
+            if d.get("candidates") and d["candidates"][0].get("finishReason") == "MAX_TOKENS":
+                # Truncated. Double the output budget and retry (only once per run).
+                req_body = json.loads(body.decode())
+                cur = req_body.get("generationConfig", {}).get("maxOutputTokens") or 8192
+                req_body.setdefault("generationConfig", {})["maxOutputTokens"] = min(cur * 2, 16384)
+                body = json.dumps(req_body).encode()
+                sys.stderr.write(f"  gemini MAX_TOKENS -> retry with budget {min(cur*2,16384)}\n")
+                continue
+            return d
         except urllib.error.HTTPError as e:
             last = e
             if e.code != 429 and e.code < 500:
@@ -391,7 +481,7 @@ Rules:
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}],
-        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 800},
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 2048},
     }).encode()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     try:
