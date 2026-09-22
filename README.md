@@ -990,7 +990,7 @@ The `<meta http-equiv="origin-trial">` in `index.html` is for
 `isSubdomain`, so it covers `www.` but **not** the
 `mygov.faizalmzain.com` staging deploy (different apex) or `localhost`.
 
-**It expires 2026-10-06.** After that `LanguageModel.params()` starts failing,
+**It expires 2027-01-19.** After that `LanguageModel.params()` starts failing,
 `aiCreate()` drops `temperature`/`topK` and retries bare, and summaries quietly
 run at default sampling. Nothing breaks and nothing is logged - so if the
 output gets looser around October, this is why. Re-register at
