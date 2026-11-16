@@ -34,10 +34,18 @@ jobs:
           python3 - <<'PY'
           import json
           d = json.load(open('public/hotel.json'))
-          for k in ('aor', 'arr', 'guests'):
+          # aor/arr are {state, cur, prev}; guests carries {state, dom, intl} and has
+          # no prev - it is a split by origin, not a period-over-period figure, and
+          # the dashboard sums dom+intl. Asserting 'cur' on guests failed every run
+          # that got this far.
+          for k in ('aor', 'arr'):
               rows = d.get(k) or []
               assert len(rows) == 16, f'{k}: {len(rows)} states, expected 16'
               assert all(r.get('cur') is not None for r in rows), f'{k}: missing cur'
+          guests = d.get('guests') or []
+          assert len(guests) == 16, f'guests: {len(guests)} states, expected 16'
+          assert all(r.get('dom') is not None and r.get('intl') is not None for r in guests), \
+              'guests: missing dom/intl'
           assert d['asOf']['year'] >= 2024, 'asOf year odd'
           assert d['asOf']['label'], 'missing label'
           print('OK:', d['asOf']['label'], '16 states x', len(d['aor']), 'metrics')
