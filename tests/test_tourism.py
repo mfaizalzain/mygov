@@ -1,9 +1,20 @@
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
 
 import collect_tourism as ct
+
+
+def test_refuses_pymupdf_2x():
+    """2.x reorders cell punctuation and loses decimal positions, so the parser
+    must refuse it instead of returning plausible-but-wrong numbers."""
+    assert ct._require_pymupdf_1x("1.26.5") is None
+    assert ct._require_pymupdf_1x("1.26.0") is None
+    with pytest.raises(ValueError, match="pin pymupdf<2"):
+        ct._require_pymupdf_1x("2.1")
 
 
 def test_malay_to_num():

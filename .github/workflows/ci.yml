@@ -96,5 +96,5 @@ jobs:
       # collector next fires - up to a day later, in production.
       - name: Run the collector test suite
         run: |
-          python3 -m pip install --quiet --disable-pip-version-check pytest pymupdf pandas pyarrow
+          python3 -m pip install --quiet --disable-pip-version-check pytest "pymupdf>=1.26.5,<2" pandas pyarrow
           python3 -m pytest tests/ -q

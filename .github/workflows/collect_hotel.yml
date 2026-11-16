@@ -21,7 +21,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pymupdf
+        run: pip install "pymupdf>=1.26.5,<2"
 
       - name: Syntax
         run: python3 -m py_compile tools/collect_hotel.py tools/kv_upload.py

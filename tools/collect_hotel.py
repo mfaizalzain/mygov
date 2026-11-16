@@ -144,10 +144,34 @@ def _match_col(values, x_anchor, y_anchor, x_tol=30, y_win=60):
     return best
 
 
+def _require_pymupdf_1x(version=None):
+    """Refuse to parse under PyMuPDF 2.x, which reorders cell punctuation.
+
+    2.x moves separators to the END of each extracted word ("11.9" -> "119\n."),
+    so a decimal point's position is lost and 11.9 cannot be told from 119. The
+    hotel survey is all one- and two-decimal rates by construction, so guessing
+    would corrupt ARR figures. Fail loudly; the workflows pin pymupdf<2.
+    """
+    ver = version
+    if ver is None:
+        import fitz
+        ver = getattr(fitz, "__version__", None) or getattr(fitz, "VersionBind", "0")
+    try:
+        major = int(str(ver).split(".")[0])
+    except (TypeError, ValueError):
+        return
+    if major >= 2:
+        raise ValueError(
+            f"PyMuPDF {ver} reorders cell punctuation and cannot be parsed reliably; "
+            "pin pymupdf<2 (see .github/workflows/collect_hotel.yml)"
+        )
+
+
 def parse_hotel_pdf(pdf_bytes):
     """Extract AOR, ARR and guests by state. Raises ValueError on drift."""
     import fitz  # pymupdf, CI-only dependency
 
+    _require_pymupdf_1x()
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     if len(doc) < 3:
         raise ValueError("hotel PDF has fewer than 3 pages - layout drift?")
