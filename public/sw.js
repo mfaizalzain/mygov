@@ -259,8 +259,16 @@
    (see the v83 note below).
    v84: Phase-3 - .wx-t-min min-temp color uses --fg-2 (the old #93a0b6
    failed 2.26:1 on the light theme's tinted today-card; --fg-2 passes
-   5.91:1 dark / 6.62:1 light on that same background). */
-const VERSION    = "mygov-v87";
+   5.91:1 dark / 6.62:1 light on that same background).
+   v88: Live buses. The Rapid KL and Penang feeds were proxying the operator's
+   kiosk (/api/rapid), whose Azure app is decommissioned - it answers "Web App -
+   Unavailable" and the kiosk page redirect-loops, so every visitor got "feed
+   unavailable" over an empty map. The feed now leads with the official
+   api.data.gov.my GTFS-RT vehicle positions (73 Klang Valley buses and 141
+   Penang when measured on 16 Nov 2026) and only asks the kiosk when that feed
+   comes back empty, so a returning visitor's cached shell stops replaying the
+   dead-feed shape. */
+const VERSION    = "mygov-v88";
 const SHELL      = `${VERSION}-shell`;
 const API_CACHE  = `${VERSION}-api`;
 const KEEP       = new Set([SHELL, API_CACHE]);

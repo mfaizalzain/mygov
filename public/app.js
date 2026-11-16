@@ -1398,8 +1398,16 @@ function decodeVehiclePositions(arrayBuffer){
       key(){ const k = r.varint(); return [k >>> 3, k & 7]; },
       sub(){ const n = r.varint(), s = p; p += n; return [s, p]; },
       str(a, b){ return dec.decode(bytes.subarray(a, b)); },
+      /* `p += r.varint()` is a trap: JS evaluates the left-hand value BEFORE the
+         right-hand expression, so the assignment writes oldP + length and throws
+         away the bytes varint() already consumed. Every length-delimited field
+         was therefore skipped one byte short, corrupting whatever followed - the
+         prasarana GTFS-RT feed lost every route_id that way (the field right
+         after start_time), which is why Rapid KL buses read as one unnamed
+         route. Read the length into a temp first. */
       skip(w){ if (w === 0) r.varint(); else if (w === 1) p += 8;
-        else if (w === 2) p += r.varint(); else if (w === 5) p += 4; else p = end; },
+        else if (w === 2){ const n = r.varint(); p += n; }
+        else if (w === 5) p += 4; else p = end; },
     };
     return r;
   }
@@ -2557,6 +2565,11 @@ const ROUTE_NAMES = new Map();
    waits on them: positions paint first and the names land on a repaint. */
 const FEEDER_NAMES = new Map();
 const PENANG_NAMES = new Map();
+/* Keyed by GTFS route_id, which is what GTFS-RT broadcasts ("U4500"), carrying
+   the public number as the label ("450"). The feeder map cannot serve this: it
+   is keyed by the public name because the kiosk feed sent numbers, which is why
+   `c.slice(0, -1)` exists below. */
+const KL_NAMES = new Map();
 function nameLoader(category, build){
   let p = null, tries = 0;
   return () => {
@@ -2596,6 +2609,21 @@ const fillNames = (map, keyOf) => (routes, trips) => {
 };
 const loadFeederNames = nameLoader("rapid-bus-mrtfeeder",
   fillNames(FEEDER_NAMES, x => (x.route_long_name || x.route_short_name || "").trim()));
+/* route_long_name is the reliable descriptor in rapid-bus-kl (trip_headsign is
+   blank in this feed), so it wins; a headsign is only the fallback. */
+const fillNamesById = map => (routes, trips) => {
+  const headsign = new Map();
+  for (const t of trips)
+    if (t.trip_headsign && !headsign.has(t.route_id)) headsign.set(t.route_id, t.trip_headsign.trim());
+  for (const r of routes){
+    if (!r.route_id) continue;
+    map.set(r.route_id, {
+      short: (r.route_short_name || r.route_id).trim(),
+      long: (r.route_long_name || headsign.get(r.route_id) || "").trim(),
+    });
+  }
+};
+const loadKlNames = nameLoader("rapid-bus-kl", fillNamesById(KL_NAMES));
 const loadPenangNames = nameLoader("rapid-bus-penang",
   fillNames(PENANG_NAMES, x => (x.route_short_name || x.route_long_name || "").trim()));
 /* Names are filled from render, never from a loader. loadSection() serves a
@@ -2611,6 +2639,23 @@ function ensureLiveNames(){
           if (r.id) ROUTE_NAMES.set(r.id, { short:r.short || r.id, long:r.long || "" });
   const want = [];
   if (lvdata && lvdata.rapid  && !FEEDER_NAMES.size) want.push(loadFeederNames());
+  /* The GTFS-RT feed broadcasts route_ids, and rapid-bus-kl's 1.7 MB static
+     bundle is the only thing that can name them - so it is fetched only when a
+     visible vehicle's code resolves against none of the maps already loaded.
+     With the kiosk feed (public numbers) that condition never held, so this
+     costs nothing if the kiosk ever comes back. */
+  const unresolved = lvdata && lvdata.rapid && !KL_NAMES.size &&
+    (lvdata.rapid.vehicles || []).some(v => {
+      const c = String(v.routeId == null ? "" : v.routeId);
+      if (!c) return false;
+      if (FEEDER_NAMES.has(c) || FEEDER_NAMES.has(c.slice(0, -1))) return false;
+      /* The transport dataset already indexes these route_ids, but only as an
+         id label ("U3000"), which is what the chips showed before this map
+         existed. A label that just repeats the code is still unresolved. */
+      const known = ROUTE_NAMES.get(c);
+      return !known || known.short === c;
+    });
+  if (unresolved) want.push(loadKlNames());
   /* Penang's route names are megabytes of static GTFS fetched just to label
      its buses; they are only needed once the Penang block is actually shown,
      so they stay deferred until the chip (or All) asks for them. */
@@ -2619,9 +2664,9 @@ function ensureLiveNames(){
   if (!want.length) return;
   /* Repaint only if names actually arrived. Re-rendering unconditionally
      would call this again, queue the same loads again, and never settle. */
-  const before = FEEDER_NAMES.size + PENANG_NAMES.size;
+  const before = FEEDER_NAMES.size + PENANG_NAMES.size + KL_NAMES.size;
   Promise.all(want).then(() => {
-    if (lvdata && FEEDER_NAMES.size + PENANG_NAMES.size > before) renderLive(lvdata);
+    if (lvdata && FEEDER_NAMES.size + PENANG_NAMES.size + KL_NAMES.size > before) renderLive(lvdata);
   });
 }
 /* A live route code -> what to call it, per feed: Klang Valley sends GTFS
@@ -2630,7 +2675,8 @@ function ensureLiveNames(){
 function liveRoute(code, feed){
   const c = String(code == null ? "" : code);
   if (feed === "penang") return PENANG_NAMES.get(c) || { short:c, long:"" };
-  return ROUTE_NAMES.get(c) || FEEDER_NAMES.get(c.slice(0, -1)) || { short:c, long:"" };
+  return KL_NAMES.get(c) || ROUTE_NAMES.get(c) || FEEDER_NAMES.get(c)
+      || FEEDER_NAMES.get(c.slice(0, -1)) || { short:c, long:"" };
 }
 /* Trains carry no route id at all - tagKtmb() gives them a line name instead,
    so ask the vehicle rather than the code. The pill is a few characters wide,
@@ -2666,42 +2712,65 @@ const lvPopup = (f, v) => `<b>${esc(v.vehicleId || v.entityId || "-")}</b>` +
   (v.speed != null ? `<br>${v.speed > 0 ? nf(v.speed, 0) + " km/h" : T("stopped")}` : "") +
   (v.timestamp ? `<br><span class="dim">${ago(v.timestamp)}</span>` : "");
 
+/* Rapid buses: the official GTFS-RT feed is the primary source, the operator
+   kiosk is the enrichment. The kiosk (myrapidbus.prasarana.com.my socket.io,
+   proxied by our /api/rapid) used to be primary because it carried 800+ buses
+   while this feed was frequently empty mid-service. That reversed: the kiosk's
+   Azure app is now decommissioned - the host answers "Web App - Unavailable"
+   (HTTP 403) and the kiosk page itself redirect-loops - so /api/rapid answers
+   502 kiosk_unreachable and the whole section died with it. The GTFS-RT feed
+   carries live positions again (verified 16 Nov 2026: 73 Klang Valley buses,
+   141 Penang), and we already decode its format for KTMB, so it leads here.
+   The kiosk is still tried when this feed comes back empty, because "empty"
+   is also what happens outside service hours - if the kiosk returns, its larger
+   fleet wins again with no code change. */
 const RT = [
   { key:"ktmb", label:"KTMB trains", noun:"trains", path:"/gtfs-realtime/vehicle-position/ktmb", params:null },
-  /* Rapid KL buses come from the operator's kiosk feed (via our /api/rapid
-     proxy): the api.data.gov.my GTFS-RT feed for prasarana is frequently
-     empty even mid-service, while the kiosk shows 800+ live buses. */
-  { key:"rapid", label:"Rapid KL buses", noun:"buses", path:"/api/rapid", params:{ provider:"RKL" } },
-  /* Same kiosk feed, different city. RKN (Kuantan) is the third provider the
-     kiosk offers and is deliberately absent: it has carried no vehicles when
-     sampled, and there is no rapid-bus-kuantan static feed to name or place
-     them with, so it would only ever add a block of unnamed dots. */
-  { key:"penang", label:"Rapid Penang buses", noun:"buses", path:"/api/rapid", params:{ provider:"RPG" } },
+  { key:"rapid", label:"Rapid KL buses", noun:"buses",
+    path:"/gtfs-realtime/vehicle-position/prasarana", params:{ category:"rapid-bus-kl" },
+    kiosk:{ provider:"RKL" } },
+  /* RKN (Kuantan) stays absent: it has carried no vehicles when sampled, and
+     there is no rapid-bus-kuantan static feed to name or place them with, so it
+     would only ever add a block of unnamed dots. */
+  { key:"penang", label:"Rapid Penang buses", noun:"buses",
+    path:"/gtfs-realtime/vehicle-position/prasarana", params:{ category:"rapid-bus-penang" },
+    kiosk:{ provider:"RPG" } },
 ];
+/* The operator-kiosk variant of a live feed, proxied by our Worker. Throws when
+   the kiosk is unreachable, which is the normal case right now. */
+async function kioskLive(f){
+  const provider = (f.kiosk || f.params || {}).provider;
+  const d = await fetch("/api/rapid?provider=" + encodeURIComponent(provider), { cache:"no-store" })
+    .then(r => { if (!r.ok) throw new ApiError(`${f.label} feed unavailable.`, "http"); return r.json(); });
+  return { key:f.key, label:f.label, noun:f.noun, version:"kiosk",
+    feedTimestamp: d.updated ? Math.floor(Date.parse(d.updated) / 1000) : null,
+    vehicles: (d.buses || []).map(b => ({
+      vehicleId: b.bus_no, routeId: b.route, lat: b.latitude, lon: b.longitude,
+      speed: b.speed, dir: b.dir, timestamp: b.ts || null,
+    })).filter(v => v.lat != null && v.lon != null) };
+}
 async function loadLive(){
   const out = {};
   for (const f of RT){
-    if (f.path === "/api/rapid"){
-      /* Route names are not fetched here. ensureLiveNames() does it from
-         render, which is the only path a returning visitor takes - a cached
-         section never calls this loader at all. Positions must not wait on
-         megabytes of naming data either. */
-      const d = await fetch("/api/rapid?provider=" + encodeURIComponent(f.params.provider),
-        { cache:"no-store" }).then(r => { if (!r.ok) throw new ApiError(`${f.label} feed unavailable.`, "http"); return r.json(); });
-      out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:"kiosk",
-        feedTimestamp: d.updated ? Math.floor(Date.parse(d.updated) / 1000) : null,
-        vehicles: (d.buses || []).map(b => ({
-          vehicleId: b.bus_no, routeId: b.route, lat: b.latitude, lon: b.longitude,
-          speed: b.speed, dir: b.dir, timestamp: b.ts || null,
-        })).filter(v => v.lat != null && v.lon != null) };
-    } else {
-      const buf = await request("gtfs-realtime", f.path, f.params, "buffer");
-      const d = decodeVehiclePositions(buf);
-      const vehicles = d.vehicles.filter(v => v.lat != null && v.lon != null)
-        .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-      out[f.key] = { key:f.key, label:f.label, noun:f.noun, version:d.version, feedTimestamp:d.feedTimestamp,
-        vehicles };
+    /* Route names are not fetched here. ensureLiveNames() does it from
+       render, which is the only path a returning visitor takes - a cached
+       section never calls this loader at all. Positions must not wait on
+       megabytes of naming data either. */
+    const buf = await request("gtfs-realtime", f.path, f.params, "buffer");
+    const d = decodeVehiclePositions(buf);
+    const vehicles = d.vehicles.filter(v => v.lat != null && v.lon != null)
+      .sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+    let entry = { key:f.key, label:f.label, noun:f.noun, version:d.version,
+      feedTimestamp:d.feedTimestamp, vehicles };
+    /* Zero vehicles mid-service is the feed going quiet; outside service hours it
+       is the truth. Only the kiosk can tell those apart, so ask it and keep
+       whichever answer actually has buses. A dead kiosk (502) is swallowed - the
+       government feed is the source of record and its empty answer stands. */
+    if (!vehicles.length && f.kiosk){
+      const alt = await kioskLive(f).catch(() => null);
+      if (alt && alt.vehicles.length) entry = alt;
     }
+    out[f.key] = entry;
   }
   return out;
 }
